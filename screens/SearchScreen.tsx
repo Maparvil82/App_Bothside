@@ -12,13 +12,17 @@ import {
 } from 'react-native';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsRelease } from '../types';
+import { useAuth } from '../contexts/AuthContext';
+import { UserCollectionService, AlbumService } from '../services/database';
 
 export const SearchScreen: React.FC = () => {
+  const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
 
   const searchReleases = async (searchQuery: string, pageNum: number = 1) => {
     if (!searchQuery.trim()) return;
@@ -55,6 +59,38 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  const addToCollection = async (release: DiscogsRelease) => {
+    if (!user) {
+      Alert.alert('Error', 'Debes iniciar sesión para agregar álbumes a tu colección');
+      return;
+    }
+
+    setAddingToCollection(release.id.toString());
+    try {
+      // Primero crear el álbum en la base de datos
+      const albumData = {
+        title: release.title,
+        artist: release.artists?.[0]?.name || 'Unknown Artist',
+        year: release.year,
+        cover_url: release.cover_image || release.thumb,
+        discogs_id: release.id,
+        user_id: user.id,
+      };
+
+      const album = await AlbumService.createAlbum(albumData);
+      
+      // Luego agregarlo a la colección del usuario
+      await UserCollectionService.addToCollection(user.id, album.id);
+      
+      Alert.alert('Éxito', 'Álbum agregado a tu colección');
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo agregar el álbum a la colección');
+      console.error('Error adding to collection:', error);
+    } finally {
+      setAddingToCollection(null);
+    }
+  };
+
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
     <View style={styles.releaseItem}>
       <Image
@@ -80,6 +116,20 @@ export const SearchScreen: React.FC = () => {
           </Text>
         )}
       </View>
+      
+      {user && (
+        <TouchableOpacity
+          style={styles.addButton}
+          onPress={() => addToCollection(item)}
+          disabled={addingToCollection === item.id.toString()}
+        >
+          {addingToCollection === item.id.toString() ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Text style={styles.addButtonText}>+</Text>
+          )}
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -240,5 +290,19 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 14,
     color: '#666',
+  },
+  addButton: {
+    backgroundColor: '#007AFF',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginLeft: 10,
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 }); 
