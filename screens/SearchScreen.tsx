@@ -644,8 +644,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   collectionThumbnail: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: '100%',
     borderRadius: 4,
     marginRight: 10,
   },
@@ -729,8 +729,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   releaseThumbnail: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: '100%',
     borderRadius: 4,
     marginRight: 10,
   },
