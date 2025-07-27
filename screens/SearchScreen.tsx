@@ -208,25 +208,44 @@ export const SearchScreen: React.FC = () => {
           {item.albums?.title}
         </Text>
         <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
-        {viewMode === 'list' && (
-          <View style={styles.collectionDetails}>
-            <Text style={styles.collectionDetail}>
-              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year 
-                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                : item.albums?.label && item.albums.label !== '' 
-                  ? `Sello: ${item.albums.label}`
-                  : item.albums?.release_year 
-                    ? `Año: ${item.albums.release_year}`
-                    : ''
-              }
-            </Text>
-            <Text style={styles.collectionDetail}>
-              {item.albums?.album_styles && item.albums.album_styles.length > 0 && 
-                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-              }
-            </Text>
-          </View>
-        )}
+                              {viewMode === 'list' && (
+                        <View style={styles.collectionDetails}>
+                          <Text style={styles.collectionDetail}>
+                            {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                              ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                              : item.albums?.label && item.albums.label !== ''
+                                ? `Sello: ${item.albums.label}`
+                                : item.albums?.release_year
+                                  ? `Año: ${item.albums.release_year}`
+                                  : ''
+                            }
+                          </Text>
+                          <Text style={styles.collectionDetail}>
+                            {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+                            }
+                          </Text>
+                        </View>
+                      )}
+                      {viewMode === 'grid' && (
+                        <View style={styles.collectionDetailsGrid}>
+                          <Text style={styles.collectionDetailGrid}>
+                            {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                              ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                              : item.albums?.label && item.albums.label !== ''
+                                ? `Sello: ${item.albums.label}`
+                                : item.albums?.release_year
+                                  ? `Año: ${item.albums.release_year}`
+                                  : ''
+                            }
+                          </Text>
+                          <Text style={styles.collectionDetailGrid}>
+                            {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+                            }
+                          </Text>
+                        </View>
+                      )}
       </View>
     </View>
   );
@@ -333,18 +352,21 @@ export const SearchScreen: React.FC = () => {
             onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
           >
             <Ionicons 
-              name={viewMode === 'list' ? 'grid' : 'list'} 
+              name={viewMode === 'list' ? 'grid-outline' : 'list-outline'} 
               size={24} 
               color="#666" 
             />
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={styles.filterButton}
+            style={[
+              styles.filterButton,
+              showFilters && { backgroundColor: '#f0f0f0' }
+            ]}
             onPress={() => setShowFilters(!showFilters)}
           >
             <Ionicons 
-              name="filter" 
+              name="filter-outline" 
               size={24} 
               color={showFilters ? '#007AFF' : '#666'} 
             />
@@ -532,13 +554,13 @@ const styles = StyleSheet.create({
   },
   viewButton: {
     padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 4,
+    backgroundColor: 'transparent',
   },
   filterButton: {
     padding: 8,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
+    borderRadius: 4,
+    backgroundColor: 'transparent',
   },
   // Estilos para el desplegable de filtros
   filterDropdownContent: {
@@ -645,6 +667,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'left',
+  },
+  collectionDetailsGrid: {
+    marginTop: 4,
+  },
+  collectionDetailGrid: {
+    fontSize: 10,
+    color: '#666',
+    marginBottom: 2,
   },
   gridRow: {
     justifyContent: 'space-between',
