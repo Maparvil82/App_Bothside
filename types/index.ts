@@ -9,6 +9,10 @@ export interface DiscogsRelease {
   year?: number;
   genres?: string[];
   styles?: string[];
+  labels?: Array<{
+    name: string;
+    id: number;
+  }>;
   thumb?: string;
   cover_image?: string;
   resource_url?: string;

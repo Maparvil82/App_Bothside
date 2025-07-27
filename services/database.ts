@@ -145,7 +145,12 @@ export const UserCollectionService = {
       .from('user_collection')
       .select(`
         *,
-        albums (*)
+        albums (
+          *,
+          album_styles (
+            styles (*)
+          )
+        )
       `)
       .eq('user_id', userId)
       .order('added_at', { ascending: false });

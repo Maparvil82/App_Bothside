@@ -8,237 +8,28 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
-  Alert,
   ScrollView,
+  Alert,
 } from 'react-native';
+import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsRelease } from '../types';
-import { useAuth } from '../contexts/AuthContext';
-import { UserCollectionService, AlbumService } from '../services/database';
+import { AlbumService, UserCollectionService } from '../services/database';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
   const [collection, setCollection] = useState<any[]>([]);
   const [collectionLoading, setCollectionLoading] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'year' | 'artist' | 'label'>('date');
+  const [filterByStyle, setFilterByStyle] = useState<string>('');
+  const [filterByYear, setFilterByYear] = useState<string>('');
+  const [filterByLabel, setFilterByLabel] = useState<string>('');
+  const [filterByArtist, setFilterByArtist] = useState<string>('');
+  const [showFilters, setShowFilters] = useState<boolean>(false);
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
-
-  const searchReleases = async (searchQuery: string, pageNum: number = 1) => {
-    if (!searchQuery.trim()) return;
-
-    setLoading(true);
-    try {
-      const response = await DiscogsService.searchReleases(searchQuery, pageNum);
-      
-      if (pageNum === 1) {
-        setReleases(response.results);
-      } else {
-        setReleases(prev => [...prev, ...response.results]);
-      }
-      
-      setHasMore(response.pagination.page < response.pagination.pages);
-      setPage(pageNum);
-    } catch (error: any) {
-      Alert.alert('Error', 'No se pudo buscar. Verifica tu conexión a internet.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = () => {
-    if (query.trim()) {
-      setPage(1);
-      searchReleases(query, 1);
-    }
-  };
-
-  const loadMore = () => {
-    if (!loading && hasMore && query.trim()) {
-      searchReleases(query, page + 1);
-    }
-  };
-
-  const loadCollection = async () => {
-    if (!user) return;
-    
-    try {
-      setCollectionLoading(true);
-      const data = await UserCollectionService.getUserCollection(user.id);
-      setCollection(data);
-      sortCollection(data, sortBy);
-    } catch (error: any) {
-      console.error('Error loading collection:', error);
-    } finally {
-      setCollectionLoading(false);
-    }
-  };
-
-  const sortCollection = (data: any[], sortType: 'date' | 'year' | 'artist' | 'label') => {
-    const sorted = [...data].sort((a, b) => {
-      switch (sortType) {
-        case 'date':
-          return new Date(b.added_at).getTime() - new Date(a.added_at).getTime();
-        case 'year':
-          const yearA = a.albums.year || 0;
-          const yearB = b.albums.year || 0;
-          return yearB - yearA;
-        case 'artist':
-          return (a.albums.artist || '').localeCompare(b.albums.artist || '');
-        case 'label':
-          return (a.albums.label || '').localeCompare(b.albums.label || '');
-        default:
-          return 0;
-      }
-    });
-    setFilteredCollection(sorted);
-  };
-
-  const handleSortChange = (newSortBy: 'date' | 'year' | 'artist' | 'label') => {
-    setSortBy(newSortBy);
-    sortCollection(collection, newSortBy);
-  };
-
-  const removeFromCollection = async (albumId: string) => {
-    if (!user) return;
-
-    try {
-      await UserCollectionService.removeFromCollection(user.id, albumId);
-      const updatedCollection = collection.filter(item => item.album_id !== albumId);
-      setCollection(updatedCollection);
-      sortCollection(updatedCollection, sortBy);
-    } catch (error: any) {
-      Alert.alert('Error', 'No se pudo remover el álbum');
-    }
-  };
-
-  const toggleGem = async (albumId: string, isGem: boolean) => {
-    if (!user) return;
-
-    try {
-      await UserCollectionService.removeFromCollection(user.id, albumId);
-      await UserCollectionService.addToCollection(user.id, albumId, !isGem);
-      const updatedCollection = collection.map(item => 
-        item.album_id === albumId 
-          ? { ...item, is_gem: !isGem }
-          : item
-      );
-      setCollection(updatedCollection);
-      sortCollection(updatedCollection, sortBy);
-    } catch (error: any) {
-      Alert.alert('Error', 'No se pudo actualizar el estado');
-    }
-  };
-
-  const addToCollection = async (release: DiscogsRelease) => {
-    if (!user) {
-      Alert.alert('Error', 'Debes iniciar sesión para agregar álbumes a tu colección');
-      return;
-    }
-
-    setAddingToCollection(release.id.toString());
-    try {
-      // Primero crear el álbum en la base de datos
-      const albumData = {
-        title: release.title,
-        artist: release.artists?.[0]?.name || 'Unknown Artist',
-        year: release.year,
-        cover_url: release.cover_image || release.thumb,
-        discogs_id: release.id,
-        user_id: user.id,
-      };
-
-      const album = await AlbumService.createAlbum(albumData);
-      
-      // Luego agregarlo a la colección del usuario
-      await UserCollectionService.addToCollection(user.id, album.id);
-      
-      // Recargar la colección
-      await loadCollection();
-      
-      Alert.alert('Éxito', 'Álbum agregado a tu colección');
-    } catch (error: any) {
-      Alert.alert('Error', 'No se pudo agregar el álbum a la colección');
-      console.error('Error adding to collection:', error);
-    } finally {
-      setAddingToCollection(null);
-    }
-  };
-
-  const renderRelease = ({ item }: { item: DiscogsRelease }) => (
-    <View style={styles.releaseItem}>
-      <Image
-        source={{ uri: item.thumb || 'https://via.placeholder.com/100' }}
-        style={styles.thumbnail}
-        resizeMode="cover"
-      />
-      <View style={styles.releaseInfo}>
-        <Text style={styles.releaseTitle} numberOfLines={2}>
-          {item.title}
-        </Text>
-        {item.artists && item.artists.length > 0 && (
-          <Text style={styles.artistName} numberOfLines={1}>
-            {item.artists[0].name}
-          </Text>
-        )}
-        {item.year && (
-          <Text style={styles.year}>{item.year}</Text>
-        )}
-        {item.genres && item.genres.length > 0 && (
-          <Text style={styles.genre} numberOfLines={1}>
-            {item.genres.join(', ')}
-          </Text>
-        )}
-      </View>
-      
-      {user && (
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => addToCollection(item)}
-          disabled={addingToCollection === item.id.toString()}
-        >
-          {addingToCollection === item.id.toString() ? (
-            <ActivityIndicator size="small" color="white" />
-          ) : (
-            <Text style={styles.addButtonText}>+</Text>
-          )}
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
-  const renderCollectionItem = ({ item }: { item: any }) => (
-    <View style={styles.collectionItem}>
-      <Image
-        source={{ 
-          uri: item.albums.cover_url || 'https://via.placeholder.com/100'
-        }}
-        style={styles.collectionThumbnail}
-        resizeMode="cover"
-      />
-      <View style={styles.collectionInfo}>
-        <Text style={styles.collectionTitle} numberOfLines={2}>
-          {item.albums.title}
-        </Text>
-        <Text style={styles.collectionArtist} numberOfLines={1}>
-          {item.albums.artist}
-        </Text>
-        {item.albums.year && (
-          <Text style={styles.collectionYear}>{item.albums.year}</Text>
-        )}
-        <Text style={styles.addedDate}>
-          Agregado: {new Date(item.added_at).toLocaleDateString()}
-        </Text>
-      </View>
-
-      
-    </View>
-  );
 
   useEffect(() => {
     if (user) {
@@ -246,116 +37,495 @@ export const SearchScreen: React.FC = () => {
     }
   }, [user]);
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar discos..."
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={handleSearch}
-          returnKeyType="search"
-        />
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={handleSearch}
-          disabled={loading}
-        >
-          <Text style={styles.searchButtonText}>Buscar</Text>
-        </TouchableOpacity>
+  useEffect(() => {
+    sortCollection();
+  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByArtist]);
+
+  useEffect(() => {
+    sortCollection();
+  }, [collection, sortBy, filterByStyle]);
+
+  const loadCollection = async () => {
+    if (!user) return;
+    
+    setCollectionLoading(true);
+    try {
+      const userCollection = await UserCollectionService.getUserCollection(user.id);
+      setCollection(userCollection || []);
+    } catch (error) {
+      console.error('Error loading collection:', error);
+      Alert.alert('Error', 'No se pudo cargar la colección');
+    } finally {
+      setCollectionLoading(false);
+    }
+  };
+
+  const sortCollection = () => {
+    let sorted = [...collection];
+    
+    // Filtrar por estilo si hay filtro activo
+    if (filterByStyle) {
+      sorted = sorted.filter(item => 
+        item.albums?.album_styles && 
+        item.albums.album_styles.some((as: any) => 
+          as.styles?.name === filterByStyle
+        )
+      );
+    }
+
+    // Filtrar por año si hay filtro activo
+    if (filterByYear) {
+      sorted = sorted.filter(item => 
+        item.albums?.release_year === filterByYear
+      );
+    }
+
+    // Filtrar por sello si hay filtro activo
+    if (filterByLabel) {
+      sorted = sorted.filter(item => 
+        item.albums?.label === filterByLabel
+      );
+    }
+
+    // Filtrar por artista si hay filtro activo
+    if (filterByArtist) {
+      sorted = sorted.filter(item => 
+        item.albums?.artist === filterByArtist
+      );
+    }
+    
+    // Ordenar
+    switch (sortBy) {
+      case 'date':
+        sorted.sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime());
+        break;
+      case 'year':
+        sorted.sort((a, b) => {
+          const yearA = parseInt(a.albums?.release_year || '0');
+          const yearB = parseInt(b.albums?.release_year || '0');
+          return yearB - yearA;
+        });
+        break;
+      case 'artist':
+        sorted.sort((a, b) => (a.albums?.artist || '').localeCompare(b.albums?.artist || ''));
+        break;
+      case 'label':
+        sorted.sort((a, b) => (a.albums?.label || '').localeCompare(b.albums?.label || ''));
+        break;
+    }
+    
+    setFilteredCollection(sorted);
+  };
+
+  const handleSortChange = (newSortBy: 'date' | 'year' | 'artist' | 'label') => {
+    setSortBy(newSortBy);
+  };
+
+  const handleStyleFilterChange = (style: string) => {
+    setFilterByStyle(style === filterByStyle ? '' : style);
+  };
+
+  const handleYearFilterChange = (year: string) => {
+    setFilterByYear(year === filterByYear ? '' : year);
+  };
+
+  const handleLabelFilterChange = (label: string) => {
+    setFilterByLabel(label === filterByLabel ? '' : label);
+  };
+
+  const handleArtistFilterChange = (artist: string) => {
+    setFilterByArtist(artist === filterByArtist ? '' : artist);
+  };
+
+  const searchReleases = async () => {
+    if (!query.trim()) return;
+    
+    setLoading(true);
+    try {
+      const response = await DiscogsService.searchReleases(query);
+      setReleases(response.results);
+    } catch (error) {
+      console.error('Error searching releases:', error);
+      Alert.alert('Error', 'No se pudo buscar los lanzamientos');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addToCollection = async (release: DiscogsRelease) => {
+    if (!user) return;
+    
+    try {
+      // Crear el álbum en la base de datos con los datos disponibles
+      const albumData = {
+        title: release.title,
+        artist: release.artists?.[0]?.name || 'Unknown Artist',
+        release_year: release.year?.toString() || '',
+        label: '', // Se puede obtener después si es necesario
+        genre: release.genres?.join(', ') || '',
+        cover_url: release.cover_image || release.thumb,
+        discogs_id: release.id,
+      };
+      
+      const album = await AlbumService.createAlbum(albumData);
+      
+      // Añadir a la colección del usuario
+      await UserCollectionService.addToCollection(user.id, album.id);
+      
+      Alert.alert('Éxito', 'Álbum añadido a tu colección');
+      loadCollection(); // Recargar la colección
+    } catch (error) {
+      console.error('Error adding to collection:', error);
+      Alert.alert('Error', 'No se pudo añadir a la colección');
+    }
+  };
+
+  const removeFromCollection = async (collectionItem: any) => {
+    if (!user) return;
+    
+    try {
+      await UserCollectionService.removeFromCollection(user.id, collectionItem.album_id);
+      Alert.alert('Éxito', 'Álbum eliminado de tu colección');
+      loadCollection(); // Recargar la colección
+    } catch (error) {
+      console.error('Error removing from collection:', error);
+      Alert.alert('Error', 'No se pudo eliminar de la colección');
+    }
+  };
+
+  const toggleGem = async (collectionItem: any) => {
+    if (!user) return;
+    
+    try {
+      // Para cambiar el estado de gem, necesitamos remover y volver a añadir
+      await UserCollectionService.removeFromCollection(user.id, collectionItem.album_id);
+      await UserCollectionService.addToCollection(user.id, collectionItem.album_id, !collectionItem.is_gem);
+      loadCollection(); // Recargar la colección
+    } catch (error) {
+      console.error('Error toggling gem:', error);
+      Alert.alert('Error', 'No se pudo actualizar el álbum');
+    }
+  };
+
+  const renderCollectionItem = ({ item }: { item: any }) => (
+    <View style={styles.collectionItem}>
+      <Image
+        source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+        style={styles.collectionThumbnail}
+      />
+      <View style={styles.collectionInfo}>
+        <Text style={styles.collectionTitle} numberOfLines={1} ellipsizeMode="tail">
+          {item.albums?.title}
+        </Text>
+        <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
+        <View style={styles.collectionDetails}>
+                                  <Text style={styles.collectionDetail}>
+                          {item.albums?.label && item.albums.label !== '' && item.albums?.release_year 
+                            ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                            : item.albums?.label && item.albums.label !== '' 
+                              ? `Sello: ${item.albums.label}`
+                              : item.albums?.release_year 
+                                ? `Año: ${item.albums.release_year}`
+                                : null
+                          }
+                        </Text>
+          <Text style={styles.collectionDetail}>
+            {item.albums?.album_styles && item.albums.album_styles.length > 0 && 
+              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+            }
+          </Text>
+        </View>
       </View>
 
-      {/* Sección de Colección */}
-      {user && (
-        <View style={styles.collectionHeader}>
-          <Text style={styles.collectionHeaderTitle}>Mi Colección</Text>
-          <Text style={styles.collectionSubtitle}>
-            {filteredCollection.length} álbum{filteredCollection.length !== 1 ? 'es' : ''}
+    </View>
+  );
+
+  const renderRelease = ({ item }: { item: DiscogsRelease }) => (
+    <View style={styles.releaseItem}>
+      <Image
+        source={{ uri: item.cover_image || 'https://via.placeholder.com/60' }}
+        style={styles.thumbnail}
+      />
+      <View style={styles.releaseInfo}>
+        <Text style={styles.releaseTitle} numberOfLines={1} ellipsizeMode="tail">
+          {item.title}
+        </Text>
+        <Text style={styles.releaseArtist}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
+        <View style={styles.releaseDetails}>
+          <Text style={styles.releaseDetail}>{item.year && `Año: ${item.year}`}
           </Text>
-          
-          {/* Filtros de ordenamiento */}
-          <View style={styles.sortContainer}>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-              <TouchableOpacity
-                style={[styles.sortButton, sortBy === 'date' && styles.sortButtonActive]}
-                onPress={() => handleSortChange('date')}
-              >
-                <Text style={[styles.sortButtonText, sortBy === 'date' && styles.sortButtonTextActive]}>
-                  Último añadido
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.sortButton, sortBy === 'year' && styles.sortButtonActive]}
-                onPress={() => handleSortChange('year')}
-              >
-                <Text style={[styles.sortButtonText, sortBy === 'year' && styles.sortButtonTextActive]}>
-                  Por año
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.sortButton, sortBy === 'artist' && styles.sortButtonActive]}
-                onPress={() => handleSortChange('artist')}
-              >
-                <Text style={[styles.sortButtonText, sortBy === 'artist' && styles.sortButtonTextActive]}>
-                  Por artista
-                </Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity
-                style={[styles.sortButton, sortBy === 'label' && styles.sortButtonActive]}
-                onPress={() => handleSortChange('label')}
-              >
-                <Text style={[styles.sortButtonText, sortBy === 'label' && styles.sortButtonTextActive]}>
-                  Por sello
-                </Text>
-              </TouchableOpacity>
-            </ScrollView>
+          <Text style={styles.releaseDetail}>
+            {item.genres && item.genres.length > 0 && 
+              `Género: ${item.genres.join(', ')}`
+            }
+          </Text>
+          <Text style={styles.releaseDetail}>
+            {item.styles && item.styles.length > 0 && 
+              `Estilo: ${item.styles.join(', ')}`
+            }
+          </Text>
+        </View>
+      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => addToCollection(item)}
+      >
+        <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Obtener estilos únicos de la colección para el filtro
+  const getUniqueStyles = () => {
+    const styles = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.album_styles && item.albums.album_styles.length > 0) {
+        item.albums.album_styles.forEach((as: any) => {
+          if (as.styles?.name) {
+            styles.add(as.styles.name);
+          }
+        });
+      }
+    });
+    return Array.from(styles).sort();
+  };
+
+  // Obtener años únicos de la colección para el filtro
+  const getUniqueYears = () => {
+    const years = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.release_year && item.albums.release_year !== '') {
+        years.add(item.albums.release_year);
+      }
+    });
+    return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+  };
+
+  // Obtener sellos únicos de la colección para el filtro
+  const getUniqueLabels = () => {
+    const labels = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.label && item.albums.label !== '') {
+        labels.add(item.albums.label);
+      }
+    });
+    return Array.from(labels).sort();
+  };
+
+  // Obtener artistas únicos de la colección para el filtro
+  const getUniqueArtists = () => {
+    const artists = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.artist && item.albums.artist !== '') {
+        artists.add(item.albums.artist);
+      }
+    });
+    return Array.from(artists).sort();
+  };
+
+  const uniqueStyles = getUniqueStyles();
+  const uniqueYears = getUniqueYears();
+  const uniqueLabels = getUniqueLabels();
+  const uniqueArtists = getUniqueArtists();
+
+  return (
+    <View style={styles.container}>
+
+
+      {/* Botón de filtros desplegable */}
+      <View style={styles.filterDropdownContainer}>
+        <TouchableOpacity
+          style={styles.filterDropdownButton}
+          onPress={() => setShowFilters(!showFilters)}
+        >
+          <Text style={styles.filterDropdownButtonText}>
+            Filtros {showFilters ? '▼' : '▶'}
+          </Text>
+        </TouchableOpacity>
+        
+        {showFilters && (
+          <View style={styles.filterDropdownContent}>
+            {/* Filtro por estilo */}
+            {uniqueStyles.length > 0 && (
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Estilo:</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <TouchableOpacity
+                    style={[
+                      styles.filterChip,
+                      !filterByStyle && styles.filterChipActive
+                    ]}
+                    onPress={() => handleStyleFilterChange('')}
+                  >
+                    <Text style={[
+                      styles.filterChipText,
+                      !filterByStyle && styles.filterChipTextActive
+                    ]}>
+                      Todos
+                    </Text>
+                  </TouchableOpacity>
+                  {uniqueStyles.map((style) => (
+                    <TouchableOpacity
+                      key={style}
+                      style={[
+                        styles.filterChip,
+                        filterByStyle === style && styles.filterChipActive
+                      ]}
+                      onPress={() => handleStyleFilterChange(style)}
+                    >
+                      <Text style={[
+                        styles.filterChipText,
+                        filterByStyle === style && styles.filterChipTextActive
+                      ]}>
+                        {style}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+            )}
+
+            {/* Filtro por año */}
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Año:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={[
+                    styles.filterChip,
+                    !filterByYear && styles.filterChipActive
+                  ]}
+                  onPress={() => handleYearFilterChange('')}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByYear && styles.filterChipTextActive
+                  ]}>
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+                {uniqueYears.map((year) => (
+                  <TouchableOpacity
+                    key={year}
+                    style={[
+                      styles.filterChip,
+                      filterByYear === year && styles.filterChipActive
+                    ]}
+                    onPress={() => handleYearFilterChange(year)}
+                  >
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByYear === year && styles.filterChipTextActive
+                    ]}>
+                      {year}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Filtro por sello */}
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Sello:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={[
+                    styles.filterChip,
+                    !filterByLabel && styles.filterChipActive
+                  ]}
+                  onPress={() => handleLabelFilterChange('')}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByLabel && styles.filterChipTextActive
+                  ]}>
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+                {uniqueLabels.map((label) => (
+                  <TouchableOpacity
+                    key={label}
+                    style={[
+                      styles.filterChip,
+                      filterByLabel === label && styles.filterChipActive
+                    ]}
+                    onPress={() => handleLabelFilterChange(label)}
+                  >
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByLabel === label && styles.filterChipTextActive
+                    ]}>
+                      {label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* Filtro por artista */}
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Artista:</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={[
+                    styles.filterChip,
+                    !filterByArtist && styles.filterChipActive
+                  ]}
+                  onPress={() => handleArtistFilterChange('')}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByArtist && styles.filterChipTextActive
+                  ]}>
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+                {uniqueArtists.map((artist) => (
+                  <TouchableOpacity
+                    key={artist}
+                    style={[
+                      styles.filterChip,
+                      filterByArtist === artist && styles.filterChipActive
+                    ]}
+                    onPress={() => handleArtistFilterChange(artist)}
+                  >
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByArtist === artist && styles.filterChipTextActive
+                    ]}>
+                      {artist}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
           </View>
-        </View>
-      )}
+        )}
+      </View>
 
-      {user && collectionLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Cargando colección...</Text>
-        </View>
-      )}
 
-      {/* Lista combinada de colección y búsqueda */}
+
+      {/* Lista combinada */}
       <FlatList
         data={user ? [...filteredCollection, ...releases] : releases}
         renderItem={({ item, index }) => {
-          // Si es un item de la colección (tiene albums property)
           if (item.albums) {
             return renderCollectionItem({ item });
           }
-          // Si es un resultado de búsqueda
           return renderRelease({ item });
         }}
         keyExtractor={(item, index) => 
           item.albums ? `collection-${item.id}` : `search-${item.id}`
         }
-        style={styles.list}
-        onEndReached={loadMore}
-        onEndReachedThreshold={0.1}
         ListEmptyComponent={
-          !loading && !collectionLoading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>
-                {user ? 'Tu colección está vacía. Busca música para agregar.' : 'Busca tu música favorita'}
-              </Text>
-            </View>
+          !user ? (
+            <Text style={styles.emptyText}>
+              Busca álbumes para comenzar
+            </Text>
           ) : null
         }
         ListFooterComponent={
-          loading && releases.length > 0 ? (
-            <View style={styles.footerLoading}>
-              <ActivityIndicator size="small" color="#007AFF" />
-              <Text style={styles.footerLoadingText}>Cargando más...</Text>
-            </View>
+          loading ? (
+            <ActivityIndicator size="large" color="#007AFF" style={styles.loading} />
           ) : null
         }
       />
@@ -377,12 +547,12 @@ const styles = StyleSheet.create({
   },
   searchInput: {
     flex: 1,
-    backgroundColor: '#f8f8f8',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#ddd',
     borderRadius: 8,
+    paddingHorizontal: 12,
     marginRight: 10,
-    fontSize: 16,
   },
   searchButton: {
     backgroundColor: '#007AFF',
@@ -395,91 +565,80 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  list: {
-    flex: 1,
-  },
-  releaseItem: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
+  styleFilterContainer: {
     padding: 15,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  thumbnail: {
-    width: 80,
-    height: 80,
-    borderRadius: 4,
-    marginRight: 15,
-  },
-  releaseInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  releaseTitle: {
+  filterTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 10,
     color: '#333',
   },
-  artistName: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 2,
+  styleFilterButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#ddd',
   },
-  year: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
-  },
-  genre: {
-    fontSize: 12,
-    color: '#999',
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 50,
-  },
-  emptyText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-  },
-  footerLoading: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  footerLoadingText: {
-    marginTop: 5,
-    fontSize: 14,
-    color: '#666',
-  },
-  addButton: {
+  styleFilterButtonActive: {
     backgroundColor: '#007AFF',
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 10,
+    borderColor: '#007AFF',
   },
-  addButtonText: {
+  styleFilterButtonText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  styleFilterButtonTextActive: {
     color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
-  // Estilos para la colección
+  collectionHeader: {
+    padding: 15,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  collectionHeaderTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: '#333',
+  },
+  collectionCount: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 10,
+  },
+  sortContainer: {
+    marginTop: 10,
+  },
+  sortButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    marginRight: 8,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  sortButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  sortButtonText: {
+    fontSize: 12,
+    color: '#666',
+  },
+  sortButtonTextActive: {
+    color: 'white',
+    fontWeight: '600',
+  },
   collectionItem: {
     flexDirection: 'row',
     backgroundColor: 'white',
@@ -506,22 +665,21 @@ const styles = StyleSheet.create({
   collectionTitle: {
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 2,
     color: '#333',
-    marginBottom: 4,
   },
   collectionArtist: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 2,
+    marginBottom: 4,
   },
-  collectionYear: {
+  collectionDetails: {
+    marginTop: 4,
+  },
+  collectionDetail: {
     fontSize: 12,
-    color: '#999',
-    marginBottom: 2,
-  },
-  addedDate: {
-    fontSize: 11,
-    color: '#ccc',
+    color: '#888',
+    marginBottom: 1,
   },
   collectionActions: {
     justifyContent: 'center',
@@ -533,59 +691,133 @@ const styles = StyleSheet.create({
   },
   gemButtonActive: {
     backgroundColor: '#FFD700',
-    borderRadius: 15,
+    borderRadius: 4,
   },
   gemButtonText: {
     fontSize: 20,
+    color: '#ccc',
   },
   gemButtonTextActive: {
-    color: '#333',
+    color: '#FFD700',
   },
   removeButton: {
-    padding: 8,
+    backgroundColor: '#FF3B30',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
   },
   removeButtonText: {
-    fontSize: 18,
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
   },
-  collectionHeader: {
+  releaseItem: {
+    flexDirection: 'row',
     backgroundColor: 'white',
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  collectionHeaderTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+  thumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 4,
+    marginRight: 15,
   },
-  collectionSubtitle: {
+  releaseInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  releaseTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+    color: '#333',
+  },
+  releaseArtist: {
     fontSize: 14,
     color: '#666',
+    marginBottom: 4,
   },
-  // Estilos para los filtros de ordenamiento
-  sortContainer: {
-    marginTop: 10,
+  releaseDetails: {
+    marginTop: 4,
   },
-  sortButton: {
-    backgroundColor: '#f0f0f0',
+  releaseDetail: {
+    fontSize: 12,
+    color: '#888',
+    marginBottom: 1,
+  },
+  addButton: {
+    backgroundColor: '#34C759',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  addButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 50,
+    fontSize: 16,
+    color: '#666',
+  },
+  loading: {
+    marginVertical: 20,
+  },
+  // Estilos para el desplegable de filtros
+  filterDropdownContainer: {
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  filterDropdownButton: {
+    padding: 15,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  filterDropdownButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  filterDropdownContent: {
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+  },
+  filterSection: {
+    marginBottom: 15,
+  },
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 15,
     marginRight: 8,
+    borderRadius: 16,
+    backgroundColor: '#f0f0f0',
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  sortButtonActive: {
+  filterChipActive: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
-  sortButtonText: {
+  filterChipText: {
     fontSize: 12,
     color: '#666',
-    fontWeight: '500',
   },
-  sortButtonTextActive: {
+  filterChipTextActive: {
     color: 'white',
     fontWeight: '600',
   },
