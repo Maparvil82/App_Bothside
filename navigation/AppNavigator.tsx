@@ -6,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
-import { CollectionScreen } from '../screens/CollectionScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -16,20 +15,12 @@ const SearchStack = () => (
     <Stack.Screen 
       name="Search" 
       component={SearchScreen}
-      options={{ title: 'Buscar' }}
-    />
-  </Stack.Navigator>
-);
-
-const CollectionStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="Collection" 
-      component={CollectionScreen}
       options={{ title: 'Colección' }}
     />
   </Stack.Navigator>
 );
+
+
 
 const ProfileStack = () => (
   <Stack.Navigator>
@@ -51,8 +42,6 @@ export const AppNavigator: React.FC = () => {
 
             if (route.name === 'SearchTab') {
               iconName = focused ? 'search' : 'search-outline';
-            } else if (route.name === 'CollectionTab') {
-              iconName = focused ? 'library' : 'library-outline';
             } else if (route.name === 'ProfileTab') {
               iconName = focused ? 'person' : 'person-outline';
             } else {
@@ -69,11 +58,6 @@ export const AppNavigator: React.FC = () => {
         <Tab.Screen 
           name="SearchTab" 
           component={SearchStack}
-          options={{ title: 'Buscar' }}
-        />
-        <Tab.Screen 
-          name="CollectionTab" 
-          component={CollectionStack}
           options={{ title: 'Colección' }}
         />
         <Tab.Screen 

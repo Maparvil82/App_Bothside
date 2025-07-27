@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,8 @@ export const SearchScreen: React.FC = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
+  const [collection, setCollection] = useState<any[]>([]);
+  const [collectionLoading, setCollectionLoading] = useState(false);
 
   const searchReleases = async (searchQuery: string, pageNum: number = 1) => {
     if (!searchQuery.trim()) return;
@@ -59,6 +61,49 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  const loadCollection = async () => {
+    if (!user) return;
+    
+    try {
+      setCollectionLoading(true);
+      const data = await UserCollectionService.getUserCollection(user.id);
+      setCollection(data);
+    } catch (error: any) {
+      console.error('Error loading collection:', error);
+    } finally {
+      setCollectionLoading(false);
+    }
+  };
+
+  const removeFromCollection = async (albumId: string) => {
+    if (!user) return;
+
+    try {
+      await UserCollectionService.removeFromCollection(user.id, albumId);
+      setCollection(prev => prev.filter(item => item.album_id !== albumId));
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo remover el álbum');
+    }
+  };
+
+  const toggleGem = async (albumId: string, isGem: boolean) => {
+    if (!user) return;
+
+    try {
+      await UserCollectionService.removeFromCollection(user.id, albumId);
+      await UserCollectionService.addToCollection(user.id, albumId, !isGem);
+      setCollection(prev => 
+        prev.map(item => 
+          item.album_id === albumId 
+            ? { ...item, is_gem: !isGem }
+            : item
+        )
+      );
+    } catch (error: any) {
+      Alert.alert('Error', 'No se pudo actualizar el estado');
+    }
+  };
+
   const addToCollection = async (release: DiscogsRelease) => {
     if (!user) {
       Alert.alert('Error', 'Debes iniciar sesión para agregar álbumes a tu colección');
@@ -81,6 +126,9 @@ export const SearchScreen: React.FC = () => {
       
       // Luego agregarlo a la colección del usuario
       await UserCollectionService.addToCollection(user.id, album.id);
+      
+      // Recargar la colección
+      await loadCollection();
       
       Alert.alert('Éxito', 'Álbum agregado a tu colección');
     } catch (error: any) {
@@ -133,6 +181,56 @@ export const SearchScreen: React.FC = () => {
     </View>
   );
 
+  const renderCollectionItem = ({ item }: { item: any }) => (
+    <View style={styles.collectionItem}>
+      <Image
+        source={{ 
+          uri: item.albums.cover_url || 'https://via.placeholder.com/100'
+        }}
+        style={styles.collectionThumbnail}
+        resizeMode="cover"
+      />
+      <View style={styles.collectionInfo}>
+        <Text style={styles.collectionTitle} numberOfLines={2}>
+          {item.albums.title}
+        </Text>
+        <Text style={styles.collectionArtist} numberOfLines={1}>
+          {item.albums.artist}
+        </Text>
+        {item.albums.year && (
+          <Text style={styles.collectionYear}>{item.albums.year}</Text>
+        )}
+        <Text style={styles.addedDate}>
+          Agregado: {new Date(item.added_at).toLocaleDateString()}
+        </Text>
+      </View>
+
+      <View style={styles.collectionActions}>
+        <TouchableOpacity
+          style={[styles.gemButton, item.is_gem && styles.gemButtonActive]}
+          onPress={() => toggleGem(item.album_id, item.is_gem)}
+        >
+          <Text style={[styles.gemButtonText, item.is_gem && styles.gemButtonTextActive]}>
+            {item.is_gem ? '💎' : '⭐'}
+          </Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity
+          style={styles.removeButton}
+          onPress={() => removeFromCollection(item.album_id)}
+        >
+          <Text style={styles.removeButtonText}>🗑️</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  useEffect(() => {
+    if (user) {
+      loadCollection();
+    }
+  }, [user]);
+
   return (
     <View style={styles.container}>
       <View style={styles.searchContainer}>
@@ -153,25 +251,45 @@ export const SearchScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {loading && releases.length === 0 && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Buscando...</Text>
+      {/* Sección de Colección */}
+      {user && (
+        <View style={styles.collectionHeader}>
+          <Text style={styles.collectionHeaderTitle}>Mi Colección</Text>
+          <Text style={styles.collectionSubtitle}>
+            {collection.length} álbum{collection.length !== 1 ? 'es' : ''}
+          </Text>
         </View>
       )}
 
+      {user && collectionLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+          <Text style={styles.loadingText}>Cargando colección...</Text>
+        </View>
+      )}
+
+      {/* Lista combinada de colección y búsqueda */}
       <FlatList
-        data={releases}
-        renderItem={renderRelease}
-        keyExtractor={(item) => item.id.toString()}
+        data={user ? [...collection, ...releases] : releases}
+        renderItem={({ item, index }) => {
+          // Si es un item de la colección (tiene albums property)
+          if (item.albums) {
+            return renderCollectionItem({ item });
+          }
+          // Si es un resultado de búsqueda
+          return renderRelease({ item });
+        }}
+        keyExtractor={(item, index) => 
+          item.albums ? `collection-${item.id}` : `search-${item.id}`
+        }
         style={styles.list}
         onEndReached={loadMore}
         onEndReachedThreshold={0.1}
         ListEmptyComponent={
-          !loading ? (
+          !loading && !collectionLoading ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>
-                Busca tu música favorita
+                {user ? 'Tu colección está vacía. Busca música para agregar.' : 'Busca tu música favorita'}
               </Text>
             </View>
           ) : null
@@ -304,5 +422,89 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  // Estilos para la colección
+  collectionItem: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    padding: 15,
+    marginHorizontal: 15,
+    marginVertical: 5,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  collectionThumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 4,
+    marginRight: 15,
+  },
+  collectionInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  collectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  collectionArtist: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  collectionYear: {
+    fontSize: 12,
+    color: '#999',
+    marginBottom: 2,
+  },
+  addedDate: {
+    fontSize: 11,
+    color: '#ccc',
+  },
+  collectionActions: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  gemButton: {
+    padding: 8,
+    marginBottom: 5,
+  },
+  gemButtonActive: {
+    backgroundColor: '#FFD700',
+    borderRadius: 15,
+  },
+  gemButtonText: {
+    fontSize: 20,
+  },
+  gemButtonTextActive: {
+    color: '#333',
+  },
+  removeButton: {
+    padding: 8,
+  },
+  removeButtonText: {
+    fontSize: 18,
+  },
+  collectionHeader: {
+    backgroundColor: 'white',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  collectionHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  collectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
   },
 }); 
