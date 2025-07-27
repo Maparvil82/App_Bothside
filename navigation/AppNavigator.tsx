@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
+import { AddDiscScreen } from '../screens/AddDiscScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -32,6 +33,16 @@ const ProfileStack = () => (
   </Stack.Navigator>
 );
 
+const AddDiscStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="AddDisc" 
+      component={AddDiscScreen}
+      options={{ title: 'Añadir Disco' }}
+    />
+  </Stack.Navigator>
+);
+
 export const AppNavigator: React.FC = () => {
   return (
     <NavigationContainer>
@@ -42,6 +53,8 @@ export const AppNavigator: React.FC = () => {
 
             if (route.name === 'SearchTab') {
               iconName = focused ? 'disc' : 'disc-outline';
+            } else if (route.name === 'AddDiscTab') {
+              iconName = focused ? 'add-circle' : 'add-circle-outline';
             } else if (route.name === 'ProfileTab') {
               iconName = focused ? 'person' : 'person-outline';
             } else {
@@ -59,6 +72,11 @@ export const AppNavigator: React.FC = () => {
           name="SearchTab" 
           component={SearchStack}
           options={{ title: 'Colección' }}
+        />
+        <Tab.Screen 
+          name="AddDiscTab" 
+          component={AddDiscStack}
+          options={{ title: 'Añadir' }}
         />
         <Tab.Screen 
           name="ProfileTab" 
