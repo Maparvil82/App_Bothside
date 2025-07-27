@@ -9,6 +9,7 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsRelease } from '../types';
@@ -25,6 +26,8 @@ export const SearchScreen: React.FC = () => {
   const [addingToCollection, setAddingToCollection] = useState<string | null>(null);
   const [collection, setCollection] = useState<any[]>([]);
   const [collectionLoading, setCollectionLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'year' | 'artist' | 'label'>('date');
+  const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
 
   const searchReleases = async (searchQuery: string, pageNum: number = 1) => {
     if (!searchQuery.trim()) return;
@@ -68,6 +71,7 @@ export const SearchScreen: React.FC = () => {
       setCollectionLoading(true);
       const data = await UserCollectionService.getUserCollection(user.id);
       setCollection(data);
+      sortCollection(data, sortBy);
     } catch (error: any) {
       console.error('Error loading collection:', error);
     } finally {
@@ -75,12 +79,39 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  const sortCollection = (data: any[], sortType: 'date' | 'year' | 'artist' | 'label') => {
+    const sorted = [...data].sort((a, b) => {
+      switch (sortType) {
+        case 'date':
+          return new Date(b.added_at).getTime() - new Date(a.added_at).getTime();
+        case 'year':
+          const yearA = a.albums.year || 0;
+          const yearB = b.albums.year || 0;
+          return yearB - yearA;
+        case 'artist':
+          return (a.albums.artist || '').localeCompare(b.albums.artist || '');
+        case 'label':
+          return (a.albums.label || '').localeCompare(b.albums.label || '');
+        default:
+          return 0;
+      }
+    });
+    setFilteredCollection(sorted);
+  };
+
+  const handleSortChange = (newSortBy: 'date' | 'year' | 'artist' | 'label') => {
+    setSortBy(newSortBy);
+    sortCollection(collection, newSortBy);
+  };
+
   const removeFromCollection = async (albumId: string) => {
     if (!user) return;
 
     try {
       await UserCollectionService.removeFromCollection(user.id, albumId);
-      setCollection(prev => prev.filter(item => item.album_id !== albumId));
+      const updatedCollection = collection.filter(item => item.album_id !== albumId);
+      setCollection(updatedCollection);
+      sortCollection(updatedCollection, sortBy);
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo remover el álbum');
     }
@@ -92,13 +123,13 @@ export const SearchScreen: React.FC = () => {
     try {
       await UserCollectionService.removeFromCollection(user.id, albumId);
       await UserCollectionService.addToCollection(user.id, albumId, !isGem);
-      setCollection(prev => 
-        prev.map(item => 
-          item.album_id === albumId 
-            ? { ...item, is_gem: !isGem }
-            : item
-        )
+      const updatedCollection = collection.map(item => 
+        item.album_id === albumId 
+          ? { ...item, is_gem: !isGem }
+          : item
       );
+      setCollection(updatedCollection);
+      sortCollection(updatedCollection, sortBy);
     } catch (error: any) {
       Alert.alert('Error', 'No se pudo actualizar el estado');
     }
@@ -240,8 +271,49 @@ export const SearchScreen: React.FC = () => {
         <View style={styles.collectionHeader}>
           <Text style={styles.collectionHeaderTitle}>Mi Colección</Text>
           <Text style={styles.collectionSubtitle}>
-            {collection.length} álbum{collection.length !== 1 ? 'es' : ''}
+            {filteredCollection.length} álbum{filteredCollection.length !== 1 ? 'es' : ''}
           </Text>
+          
+          {/* Filtros de ordenamiento */}
+          <View style={styles.sortContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <TouchableOpacity
+                style={[styles.sortButton, sortBy === 'date' && styles.sortButtonActive]}
+                onPress={() => handleSortChange('date')}
+              >
+                <Text style={[styles.sortButtonText, sortBy === 'date' && styles.sortButtonTextActive]}>
+                  Último añadido
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.sortButton, sortBy === 'year' && styles.sortButtonActive]}
+                onPress={() => handleSortChange('year')}
+              >
+                <Text style={[styles.sortButtonText, sortBy === 'year' && styles.sortButtonTextActive]}>
+                  Por año
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.sortButton, sortBy === 'artist' && styles.sortButtonActive]}
+                onPress={() => handleSortChange('artist')}
+              >
+                <Text style={[styles.sortButtonText, sortBy === 'artist' && styles.sortButtonTextActive]}>
+                  Por artista
+                </Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.sortButton, sortBy === 'label' && styles.sortButtonActive]}
+                onPress={() => handleSortChange('label')}
+              >
+                <Text style={[styles.sortButtonText, sortBy === 'label' && styles.sortButtonTextActive]}>
+                  Por sello
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
         </View>
       )}
 
@@ -254,7 +326,7 @@ export const SearchScreen: React.FC = () => {
 
       {/* Lista combinada de colección y búsqueda */}
       <FlatList
-        data={user ? [...collection, ...releases] : releases}
+        data={user ? [...filteredCollection, ...releases] : releases}
         renderItem={({ item, index }) => {
           // Si es un item de la colección (tiene albums property)
           if (item.albums) {
@@ -412,11 +484,14 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'white',
     padding: 15,
-    marginHorizontal: 12,
-    marginVertical: 4,
-    borderRadius: 4,
-    
-    
+    marginHorizontal: 15,
+    marginVertical: 5,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   collectionThumbnail: {
     width: 60,
@@ -487,5 +562,31 @@ const styles = StyleSheet.create({
   collectionSubtitle: {
     fontSize: 14,
     color: '#666',
+  },
+  // Estilos para los filtros de ordenamiento
+  sortContainer: {
+    marginTop: 10,
+  },
+  sortButton: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  sortButtonActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  sortButtonText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  sortButtonTextActive: {
+    color: 'white',
+    fontWeight: '600',
   },
 }); 
