@@ -205,23 +205,7 @@ export const SearchScreen: React.FC = () => {
         </Text>
       </View>
 
-      <View style={styles.collectionActions}>
-        <TouchableOpacity
-          style={[styles.gemButton, item.is_gem && styles.gemButtonActive]}
-          onPress={() => toggleGem(item.album_id, item.is_gem)}
-        >
-          <Text style={[styles.gemButtonText, item.is_gem && styles.gemButtonTextActive]}>
-            {item.is_gem ? '💎' : '⭐'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => removeFromCollection(item.album_id)}
-        >
-          <Text style={styles.removeButtonText}>🗑️</Text>
-        </TouchableOpacity>
-      </View>
+      
     </View>
   );
 
@@ -360,8 +344,8 @@ const styles = StyleSheet.create({
     borderBottomColor: '#eee',
   },
   thumbnail: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 4,
     marginRight: 15,
   },
@@ -428,14 +412,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: 'white',
     padding: 15,
-    marginHorizontal: 15,
-    marginVertical: 5,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    marginHorizontal: 12,
+    marginVertical: 4,
+    borderRadius: 4,
+    
+    
   },
   collectionThumbnail: {
     width: 60,
