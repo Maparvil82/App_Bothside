@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
+  const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,7 @@ export const SearchScreen: React.FC = () => {
   const [filterByLabel, setFilterByLabel] = useState<string>('');
   const [filterByArtist, setFilterByArtist] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [showSearch, setShowSearch] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
 
@@ -41,7 +43,16 @@ export const SearchScreen: React.FC = () => {
 
   useEffect(() => {
     sortCollection();
-  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByArtist]);
+  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByArtist, query]);
+
+  useEffect(() => {
+    if (showSearch && searchInputRef.current) {
+      // Pequeño delay para asegurar que el input esté renderizado
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [showSearch]);
 
   const loadCollection = async () => {
     if (!user) return;
@@ -60,6 +71,16 @@ export const SearchScreen: React.FC = () => {
 
   const sortCollection = () => {
     let sorted = [...collection];
+    
+    // Filtrar por búsqueda si hay query
+    if (query.trim()) {
+      const searchTerm = query.toLowerCase().trim();
+      sorted = sorted.filter(item => 
+        (item.albums?.title && item.albums.title.toLowerCase().includes(searchTerm)) ||
+        (item.albums?.artist && item.albums.artist.toLowerCase().includes(searchTerm)) ||
+        (item.albums?.label && item.albums.label.toLowerCase().includes(searchTerm))
+      );
+    }
     
     // Filtrar por estilo si hay filtro activo
     if (filterByStyle) {
@@ -98,11 +119,7 @@ export const SearchScreen: React.FC = () => {
         sorted.sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime());
         break;
       case 'year':
-        sorted.sort((a, b) => {
-          const yearA = parseInt(a.albums?.release_year || '0');
-          const yearB = parseInt(b.albums?.release_year || '0');
-          return yearB - yearA;
-        });
+        sorted.sort((a, b) => (b.albums?.release_year || '').localeCompare(a.albums?.release_year || ''));
         break;
       case 'artist':
         sorted.sort((a, b) => (a.albums?.artist || '').localeCompare(b.albums?.artist || ''));
@@ -120,19 +137,19 @@ export const SearchScreen: React.FC = () => {
   };
 
   const handleStyleFilterChange = (style: string) => {
-    setFilterByStyle(style === filterByStyle ? '' : style);
+    setFilterByStyle(style);
   };
 
   const handleYearFilterChange = (year: string) => {
-    setFilterByYear(year === filterByYear ? '' : year);
+    setFilterByYear(year);
   };
 
   const handleLabelFilterChange = (label: string) => {
-    setFilterByLabel(label === filterByLabel ? '' : label);
+    setFilterByLabel(label);
   };
 
   const handleArtistFilterChange = (artist: string) => {
-    setFilterByArtist(artist === filterByArtist ? '' : artist);
+    setFilterByArtist(artist);
   };
 
   const searchReleases = async () => {
@@ -144,7 +161,7 @@ export const SearchScreen: React.FC = () => {
       setReleases(response.results || []);
     } catch (error) {
       console.error('Error searching releases:', error);
-      Alert.alert('Error', 'No se pudo buscar álbumes');
+      Alert.alert('Error', 'No se pudo buscar los álbumes');
     } finally {
       setLoading(false);
     }
@@ -176,7 +193,7 @@ export const SearchScreen: React.FC = () => {
   const removeFromCollection = async (collectionItem: any) => {
     if (!user) return;
     try {
-      await UserCollectionService.removeFromCollection(user.id, collectionItem.album_id);
+      await UserCollectionService.removeFromCollection(user.id, collectionItem.albums.id);
       Alert.alert('Éxito', 'Álbum eliminado de tu colección');
       loadCollection();
     } catch (error) {
@@ -188,12 +205,12 @@ export const SearchScreen: React.FC = () => {
   const toggleGem = async (collectionItem: any) => {
     if (!user) return;
     try {
-      await UserCollectionService.removeFromCollection(user.id, collectionItem.album_id);
-      await UserCollectionService.addToCollection(user.id, collectionItem.album_id, !collectionItem.is_gem);
+      await UserCollectionService.removeFromCollection(user.id, collectionItem.albums.id);
+      await UserCollectionService.addToCollection(user.id, collectionItem.albums.id);
       loadCollection();
     } catch (error) {
       console.error('Error toggling gem:', error);
-      Alert.alert('Error', 'No se pudo actualizar el estado');
+      Alert.alert('Error', 'No se pudo actualizar el favorito');
     }
   };
 
@@ -208,44 +225,44 @@ export const SearchScreen: React.FC = () => {
           {item.albums?.title}
         </Text>
         <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
-                              {viewMode === 'list' && (
-                        <View style={styles.collectionDetails}>
-                          <Text style={styles.collectionDetail}>
-                            {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                              ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                              : item.albums?.label && item.albums.label !== ''
-                                ? `Sello: ${item.albums.label}`
-                                : item.albums?.release_year
-                                  ? `Año: ${item.albums.release_year}`
-                                  : ''
-                            }
-                          </Text>
-                          <Text style={styles.collectionDetail}>
-                            {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-                            }
-                          </Text>
-                        </View>
-                      )}
-                      {viewMode === 'grid' && (
-                        <View style={styles.collectionDetailsGrid}>
-                          <Text style={styles.collectionDetailGrid}>
-                            {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                              ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                              : item.albums?.label && item.albums.label !== ''
-                                ? `Sello: ${item.albums.label}`
-                                : item.albums?.release_year
-                                  ? `Año: ${item.albums.release_year}`
-                                  : ''
-                            }
-                          </Text>
-                          <Text style={styles.collectionDetailGrid}>
-                            {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-                            }
-                          </Text>
-                        </View>
-                      )}
+        {viewMode === 'list' && (
+          <View style={styles.collectionDetails}>
+            <Text style={styles.collectionDetail}>
+              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                : item.albums?.label && item.albums.label !== ''
+                  ? `Sello: ${item.albums.label}`
+                  : item.albums?.release_year
+                    ? `Año: ${item.albums.release_year}`
+                    : ''
+              }
+            </Text>
+            <Text style={styles.collectionDetail}>
+              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+              }
+            </Text>
+          </View>
+        )}
+        {viewMode === 'grid' && (
+          <View style={styles.collectionDetailsGrid}>
+            <Text style={styles.collectionDetailGrid}>
+              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                : item.albums?.label && item.albums.label !== ''
+                  ? `Sello: ${item.albums.label}`
+                  : item.albums?.release_year
+                    ? `Año: ${item.albums.release_year}`
+                    : ''
+              }
+            </Text>
+            <Text style={styles.collectionDetailGrid}>
+              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+              }
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -253,7 +270,7 @@ export const SearchScreen: React.FC = () => {
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
     <View style={styles.releaseItem}>
       <Image
-        source={{ uri: item.cover_image || 'https://via.placeholder.com/60' }}
+        source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/60' }}
         style={styles.thumbnail}
       />
       <View style={styles.releaseInfo}>
@@ -262,19 +279,13 @@ export const SearchScreen: React.FC = () => {
         </Text>
         <Text style={styles.releaseArtist}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
         <View style={styles.releaseDetails}>
-          <Text style={styles.releaseDetail}>
-            {item.year && `Año: ${item.year}`}
-          </Text>
-          <Text style={styles.releaseDetail}>
-            {item.genres && item.genres.length > 0 &&
-              `Género: ${item.genres.join(', ')}`
-            }
-          </Text>
-          <Text style={styles.releaseDetail}>
-            {item.styles && item.styles.length > 0 &&
-              `Estilo: ${item.styles.join(', ')}`
-            }
-          </Text>
+          {item.year && <Text style={styles.releaseDetail}>Año: {item.year}</Text>}
+          {item.genres && item.genres.length > 0 && (
+            <Text style={styles.releaseDetail}>Género: {item.genres.join(', ')}</Text>
+          )}
+          {item.styles && item.styles.length > 0 && (
+            <Text style={styles.releaseDetail}>Estilo: {item.styles.join(', ')}</Text>
+          )}
         </View>
       </View>
       <TouchableOpacity style={styles.addButton} onPress={() => addToCollection(item)}>
@@ -283,11 +294,10 @@ export const SearchScreen: React.FC = () => {
     </View>
   );
 
-  // Obtener estilos únicos de la colección para el filtro
   const getUniqueStyles = () => {
     const styles = new Set<string>();
     collection.forEach(item => {
-      if (item.albums?.album_styles && item.albums.album_styles.length > 0) {
+      if (item.albums?.album_styles) {
         item.albums.album_styles.forEach((as: any) => {
           if (as.styles?.name) {
             styles.add(as.styles.name);
@@ -298,33 +308,30 @@ export const SearchScreen: React.FC = () => {
     return Array.from(styles).sort();
   };
 
-  // Obtener años únicos de la colección para el filtro
   const getUniqueYears = () => {
     const years = new Set<string>();
     collection.forEach(item => {
-      if (item.albums?.release_year && item.albums.release_year !== '') {
+      if (item.albums?.release_year) {
         years.add(item.albums.release_year);
       }
     });
-    return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+    return Array.from(years).sort();
   };
 
-  // Obtener sellos únicos de la colección para el filtro
   const getUniqueLabels = () => {
     const labels = new Set<string>();
     collection.forEach(item => {
-      if (item.albums?.label && item.albums.label !== '') {
+      if (item.albums?.label && item.albums.label.trim() !== '') {
         labels.add(item.albums.label);
       }
     });
     return Array.from(labels).sort();
   };
 
-  // Obtener artistas únicos de la colección para el filtro
   const getUniqueArtists = () => {
     const artists = new Set<string>();
     collection.forEach(item => {
-      if (item.albums?.artist && item.albums.artist !== '') {
+      if (item.albums?.artist && item.albums.artist.trim() !== '') {
         artists.add(item.albums.artist);
       }
     });
@@ -348,6 +355,20 @@ export const SearchScreen: React.FC = () => {
         
         <View style={styles.headerButtons}>
           <TouchableOpacity
+            style={[
+              styles.searchButton,
+              { backgroundColor: showSearch ? '#f0f0f0' : 'transparent' }
+            ]}
+            onPress={() => setShowSearch(!showSearch)}
+          >
+            <Ionicons 
+              name="search-outline" 
+              size={24} 
+              color="#666" 
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
             style={styles.viewButton}
             onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
           >
@@ -361,18 +382,47 @@ export const SearchScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.filterButton,
-              showFilters && { backgroundColor: '#f0f0f0' }
+              { backgroundColor: showFilters ? '#f0f0f0' : 'transparent' }
             ]}
             onPress={() => setShowFilters(!showFilters)}
           >
             <Ionicons 
               name="filter-outline" 
               size={24} 
-              color={showFilters ? '#007AFF' : '#666'} 
+              color="#666" 
             />
           </TouchableOpacity>
         </View>
       </View>
+      
+      {/* Campo de búsqueda */}
+      {showSearch && (
+        <View style={styles.searchContainer}>
+          <View style={styles.searchInputContainer}>
+            <TextInput
+              ref={searchInputRef}
+              style={styles.searchInput}
+              placeholder="Buscar por artista, sello o álbum..."
+              value={query}
+              onChangeText={setQuery}
+              placeholderTextColor="#999"
+            />
+            <TouchableOpacity
+              style={styles.closeSearchButton}
+              onPress={() => {
+                setShowSearch(false);
+                setQuery('');
+              }}
+            >
+              <Ionicons 
+                name="close" 
+                size={20} 
+                color="#666" 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
       
       {/* Desplegable de filtros */}
       {showFilters && (
@@ -493,29 +543,30 @@ export const SearchScreen: React.FC = () => {
 
       {/* Lista combinada */}
       <FlatList
-        key={viewMode} // Forzar re-render cuando cambie el modo de vista
+        key={viewMode}
         data={user ? [...filteredCollection, ...releases] : releases}
         renderItem={({ item, index }) => {
-          if (item.albums) {
+          if (index < filteredCollection.length) {
             return renderCollectionItem({ item });
+          } else {
+            return renderRelease({ item });
           }
-          return renderRelease({ item });
         }}
-        keyExtractor={(item, index) => 
-          item.albums ? `collection-${item.id}` : `search-${item.id}`
-        }
+        keyExtractor={(item, index) => `${item.id || item.albums?.id || index}`}
         numColumns={viewMode === 'grid' ? 2 : 1}
         columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
         ListEmptyComponent={
-          !user ? (
+          collectionLoading ? (
+            <ActivityIndicator style={styles.loading} size="large" color="#007AFF" />
+          ) : (
             <Text style={styles.emptyText}>
-              Busca álbumes para comenzar
+              {user ? 'No hay álbumes en tu colección' : 'Busca álbumes para añadirlos a tu colección'}
             </Text>
-          ) : null
+          )
         }
         ListFooterComponent={
           loading ? (
-            <ActivityIndicator size="large" color="#007AFF" style={styles.loading} />
+            <ActivityIndicator style={styles.loading} size="large" color="#007AFF" />
           ) : null
         }
       />
@@ -552,6 +603,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  searchButton: {
+    padding: 8,
+    borderRadius: 4,
+    backgroundColor: 'transparent',
+  },
   viewButton: {
     padding: 8,
     borderRadius: 4,
@@ -561,6 +617,31 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 4,
     backgroundColor: 'transparent',
+  },
+  // Estilos para el campo de búsqueda
+  searchContainer: {
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  searchInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  searchInput: {
+    flex: 1,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+  },
+  closeSearchButton: {
+    padding: 12,
+    marginRight: 5,
   },
   // Estilos para el desplegable de filtros
   filterDropdownContent: {
