@@ -6,16 +6,15 @@ import {
   TouchableOpacity,
   FlatList,
   Image,
-  StyleSheet,
-  ActivityIndicator,
-  ScrollView,
   Alert,
+  StyleSheet,
+  ScrollView,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
-import { DiscogsRelease } from '../types';
 import { AlbumService, UserCollectionService } from '../services/database';
-import { Ionicons } from '@expo/vector-icons';
+import { DiscogsRelease } from '../types';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -24,7 +23,6 @@ export const SearchScreen: React.FC = () => {
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
   const [collection, setCollection] = useState<any[]>([]);
-  const [collectionLoading, setCollectionLoading] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'year' | 'artist' | 'label'>('date');
   const [filterByStyle, setFilterByStyle] = useState<string>('');
   const [filterByYear, setFilterByYear] = useState<string>('');
@@ -56,31 +54,16 @@ export const SearchScreen: React.FC = () => {
 
   const loadCollection = async () => {
     if (!user) return;
-    
-    setCollectionLoading(true);
     try {
       const userCollection = await UserCollectionService.getUserCollection(user.id);
-      setCollection(userCollection || []);
+      setCollection(userCollection);
     } catch (error) {
       console.error('Error loading collection:', error);
-      Alert.alert('Error', 'No se pudo cargar la colección');
-    } finally {
-      setCollectionLoading(false);
     }
   };
 
   const sortCollection = () => {
     let sorted = [...collection];
-    
-    // Filtrar por búsqueda si hay query
-    if (query.trim()) {
-      const searchTerm = query.toLowerCase().trim();
-      sorted = sorted.filter(item => 
-        (item.albums?.title && item.albums.title.toLowerCase().includes(searchTerm)) ||
-        (item.albums?.artist && item.albums.artist.toLowerCase().includes(searchTerm)) ||
-        (item.albums?.label && item.albums.label.toLowerCase().includes(searchTerm))
-      );
-    }
     
     // Filtrar por estilo si hay filtro activo
     if (filterByStyle) {
@@ -112,14 +95,24 @@ export const SearchScreen: React.FC = () => {
         item.albums?.artist === filterByArtist
       );
     }
-    
+
+    // Filtrar por búsqueda si hay query
+    if (query.trim()) {
+      const searchTerm = query.toLowerCase().trim();
+      sorted = sorted.filter(item => 
+        item.albums?.title?.toLowerCase().includes(searchTerm) ||
+        item.albums?.artist?.toLowerCase().includes(searchTerm) ||
+        item.albums?.label?.toLowerCase().includes(searchTerm)
+      );
+    }
+
     // Ordenar
     switch (sortBy) {
       case 'date':
         sorted.sort((a, b) => new Date(b.added_at).getTime() - new Date(a.added_at).getTime());
         break;
       case 'year':
-        sorted.sort((a, b) => (b.albums?.release_year || '').localeCompare(a.albums?.release_year || ''));
+        sorted.sort((a, b) => (b.albums?.release_year || 0) - (a.albums?.release_year || 0));
         break;
       case 'artist':
         sorted.sort((a, b) => (a.albums?.artist || '').localeCompare(b.albums?.artist || ''));
@@ -128,43 +121,8 @@ export const SearchScreen: React.FC = () => {
         sorted.sort((a, b) => (a.albums?.label || '').localeCompare(b.albums?.label || ''));
         break;
     }
-    
+
     setFilteredCollection(sorted);
-  };
-
-  const handleSortChange = (newSortBy: 'date' | 'year' | 'artist' | 'label') => {
-    setSortBy(newSortBy);
-  };
-
-  const handleStyleFilterChange = (style: string) => {
-    setFilterByStyle(style);
-  };
-
-  const handleYearFilterChange = (year: string) => {
-    setFilterByYear(year);
-  };
-
-  const handleLabelFilterChange = (label: string) => {
-    setFilterByLabel(label);
-  };
-
-  const handleArtistFilterChange = (artist: string) => {
-    setFilterByArtist(artist);
-  };
-
-  const searchReleases = async () => {
-    if (!query.trim()) return;
-    
-    setLoading(true);
-    try {
-      const response = await DiscogsService.searchReleases(query);
-      setReleases(response.results || []);
-    } catch (error) {
-      console.error('Error searching releases:', error);
-      Alert.alert('Error', 'No se pudo buscar los álbumes');
-    } finally {
-      setLoading(false);
-    }
   };
 
   const addToCollection = async (release: DiscogsRelease) => {
@@ -174,7 +132,7 @@ export const SearchScreen: React.FC = () => {
         title: release.title,
         artist: release.artists?.[0]?.name || 'Unknown Artist',
         release_year: release.year?.toString() || '',
-        label: '',
+        label: release.labels?.[0]?.name || '',
         genre: release.genres?.join(', ') || '',
         styles: release.styles?.join(', ') || '',
         cover_url: release.cover_image || release.thumb,
@@ -190,28 +148,48 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
-  const removeFromCollection = async (collectionItem: any) => {
-    if (!user) return;
-    try {
-      await UserCollectionService.removeFromCollection(user.id, collectionItem.albums.id);
-      Alert.alert('Éxito', 'Álbum eliminado de tu colección');
-      loadCollection();
-    } catch (error) {
-      console.error('Error removing from collection:', error);
-      Alert.alert('Error', 'No se pudo eliminar de la colección');
-    }
+  const getUniqueStyles = () => {
+    const styles = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.album_styles) {
+        item.albums.album_styles.forEach((as: any) => {
+          if (as.styles?.name) {
+            styles.add(as.styles.name);
+          }
+        });
+      }
+    });
+    return Array.from(styles).sort();
   };
 
-  const toggleGem = async (collectionItem: any) => {
-    if (!user) return;
-    try {
-      await UserCollectionService.removeFromCollection(user.id, collectionItem.albums.id);
-      await UserCollectionService.addToCollection(user.id, collectionItem.albums.id);
-      loadCollection();
-    } catch (error) {
-      console.error('Error toggling gem:', error);
-      Alert.alert('Error', 'No se pudo actualizar el favorito');
-    }
+  const getUniqueYears = () => {
+    const years = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.release_year) {
+        years.add(item.albums.release_year);
+      }
+    });
+    return Array.from(years).sort((a, b) => parseInt(b) - parseInt(a));
+  };
+
+  const getUniqueLabels = () => {
+    const labels = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.label && item.albums.label.trim() !== '') {
+        labels.add(item.albums.label);
+      }
+    });
+    return Array.from(labels).sort();
+  };
+
+  const getUniqueArtists = () => {
+    const artists = new Set<string>();
+    collection.forEach(item => {
+      if (item.albums?.artist) {
+        artists.add(item.albums.artist);
+      }
+    });
+    return Array.from(artists).sort();
   };
 
   const renderCollectionItem = ({ item }: { item: any }) => (
@@ -225,7 +203,7 @@ export const SearchScreen: React.FC = () => {
           {item.albums?.title}
         </Text>
         <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
-        {viewMode === 'list' && (
+        {viewMode === 'list' ? (
           <View style={styles.collectionDetails}>
             <Text style={styles.collectionDetail}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
@@ -243,8 +221,7 @@ export const SearchScreen: React.FC = () => {
               }
             </Text>
           </View>
-        )}
-        {viewMode === 'grid' && (
+        ) : (
           <View style={styles.collectionDetailsGrid}>
             <Text style={styles.collectionDetailGrid}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
@@ -271,81 +248,31 @@ export const SearchScreen: React.FC = () => {
     <View style={styles.releaseItem}>
       <Image
         source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/60' }}
-        style={styles.thumbnail}
+        style={styles.releaseThumbnail}
       />
       <View style={styles.releaseInfo}>
         <Text style={styles.releaseTitle} numberOfLines={1} ellipsizeMode="tail">
           {item.title}
         </Text>
         <Text style={styles.releaseArtist}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
-        <View style={styles.releaseDetails}>
-          {item.year && <Text style={styles.releaseDetail}>Año: {item.year}</Text>}
-          {item.genres && item.genres.length > 0 && (
-            <Text style={styles.releaseDetail}>Género: {item.genres.join(', ')}</Text>
-          )}
-          {item.styles && item.styles.length > 0 && (
-            <Text style={styles.releaseDetail}>Estilo: {item.styles.join(', ')}</Text>
-          )}
-        </View>
+        <Text style={styles.releaseDetail}>
+          {item.year && `Año: ${item.year}`}
+          {item.genres && item.genres.length > 0 && ` | Género: ${item.genres.join(', ')}`}
+          {item.styles && item.styles.length > 0 && ` | Estilo: ${item.styles.join(', ')}`}
+        </Text>
       </View>
-      <TouchableOpacity style={styles.addButton} onPress={() => addToCollection(item)}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => addToCollection(item)}
+      >
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
     </View>
   );
 
-  const getUniqueStyles = () => {
-    const styles = new Set<string>();
-    collection.forEach(item => {
-      if (item.albums?.album_styles) {
-        item.albums.album_styles.forEach((as: any) => {
-          if (as.styles?.name) {
-            styles.add(as.styles.name);
-          }
-        });
-      }
-    });
-    return Array.from(styles).sort();
-  };
-
-  const getUniqueYears = () => {
-    const years = new Set<string>();
-    collection.forEach(item => {
-      if (item.albums?.release_year) {
-        years.add(item.albums.release_year);
-      }
-    });
-    return Array.from(years).sort();
-  };
-
-  const getUniqueLabels = () => {
-    const labels = new Set<string>();
-    collection.forEach(item => {
-      if (item.albums?.label && item.albums.label.trim() !== '') {
-        labels.add(item.albums.label);
-      }
-    });
-    return Array.from(labels).sort();
-  };
-
-  const getUniqueArtists = () => {
-    const artists = new Set<string>();
-    collection.forEach(item => {
-      if (item.albums?.artist && item.albums.artist.trim() !== '') {
-        artists.add(item.albums.artist);
-      }
-    });
-    return Array.from(artists).sort();
-  };
-
-  const uniqueStyles = getUniqueStyles();
-  const uniqueYears = getUniqueYears();
-  const uniqueLabels = getUniqueLabels();
-  const uniqueArtists = getUniqueArtists();
-
   return (
     <View style={styles.container}>
-      {/* Header con contador y filtros */}
+      {/* Header */}
       <View style={styles.headerContainer}>
         <View style={styles.collectionCountContainer}>
           <Text style={styles.collectionCountText}>
@@ -414,11 +341,7 @@ export const SearchScreen: React.FC = () => {
                 setQuery('');
               }}
             >
-              <Ionicons 
-                name="close" 
-                size={20} 
-                color="#666" 
-              />
+              <Ionicons name="close" size={20} color="#666" />
             </TouchableOpacity>
           </View>
         </View>
@@ -427,146 +350,177 @@ export const SearchScreen: React.FC = () => {
       {/* Desplegable de filtros */}
       {showFilters && (
         <View style={styles.filterDropdownContent}>
-          {/* Filtro por Estilo */}
-          {uniqueStyles.length > 0 && (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Filtro por Estilo */}
             <View style={styles.filterSection}>
               <Text style={styles.filterSectionTitle}>Estilo</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
                 <TouchableOpacity
-                  style={[styles.filterChip, !filterByStyle && styles.filterChipActive]}
+                  style={[
+                    styles.filterChip,
+                    !filterByStyle && styles.filterChipActive
+                  ]}
                   onPress={() => setFilterByStyle('')}
                 >
-                  <Text style={[styles.filterChipText, !filterByStyle && styles.filterChipTextActive]}>
-                    Todos
-                  </Text>
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByStyle && styles.filterChipTextActive
+                  ]}>Todos</Text>
                 </TouchableOpacity>
-                {uniqueStyles.map((style) => (
+                {getUniqueStyles().map((style) => (
                   <TouchableOpacity
                     key={style}
-                    style={[styles.filterChip, filterByStyle === style && styles.filterChipActive]}
-                    onPress={() => handleStyleFilterChange(style)}
+                    style={[
+                      styles.filterChip,
+                      filterByStyle === style && styles.filterChipActive
+                    ]}
+                    onPress={() => setFilterByStyle(style)}
                   >
-                    <Text style={[styles.filterChipText, filterByStyle === style && styles.filterChipTextActive]}>
-                      {style}
-                    </Text>
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByStyle === style && styles.filterChipTextActive
+                    ]}>{style}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
-          )}
 
-          {/* Filtro por Año */}
-          {uniqueYears.length > 0 && (
+            {/* Filtro por Año */}
             <View style={styles.filterSection}>
               <Text style={styles.filterSectionTitle}>Año</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
                 <TouchableOpacity
-                  style={[styles.filterChip, !filterByYear && styles.filterChipActive]}
+                  style={[
+                    styles.filterChip,
+                    !filterByYear && styles.filterChipActive
+                  ]}
                   onPress={() => setFilterByYear('')}
                 >
-                  <Text style={[styles.filterChipText, !filterByYear && styles.filterChipTextActive]}>
-                    Todos
-                  </Text>
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByYear && styles.filterChipTextActive
+                  ]}>Todos</Text>
                 </TouchableOpacity>
-                {uniqueYears.map((year) => (
+                {getUniqueYears().map((year) => (
                   <TouchableOpacity
                     key={year}
-                    style={[styles.filterChip, filterByYear === year && styles.filterChipActive]}
-                    onPress={() => handleYearFilterChange(year)}
+                    style={[
+                      styles.filterChip,
+                      filterByYear === year && styles.filterChipActive
+                    ]}
+                    onPress={() => setFilterByYear(year)}
                   >
-                    <Text style={[styles.filterChipText, filterByYear === year && styles.filterChipTextActive]}>
-                      {year}
-                    </Text>
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByYear === year && styles.filterChipTextActive
+                    ]}>{year}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
-          )}
 
-          {/* Filtro por Sello */}
-          {uniqueLabels.length > 0 && (
+            {/* Filtro por Sello */}
             <View style={styles.filterSection}>
               <Text style={styles.filterSectionTitle}>Sello</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
                 <TouchableOpacity
-                  style={[styles.filterChip, !filterByLabel && styles.filterChipActive]}
+                  style={[
+                    styles.filterChip,
+                    !filterByLabel && styles.filterChipActive
+                  ]}
                   onPress={() => setFilterByLabel('')}
                 >
-                  <Text style={[styles.filterChipText, !filterByLabel && styles.filterChipTextActive]}>
-                    Todos
-                  </Text>
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByLabel && styles.filterChipTextActive
+                  ]}>Todos</Text>
                 </TouchableOpacity>
-                {uniqueLabels.map((label) => (
+                {getUniqueLabels().map((label) => (
                   <TouchableOpacity
                     key={label}
-                    style={[styles.filterChip, filterByLabel === label && styles.filterChipActive]}
-                    onPress={() => handleLabelFilterChange(label)}
+                    style={[
+                      styles.filterChip,
+                      filterByLabel === label && styles.filterChipActive
+                    ]}
+                    onPress={() => setFilterByLabel(label)}
                   >
-                    <Text style={[styles.filterChipText, filterByLabel === label && styles.filterChipTextActive]}>
-                      {label}
-                    </Text>
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByLabel === label && styles.filterChipTextActive
+                    ]}>{label}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
-          )}
 
-          {/* Filtro por Artista */}
-          {uniqueArtists.length > 0 && (
+            {/* Filtro por Artista */}
             <View style={styles.filterSection}>
               <Text style={styles.filterSectionTitle}>Artista</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
                 <TouchableOpacity
-                  style={[styles.filterChip, !filterByArtist && styles.filterChipActive]}
+                  style={[
+                    styles.filterChip,
+                    !filterByArtist && styles.filterChipActive
+                  ]}
                   onPress={() => setFilterByArtist('')}
                 >
-                  <Text style={[styles.filterChipText, !filterByArtist && styles.filterChipTextActive]}>
-                    Todos
-                  </Text>
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByArtist && styles.filterChipTextActive
+                  ]}>Todos</Text>
                 </TouchableOpacity>
-                {uniqueArtists.map((artist) => (
+                {getUniqueArtists().map((artist) => (
                   <TouchableOpacity
                     key={artist}
-                    style={[styles.filterChip, filterByArtist === artist && styles.filterChipActive]}
-                    onPress={() => handleArtistFilterChange(artist)}
+                    style={[
+                      styles.filterChip,
+                      filterByArtist === artist && styles.filterChipActive
+                    ]}
+                    onPress={() => setFilterByArtist(artist)}
                   >
-                    <Text style={[styles.filterChipText, filterByArtist === artist && styles.filterChipTextActive]}>
-                      {artist}
-                    </Text>
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByArtist === artist && styles.filterChipTextActive
+                    ]}>{artist}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
-          )}
+          </ScrollView>
         </View>
       )}
 
       {/* Lista combinada */}
       <FlatList
-        key={viewMode}
         data={user ? [...filteredCollection, ...releases] : releases}
         renderItem={({ item, index }) => {
-          if (index < filteredCollection.length) {
+          if (user && index < filteredCollection.length) {
             return renderCollectionItem({ item });
           } else {
             return renderRelease({ item });
           }
         }}
-        keyExtractor={(item, index) => `${item.id || item.albums?.id || index}`}
+        keyExtractor={(item, index) => `${item.id || item.albums?.id}-${index}`}
         numColumns={viewMode === 'grid' ? 2 : 1}
         columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
+        key={viewMode}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
-          collectionLoading ? (
-            <ActivityIndicator style={styles.loading} size="large" color="#007AFF" />
+          loading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>Cargando...</Text>
+            </View>
           ) : (
-            <Text style={styles.emptyText}>
-              {user ? 'No hay álbumes en tu colección' : 'Busca álbumes para añadirlos a tu colección'}
-            </Text>
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No se encontraron resultados</Text>
+            </View>
           )
         }
         ListFooterComponent={
-          loading ? (
-            <ActivityIndicator style={styles.loading} size="large" color="#007AFF" />
+          releases.length > 0 ? (
+            <View style={styles.footerContainer}>
+              <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
+            </View>
           ) : null
         }
       />
@@ -579,13 +533,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  // Estilos para el nuevo header con contador y filtros
   headerContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
+    padding: 15,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
@@ -601,7 +553,6 @@ const styles = StyleSheet.create({
   headerButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   searchButton: {
     padding: 8,
@@ -645,17 +596,25 @@ const styles = StyleSheet.create({
   },
   // Estilos para el desplegable de filtros
   filterDropdownContent: {
-    padding: 15,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    maxHeight: 300,
   },
   filterSection: {
-    marginBottom: 15,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
   filterSectionTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
+    marginBottom: 10,
     color: '#333',
-    marginBottom: 8,
+  },
+  filterChips: {
+    flexDirection: 'row',
   },
   filterChip: {
     paddingHorizontal: 12,
@@ -663,34 +622,36 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 16,
     backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
   },
   filterChipActive: {
     backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   filterChipText: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#666',
   },
   filterChipTextActive: {
     color: 'white',
-    fontWeight: '600',
   },
-  // Estilos para las tarjetas de colección
+  // Estilos para elementos de colección
   collectionItem: {
     flexDirection: 'row',
-    padding: 15,
     backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    marginHorizontal: 15,
+    marginVertical: 5,
+    padding: 10,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   collectionThumbnail: {
     width: 60,
     height: 60,
-    borderRadius: 8,
-    marginRight: 15,
+    borderRadius: 4,
+    marginRight: 10,
   },
   collectionInfo: {
     flex: 1,
@@ -699,8 +660,8 @@ const styles = StyleSheet.create({
   collectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 2,
     color: '#333',
+    marginBottom: 4,
   },
   collectionArtist: {
     fontSize: 14,
@@ -712,16 +673,16 @@ const styles = StyleSheet.create({
   },
   collectionDetail: {
     fontSize: 12,
-    color: '#888',
-    marginBottom: 1,
+    color: '#999',
+    marginBottom: 2,
   },
-  // Estilos para el modo grid
+  // Estilos para vista grid
   collectionItemGrid: {
     flex: 1,
-    margin: 5,
     backgroundColor: 'white',
-    borderRadius: 8,
+    margin: 5,
     padding: 10,
+    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -731,7 +692,7 @@ const styles = StyleSheet.create({
   collectionThumbnailGrid: {
     width: '100%',
     aspectRatio: 1,
-    borderRadius: 8,
+    borderRadius: 4,
     marginBottom: 8,
   },
   collectionInfoGrid: {
@@ -740,13 +701,14 @@ const styles = StyleSheet.create({
   collectionTitleGrid: {
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
     color: '#333',
+    marginBottom: 4,
     textAlign: 'left',
   },
   collectionArtistGrid: {
     fontSize: 12,
     color: '#666',
+    marginBottom: 4,
     textAlign: 'left',
   },
   collectionDetailsGrid: {
@@ -754,25 +716,31 @@ const styles = StyleSheet.create({
   },
   collectionDetailGrid: {
     fontSize: 10,
-    color: '#666',
+    color: '#999',
     marginBottom: 2,
   },
   gridRow: {
     justifyContent: 'space-between',
   },
-  // Estilos para las tarjetas de búsqueda
+  // Estilos para elementos de búsqueda
   releaseItem: {
     flexDirection: 'row',
-    padding: 15,
     backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    marginHorizontal: 15,
+    marginVertical: 5,
+    padding: 10,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  thumbnail: {
+  releaseThumbnail: {
     width: 60,
     height: 60,
-    borderRadius: 8,
-    marginRight: 15,
+    borderRadius: 4,
+    marginRight: 10,
   },
   releaseInfo: {
     flex: 1,
@@ -781,24 +749,20 @@ const styles = StyleSheet.create({
   releaseTitle: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 2,
     color: '#333',
+    marginBottom: 4,
   },
   releaseArtist: {
     fontSize: 14,
     color: '#666',
     marginBottom: 4,
   },
-  releaseDetails: {
-    marginTop: 4,
-  },
   releaseDetail: {
     fontSize: 12,
-    color: '#888',
-    marginBottom: 1,
+    color: '#999',
   },
   addButton: {
-    backgroundColor: '#34C759',
+    backgroundColor: '#007AFF',
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -811,13 +775,23 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
-  emptyText: {
-    textAlign: 'center',
-    marginTop: 50,
-    fontSize: 16,
-    color: '#666',
+  // Estilos para estados vacíos
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
   },
-  loading: {
-    marginVertical: 20,
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  footerContainer: {
+    padding: 15,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#666',
   },
 }); 

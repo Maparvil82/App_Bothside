@@ -41,7 +41,7 @@ export const AppNavigator: React.FC = () => {
             let iconName: keyof typeof Ionicons.glyphMap;
 
             if (route.name === 'SearchTab') {
-              iconName = focused ? 'search' : 'search-outline';
+              iconName = focused ? 'disc' : 'disc-outline';
             } else if (route.name === 'ProfileTab') {
               iconName = focused ? 'person' : 'person-outline';
             } else {
