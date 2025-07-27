@@ -32,6 +32,7 @@ export const SearchScreen: React.FC = () => {
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -59,6 +60,17 @@ export const SearchScreen: React.FC = () => {
       setCollection(userCollection);
     } catch (error) {
       console.error('Error loading collection:', error);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadCollection();
+    } catch (error) {
+      console.error('Error refreshing collection:', error);
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -505,6 +517,8 @@ export const SearchScreen: React.FC = () => {
         columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
         key={viewMode}
         showsVerticalScrollIndicator={false}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
         ListEmptyComponent={
           loading ? (
             <View style={styles.emptyContainer}>
