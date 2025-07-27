@@ -9,6 +9,8 @@ import {
   Alert,
   StyleSheet,
   ScrollView,
+  ActionSheetIOS,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -71,6 +73,45 @@ export const SearchScreen: React.FC = () => {
       console.error('Error refreshing collection:', error);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const handleLongPress = (item: any) => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: ['Cancelar', 'Eliminar'],
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+          title: item.albums?.title || 'Álbum',
+          message: '¿Qué quieres hacer con este álbum?',
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleDeleteItem(item);
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        item.albums?.title || 'Álbum',
+        '¿Qué quieres hacer con este álbum?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Eliminar', style: 'destructive', onPress: () => handleDeleteItem(item) },
+        ]
+      );
+    }
+  };
+
+  const handleDeleteItem = async (item: any) => {
+    try {
+      await UserCollectionService.removeFromCollection(user!.id, item.albums.id);
+      await loadCollection(); // Recargar la colección
+      Alert.alert('Éxito', 'Álbum eliminado de la colección');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      Alert.alert('Error', 'No se pudo eliminar el álbum');
     }
   };
 
@@ -205,7 +246,11 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderCollectionItem = ({ item }: { item: any }) => (
-    <View style={viewMode === 'list' ? styles.collectionItem : styles.collectionItemGrid}>
+    <TouchableOpacity 
+      style={viewMode === 'list' ? styles.collectionItem : styles.collectionItemGrid}
+      onLongPress={() => handleLongPress(item)}
+      activeOpacity={0.7}
+    >
       <Image
         source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
         style={viewMode === 'list' ? styles.collectionThumbnail : styles.collectionThumbnailGrid}
@@ -253,7 +298,7 @@ export const SearchScreen: React.FC = () => {
           </View>
         )}
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
