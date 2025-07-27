@@ -531,7 +531,7 @@ export const SearchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white',
   },
   headerContainer: {
     flexDirection: 'row',
@@ -637,15 +637,11 @@ const styles = StyleSheet.create({
   collectionItem: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    marginHorizontal: 15,
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   collectionThumbnail: {
     width: 60,
@@ -726,15 +722,11 @@ const styles = StyleSheet.create({
   releaseItem: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    marginHorizontal: 15,
-    marginVertical: 5,
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
   releaseThumbnail: {
     width: 60,
