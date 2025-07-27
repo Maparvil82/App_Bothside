@@ -1,20 +1,49 @@
+import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { AppNavigator } from './navigation/AppNavigator';
+import { LoginScreen } from './screens/LoginScreen';
+import { validateEnv } from './config/env';
+
+const AppContent: React.FC = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
+  return user ? <AppNavigator /> : <LoginScreen />;
+};
 
 export default function App() {
+  React.useEffect(() => {
+    if (!validateEnv()) {
+      Alert.alert(
+        'Error de Configuración',
+        'Por favor, configura las variables de entorno en config/env.ts antes de ejecutar la aplicación.',
+        [{ text: 'OK' }]
+      );
+    }
+  }, []);
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
+    <AuthProvider>
       <StatusBar style="auto" />
-    </View>
+      <AppContent />
+    </AuthProvider>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  loadingContainer: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
   },
 });
