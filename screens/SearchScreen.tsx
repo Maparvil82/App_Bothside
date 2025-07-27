@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsRelease } from '../types';
 import { AlbumService, UserCollectionService } from '../services/database';
+import { Ionicons } from '@expo/vector-icons';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -29,6 +30,7 @@ export const SearchScreen: React.FC = () => {
   const [filterByLabel, setFilterByLabel] = useState<string>('');
   const [filterByArtist, setFilterByArtist] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
 
   useEffect(() => {
@@ -40,10 +42,6 @@ export const SearchScreen: React.FC = () => {
   useEffect(() => {
     sortCollection();
   }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByArtist]);
-
-  useEffect(() => {
-    sortCollection();
-  }, [collection, sortBy, filterByStyle]);
 
   const loadCollection = async () => {
     if (!user) return;
@@ -143,10 +141,10 @@ export const SearchScreen: React.FC = () => {
     setLoading(true);
     try {
       const response = await DiscogsService.searchReleases(query);
-      setReleases(response.results);
+      setReleases(response.results || []);
     } catch (error) {
       console.error('Error searching releases:', error);
-      Alert.alert('Error', 'No se pudo buscar los lanzamientos');
+      Alert.alert('Error', 'No se pudo buscar álbumes');
     } finally {
       setLoading(false);
     }
@@ -154,26 +152,21 @@ export const SearchScreen: React.FC = () => {
 
   const addToCollection = async (release: DiscogsRelease) => {
     if (!user) return;
-    
     try {
-      // Crear el álbum en la base de datos con los datos disponibles
       const albumData = {
         title: release.title,
         artist: release.artists?.[0]?.name || 'Unknown Artist',
         release_year: release.year?.toString() || '',
-        label: '', // Se puede obtener después si es necesario
+        label: '',
         genre: release.genres?.join(', ') || '',
+        styles: release.styles?.join(', ') || '',
         cover_url: release.cover_image || release.thumb,
         discogs_id: release.id,
       };
-      
       const album = await AlbumService.createAlbum(albumData);
-      
-      // Añadir a la colección del usuario
       await UserCollectionService.addToCollection(user.id, album.id);
-      
       Alert.alert('Éxito', 'Álbum añadido a tu colección');
-      loadCollection(); // Recargar la colección
+      loadCollection();
     } catch (error) {
       console.error('Error adding to collection:', error);
       Alert.alert('Error', 'No se pudo añadir a la colección');
@@ -182,11 +175,10 @@ export const SearchScreen: React.FC = () => {
 
   const removeFromCollection = async (collectionItem: any) => {
     if (!user) return;
-    
     try {
       await UserCollectionService.removeFromCollection(user.id, collectionItem.album_id);
       Alert.alert('Éxito', 'Álbum eliminado de tu colección');
-      loadCollection(); // Recargar la colección
+      loadCollection();
     } catch (error) {
       console.error('Error removing from collection:', error);
       Alert.alert('Error', 'No se pudo eliminar de la colección');
@@ -195,48 +187,47 @@ export const SearchScreen: React.FC = () => {
 
   const toggleGem = async (collectionItem: any) => {
     if (!user) return;
-    
     try {
-      // Para cambiar el estado de gem, necesitamos remover y volver a añadir
       await UserCollectionService.removeFromCollection(user.id, collectionItem.album_id);
       await UserCollectionService.addToCollection(user.id, collectionItem.album_id, !collectionItem.is_gem);
-      loadCollection(); // Recargar la colección
+      loadCollection();
     } catch (error) {
       console.error('Error toggling gem:', error);
-      Alert.alert('Error', 'No se pudo actualizar el álbum');
+      Alert.alert('Error', 'No se pudo actualizar el estado');
     }
   };
 
   const renderCollectionItem = ({ item }: { item: any }) => (
-    <View style={styles.collectionItem}>
+    <View style={viewMode === 'list' ? styles.collectionItem : styles.collectionItemGrid}>
       <Image
         source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-        style={styles.collectionThumbnail}
+        style={viewMode === 'list' ? styles.collectionThumbnail : styles.collectionThumbnailGrid}
       />
-      <View style={styles.collectionInfo}>
-        <Text style={styles.collectionTitle} numberOfLines={1} ellipsizeMode="tail">
+      <View style={viewMode === 'list' ? styles.collectionInfo : styles.collectionInfoGrid}>
+        <Text style={viewMode === 'list' ? styles.collectionTitle : styles.collectionTitleGrid} numberOfLines={1} ellipsizeMode="tail">
           {item.albums?.title}
         </Text>
-        <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
-        <View style={styles.collectionDetails}>
-                                  <Text style={styles.collectionDetail}>
-                          {item.albums?.label && item.albums.label !== '' && item.albums?.release_year 
-                            ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                            : item.albums?.label && item.albums.label !== '' 
-                              ? `Sello: ${item.albums.label}`
-                              : item.albums?.release_year 
-                                ? `Año: ${item.albums.release_year}`
-                                : null
-                          }
-                        </Text>
-          <Text style={styles.collectionDetail}>
-            {item.albums?.album_styles && item.albums.album_styles.length > 0 && 
-              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-            }
-          </Text>
-        </View>
+        <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
+        {viewMode === 'list' && (
+          <View style={styles.collectionDetails}>
+            <Text style={styles.collectionDetail}>
+              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year 
+                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                : item.albums?.label && item.albums.label !== '' 
+                  ? `Sello: ${item.albums.label}`
+                  : item.albums?.release_year 
+                    ? `Año: ${item.albums.release_year}`
+                    : ''
+              }
+            </Text>
+            <Text style={styles.collectionDetail}>
+              {item.albums?.album_styles && item.albums.album_styles.length > 0 && 
+                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+              }
+            </Text>
+          </View>
+        )}
       </View>
-
     </View>
   );
 
@@ -252,24 +243,22 @@ export const SearchScreen: React.FC = () => {
         </Text>
         <Text style={styles.releaseArtist}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
         <View style={styles.releaseDetails}>
-          <Text style={styles.releaseDetail}>{item.year && `Año: ${item.year}`}
+          <Text style={styles.releaseDetail}>
+            {item.year && `Año: ${item.year}`}
           </Text>
           <Text style={styles.releaseDetail}>
-            {item.genres && item.genres.length > 0 && 
+            {item.genres && item.genres.length > 0 &&
               `Género: ${item.genres.join(', ')}`
             }
           </Text>
           <Text style={styles.releaseDetail}>
-            {item.styles && item.styles.length > 0 && 
+            {item.styles && item.styles.length > 0 &&
               `Estilo: ${item.styles.join(', ')}`
             }
           </Text>
         </View>
       </View>
-      <TouchableOpacity
-        style={styles.addButton}
-        onPress={() => addToCollection(item)}
-      >
+      <TouchableOpacity style={styles.addButton} onPress={() => addToCollection(item)}>
         <Text style={styles.addButtonText}>+</Text>
       </TouchableOpacity>
     </View>
@@ -330,182 +319,159 @@ export const SearchScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-
-
-      {/* Botón de filtros desplegable */}
-      <View style={styles.filterDropdownContainer}>
-        <TouchableOpacity
-          style={styles.filterDropdownButton}
-          onPress={() => setShowFilters(!showFilters)}
-        >
-          <Text style={styles.filterDropdownButtonText}>
-            Filtros {showFilters ? '▼' : '▶'}
+      {/* Header con contador y filtros */}
+      <View style={styles.headerContainer}>
+        <View style={styles.collectionCountContainer}>
+          <Text style={styles.collectionCountText}>
+            {filteredCollection.length} discos
           </Text>
-        </TouchableOpacity>
+        </View>
         
-        {showFilters && (
-          <View style={styles.filterDropdownContent}>
-            {/* Filtro por estilo */}
-            {uniqueStyles.length > 0 && (
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>Estilo:</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  <TouchableOpacity
-                    style={[
-                      styles.filterChip,
-                      !filterByStyle && styles.filterChipActive
-                    ]}
-                    onPress={() => handleStyleFilterChange('')}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      !filterByStyle && styles.filterChipTextActive
-                    ]}>
-                      Todos
-                    </Text>
-                  </TouchableOpacity>
-                  {uniqueStyles.map((style) => (
-                    <TouchableOpacity
-                      key={style}
-                      style={[
-                        styles.filterChip,
-                        filterByStyle === style && styles.filterChipActive
-                      ]}
-                      onPress={() => handleStyleFilterChange(style)}
-                    >
-                      <Text style={[
-                        styles.filterChipText,
-                        filterByStyle === style && styles.filterChipTextActive
-                      ]}>
-                        {style}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            )}
-
-            {/* Filtro por año */}
+        <View style={styles.headerButtons}>
+          <TouchableOpacity
+            style={styles.viewButton}
+            onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+          >
+            <Ionicons 
+              name={viewMode === 'list' ? 'grid' : 'list'} 
+              size={24} 
+              color="#666" 
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setShowFilters(!showFilters)}
+          >
+            <Ionicons 
+              name="filter" 
+              size={24} 
+              color={showFilters ? '#007AFF' : '#666'} 
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+      
+      {/* Desplegable de filtros */}
+      {showFilters && (
+        <View style={styles.filterDropdownContent}>
+          {/* Filtro por Estilo */}
+          {uniqueStyles.length > 0 && (
             <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Año:</Text>
+              <Text style={styles.filterSectionTitle}>Estilo</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <TouchableOpacity
-                  style={[
-                    styles.filterChip,
-                    !filterByYear && styles.filterChipActive
-                  ]}
-                  onPress={() => handleYearFilterChange('')}
+                  style={[styles.filterChip, !filterByStyle && styles.filterChipActive]}
+                  onPress={() => setFilterByStyle('')}
                 >
-                  <Text style={[
-                    styles.filterChipText,
-                    !filterByYear && styles.filterChipTextActive
-                  ]}>
+                  <Text style={[styles.filterChipText, !filterByStyle && styles.filterChipTextActive]}>
+                    Todos
+                  </Text>
+                </TouchableOpacity>
+                {uniqueStyles.map((style) => (
+                  <TouchableOpacity
+                    key={style}
+                    style={[styles.filterChip, filterByStyle === style && styles.filterChipActive]}
+                    onPress={() => handleStyleFilterChange(style)}
+                  >
+                    <Text style={[styles.filterChipText, filterByStyle === style && styles.filterChipTextActive]}>
+                      {style}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Filtro por Año */}
+          {uniqueYears.length > 0 && (
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Año</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <TouchableOpacity
+                  style={[styles.filterChip, !filterByYear && styles.filterChipActive]}
+                  onPress={() => setFilterByYear('')}
+                >
+                  <Text style={[styles.filterChipText, !filterByYear && styles.filterChipTextActive]}>
                     Todos
                   </Text>
                 </TouchableOpacity>
                 {uniqueYears.map((year) => (
                   <TouchableOpacity
                     key={year}
-                    style={[
-                      styles.filterChip,
-                      filterByYear === year && styles.filterChipActive
-                    ]}
+                    style={[styles.filterChip, filterByYear === year && styles.filterChipActive]}
                     onPress={() => handleYearFilterChange(year)}
                   >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByYear === year && styles.filterChipTextActive
-                    ]}>
+                    <Text style={[styles.filterChipText, filterByYear === year && styles.filterChipTextActive]}>
                       {year}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
+          )}
 
-            {/* Filtro por sello */}
+          {/* Filtro por Sello */}
+          {uniqueLabels.length > 0 && (
             <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Sello:</Text>
+              <Text style={styles.filterSectionTitle}>Sello</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <TouchableOpacity
-                  style={[
-                    styles.filterChip,
-                    !filterByLabel && styles.filterChipActive
-                  ]}
-                  onPress={() => handleLabelFilterChange('')}
+                  style={[styles.filterChip, !filterByLabel && styles.filterChipActive]}
+                  onPress={() => setFilterByLabel('')}
                 >
-                  <Text style={[
-                    styles.filterChipText,
-                    !filterByLabel && styles.filterChipTextActive
-                  ]}>
+                  <Text style={[styles.filterChipText, !filterByLabel && styles.filterChipTextActive]}>
                     Todos
                   </Text>
                 </TouchableOpacity>
                 {uniqueLabels.map((label) => (
                   <TouchableOpacity
                     key={label}
-                    style={[
-                      styles.filterChip,
-                      filterByLabel === label && styles.filterChipActive
-                    ]}
+                    style={[styles.filterChip, filterByLabel === label && styles.filterChipActive]}
                     onPress={() => handleLabelFilterChange(label)}
                   >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByLabel === label && styles.filterChipTextActive
-                    ]}>
+                    <Text style={[styles.filterChipText, filterByLabel === label && styles.filterChipTextActive]}>
                       {label}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
+          )}
 
-            {/* Filtro por artista */}
+          {/* Filtro por Artista */}
+          {uniqueArtists.length > 0 && (
             <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Artista:</Text>
+              <Text style={styles.filterSectionTitle}>Artista</Text>
               <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                 <TouchableOpacity
-                  style={[
-                    styles.filterChip,
-                    !filterByArtist && styles.filterChipActive
-                  ]}
-                  onPress={() => handleArtistFilterChange('')}
+                  style={[styles.filterChip, !filterByArtist && styles.filterChipActive]}
+                  onPress={() => setFilterByArtist('')}
                 >
-                  <Text style={[
-                    styles.filterChipText,
-                    !filterByArtist && styles.filterChipTextActive
-                  ]}>
+                  <Text style={[styles.filterChipText, !filterByArtist && styles.filterChipTextActive]}>
                     Todos
                   </Text>
                 </TouchableOpacity>
                 {uniqueArtists.map((artist) => (
                   <TouchableOpacity
                     key={artist}
-                    style={[
-                      styles.filterChip,
-                      filterByArtist === artist && styles.filterChipActive
-                    ]}
+                    style={[styles.filterChip, filterByArtist === artist && styles.filterChipActive]}
                     onPress={() => handleArtistFilterChange(artist)}
                   >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByArtist === artist && styles.filterChipTextActive
-                    ]}>
+                    <Text style={[styles.filterChipText, filterByArtist === artist && styles.filterChipTextActive]}>
                       {artist}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
             </View>
-          </View>
-        )}
-      </View>
-
-
+          )}
+        </View>
+      )}
 
       {/* Lista combinada */}
       <FlatList
+        key={viewMode} // Forzar re-render cuando cambie el modo de vista
         data={user ? [...filteredCollection, ...releases] : releases}
         renderItem={({ item, index }) => {
           if (item.albums) {
@@ -516,6 +482,8 @@ export const SearchScreen: React.FC = () => {
         keyExtractor={(item, index) => 
           item.albums ? `collection-${item.id}` : `search-${item.id}`
         }
+        numColumns={viewMode === 'grid' ? 2 : 1}
+        columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
         ListEmptyComponent={
           !user ? (
             <Text style={styles.emptyText}>
@@ -538,46 +506,55 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
   },
-  searchContainer: {
+  // Estilos para el nuevo header con contador y filtros
+  headerContainer: {
     flexDirection: 'row',
-    padding: 15,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  searchInput: {
-    flex: 1,
-    height: 40,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    marginRight: 10,
-  },
-  searchButton: {
-    backgroundColor: '#007AFF',
-    paddingHorizontal: 20,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
     paddingVertical: 10,
-    borderRadius: 8,
-    justifyContent: 'center',
-  },
-  searchButtonText: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  styleFilterContainer: {
-    padding: 15,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  filterTitle: {
+  collectionCountContainer: {
+    flex: 1,
+  },
+  collectionCountText: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 10,
     color: '#333',
   },
-  styleFilterButton: {
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  viewButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  },
+  filterButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: '#f0f0f0',
+  },
+  // Estilos para el desplegable de filtros
+  filterDropdownContent: {
+    padding: 15,
+    backgroundColor: '#f9f9f9',
+  },
+  filterSection: {
+    marginBottom: 15,
+  },
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     marginRight: 8,
@@ -586,76 +563,30 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
   },
-  styleFilterButtonActive: {
+  filterChipActive: {
     backgroundColor: '#007AFF',
     borderColor: '#007AFF',
   },
-  styleFilterButtonText: {
+  filterChipText: {
     fontSize: 12,
     color: '#666',
   },
-  styleFilterButtonTextActive: {
+  filterChipTextActive: {
     color: 'white',
     fontWeight: '600',
   },
-  collectionHeader: {
+  // Estilos para las tarjetas de colección
+  collectionItem: {
+    flexDirection: 'row',
     padding: 15,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-  },
-  collectionHeaderTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 5,
-    color: '#333',
-  },
-  collectionCount: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 10,
-  },
-  sortContainer: {
-    marginTop: 10,
-  },
-  sortButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    borderRadius: 16,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  sortButtonActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  sortButtonText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  sortButtonTextActive: {
-    color: 'white',
-    fontWeight: '600',
-  },
-  collectionItem: {
-    flexDirection: 'row',
-    backgroundColor: 'white',
-    padding: 15,
-    marginHorizontal: 15,
-    marginVertical: 5,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
   },
   collectionThumbnail: {
     width: 60,
     height: 60,
-    borderRadius: 4,
+    borderRadius: 8,
     marginRight: 15,
   },
   collectionInfo: {
@@ -681,47 +612,55 @@ const styles = StyleSheet.create({
     color: '#888',
     marginBottom: 1,
   },
-  collectionActions: {
-    justifyContent: 'center',
-    alignItems: 'center',
+  // Estilos para el modo grid
+  collectionItemGrid: {
+    flex: 1,
+    margin: 5,
+    backgroundColor: 'white',
+    borderRadius: 8,
+    padding: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  gemButton: {
-    padding: 8,
-    marginBottom: 5,
+  collectionThumbnailGrid: {
+    width: '100%',
+    aspectRatio: 1,
+    borderRadius: 8,
+    marginBottom: 8,
   },
-  gemButtonActive: {
-    backgroundColor: '#FFD700',
-    borderRadius: 4,
+  collectionInfoGrid: {
+    alignItems: 'flex-start',
   },
-  gemButtonText: {
-    fontSize: 20,
-    color: '#ccc',
-  },
-  gemButtonTextActive: {
-    color: '#FFD700',
-  },
-  removeButton: {
-    backgroundColor: '#FF3B30',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  removeButtonText: {
-    color: 'white',
-    fontSize: 12,
+  collectionTitleGrid: {
+    fontSize: 14,
     fontWeight: '600',
+    marginBottom: 2,
+    color: '#333',
+    textAlign: 'left',
   },
+  collectionArtistGrid: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'left',
+  },
+  gridRow: {
+    justifyContent: 'space-between',
+  },
+  // Estilos para las tarjetas de búsqueda
   releaseItem: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     padding: 15,
+    backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
   thumbnail: {
     width: 60,
     height: 60,
-    borderRadius: 4,
+    borderRadius: 8,
     marginRight: 15,
   },
   releaseInfo: {
@@ -769,56 +708,5 @@ const styles = StyleSheet.create({
   },
   loading: {
     marginVertical: 20,
-  },
-  // Estilos para el desplegable de filtros
-  filterDropdownContainer: {
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  filterDropdownButton: {
-    padding: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  filterDropdownButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-  },
-  filterDropdownContent: {
-    padding: 15,
-    backgroundColor: '#f9f9f9',
-  },
-  filterSection: {
-    marginBottom: 15,
-  },
-  filterSectionTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  filterChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginRight: 8,
-    borderRadius: 16,
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  filterChipActive: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
-  },
-  filterChipText: {
-    fontSize: 12,
-    color: '#666',
-  },
-  filterChipTextActive: {
-    color: 'white',
-    fontWeight: '600',
   },
 }); 
