@@ -64,6 +64,57 @@ export interface Order {
   created_at: string;
 }
 
+// Servicios de estilos
+export const StyleService = {
+  // Obtener estilo por nombre
+  async getStyleByName(name: string) {
+    const { data, error } = await supabase
+      .from('styles')
+      .select('*')
+      .eq('name', name)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return data;
+  },
+
+  // Crear nuevo estilo
+  async createStyle(name: string) {
+    const { data, error } = await supabase
+      .from('styles')
+      .insert([{ name }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Obtener o crear estilo
+  async getOrCreateStyle(name: string) {
+    let style = await this.getStyleByName(name);
+    if (!style) {
+      style = await this.createStyle(name);
+    }
+    return style;
+  },
+
+  // Vincular estilo a álbum
+  async linkStyleToAlbum(albumId: string, styleId: string) {
+    const { data, error } = await supabase
+      .from('album_styles')
+      .insert([{
+        album_id: albumId,
+        style_id: styleId
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  }
+};
+
 // Servicios de álbumes
 export const AlbumService = {
   // Obtener todos los álbumes

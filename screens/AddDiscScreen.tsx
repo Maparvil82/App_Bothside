@@ -12,7 +12,9 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { AlbumService, UserCollectionService } from '../services/database';
+import { AlbumService, UserCollectionService, StyleService } from '../services/database';
+import { supabase } from '../lib/supabase';
+import { DiscogsService } from '../services/discogs';
 
 interface Album {
   id: string;
@@ -33,6 +35,12 @@ export const AddDiscScreen: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  
+  // Estados para la pestaña manual
+  const [artistQuery, setArtistQuery] = useState('');
+  const [albumQuery, setAlbumQuery] = useState('');
+  const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
+  const [manualLoading, setManualLoading] = useState(false);
 
   const searchAlbums = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -83,20 +91,152 @@ export const AddDiscScreen: React.FC = () => {
     };
   }, [searchTimeout]);
 
+  // Función para buscar en Discogs manualmente
+  const searchDiscogsManual = async () => {
+    if (!artistQuery.trim() || !albumQuery.trim()) {
+      Alert.alert('Error', 'Por favor ingresa tanto el artista como el álbum');
+      return;
+    }
+
+    setManualLoading(true);
+    try {
+      const searchTerm = `${artistQuery} ${albumQuery}`;
+      console.log('🔍 Buscando en Discogs:', searchTerm);
+      
+      const response = await DiscogsService.searchReleases(searchTerm);
+      console.log('📦 Respuesta completa de Discogs:', response);
+      console.log('📊 Total de resultados:', response.results?.length || 0);
+      
+      // Mostrar todos los formatos disponibles para debugging
+      if (response.results && response.results.length > 0) {
+        console.log('🎵 Formatos disponibles:');
+        response.results.forEach((release: any, index: number) => {
+          console.log(`${index + 1}. "${release.title}" - Formato: "${release.format}" - Año: ${release.year}`);
+        });
+      }
+      
+      // Filtrar solo versiones en vinilo y con artista y álbum exactos
+      const vinylReleases = response.results?.filter((release: any) => {
+        // Extraer artista y álbum del título (formato: "Artista - Álbum")
+        const titleParts = release.title?.split(' - ');
+        const releaseArtist = titleParts?.[0]?.toLowerCase().trim();
+        const releaseAlbum = titleParts?.[1]?.toLowerCase().trim();
+        
+        const searchArtist = artistQuery.toLowerCase().trim();
+        const searchAlbum = albumQuery.toLowerCase().trim();
+        
+        // Verificar coincidencia del artista (más flexible)
+        const artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
+        
+        // Verificar coincidencia del álbum (más flexible)
+        const albumMatches = releaseAlbum && releaseAlbum.includes(searchAlbum);
+        
+        // Manejar diferentes tipos de format
+        let format = '';
+        if (typeof release.format === 'string') {
+          format = release.format.toLowerCase();
+        } else if (Array.isArray(release.format)) {
+          format = release.format.join(' ').toLowerCase();
+        } else if (release.format && typeof release.format === 'object') {
+          format = JSON.stringify(release.format).toLowerCase();
+        }
+        
+        const isVinyl = format.includes('vinyl') || format.includes('lp') || format.includes('12"') || format.includes('7"') || format.includes('10"');
+        console.log(`🎵 "${release.title}" - Artista extraído: "${releaseArtist || 'N/A'}" - Álbum extraído: "${releaseAlbum || 'N/A'}" - Coincide artista: ${artistMatches} - Coincide álbum: ${albumMatches} - Formato: "${release.format}" - Es vinilo: ${isVinyl}`);
+        return artistMatches && albumMatches && isVinyl;
+      }) || [];
+      
+      console.log('💿 Versiones en vinilo encontradas:', vinylReleases.length);
+      setManualSearchResults(vinylReleases);
+    } catch (error) {
+      console.error('❌ Error searching Discogs:', error);
+      Alert.alert('Error', 'No se pudo realizar la búsqueda');
+      setManualSearchResults([]);
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
+  // Función para añadir un release de Discogs a la colección
+  const addDiscogsReleaseToCollection = async (release: any) => {
+    if (!user) return;
+    
+    try {
+      console.log('🎵 Llamando a Edge Function para guardar release:', release.id);
+      
+      // Llamar a la Edge Function de Supabase
+      const { data, error } = await supabase.functions.invoke('save-discogs-release', {
+        body: {
+          discogsReleaseId: release.id,
+          userId: user.id
+        }
+      });
+      
+      if (error) {
+        console.error('❌ Error llamando a Edge Function:', error);
+        throw error;
+      }
+      
+      if (data?.success) {
+        console.log('✅ Disco guardado exitosamente con ID:', data.albumId);
+        Alert.alert('Éxito', 'Disco añadido a tu colección');
+        
+        // Limpiar búsqueda manual
+        setArtistQuery('');
+        setAlbumQuery('');
+        setManualSearchResults([]);
+      } else {
+        throw new Error(data?.error || 'Error desconocido');
+      }
+    } catch (error) {
+      console.error('❌ Error adding Discogs release to collection:', error);
+      Alert.alert('Error', 'No se pudo añadir el disco a la colección');
+    }
+  };
+
 
 
   const addToCollection = async (album: Album) => {
     if (!user) return;
 
     try {
-      await UserCollectionService.addToCollection(user.id, album.id);
-      Alert.alert('Éxito', 'Disco añadido a tu colección');
-      
-      // Limpiar búsqueda
-      setQuery('');
-      setAlbums([]);
+      // Si el álbum ya tiene discogs_id, usar la Edge Function
+      if (album.discogs_id) {
+        console.log('🎵 Llamando a Edge Function para álbum existente:', album.discogs_id);
+        
+        const { data, error } = await supabase.functions.invoke('save-discogs-release', {
+          body: {
+            discogsReleaseId: album.discogs_id,
+            userId: user.id
+          }
+        });
+        
+        if (error) {
+          console.error('❌ Error llamando a Edge Function:', error);
+          throw error;
+        }
+        
+        if (data?.success) {
+          console.log('✅ Disco añadido exitosamente a la colección');
+          Alert.alert('Éxito', 'Disco añadido a tu colección');
+          
+          // Limpiar búsqueda
+          setQuery('');
+          setAlbums([]);
+        } else {
+          throw new Error(data?.error || 'Error desconocido');
+        }
+      } else {
+        // Para álbumes sin discogs_id, usar el método directo
+        await UserCollectionService.addToCollection(user.id, album.id);
+        Alert.alert('Éxito', 'Disco añadido a tu colección');
+        
+        // Limpiar búsqueda
+        setQuery('');
+        setAlbums([]);
+      }
     } catch (error) {
-      console.error('Error adding to collection:', error);
+      console.error('❌ Error adding to collection:', error);
       Alert.alert('Error', 'No se pudo añadir el disco a la colección');
     }
   };
@@ -123,6 +263,34 @@ export const AddDiscScreen: React.FC = () => {
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => addToCollection(item)}
+      >
+        <Ionicons name="add" size={24} color="white" />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderDiscogsRelease = ({ item }: { item: any }) => (
+    <View style={styles.albumItem}>
+      <Image
+        source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/80' }}
+        style={styles.albumThumbnail}
+      />
+      <View style={styles.albumInfo}>
+        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
+          {item.title}
+        </Text>
+        <Text style={styles.albumArtist}>
+          {item.artists?.[0]?.name || 'Unknown Artist'}
+        </Text>
+        <Text style={styles.albumDetails}>
+          {item.year && `${item.year} • `}
+          {item.format && `${item.format} • `}
+          {item.label && `${item.label}`}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => addDiscogsReleaseToCollection(item)}
       >
         <Ionicons name="add" size={24} color="white" />
       </TouchableOpacity>
@@ -202,15 +370,121 @@ export const AddDiscScreen: React.FC = () => {
 
   const renderManualTab = () => (
     <View style={styles.tabContent}>
-      <View style={styles.emptyContainer}>
-        <Ionicons name="create-outline" size={48} color="#ccc" />
-        <Text style={styles.emptyText}>
-          Añadir disco manualmente
-        </Text>
-        <Text style={styles.emptySubtext}>
-          Esta funcionalidad estará disponible próximamente
-        </Text>
+      {/* Formulario de búsqueda manual */}
+      <View style={styles.manualSearchContainer}>
+        <View style={styles.manualInputContainer}>
+          <Ionicons
+            name="person-outline"
+            size={20}
+            color="#999"
+            style={styles.manualInputIcon}
+          />
+          <TextInput
+            style={styles.manualInput}
+            placeholder="Nombre del artista..."
+            value={artistQuery}
+            onChangeText={setArtistQuery}
+            placeholderTextColor="#999"
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+          {artistQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearInputButton}
+              onPress={() => setArtistQuery('')}
+            >
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        <View style={styles.manualInputContainer}>
+          <Ionicons
+            name="disc-outline"
+            size={20}
+            color="#999"
+            style={styles.manualInputIcon}
+          />
+          <TextInput
+            style={styles.manualInput}
+            placeholder="Nombre del álbum..."
+            value={albumQuery}
+            onChangeText={setAlbumQuery}
+            placeholderTextColor="#999"
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
+          {albumQuery.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearInputButton}
+              onPress={() => setAlbumQuery('')}
+            >
+              <Ionicons name="close-circle" size={20} color="#999" />
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        <View style={styles.manualButtonContainer}>
+          <TouchableOpacity
+            style={[
+              styles.manualSearchButton,
+              (!artistQuery.trim() || !albumQuery.trim()) && styles.manualSearchButtonDisabled
+            ]}
+            onPress={searchDiscogsManual}
+            disabled={manualLoading || !artistQuery.trim() || !albumQuery.trim()}
+          >
+            {manualLoading ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <Text style={styles.manualSearchButtonText}>Buscar en Discogs</Text>
+            )}
+          </TouchableOpacity>
+          
+          {(artistQuery.length > 0 || albumQuery.length > 0) && (
+            <TouchableOpacity
+              style={styles.clearAllButton}
+              onPress={() => {
+                setArtistQuery('');
+                setAlbumQuery('');
+                setManualSearchResults([]);
+              }}
+            >
+              <Text style={styles.clearAllButtonText}>Limpiar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
+
+      {/* Resultados de búsqueda */}
+      {manualLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#007AFF" />
+          <Text style={styles.loadingText}>Buscando versiones en vinilo...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={manualSearchResults}
+          renderItem={renderDiscogsRelease}
+          keyExtractor={(item) => item.id.toString()}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="disc-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyText}>
+                {artistQuery && albumQuery 
+                  ? 'No se encontraron versiones en vinilo para esta búsqueda'
+                  : 'Ingresa el artista y álbum para buscar versiones en vinilo'
+                }
+              </Text>
+              {artistQuery && albumQuery && (
+                <Text style={styles.emptySubtext}>
+                  Solo se muestran versiones en formato vinilo (LP, 12", 7", etc.)
+                </Text>
+              )}
+            </View>
+          }
+        />
+      )}
     </View>
   );
 
@@ -347,13 +621,57 @@ const styles = StyleSheet.create({
   clearButton: {
     padding: 5,
   },
-  searchButton: {
-    width: 44,
-    height: 44,
+  manualSearchContainer: {
+    padding: 15,
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  manualInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
+  manualInputIcon: {
+    marginRight: 10,
+  },
+  manualInput: {
+    flex: 1,
+    height: 44,
+    fontSize: 16,
+    paddingVertical: 0,
+  },
+  manualSearchButton: {
+    backgroundColor: '#007AFF',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: 12,
+    flex: 2,
+  },
+  manualSearchButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  manualSearchButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  searchButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    marginTop: 10,
+  },
+  searchButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
   albumItem: {
     flexDirection: 'row',
@@ -436,5 +754,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     fontStyle: 'italic',
+  },
+  clearInputButton: {
+    padding: 5,
+  },
+  manualButtonContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+  },
+  clearAllButton: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flex: 1,
+  },
+  clearAllButtonText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
