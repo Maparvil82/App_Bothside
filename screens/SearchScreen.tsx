@@ -12,6 +12,7 @@ import {
   ActionSheetIOS,
   Platform,
 } from 'react-native';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
@@ -113,6 +114,27 @@ export const SearchScreen: React.FC = () => {
       console.error('Error deleting item:', error);
       Alert.alert('Error', 'No se pudo eliminar el disco');
     }
+  };
+
+  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
+    const item = filteredCollection.find(col => col.id === rowKey);
+    if (item) {
+      await handleDeleteItem(item);
+    }
+    rowMap[rowKey]?.closeRow();
+  };
+
+  const handleSwipeFavorite = async (rowMap: any, rowKey: string) => {
+    const item = filteredCollection.find(col => col.id === rowKey);
+    if (item) {
+      try {
+        // Aquí puedes implementar la lógica para marcar como favorito
+        Alert.alert('Favorito', 'Función de favorito próximamente');
+      } catch (error) {
+        console.error('Error marking as favorite:', error);
+      }
+    }
+    rowMap[rowKey]?.closeRow();
   };
 
   const sortCollection = () => {
@@ -313,6 +335,26 @@ export const SearchScreen: React.FC = () => {
         onPress={() => addToCollection(item)}
       >
         <Text style={styles.addButtonText}>+</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Componente para las acciones de swipe (fondo)
+  const renderSwipeActions = (rowData: any, rowMap: any) => (
+    <View style={styles.swipeActionsContainer}>
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeFavorite]}
+        onPress={() => handleSwipeFavorite(rowMap, rowData.item.id)}
+      >
+        <Ionicons name="heart" size={24} color="white" />
+        <Text style={styles.swipeActionText}>Favorito</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeDelete]}
+        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
+      >
+        <Ionicons name="trash" size={24} color="white" />
+        <Text style={styles.swipeActionText}>Eliminar</Text>
       </TouchableOpacity>
     </View>
   );
@@ -538,41 +580,71 @@ export const SearchScreen: React.FC = () => {
       )}
 
       {/* Lista combinada */}
-      <FlatList
-        data={user ? [...filteredCollection, ...releases] : releases}
-        renderItem={({ item, index }) => {
-          if (user && index < filteredCollection.length) {
-            return renderCollectionItem({ item });
-          } else {
-            return renderRelease({ item });
+      {user ? (
+        <SwipeListView
+          data={filteredCollection}
+          renderItem={renderCollectionItem}
+          renderHiddenItem={renderSwipeActions}
+          rightOpenValue={-160}
+          disableRightSwipe
+          keyExtractor={(item) => item.id}
+          numColumns={viewMode === 'grid' ? 2 : 1}
+          columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
+          key={viewMode}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ListEmptyComponent={
+            loading ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Cargando...</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No se encontraron resultados</Text>
+              </View>
+            )
           }
-        }}
-        keyExtractor={(item, index) => `${item.id || item.albums?.id}-${index}`}
-        numColumns={viewMode === 'grid' ? 2 : 1}
-        columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
-        key={viewMode}
-        showsVerticalScrollIndicator={false}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        ListEmptyComponent={
-          loading ? (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Cargando...</Text>
-            </View>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No se encontraron resultados</Text>
-            </View>
-          )
-        }
-        ListFooterComponent={
-          releases.length > 0 ? (
-            <View style={styles.footerContainer}>
-              <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
-            </View>
-          ) : null
-        }
-      />
+          ListFooterComponent={
+            releases.length > 0 ? (
+              <View style={styles.footerContainer}>
+                <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
+                <FlatList
+                  data={releases}
+                  renderItem={renderRelease}
+                  keyExtractor={(item) => item.id.toString()}
+                  numColumns={viewMode === 'grid' ? 2 : 1}
+                  columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
+            ) : null
+          }
+        />
+      ) : (
+        <FlatList
+          data={releases}
+          renderItem={renderRelease}
+          keyExtractor={(item) => item.id.toString()}
+          numColumns={viewMode === 'grid' ? 2 : 1}
+          columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
+          key={viewMode}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ListEmptyComponent={
+            loading ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>Cargando...</Text>
+              </View>
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No se encontraron resultados</Text>
+              </View>
+            )
+          }
+        />
+      )}
     </View>
   );
 };
@@ -828,5 +900,30 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: '#666',
+  },
+  // Estilos para swipe actions
+  swipeActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: '100%',
+  },
+  swipeAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    height: '100%',
+  },
+  swipeFavorite: {
+    backgroundColor: '#FF9500',
+  },
+  swipeDelete: {
+    backgroundColor: '#FF3B30',
+  },
+  swipeActionText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 4,
   },
 }); 
