@@ -133,27 +133,36 @@ export const AddDiscScreen: React.FC = () => {
     <View style={styles.tabContent}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-                                                <TextInput
-                      style={styles.searchInput}
-                      placeholder="Buscar en toda la base de datos..."
-                      value={query}
-                      onChangeText={handleSearchChange}
-                      returnKeyType="search"
-                      placeholderTextColor="#999"
-                      autoCapitalize="none"
-                      autoCorrect={false}
-                    />
-                                        <TouchableOpacity
-                      style={styles.searchButton}
-                      onPress={() => searchAlbums(query)}
-                      disabled={loading}
-                    >
-                      <Ionicons
-                        name="search-outline"
-                        size={24}
-                        color="#666"
-                      />
-                    </TouchableOpacity>
+        <View style={styles.inputContainer}>
+          <Ionicons
+            name="search-outline"
+            size={20}
+            color="#999"
+            style={styles.searchIcon}
+          />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Buscar en toda la base de datos..."
+            value={query}
+            onChangeText={handleSearchChange}
+            returnKeyType="search"
+            placeholderTextColor="#999"
+            autoCapitalize="none"
+            autoCorrect={false}
+          />
+          {query.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => handleSearchChange('')}
+            >
+              <Ionicons
+                name="close-circle"
+                size={20}
+                color="#999"
+              />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
 
@@ -318,14 +327,25 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  searchInput: {
+  inputContainer: {
     flex: 1,
-    height: 44,
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: '#f5f5f5',
     borderRadius: 8,
     paddingHorizontal: 15,
+  },
+  searchIcon: {
     marginRight: 10,
+  },
+  searchInput: {
+    flex: 1,
+    height: 44,
     fontSize: 16,
+    paddingVertical: 0,
+  },
+  clearButton: {
+    padding: 5,
   },
   searchButton: {
     width: 44,
