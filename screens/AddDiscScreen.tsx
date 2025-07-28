@@ -11,6 +11,9 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useCameraPermissions } from 'expo-camera';
+import Tesseract from 'tesseract.js';
+import { CameraComponent } from '../components/CameraComponent';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
 import { supabase } from '../lib/supabase';
@@ -41,6 +44,17 @@ export const AddDiscScreen: React.FC = () => {
   const [albumQuery, setAlbumQuery] = useState('');
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
   const [manualLoading, setManualLoading] = useState(false);
+
+  // Estados para la pestaña cámara
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraType, setCameraType] = useState<string>('back');
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  
+  // Estados para OCR
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrResults, setOcrResults] = useState<any[]>([]);
+  const [extractedText, setExtractedText] = useState<string>('');
 
   const searchAlbums = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -90,6 +104,13 @@ export const AddDiscScreen: React.FC = () => {
       }
     };
   }, [searchTimeout]);
+
+  // Solicitar permisos de cámara
+  useEffect(() => {
+    if (!permission) {
+      requestPermission();
+    }
+  }, [permission, requestPermission]);
 
   // Función para buscar en Discogs manualmente
   const searchDiscogsManual = async () => {
@@ -238,6 +259,143 @@ export const AddDiscScreen: React.FC = () => {
     } catch (error) {
       console.error('❌ Error adding to collection:', error);
       Alert.alert('Error', 'No se pudo añadir el disco a la colección');
+    }
+  };
+
+  // Funciones para la cámara
+  const openCamera = () => {
+    setShowCamera(true);
+  };
+
+  const closeCamera = () => {
+    setShowCamera(false);
+    setCapturedImage(null);
+  };
+
+  const takePicture = async (cameraRef: any) => {
+    if (cameraRef) {
+      try {
+        const photo = await cameraRef.takePictureAsync();
+        setCapturedImage(photo.uri);
+        setShowCamera(false);
+        console.log('📸 Foto capturada:', photo.uri);
+      } catch (error) {
+        console.error('Error taking picture:', error);
+        Alert.alert('Error', 'No se pudo capturar la foto');
+      }
+    }
+  };
+
+  // Función para realizar OCR en la imagen
+  const performOCR = async (imageUri: string) => {
+    if (!imageUri) return;
+    
+    setOcrLoading(true);
+    setExtractedText('');
+    setOcrResults([]);
+    
+    try {
+      console.log('🔍 Iniciando OCR en imagen:', imageUri);
+      
+      const result = await Tesseract.recognize(
+        imageUri,
+        'eng', // Idioma inglés
+        {
+          logger: m => console.log('OCR Progress:', m)
+        }
+      );
+      
+      const text = result.data.text;
+      setExtractedText(text);
+      console.log('📝 Texto extraído:', text);
+      
+      // Extraer artista y álbum del texto
+      const { artist, album } = extractArtistAndAlbum(text);
+      
+      if (artist && album) {
+        console.log('🎵 Artista extraído:', artist);
+        console.log('💿 Álbum extraído:', album);
+        
+        // Buscar en Discogs API
+        await searchDiscogsFromOCR(artist, album);
+      } else {
+        Alert.alert('OCR', 'No se pudo extraer artista y álbum del texto reconocido');
+      }
+      
+    } catch (error) {
+      console.error('❌ Error en OCR:', error);
+      Alert.alert('Error', 'No se pudo procesar la imagen con OCR');
+    } finally {
+      setOcrLoading(false);
+    }
+  };
+
+  // Función para extraer artista y álbum del texto OCR
+  const extractArtistAndAlbum = (text: string): { artist: string | null; album: string | null } => {
+    const lines = text.split('\n').filter(line => line.trim().length > 0);
+    
+    // Buscar patrones comunes en portadas de álbumes
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      
+      // Patrón: "Artista - Álbum"
+      const dashPattern = line.match(/^(.+?)\s*-\s*(.+)$/);
+      if (dashPattern) {
+        return {
+          artist: dashPattern[1].trim(),
+          album: dashPattern[2].trim()
+        };
+      }
+      
+      // Patrón: "Artista" en una línea, "Álbum" en la siguiente
+      if (i < lines.length - 1) {
+        const nextLine = lines[i + 1].trim();
+        if (line.length > 0 && nextLine.length > 0 && !line.includes('-')) {
+          return {
+            artist: line,
+            album: nextLine
+          };
+        }
+      }
+    }
+    
+    // Si no encontramos patrones específicos, tomar las primeras dos líneas
+    if (lines.length >= 2) {
+      return {
+        artist: lines[0].trim(),
+        album: lines[1].trim()
+      };
+    }
+    
+    return { artist: null, album: null };
+  };
+
+  // Función para buscar en Discogs API usando datos del OCR
+  const searchDiscogsFromOCR = async (artist: string, album: string) => {
+    try {
+      console.log('🔍 Buscando en Discogs:', artist, '-', album);
+      
+      const results = await DiscogsService.searchReleases(`${artist} ${album}`);
+      
+      if (results && results.results && results.results.length > 0) {
+        // Filtrar solo versiones en vinilo
+        const vinylResults = results.results.filter((release: any) => {
+          const formats = release.format || '';
+          return formats.toLowerCase().includes('vinyl') || 
+                 formats.toLowerCase().includes('lp') ||
+                 formats.toLowerCase().includes('12"') ||
+                 formats.toLowerCase().includes('7"');
+        });
+        
+        setOcrResults(vinylResults);
+        console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
+      } else {
+        setOcrResults([]);
+        Alert.alert('Búsqueda', 'No se encontraron resultados en Discogs');
+      }
+    } catch (error) {
+      console.error('❌ Error buscando en Discogs:', error);
+      Alert.alert('Error', 'No se pudo buscar en Discogs');
     }
   };
 
@@ -488,19 +646,101 @@ export const AddDiscScreen: React.FC = () => {
     </View>
   );
 
-  const renderCameraTab = () => (
-    <View style={styles.tabContent}>
-      <View style={styles.emptyContainer}>
-        <Ionicons name="camera-outline" size={48} color="#ccc" />
-        <Text style={styles.emptyText}>
-          Escanear con cámara
-        </Text>
-        <Text style={styles.emptySubtext}>
-          Esta funcionalidad estará disponible próximamente
-        </Text>
+  const renderCameraTab = () => {
+    if (showCamera) {
+      return (
+        <View style={styles.cameraContainer}>
+          <CameraComponent
+            onCapture={(imageUri) => {
+              setCapturedImage(imageUri);
+              closeCamera();
+            }}
+            onClose={closeCamera}
+          />
+        </View>
+      );
+    }
+
+            return (
+          <View style={styles.tabContent}>
+            {capturedImage ? (
+              <View style={styles.capturedImageContainer}>
+                <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
+                
+                {/* Botones de acción */}
+                <View style={styles.capturedImageButtons}>
+                  <TouchableOpacity
+                    style={styles.capturedImageButton}
+                    onPress={() => setCapturedImage(null)}
+                  >
+                    <Ionicons name="refresh" size={20} color="#007AFF" />
+                    <Text style={styles.capturedImageButtonText}>Nueva foto</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.capturedImageButton, ocrLoading && styles.capturedImageButtonDisabled]}
+                    onPress={() => performOCR(capturedImage)}
+                    disabled={ocrLoading}
+                  >
+                    <Ionicons name="text" size={20} color={ocrLoading ? "#ccc" : "#007AFF"} />
+                    <Text style={[styles.capturedImageButtonText, ocrLoading && styles.capturedImageButtonTextDisabled]}>
+                      {ocrLoading ? 'Analizando...' : 'Analizar texto'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Texto extraído por OCR */}
+                {extractedText && (
+                  <View style={styles.extractedTextContainer}>
+                    <Text style={styles.extractedTextTitle}>Texto reconocido:</Text>
+                    <Text style={styles.extractedText}>{extractedText}</Text>
+                  </View>
+                )}
+
+                {/* Resultados de búsqueda en Discogs */}
+                {ocrLoading ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#007AFF" />
+                    <Text style={styles.loadingText}>Analizando imagen y buscando en Discogs...</Text>
+                  </View>
+                ) : ocrResults.length > 0 ? (
+                  <View style={styles.ocrResultsContainer}>
+                    <Text style={styles.ocrResultsTitle}>Resultados encontrados:</Text>
+                    <FlatList
+                      data={ocrResults}
+                      renderItem={renderDiscogsRelease}
+                      keyExtractor={(item) => item.id.toString()}
+                      showsVerticalScrollIndicator={false}
+                    />
+                  </View>
+                ) : null}
+              </View>
+            ) : (
+          <View style={styles.emptyContainer}>
+            <Ionicons name="camera-outline" size={48} color="#ccc" />
+            <Text style={styles.emptyText}>
+              Escanear con cámara
+            </Text>
+            <Text style={styles.emptySubtext}>
+              Toma una foto de la portada del álbum para analizar
+            </Text>
+            {permission?.status !== 'granted' && (
+              <Text style={styles.permissionText}>
+                Se requiere permiso de cámara para usar esta función
+              </Text>
+            )}
+            <TouchableOpacity
+              style={styles.cameraOpenButton}
+              onPress={openCamera}
+              disabled={permission?.status !== 'granted'}
+            >
+              <Ionicons name="camera" size={24} color="white" />
+              <Text style={styles.cameraOpenButtonText}>Abrir cámara</Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
-    </View>
-  );
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -776,5 +1016,129 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Estilos para la cámara
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraButtonContainer: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+    paddingBottom: 50,
+  },
+  cameraButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    borderRadius: 35,
+    width: 70,
+    height: 70,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  closeCameraButton: {
+    position: 'absolute',
+    top: 50,
+    right: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  capturedImageContainer: {
+    flex: 1,
+    padding: 15,
+  },
+  capturedImage: {
+    width: '100%',
+    height: 300,
+    borderRadius: 8,
+    marginBottom: 15,
+  },
+  capturedImageButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  capturedImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  capturedImageButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  permissionText: {
+    color: '#ff3b30',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  cameraOpenButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 20,
+  },
+  cameraOpenButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  // Estilos para OCR
+  capturedImageButtonDisabled: {
+    backgroundColor: '#f0f0f0',
+  },
+  capturedImageButtonTextDisabled: {
+    color: '#ccc',
+  },
+  extractedTextContainer: {
+    backgroundColor: '#f8f8f8',
+    padding: 15,
+    marginTop: 15,
+    borderRadius: 8,
+  },
+  extractedTextTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  extractedText: {
+    fontSize: 12,
+    color: '#666',
+    fontFamily: 'monospace',
+    lineHeight: 16,
+  },
+  ocrResultsContainer: {
+    marginTop: 15,
+  },
+  ocrResultsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+    paddingHorizontal: 15,
+  },
+  cameraOverlay: {
+    flex: 1,
+    backgroundColor: 'transparent',
   },
 }); 
