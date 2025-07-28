@@ -124,14 +124,42 @@ export const SearchScreen: React.FC = () => {
     rowMap[rowKey]?.closeRow();
   };
 
-  const handleSwipeFavorite = async (rowMap: any, rowKey: string) => {
+  const handleSwipeOptions = async (rowMap: any, rowKey: string) => {
     const item = filteredCollection.find(col => col.id === rowKey);
     if (item) {
-      try {
-        // Aquí puedes implementar la lógica para marcar como favorito
-        Alert.alert('Favorito', 'Función de favorito próximamente');
-      } catch (error) {
-        console.error('Error marking as favorite:', error);
+      if (Platform.OS === 'ios') {
+        ActionSheetIOS.showActionSheetWithOptions(
+          {
+            options: ['Cancelar', 'Detalles', 'Editar', 'Compartir'],
+            cancelButtonIndex: 0,
+            title: item.albums?.title || 'Álbum',
+            message: '¿Qué quieres hacer con este álbum?',
+          },
+          (buttonIndex) => {
+            switch (buttonIndex) {
+              case 1: // Detalles
+                Alert.alert('Detalles', 'Función de detalles próximamente');
+                break;
+              case 2: // Editar
+                Alert.alert('Editar', 'Función de editar próximamente');
+                break;
+              case 3: // Compartir
+                Alert.alert('Compartir', 'Función de compartir próximamente');
+                break;
+            }
+          }
+        );
+      } else {
+        Alert.alert(
+          item.albums?.title || 'Álbum',
+          '¿Qué quieres hacer con este álbum?',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Detalles', onPress: () => Alert.alert('Detalles', 'Función de detalles próximamente') },
+            { text: 'Editar', onPress: () => Alert.alert('Editar', 'Función de editar próximamente') },
+            { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
+          ]
+        );
       }
     }
     rowMap[rowKey]?.closeRow();
@@ -343,11 +371,11 @@ export const SearchScreen: React.FC = () => {
   const renderSwipeActions = (rowData: any, rowMap: any) => (
     <View style={styles.swipeActionsContainer}>
       <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeFavorite]}
-        onPress={() => handleSwipeFavorite(rowMap, rowData.item.id)}
+        style={[styles.swipeAction, styles.swipeOptions]}
+        onPress={() => handleSwipeOptions(rowMap, rowData.item.id)}
       >
-        <Ionicons name="heart" size={24} color="white" />
-        <Text style={styles.swipeActionText}>Favorito</Text>
+        <Ionicons name="ellipsis-horizontal" size={24} color="white" />
+        <Text style={styles.swipeActionText}>Opciones</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeDelete]}
@@ -914,8 +942,8 @@ const styles = StyleSheet.create({
     width: 80,
     height: '100%',
   },
-  swipeFavorite: {
-    backgroundColor: '#FF9500',
+  swipeOptions: {
+    backgroundColor: '#007AFF',
   },
   swipeDelete: {
     backgroundColor: '#FF3B30',
