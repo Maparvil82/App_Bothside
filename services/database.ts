@@ -89,15 +89,19 @@ export const AlbumService = {
     return data;
   },
 
-  // Buscar álbumes por título o artista
+  // Buscar álbumes por título, artista o sello
   async searchAlbums(query: string) {
     const { data, error } = await supabase
       .from('albums')
       .select('*')
-      .or(`title.ilike.%${query}%,artist.ilike.%${query}%`)
+      .or(`title.ilike.%${query}%,artist.ilike.%${query}%,label.ilike.%${query}%`)
       .order('created_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Database error:', error);
+      throw error;
+    }
+    
     return data;
   },
 

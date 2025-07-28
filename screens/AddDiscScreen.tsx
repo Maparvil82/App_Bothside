@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Image,
   StyleSheet,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -31,21 +32,58 @@ export const AddDiscScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
 
-  const searchAlbums = async () => {
-    if (!query.trim()) return;
+  const searchAlbums = async (searchQuery: string) => {
+    if (!searchQuery.trim()) {
+      setAlbums([]);
+      return;
+    }
     
     setLoading(true);
     try {
-      const results = await AlbumService.searchAlbums(query);
+      const results = await AlbumService.searchAlbums(searchQuery);
       setAlbums(results || []);
     } catch (error) {
       console.error('Error searching albums:', error);
-      Alert.alert('Error', 'No se pudo buscar los discos');
+      setAlbums([]);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleSearchChange = useCallback((text: string) => {
+    setQuery(text);
+    
+    // Limpiar el timeout anterior si existe
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+    
+    // Si el texto está vacío, limpiar resultados inmediatamente
+    if (!text.trim()) {
+      setAlbums([]);
+      return;
+    }
+    
+    // Crear un nuevo timeout para la búsqueda
+    const timeout = setTimeout(() => {
+      searchAlbums(text);
+    }, 300); // 300ms de delay
+    
+    setSearchTimeout(timeout);
+  }, [searchTimeout]);
+
+  // Limpiar timeout cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      if (searchTimeout) {
+        clearTimeout(searchTimeout);
+      }
+    };
+  }, [searchTimeout]);
+
+
 
   const addToCollection = async (album: Album) => {
     if (!user) return;
@@ -95,43 +133,61 @@ export const AddDiscScreen: React.FC = () => {
     <View style={styles.tabContent}>
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Buscar discos en la base de datos..."
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={searchAlbums}
-          returnKeyType="search"
-          placeholderTextColor="#999"
-        />
-        <TouchableOpacity
-          style={styles.searchButton}
-          onPress={searchAlbums}
-          disabled={loading}
-        >
-          <Ionicons
-            name={loading ? "hourglass-outline" : "search-outline"}
-            size={24}
-            color="#666"
-          />
-        </TouchableOpacity>
+                                                <TextInput
+                      style={styles.searchInput}
+                      placeholder="Buscar en toda la base de datos..."
+                      value={query}
+                      onChangeText={handleSearchChange}
+                      returnKeyType="search"
+                      placeholderTextColor="#999"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                                        <TouchableOpacity
+                      style={styles.searchButton}
+                      onPress={() => searchAlbums(query)}
+                      disabled={loading}
+                    >
+                      <Ionicons
+                        name="search-outline"
+                        size={24}
+                        color="#666"
+                      />
+                    </TouchableOpacity>
       </View>
 
+
+
       {/* Results */}
-      <FlatList
-        data={albums}
-        renderItem={renderAlbum}
-        keyExtractor={(item) => item.id}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyContainer}>
-            <Ionicons name="search-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {query ? 'No se encontraron resultados' : 'Busca discos en la base de datos para añadir a tu colección'}
-            </Text>
-          </View>
-        }
-      />
+      {loading && query.trim() ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#007AFF" />
+          <Text style={styles.loadingText}>Buscando...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={albums}
+          renderItem={renderAlbum}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="search-outline" size={48} color="#ccc" />
+              <Text style={styles.emptyText}>
+                {query ? `No se encontraron resultados para "${query}"` : 'Escribe para buscar discos en toda la base de datos'}
+              </Text>
+              {query && (
+                <Text style={styles.emptySubtext}>
+                  Prueba con otros términos o verifica la ortografía
+                </Text>
+              )}
+              <Text style={styles.debugText}>
+                {albums.length > 0 ? `${albums.length} resultados encontrados` : 'No se encontraron resultados'}
+              </Text>
+            </View>
+          }
+        />
+      )}
     </View>
   );
 
@@ -165,11 +221,6 @@ export const AddDiscScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Añadir Disco</Text>
-      </View>
-
       {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -228,23 +279,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  header: {
-    padding: 20,
-    paddingTop: 60,
-    backgroundColor: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-  },
   tabContainer: {
     flexDirection: 'row',
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    paddingTop: 24,
   },
   tab: {
     flex: 1,
@@ -357,5 +397,24 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: 40,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#666',
+    marginTop: 16,
+  },
+
+  debugText: {
+    fontSize: 12,
+    color: '#999',
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 }); 
