@@ -362,6 +362,54 @@ export const UserCollectionService = {
     
     if (error && error.code !== 'PGRST116') throw error;
     return !!data;
+  },
+
+  // Toggle gem status de un álbum
+  async toggleGemStatus(userId: string, albumId: string) {
+    // Primero obtener el estado actual
+    const { data: currentData, error: fetchError } = await supabase
+      .from('user_collection')
+      .select('is_gem')
+      .eq('user_id', userId)
+      .eq('album_id', albumId)
+      .single();
+    
+    if (fetchError) throw fetchError;
+    
+    // Toggle el estado
+    const newGemStatus = !currentData.is_gem;
+    
+    const { data, error } = await supabase
+      .from('user_collection')
+      .update({ is_gem: newGemStatus })
+      .eq('user_id', userId)
+      .eq('album_id', albumId)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Obtener solo los gems del usuario
+  async getUserGems(userId: string) {
+    const { data, error } = await supabase
+      .from('user_collection')
+      .select(`
+        *,
+        albums (
+          *,
+          album_styles (
+            styles (*)
+          )
+        )
+      `)
+      .eq('user_id', userId)
+      .eq('is_gem', true)
+      .order('added_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   }
 };
 

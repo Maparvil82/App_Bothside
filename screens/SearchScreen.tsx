@@ -18,7 +18,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
 import { AlbumService, UserCollectionService } from '../services/database';
 import { DiscogsRelease } from '../types';
-
 import { supabase } from '../lib/supabase';
 
 export const SearchScreen: React.FC = () => {
@@ -146,26 +145,53 @@ export const SearchScreen: React.FC = () => {
     rowMap[rowKey]?.closeRow();
   };
 
+  const handleToggleGem = async (item: any) => {
+    if (!user) return;
+    
+    try {
+      await UserCollectionService.toggleGemStatus(user.id, item.album_id);
+      
+      // Actualizar la colección local
+      await loadCollection();
+      
+      const newStatus = !item.is_gem;
+      Alert.alert(
+        'Gem Status',
+        newStatus 
+          ? `"${item.albums?.title}" añadido a tus Gems 💎`
+          : `"${item.albums?.title}" removido de tus Gems`
+      );
+    } catch (error) {
+      console.error('Error toggling gem status:', error);
+      Alert.alert('Error', 'No se pudo cambiar el estado del Gem');
+    }
+  };
+
   const handleSwipeOptions = async (rowMap: any, rowKey: string) => {
     const item = filteredCollection.find(col => col.id === rowKey);
     if (item) {
+      const gemAction = item.is_gem ? 'Remover de Gems' : 'Añadir a Gems';
+      
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancelar', 'Detalles', 'Editar', 'Compartir'],
+            options: ['Cancelar', gemAction, 'Detalles', 'Editar', 'Compartir'],
             cancelButtonIndex: 0,
             title: item.albums?.title || 'Álbum',
             message: '¿Qué quieres hacer con este álbum?',
           },
           (buttonIndex) => {
             switch (buttonIndex) {
-              case 1: // Detalles
+              case 1: // Gem action
+                handleToggleGem(item);
+                break;
+              case 2: // Detalles
                 Alert.alert('Detalles', 'Función de detalles próximamente');
                 break;
-              case 2: // Editar
+              case 3: // Editar
                 Alert.alert('Editar', 'Función de editar próximamente');
                 break;
-              case 3: // Compartir
+              case 4: // Compartir
                 Alert.alert('Compartir', 'Función de compartir próximamente');
                 break;
             }
@@ -177,6 +203,7 @@ export const SearchScreen: React.FC = () => {
           '¿Qué quieres hacer con este álbum?',
           [
             { text: 'Cancelar', style: 'cancel' },
+            { text: gemAction, onPress: () => handleToggleGem(item) },
             { text: 'Detalles', onPress: () => Alert.alert('Detalles', 'Función de detalles próximamente') },
             { text: 'Editar', onPress: () => Alert.alert('Editar', 'Función de editar próximamente') },
             { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
@@ -451,6 +478,8 @@ export const SearchScreen: React.FC = () => {
               color="#666" 
             />
           </TouchableOpacity>
+          
+
         </View>
       </View>
       
@@ -704,6 +733,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: 'transparent',
   },
+
   searchContainer: {
     padding: 15,
     backgroundColor: '#f9f9f9',
@@ -951,4 +981,5 @@ const styles = StyleSheet.create({
     marginTop: 2,
     textAlign: 'center',
   },
+
 }); 

@@ -9,6 +9,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { AddDiscScreen } from '../screens/AddDiscScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import { AdminScreen } from '../screens/AdminScreen';
+import GemsScreen from '../screens/GemsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -23,7 +24,15 @@ const SearchStack = () => (
   </Stack.Navigator>
 );
 
-
+const GemsStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="Gems" 
+      component={GemsScreen}
+      options={{ title: 'Mis Gems' }}
+    />
+  </Stack.Navigator>
+);
 
 const ProfileStack = () => (
   <Stack.Navigator>
@@ -70,6 +79,8 @@ export const AppNavigator: React.FC = () => {
 
             if (route.name === 'SearchTab') {
               iconName = focused ? 'disc' : 'disc-outline';
+            } else if (route.name === 'GemsTab') {
+              iconName = focused ? 'diamond' : 'diamond-outline';
             } else if (route.name === 'DashboardTab') {
               iconName = focused ? 'stats-chart' : 'stats-chart-outline';
             } else if (route.name === 'AddDiscTab') {
@@ -91,6 +102,11 @@ export const AppNavigator: React.FC = () => {
           name="SearchTab" 
           component={SearchStack}
           options={{ title: 'Colección' }}
+        />
+        <Tab.Screen 
+          name="GemsTab" 
+          component={GemsStack}
+          options={{ title: 'Gems' }}
         />
         <Tab.Screen 
           name="DashboardTab" 
