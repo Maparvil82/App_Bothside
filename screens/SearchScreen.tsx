@@ -175,7 +175,7 @@ export const SearchScreen: React.FC = () => {
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancelar', gemAction, 'Detalles', 'Editar', 'Compartir'],
+            options: ['Cancelar', gemAction, 'Editar', 'Compartir'],
             cancelButtonIndex: 0,
             title: item.albums?.title || 'Álbum',
             message: '¿Qué quieres hacer con este álbum?',
@@ -185,13 +185,10 @@ export const SearchScreen: React.FC = () => {
               case 1: // Gem action
                 handleToggleGem(item);
                 break;
-              case 2: // Detalles
-                Alert.alert('Detalles', 'Función de detalles próximamente');
-                break;
-              case 3: // Editar
+              case 2: // Editar
                 Alert.alert('Editar', 'Función de editar próximamente');
                 break;
-              case 4: // Compartir
+              case 3: // Compartir
                 Alert.alert('Compartir', 'Función de compartir próximamente');
                 break;
             }
@@ -204,7 +201,6 @@ export const SearchScreen: React.FC = () => {
           [
             { text: 'Cancelar', style: 'cancel' },
             { text: gemAction, onPress: () => handleToggleGem(item) },
-            { text: 'Detalles', onPress: () => Alert.alert('Detalles', 'Función de detalles próximamente') },
             { text: 'Editar', onPress: () => Alert.alert('Editar', 'Función de editar próximamente') },
             { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
           ]
@@ -634,9 +630,8 @@ export const SearchScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={onRefresh}
-          previewRowKey={filteredCollection.length > 0 ? filteredCollection[0].id : undefined}
-          previewOpenValue={-20}
-          previewOpenDelay={500}
+          previewOpenValue={0}
+          previewOpenDelay={0}
           ListEmptyComponent={
             loading ? (
               <View style={styles.emptyContainer}>
@@ -956,7 +951,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    height: '90%',
+   
+    
+    
     gap: 0, // Sin espacio entre botones para que se vean como una barra continua
   },
   swipeAction: {
