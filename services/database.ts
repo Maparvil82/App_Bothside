@@ -74,6 +74,21 @@ export interface Order {
   created_at: string;
 }
 
+export interface UserList {
+  id: string;
+  title: string;
+  description?: string;
+  cover_url?: string;
+  is_public: boolean;
+  user_id: string;
+  created_at: string;
+}
+
+export interface ListAlbum {
+  list_id: string;
+  album_id: string;
+}
+
 // Servicios de estilos
 export const StyleService = {
   // Obtener estilo por nombre
@@ -535,5 +550,161 @@ export const ListingService = {
       .eq('id', id);
     
     if (error) throw error;
+  }
+};
+
+// Servicios de listas de usuario
+export const UserListService = {
+  // Obtener todas las listas del usuario
+  async getUserLists(userId: string) {
+    console.log('Getting lists for user:', userId);
+    
+    const { data, error } = await supabase
+      .from('user_lists')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error('Error getting user lists:', error);
+      throw error;
+    }
+    
+    console.log('User lists retrieved:', data);
+    return data;
+  },
+
+  // Obtener lista por ID
+  async getListById(listId: string) {
+    const { data, error } = await supabase
+      .from('user_lists')
+      .select('*')
+      .eq('id', listId)
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Crear nueva lista
+  async createList(list: Omit<UserList, 'id' | 'created_at'>) {
+    console.log('Creating list with data:', list);
+    
+    const { data, error } = await supabase
+      .from('user_lists')
+      .insert([list])
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating list:', error);
+      throw error;
+    }
+    
+    console.log('List created successfully:', data);
+    return data;
+  },
+
+  // Actualizar lista
+  async updateList(id: string, updates: Partial<UserList>) {
+    const { data, error } = await supabase
+      .from('user_lists')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Eliminar lista
+  async deleteList(id: string) {
+    console.log('🗑️ UserListService: Deleting list with ID:', id);
+    
+    const { error } = await supabase
+      .from('user_lists')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('❌ UserListService: Error deleting list:', error);
+      throw error;
+    }
+    
+    console.log('✅ UserListService: List deleted successfully');
+  },
+
+  // Obtener álbumes de una lista
+  async getListAlbums(listId: string) {
+    const { data, error } = await supabase
+      .from('list_albums')
+      .select(`
+        *,
+        albums (
+          *,
+          album_styles (
+            styles (*)
+          )
+        )
+      `)
+      .eq('list_id', listId);
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Añadir álbum a lista
+  async addAlbumToList(listId: string, albumId: string) {
+    const { data, error } = await supabase
+      .from('list_albums')
+      .insert([{
+        list_id: listId,
+        album_id: albumId
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data;
+  },
+
+  // Remover álbum de lista
+  async removeAlbumFromList(listId: string, albumId: string) {
+    const { error } = await supabase
+      .from('list_albums')
+      .delete()
+      .eq('list_id', listId)
+      .eq('album_id', albumId);
+    
+    if (error) throw error;
+  },
+
+  // Verificar si álbum está en lista
+  async isAlbumInList(listId: string, albumId: string) {
+    const { data, error } = await supabase
+      .from('list_albums')
+      .select('id')
+      .eq('list_id', listId)
+      .eq('album_id', albumId)
+      .single();
+    
+    if (error && error.code !== 'PGRST116') throw error;
+    return !!data;
+  },
+
+  // Obtener listas públicas
+  async getPublicLists() {
+    const { data, error } = await supabase
+      .from('user_lists')
+      .select(`
+        *,
+        users!user_lists_user_id_fkey (username)
+      `)
+      .eq('is_public', true)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    return data;
   }
 }; 

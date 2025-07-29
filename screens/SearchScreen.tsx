@@ -12,6 +12,7 @@ import {
   ActionSheetIOS,
   Platform,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +23,7 @@ import { supabase } from '../lib/supabase';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
@@ -176,7 +178,7 @@ export const SearchScreen: React.FC = () => {
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancelar', gemAction, 'Editar', 'Compartir'],
+            options: ['Cancelar', gemAction, 'Añadir a Lista', 'Editar', 'Compartir'],
             cancelButtonIndex: 0,
             title: item.albums?.title || 'Álbum',
             message: '¿Qué quieres hacer con este álbum?',
@@ -186,10 +188,13 @@ export const SearchScreen: React.FC = () => {
               case 1: // Gem action
                 handleToggleGem(item);
                 break;
-              case 2: // Editar
+              case 2: // Añadir a Lista
+                navigation.navigate('ListsTab');
+                break;
+              case 3: // Editar
                 Alert.alert('Editar', 'Función de editar próximamente');
                 break;
-              case 3: // Compartir
+              case 4: // Compartir
                 Alert.alert('Compartir', 'Función de compartir próximamente');
                 break;
             }
@@ -202,6 +207,7 @@ export const SearchScreen: React.FC = () => {
           [
             { text: 'Cancelar', style: 'cancel' },
             { text: gemAction, onPress: () => handleToggleGem(item) },
+            { text: 'Añadir a Lista', onPress: () => navigation.navigate('ListsTab') },
             { text: 'Editar', onPress: () => Alert.alert('Editar', 'Función de editar próximamente') },
             { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
           ]

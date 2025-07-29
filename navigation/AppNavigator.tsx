@@ -10,6 +10,11 @@ import { AddDiscScreen } from '../screens/AddDiscScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import { AdminScreen } from '../screens/AdminScreen';
 import GemsScreen from '../screens/GemsScreen';
+import ListsScreen from '../screens/ListsScreen';
+import CreateListScreen from '../screens/CreateListScreen';
+import ViewListScreen from '../screens/ViewListScreen';
+import AddAlbumToListScreen from '../screens/AddAlbumToListScreen';
+import EditListScreen from '../screens/EditListScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -30,6 +35,36 @@ const GemsStack = () => (
       name="Gems" 
       component={GemsScreen}
       options={{ title: 'Mis Gems' }}
+    />
+  </Stack.Navigator>
+);
+
+const ListsStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="Lists" 
+      component={ListsScreen}
+      options={{ title: 'Mis Listas' }}
+    />
+    <Stack.Screen 
+      name="CreateList" 
+      component={CreateListScreen}
+      options={{ title: 'Crear Lista' }}
+    />
+    <Stack.Screen 
+      name="ViewList" 
+      component={ViewListScreen}
+      options={{ title: 'Ver Lista' }}
+    />
+    <Stack.Screen 
+      name="AddAlbumToList" 
+      component={AddAlbumToListScreen}
+      options={{ title: 'Añadir Álbumes' }}
+    />
+    <Stack.Screen 
+      name="EditList" 
+      component={EditListScreen}
+      options={{ title: 'Editar Lista' }}
     />
   </Stack.Navigator>
 );
@@ -81,6 +116,8 @@ export const AppNavigator: React.FC = () => {
               iconName = focused ? 'disc' : 'disc-outline';
             } else if (route.name === 'GemsTab') {
               iconName = focused ? 'diamond' : 'diamond-outline';
+            } else if (route.name === 'ListsTab') {
+              iconName = focused ? 'list' : 'list-outline';
             } else if (route.name === 'DashboardTab') {
               iconName = focused ? 'stats-chart' : 'stats-chart-outline';
             } else if (route.name === 'AddDiscTab') {
@@ -107,6 +144,11 @@ export const AppNavigator: React.FC = () => {
           name="GemsTab" 
           component={GemsStack}
           options={{ title: 'Gems' }}
+        />
+        <Tab.Screen 
+          name="ListsTab" 
+          component={ListsStack}
+          options={{ title: 'Listas' }}
         />
         <Tab.Screen 
           name="DashboardTab" 
