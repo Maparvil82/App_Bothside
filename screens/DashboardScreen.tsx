@@ -26,6 +26,7 @@ interface CollectionStats {
   topStyles: Array<{ style: string; count: number }>;
   albumsByDecade: Array<{ decade: string; count: number }>;
   latestAlbums: Array<{ title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
+  mostExpensiveAlbums: Array<{ title: string; artist: string; price: number; imageUrl?: string }>;
 }
 
 export default function DashboardScreen() {
@@ -40,23 +41,28 @@ export default function DashboardScreen() {
     try {
       setLoading(true);
 
-                        // Obtener datos básicos de la colección con campos directos
-                  const { data: collectionData, error: collectionError } = await supabase
-                    .from('user_collection')
-                    .select(`
-                      album_id,
-                      added_at,
-                      albums (
-                        title,
-                        release_year,
-                        artist,
-                        label,
-                        cover_url,
-                        album_styles (styles (name))
-                      )
-                    `)
-                    .eq('user_id', user.id)
-                    .order('added_at', { ascending: false });
+                              // Obtener datos básicos de la colección con estadísticas de precios
+      const { data: collectionData, error: collectionError } = await supabase
+        .from('user_collection')
+        .select(`
+          album_id,
+          added_at,
+          albums (
+            title,
+            release_year,
+            artist,
+            label,
+            cover_url,
+            album_styles (styles (name)),
+            album_stats (
+              avg_price,
+              low_price,
+              high_price
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('added_at', { ascending: false });
 
       console.log('📊 Error de consulta:', collectionError);
 
@@ -78,6 +84,7 @@ export default function DashboardScreen() {
           topStyles: [],
           albumsByDecade: [],
           latestAlbums: [],
+          mostExpensiveAlbums: [],
         });
         return;
       }
@@ -232,6 +239,23 @@ export default function DashboardScreen() {
                     })
                     .filter(Boolean) as Array<{ title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
 
+                  // Top 5 discos más caros (por precio medio)
+                  const mostExpensiveAlbums = collectionData
+                    .map((item: any) => {
+                      const album = item.albums;
+                      if (!album || !album.album_stats || !album.album_stats.avg_price) return null;
+                      
+                      return {
+                        title: album.title || 'Sin título',
+                        artist: album.artist || 'Artista desconocido',
+                        price: album.album_stats.avg_price,
+                        imageUrl: album.cover_url
+                      };
+                    })
+                    .filter(Boolean)
+                    .sort((a: any, b: any) => b.price - a.price)
+                    .slice(0, 5) as Array<{ title: string; artist: string; price: number; imageUrl?: string }>;
+
                   setStats({
                     totalAlbums,
                     totalArtists,
@@ -244,6 +268,7 @@ export default function DashboardScreen() {
                     topStyles,
                     albumsByDecade,
                     latestAlbums,
+                    mostExpensiveAlbums,
                   });
 
     } catch (error) {
@@ -374,6 +399,40 @@ export default function DashboardScreen() {
                             <Text style={styles.albumYear}>{album.year}</Text>
                           </View>
                           <Text style={styles.albumDate}>{album.addedAt}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Top 5 Discos Más Caros */}
+                  {stats.mostExpensiveAlbums.length > 0 && (
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Top 5 Discos Más Caros</Text>
+                      {stats.mostExpensiveAlbums.map((album, index) => (
+                        <View key={index} style={styles.albumItem}>
+                          <View style={styles.albumImageContainer}>
+                            {album.imageUrl ? (
+                              <Image 
+                                source={{ uri: album.imageUrl }} 
+                                style={styles.albumImage}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <View style={styles.albumImagePlaceholder}>
+                                <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                              </View>
+                            )}
+                          </View>
+                          <View style={styles.albumInfo}>
+                            <Text style={styles.albumTitle}>{album.title}</Text>
+                            <Text style={styles.albumArtist}>{album.artist}</Text>
+                            <Text style={styles.albumPrice}>
+                              {album.price ? `${album.price.toFixed(2)} €` : 'Precio no disponible'}
+                            </Text>
+                          </View>
+                          <View style={styles.albumRank}>
+                            <Text style={styles.albumRankText}>#{index + 1}</Text>
+                          </View>
                         </View>
                       ))}
                     </View>
@@ -595,5 +654,23 @@ const styles = StyleSheet.create({
                 fontSize: 10,
                 color: '#6c757d',
                 textAlign: 'center',
+              },
+              albumPrice: {
+                fontSize: 14,
+                fontWeight: 'bold',
+                color: '#28a745',
+              },
+              albumRank: {
+                backgroundColor: '#007AFF',
+                borderRadius: 12,
+                width: 24,
+                height: 24,
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+              albumRankText: {
+                fontSize: 12,
+                fontWeight: 'bold',
+                color: 'white',
               },
             }); 

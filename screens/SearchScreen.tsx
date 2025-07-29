@@ -18,7 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
 import { AlbumService, UserCollectionService } from '../services/database';
 import { DiscogsRelease } from '../types';
-import { DiscogsStatsCard } from '../components/DiscogsStatsCard';
+
 import { supabase } from '../lib/supabase';
 
 export const SearchScreen: React.FC = () => {
@@ -60,7 +60,7 @@ export const SearchScreen: React.FC = () => {
   const loadCollection = async () => {
     if (!user) return;
     try {
-      // Obtener colección con estadísticas de Discogs
+      // Obtener colección
       const { data: userCollection, error } = await supabase
         .from('user_collection')
         .select(`
@@ -69,14 +69,6 @@ export const SearchScreen: React.FC = () => {
             *,
             album_styles (
               styles (*)
-            ),
-            album_stats (
-              avg_price,
-              low_price,
-              high_price,
-              have,
-              want,
-              last_sold
             )
           )
         `)
@@ -88,10 +80,7 @@ export const SearchScreen: React.FC = () => {
         return;
       }
 
-      console.log('📊 Colección cargada con estadísticas:', userCollection?.length, 'álbumes');
-      if (userCollection && userCollection.length > 0) {
-        console.log('📊 Primer álbum con stats:', userCollection[0].albums?.album_stats);
-      }
+      console.log('📊 Colección cargada:', userCollection?.length, 'álbumes');
 
       setCollection(userCollection || []);
     } catch (error) {
@@ -375,10 +364,7 @@ export const SearchScreen: React.FC = () => {
         </View>
       </TouchableOpacity>
       
-      {/* Mostrar estadísticas de Discogs solo en modo lista */}
-      {viewMode === 'list' && item.albums && (
-        <DiscogsStatsCard album={item.albums} />
-      )}
+
     </View>
   );
 
@@ -414,15 +400,17 @@ export const SearchScreen: React.FC = () => {
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeOptions]}
         onPress={() => handleSwipeOptions(rowMap, rowData.item.id)}
+        activeOpacity={0.7}
       >
-        <Ionicons name="ellipsis-horizontal" size={24} color="white" />
+        <Ionicons name="ellipsis-horizontal" size={20} color="white" />
         <Text style={styles.swipeActionText}>Opciones</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeDelete]}
         onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
+        activeOpacity={0.7}
       >
-        <Ionicons name="trash" size={24} color="white" />
+        <Ionicons name="trash" size={20} color="white" />
         <Text style={styles.swipeActionText}>Eliminar</Text>
       </TouchableOpacity>
     </View>
@@ -979,15 +967,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-end',
     height: '100%',
+    gap: 2, // Espacio entre botones
   },
   swipeAction: {
     justifyContent: 'center',
     alignItems: 'center',
-    width: 80,
+    width: 90, // Botones más anchos
     height: '100%',
+    borderRadius: 0, // Sin bordes redondeados para que se vean como botones separados
   },
   swipeOptions: {
     backgroundColor: '#007AFF',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.3)', // Separador sutil
   },
   swipeDelete: {
     backgroundColor: '#FF3B30',
@@ -997,5 +989,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     marginTop: 4,
+    textAlign: 'center',
   },
 }); 
