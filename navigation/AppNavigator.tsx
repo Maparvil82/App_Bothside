@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AddDiscScreen } from '../screens/AddDiscScreen';
+import DashboardScreen from '../screens/DashboardScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -33,6 +34,16 @@ const ProfileStack = () => (
   </Stack.Navigator>
 );
 
+const DashboardStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen 
+      name="Dashboard" 
+      component={DashboardScreen}
+      options={{ title: 'Dashboard' }}
+    />
+  </Stack.Navigator>
+);
+
 const AddDiscStack = () => (
   <Stack.Navigator>
     <Stack.Screen 
@@ -53,6 +64,8 @@ export const AppNavigator: React.FC = () => {
 
             if (route.name === 'SearchTab') {
               iconName = focused ? 'disc' : 'disc-outline';
+            } else if (route.name === 'DashboardTab') {
+              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
             } else if (route.name === 'AddDiscTab') {
               iconName = focused ? 'add-circle' : 'add-circle-outline';
             } else if (route.name === 'ProfileTab') {
@@ -72,6 +85,11 @@ export const AppNavigator: React.FC = () => {
           name="SearchTab" 
           component={SearchStack}
           options={{ title: 'Colección' }}
+        />
+        <Tab.Screen 
+          name="DashboardTab" 
+          component={DashboardStack}
+          options={{ title: 'Dashboard' }}
         />
         <Tab.Screen 
           name="AddDiscTab" 
