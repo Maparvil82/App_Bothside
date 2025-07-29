@@ -259,6 +259,46 @@ export const AlbumService = {
     }
     
     return null;
+  },
+
+  // Obtener álbumes sin estadísticas de Discogs
+  async getAlbumsWithoutStats() {
+    const { data, error } = await supabase
+      .from('albums')
+      .select('id, title, artist, discogs_id, created_at')
+      .not('discogs_id', 'is', null)
+      .not('id', 'in', '(select album_id from album_stats)')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Obtener estadísticas de álbumes existentes
+  async getAlbumStatsSummary() {
+    // Total de álbumes
+    const { count: totalAlbums } = await supabase
+      .from('albums')
+      .select('*', { count: 'exact', head: true });
+
+    // Álbumes con discogs_id
+    const { count: albumsWithDiscogs } = await supabase
+      .from('albums')
+      .select('*', { count: 'exact', head: true })
+      .not('discogs_id', 'is', null);
+
+    // Álbumes con estadísticas
+    const { count: albumsWithStats } = await supabase
+      .from('album_stats')
+      .select('*', { count: 'exact', head: true });
+
+    return {
+      totalAlbums: totalAlbums || 0,
+      albumsWithDiscogs: albumsWithDiscogs || 0,
+      albumsWithStats: albumsWithStats || 0,
+      albumsWithoutStats: (albumsWithDiscogs || 0) - (albumsWithStats || 0),
+      percentageWithStats: (albumsWithDiscogs || 0) > 0 ? ((albumsWithStats || 0) / (albumsWithDiscogs || 0) * 100) : 0
+    };
   }
 };
 

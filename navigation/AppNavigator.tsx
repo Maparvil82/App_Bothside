@@ -9,6 +9,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { AddDiscScreen } from '../screens/AddDiscScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import { AdminScreen } from '../screens/AdminScreen';
+import StatsUpdateScreen from '../screens/StatsUpdateScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -46,6 +47,11 @@ const DashboardStack = () => (
       name="Dashboard" 
       component={DashboardScreen}
       options={{ title: 'Dashboard' }}
+    />
+    <Stack.Screen 
+      name="StatsUpdate" 
+      component={StatsUpdateScreen}
+      options={{ title: 'Actualizar Estadísticas' }}
     />
   </Stack.Navigator>
 );
