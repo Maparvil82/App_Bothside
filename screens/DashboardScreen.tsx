@@ -21,6 +21,7 @@ interface CollectionStats {
   totalStyles: number;
   oldestAlbum: number;
   newestAlbum: number;
+  collectionValue: number;
   topArtists: Array<{ artist: string; count: number }>;
   topLabels: Array<{ label: string; count: number }>;
   topStyles: Array<{ style: string; count: number }>;
@@ -79,6 +80,7 @@ export default function DashboardScreen() {
           totalStyles: 0,
           oldestAlbum: 0,
           newestAlbum: 0,
+          collectionValue: 0,
           topArtists: [],
           topLabels: [],
           topStyles: [],
@@ -256,6 +258,18 @@ export default function DashboardScreen() {
                     .sort((a: any, b: any) => b.price - a.price)
                     .slice(0, 5) as Array<{ title: string; artist: string; price: number; imageUrl?: string }>;
 
+                  // Calcular valor total de la colección
+                  const collectionValue = collectionData
+                    .reduce((total: number, item: any) => {
+                      const album = item.albums;
+                      if (album && album.album_stats && album.album_stats.avg_price) {
+                        return total + album.album_stats.avg_price;
+                      }
+                      return total;
+                    }, 0);
+
+                  console.log('💰 Valor total de la colección:', collectionValue.toFixed(2), '€');
+
                   setStats({
                     totalAlbums,
                     totalArtists,
@@ -263,6 +277,7 @@ export default function DashboardScreen() {
                     totalStyles,
                     oldestAlbum,
                     newestAlbum,
+                    collectionValue,
                     topArtists,
                     topLabels,
                     topStyles,
@@ -337,6 +352,19 @@ export default function DashboardScreen() {
         <Text style={styles.subtitle}>Estadísticas de tu colección</Text>
       </View>
 
+      {/* Valor de la colección */}
+      {stats.collectionValue > 0 && (
+        <View style={styles.valueCard}>
+          <Text style={styles.valueCardTitle}>Valor de tu Colección</Text>
+          <Text style={styles.valueCardAmount}>
+            {stats.collectionValue.toFixed(2)} €
+          </Text>
+          <Text style={styles.valueCardSubtitle}>
+            Basado en precios medios de Discogs
+          </Text>
+        </View>
+      )}
+
       {/* Estadísticas principales */}
       <View style={styles.statsGrid}>
         <StatCard title="Total Álbumes" value={stats.totalAlbums} />
@@ -359,6 +387,40 @@ export default function DashboardScreen() {
                     />
                   </View>
 
+      {/* Top 5 Discos Más Caros */}
+      {stats.mostExpensiveAlbums.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Top 5 Discos Más Caros</Text>
+          {stats.mostExpensiveAlbums.map((album, index) => (
+            <View key={index} style={styles.albumItem}>
+              <View style={styles.albumImageContainer}>
+                {album.imageUrl ? (
+                  <Image 
+                    source={{ uri: album.imageUrl }} 
+                    style={styles.albumImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.albumImagePlaceholder}>
+                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.albumInfo}>
+                <Text style={styles.albumTitle}>{album.title}</Text>
+                <Text style={styles.albumArtist}>{album.artist}</Text>
+                <Text style={styles.albumPrice}>
+                  {album.price ? `${album.price.toFixed(2)} €` : 'Precio no disponible'}
+                </Text>
+              </View>
+              <View style={styles.albumRank}>
+                <Text style={styles.albumRankText}>#{index + 1}</Text>
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+
       {/* Top Artistas */}
       {stats.topArtists.length > 0 && (
         <TopList title="Top 5 Artistas" data={stats.topArtists} keyName="artist" />
@@ -374,69 +436,35 @@ export default function DashboardScreen() {
         <TopList title="Top 5 Estilos" data={stats.topStyles} keyName="style" />
       )}
 
-                        {/* Últimos Álbumes Añadidos */}
-                  {stats.latestAlbums.length > 0 && (
-                    <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
-                      {stats.latestAlbums.map((album, index) => (
-                        <View key={index} style={styles.albumItem}>
-                          <View style={styles.albumImageContainer}>
-                            {album.imageUrl ? (
-                              <Image 
-                                source={{ uri: album.imageUrl }} 
-                                style={styles.albumImage}
-                                resizeMode="cover"
-                              />
-                            ) : (
-                              <View style={styles.albumImagePlaceholder}>
-                                <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
-                              </View>
-                            )}
-                          </View>
-                          <View style={styles.albumInfo}>
-                            <Text style={styles.albumTitle}>{album.title}</Text>
-                            <Text style={styles.albumArtist}>{album.artist}</Text>
-                            <Text style={styles.albumYear}>{album.year}</Text>
-                          </View>
-                          <Text style={styles.albumDate}>{album.addedAt}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
-
-                  {/* Top 5 Discos Más Caros */}
-                  {stats.mostExpensiveAlbums.length > 0 && (
-                    <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Top 5 Discos Más Caros</Text>
-                      {stats.mostExpensiveAlbums.map((album, index) => (
-                        <View key={index} style={styles.albumItem}>
-                          <View style={styles.albumImageContainer}>
-                            {album.imageUrl ? (
-                              <Image 
-                                source={{ uri: album.imageUrl }} 
-                                style={styles.albumImage}
-                                resizeMode="cover"
-                              />
-                            ) : (
-                              <View style={styles.albumImagePlaceholder}>
-                                <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
-                              </View>
-                            )}
-                          </View>
-                          <View style={styles.albumInfo}>
-                            <Text style={styles.albumTitle}>{album.title}</Text>
-                            <Text style={styles.albumArtist}>{album.artist}</Text>
-                            <Text style={styles.albumPrice}>
-                              {album.price ? `${album.price.toFixed(2)} €` : 'Precio no disponible'}
-                            </Text>
-                          </View>
-                          <View style={styles.albumRank}>
-                            <Text style={styles.albumRankText}>#{index + 1}</Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  )}
+      {/* Últimos Álbumes Añadidos */}
+      {stats.latestAlbums.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
+          {stats.latestAlbums.map((album, index) => (
+            <View key={index} style={styles.albumItem}>
+              <View style={styles.albumImageContainer}>
+                {album.imageUrl ? (
+                  <Image 
+                    source={{ uri: album.imageUrl }} 
+                    style={styles.albumImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.albumImagePlaceholder}>
+                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.albumInfo}>
+                <Text style={styles.albumTitle}>{album.title}</Text>
+                <Text style={styles.albumArtist}>{album.artist}</Text>
+                <Text style={styles.albumYear}>{album.year}</Text>
+              </View>
+              <Text style={styles.albumDate}>{album.addedAt}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
                   {/* Álbumes por Década */}
                   {stats.albumsByDecade.length > 0 && (
@@ -672,5 +700,37 @@ const styles = StyleSheet.create({
                 fontSize: 12,
                 fontWeight: 'bold',
                 color: 'white',
+              },
+              valueCard: {
+                backgroundColor: '#28a745',
+                borderRadius: 12,
+                padding: 20,
+                margin: 16,
+                alignItems: 'center',
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              },
+              valueCardTitle: {
+                fontSize: 16,
+                fontWeight: '600',
+                color: 'white',
+                marginBottom: 8,
+              },
+              valueCardAmount: {
+                fontSize: 32,
+                fontWeight: 'bold',
+                color: 'white',
+                marginBottom: 4,
+              },
+              valueCardSubtitle: {
+                fontSize: 12,
+                color: 'rgba(255, 255, 255, 0.8)',
+                textAlign: 'center',
               },
             }); 
