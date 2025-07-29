@@ -7,9 +7,11 @@ import {
   Alert,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
+  const navigation = useNavigation();
 
   const handleSignOut = () => {
     Alert.alert(
@@ -64,6 +66,13 @@ export const ProfileScreen: React.FC = () => {
         
         <TouchableOpacity style={styles.menuItem}>
           <Text style={styles.menuItemText}>Acerca de</Text>
+        </TouchableOpacity>
+        
+        <TouchableOpacity 
+          style={styles.menuItem}
+          onPress={() => navigation.navigate('Admin' as never)}
+        >
+          <Text style={styles.menuItemText}>Administración</Text>
         </TouchableOpacity>
       </View>
 

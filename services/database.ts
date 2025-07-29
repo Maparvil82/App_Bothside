@@ -29,6 +29,16 @@ export interface Album {
   format_descriptions?: string[];
 }
 
+export interface AlbumStats {
+  album_id: string;
+  avg_price?: number;
+  low_price?: number;
+  high_price?: number;
+  have?: number;
+  want?: number;
+  last_sold?: string;
+}
+
 export interface UserCollection {
   id: string;
   user_id: string;
@@ -189,6 +199,66 @@ export const AlbumService = {
       .eq('id', id);
     
     if (error) throw error;
+  },
+
+  // Actualizar o crear estadísticas de Discogs para un álbum
+  async updateAlbumWithDiscogsStats(albumId: string, discogsStats: any) {
+    const statsData: Partial<AlbumStats> = {
+      album_id: albumId,
+    };
+    
+    // Extraer datos de las estadísticas de Discogs
+    if (discogsStats.lowest_price !== undefined) {
+      statsData.low_price = discogsStats.lowest_price;
+    }
+    if (discogsStats.highest_price !== undefined) {
+      statsData.high_price = discogsStats.highest_price;
+    }
+    if (discogsStats.avg_price !== undefined) {
+      statsData.avg_price = discogsStats.avg_price;
+    }
+    if (discogsStats.have !== undefined) {
+      statsData.have = discogsStats.have;
+    }
+    if (discogsStats.want !== undefined) {
+      statsData.want = discogsStats.want;
+    }
+    if (discogsStats.last_sold_date !== undefined) {
+      statsData.last_sold = discogsStats.last_sold_date;
+    }
+
+    // Solo actualizar si hay datos
+    if (Object.keys(statsData).length > 1) { // Más de 1 porque siempre incluimos album_id
+      try {
+        // Intentar actualizar primero
+        const { data: updateData, error: updateError } = await supabase
+          .from('album_stats')
+          .update(statsData)
+          .eq('album_id', albumId)
+          .select()
+          .single();
+
+        if (updateError && updateError.code === 'PGRST116') {
+          // Si no existe, crear nuevo registro
+          const { data: insertData, error: insertError } = await supabase
+            .from('album_stats')
+            .insert([statsData])
+            .select()
+            .single();
+
+          if (insertError) throw insertError;
+          return insertData;
+        }
+
+        if (updateError) throw updateError;
+        return updateData;
+      } catch (error) {
+        console.error('Error updating album stats:', error);
+        throw error;
+      }
+    }
+    
+    return null;
   }
 };
 

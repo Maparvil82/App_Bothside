@@ -17,6 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
+import { DiscogsStatsService } from '../services/discogs-stats';
 
 interface Album {
   id: string;
@@ -199,6 +200,22 @@ export const AddDiscScreen: React.FC = () => {
       
       if (data?.success) {
         console.log('✅ Disco guardado exitosamente con ID:', data.albumId);
+        
+        // Obtener estadísticas de Discogs en segundo plano (no bloquear la UI)
+        if (data.albumId && release.id) {
+          DiscogsStatsService.fetchAndSaveDiscogsStats(data.albumId, release.id)
+            .then((success) => {
+              if (success) {
+                console.log('✅ Estadísticas de Discogs obtenidas y guardadas');
+              } else {
+                console.log('⚠️ No se pudieron obtener estadísticas de Discogs');
+              }
+            })
+            .catch((error) => {
+              console.error('❌ Error obteniendo estadísticas de Discogs:', error);
+            });
+        }
+        
         Alert.alert('Éxito', 'Disco añadido a tu colección');
         
         // Limpiar búsqueda manual
@@ -238,6 +255,22 @@ export const AddDiscScreen: React.FC = () => {
         
         if (data?.success) {
           console.log('✅ Disco añadido exitosamente a la colección');
+          
+          // Obtener estadísticas de Discogs en segundo plano (no bloquear la UI)
+          if (data.albumId && album.discogs_id) {
+            DiscogsStatsService.fetchAndSaveDiscogsStats(data.albumId, album.discogs_id)
+              .then((success) => {
+                if (success) {
+                  console.log('✅ Estadísticas de Discogs obtenidas y guardadas');
+                } else {
+                  console.log('⚠️ No se pudieron obtener estadísticas de Discogs');
+                }
+              })
+              .catch((error) => {
+                console.error('❌ Error obteniendo estadísticas de Discogs:', error);
+              });
+          }
+          
           Alert.alert('Éxito', 'Disco añadido a tu colección');
           
           // Limpiar búsqueda

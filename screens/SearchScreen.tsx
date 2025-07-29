@@ -18,6 +18,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
 import { AlbumService, UserCollectionService } from '../services/database';
 import { DiscogsRelease } from '../types';
+import { DiscogsStatsCard } from '../components/DiscogsStatsCard';
+import { supabase } from '../lib/supabase';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -58,8 +60,40 @@ export const SearchScreen: React.FC = () => {
   const loadCollection = async () => {
     if (!user) return;
     try {
-      const userCollection = await UserCollectionService.getUserCollection(user.id);
-      setCollection(userCollection);
+      // Obtener colección con estadísticas de Discogs
+      const { data: userCollection, error } = await supabase
+        .from('user_collection')
+        .select(`
+          *,
+          albums (
+            *,
+            album_styles (
+              styles (*)
+            ),
+            album_stats (
+              avg_price,
+              low_price,
+              high_price,
+              have,
+              want,
+              last_sold
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('added_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading collection:', error);
+        return;
+      }
+
+      console.log('📊 Colección cargada con estadísticas:', userCollection?.length, 'álbumes');
+      if (userCollection && userCollection.length > 0) {
+        console.log('📊 Primer álbum con stats:', userCollection[0].albums?.album_stats);
+      }
+
+      setCollection(userCollection || []);
     } catch (error) {
       console.error('Error loading collection:', error);
     }
@@ -286,59 +320,66 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderCollectionItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={viewMode === 'list' ? styles.collectionItem : styles.collectionItemGrid}
-      onLongPress={() => handleLongPress(item)}
-      activeOpacity={0.7}
-    >
-      <Image
-        source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-        style={viewMode === 'list' ? styles.collectionThumbnail : styles.collectionThumbnailGrid}
-      />
-      <View style={viewMode === 'list' ? styles.collectionInfo : styles.collectionInfoGrid}>
-        <Text style={viewMode === 'list' ? styles.collectionTitle : styles.collectionTitleGrid} numberOfLines={1} ellipsizeMode="tail">
-          {item.albums?.title}
-        </Text>
-        <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
-        {viewMode === 'list' ? (
-          <View style={styles.collectionDetails}>
-            <Text style={styles.collectionDetail}>
-              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                : item.albums?.label && item.albums.label !== ''
-                  ? `Sello: ${item.albums.label}`
-                  : item.albums?.release_year
-                    ? `Año: ${item.albums.release_year}`
-                    : ''
-              }
-            </Text>
-            <Text style={styles.collectionDetail}>
-              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-              }
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.collectionDetailsGrid}>
-            <Text style={styles.collectionDetailGrid}>
-              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                : item.albums?.label && item.albums.label !== ''
-                  ? `Sello: ${item.albums.label}`
-                  : item.albums?.release_year
-                    ? `Año: ${item.albums.release_year}`
-                    : ''
-              }
-            </Text>
-            <Text style={styles.collectionDetailGrid}>
-              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-              }
-            </Text>
-          </View>
-        )}
-      </View>
-    </TouchableOpacity>
+    <View style={styles.collectionItemContainer}>
+      <TouchableOpacity 
+        style={viewMode === 'list' ? styles.collectionItem : styles.collectionItemGrid}
+        onLongPress={() => handleLongPress(item)}
+        activeOpacity={0.7}
+      >
+        <Image
+          source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+          style={viewMode === 'list' ? styles.collectionThumbnail : styles.collectionThumbnailGrid}
+        />
+        <View style={viewMode === 'list' ? styles.collectionInfo : styles.collectionInfoGrid}>
+          <Text style={viewMode === 'list' ? styles.collectionTitle : styles.collectionTitleGrid} numberOfLines={1} ellipsizeMode="tail">
+            {item.albums?.title}
+          </Text>
+          <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
+          {viewMode === 'list' ? (
+            <View style={styles.collectionDetails}>
+              <Text style={styles.collectionDetail}>
+                {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                  ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                  : item.albums?.label && item.albums.label !== ''
+                    ? `Sello: ${item.albums.label}`
+                    : item.albums?.release_year
+                      ? `Año: ${item.albums.release_year}`
+                      : ''
+                }
+              </Text>
+              <Text style={styles.collectionDetail}>
+                {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                  `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+                }
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.collectionDetailsGrid}>
+              <Text style={styles.collectionDetailGrid}>
+                {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                  ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                  : item.albums?.label && item.albums.label !== ''
+                    ? `Sello: ${item.albums.label}`
+                    : item.albums?.release_year
+                      ? `Año: ${item.albums.release_year}`
+                      : ''
+                }
+              </Text>
+              <Text style={styles.collectionDetailGrid}>
+                {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                  `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+                }
+              </Text>
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+      
+      {/* Mostrar estadísticas de Discogs solo en modo lista */}
+      {viewMode === 'list' && item.albums && (
+        <DiscogsStatsCard album={item.albums} />
+      )}
+    </View>
   );
 
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
@@ -779,6 +820,9 @@ const styles = StyleSheet.create({
   },
   filterChipTextActive: {
     color: 'white',
+  },
+  collectionItemContainer: {
+    marginBottom: 8,
   },
   collectionItem: {
     flexDirection: 'row',

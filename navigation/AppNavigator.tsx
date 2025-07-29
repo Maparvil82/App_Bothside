@@ -8,6 +8,7 @@ import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AddDiscScreen } from '../screens/AddDiscScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import { AdminScreen } from '../screens/AdminScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -30,6 +31,11 @@ const ProfileStack = () => (
       name="Profile" 
       component={ProfileScreen}
       options={{ title: 'Perfil' }}
+    />
+    <Stack.Screen 
+      name="Admin" 
+      component={AdminScreen}
+      options={{ title: 'Administración' }}
     />
   </Stack.Navigator>
 );

@@ -16,6 +16,18 @@ export interface DiscogsRelease {
   thumb?: string;
   cover_image?: string;
   resource_url?: string;
+  // Campos de marketplace
+  lowest_price?: number;
+  highest_price?: number;
+  avg_price?: number;
+  have?: number;
+  want?: number;
+  last_sold_date?: string;
+  // Campo community para estadísticas
+  community?: {
+    have: number;
+    want: number;
+  };
 }
 
 export interface DiscogsSearchResponse {
