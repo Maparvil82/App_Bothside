@@ -8,12 +8,9 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
-  TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +32,6 @@ interface CollectionStats {
 
 export default function DashboardScreen() {
   const { user } = useAuth();
-  const navigation = useNavigation();
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -351,23 +347,7 @@ export default function DashboardScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      <View style={styles.header}>
-        <View style={styles.headerContent}>
-          <View>
-            <Text style={styles.title}>Dashboard</Text>
-            <Text style={styles.subtitle}>Estadísticas de tu colección</Text>
-          </View>
-          <TouchableOpacity 
-            style={styles.statsButton}
-            onPress={() => {
-              // @ts-ignore
-              navigation.navigate('StatsUpdate');
-            }}
-          >
-            <Ionicons name="refresh-circle" size={24} color="#007AFF" />
-          </TouchableOpacity>
-        </View>
-      </View>
+      
 
       {/* Valor de la colección */}
       {stats.collectionValue > 0 && (
@@ -559,17 +539,10 @@ const styles = StyleSheet.create({
     flex: 1,
     minWidth: (width - 40) / 2,
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 4,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    
   },
   statValue: {
     fontSize: 24,
@@ -592,16 +565,11 @@ const styles = StyleSheet.create({
   section: {
     backgroundColor: '#fff',
     margin: 10,
-    borderRadius: 12,
+    borderRadius: 8,
     padding: 16,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+   
+   
   },
   sectionTitle: {
     fontSize: 18,
@@ -719,7 +687,7 @@ const styles = StyleSheet.create({
                 color: 'white',
               },
               valueCard: {
-                backgroundColor: '#28a745',
+                backgroundColor: '#007AFF',
                 borderRadius: 12,
                 padding: 20,
                 margin: 16,
@@ -749,13 +717,5 @@ const styles = StyleSheet.create({
                 fontSize: 12,
                 color: 'rgba(255, 255, 255, 0.8)',
                 textAlign: 'center',
-              },
-              headerContent: {
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              },
-              statsButton: {
-                padding: 8,
               },
             }); 
