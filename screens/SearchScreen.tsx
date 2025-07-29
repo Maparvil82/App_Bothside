@@ -34,6 +34,7 @@ export const SearchScreen: React.FC = () => {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -320,61 +321,75 @@ export const SearchScreen: React.FC = () => {
   const renderCollectionItem = ({ item }: { item: any }) => (
     <View style={styles.collectionItemContainer}>
       <TouchableOpacity 
-        style={viewMode === 'list' ? styles.collectionItem : styles.collectionItemGrid}
+        style={styles.collectionItem}
         onLongPress={() => handleLongPress(item)}
         activeOpacity={0.7}
       >
         <Image
           source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-          style={viewMode === 'list' ? styles.collectionThumbnail : styles.collectionThumbnailGrid}
+          style={styles.collectionThumbnail}
         />
-        <View style={viewMode === 'list' ? styles.collectionInfo : styles.collectionInfoGrid}>
-          <Text style={viewMode === 'list' ? styles.collectionTitle : styles.collectionTitleGrid} numberOfLines={1} ellipsizeMode="tail">
+        <View style={styles.collectionInfo}>
+          <Text style={styles.collectionTitle} numberOfLines={1} ellipsizeMode="tail">
             {item.albums?.title}
           </Text>
-          <Text style={viewMode === 'list' ? styles.collectionArtist : styles.collectionArtistGrid}>{item.albums?.artist}</Text>
-          {viewMode === 'list' ? (
-            <View style={styles.collectionDetails}>
-              <Text style={styles.collectionDetail}>
-                {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                  ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                  : item.albums?.label && item.albums.label !== ''
-                    ? `Sello: ${item.albums.label}`
-                    : item.albums?.release_year
-                      ? `Año: ${item.albums.release_year}`
-                      : ''
-                }
-              </Text>
-              <Text style={styles.collectionDetail}>
-                {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                  `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-                }
-              </Text>
-            </View>
-          ) : (
-            <View style={styles.collectionDetailsGrid}>
-              <Text style={styles.collectionDetailGrid}>
-                {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                  ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                  : item.albums?.label && item.albums.label !== ''
-                    ? `Sello: ${item.albums.label}`
-                    : item.albums?.release_year
-                      ? `Año: ${item.albums.release_year}`
-                      : ''
-                }
-              </Text>
-              <Text style={styles.collectionDetailGrid}>
-                {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                  `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-                }
-              </Text>
-            </View>
-          )}
+          <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
+          <View style={styles.collectionDetails}>
+            <Text style={styles.collectionDetail}>
+              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                : item.albums?.label && item.albums.label !== ''
+                  ? `Sello: ${item.albums.label}`
+                  : item.albums?.release_year
+                    ? `Año: ${item.albums.release_year}`
+                    : ''
+              }
+            </Text>
+            <Text style={styles.collectionDetail}>
+              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+              }
+            </Text>
+          </View>
         </View>
       </TouchableOpacity>
-      
-
     </View>
+  );
+
+  const renderGridItem = ({ item }: { item: any }) => (
+    <TouchableOpacity 
+      style={styles.collectionItemGrid}
+      onLongPress={() => handleLongPress(item)}
+      activeOpacity={0.7}
+    >
+      <Image
+        source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+        style={styles.collectionThumbnailGrid}
+      />
+      <View style={styles.collectionInfoGrid}>
+        <Text style={styles.collectionTitleGrid} numberOfLines={1} ellipsizeMode="tail">
+          {item.albums?.title}
+        </Text>
+        <Text style={styles.collectionArtistGrid}>{item.albums?.artist}</Text>
+        <View style={styles.collectionDetailsGrid}>
+          <Text style={styles.collectionDetailGrid}>
+            {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+              ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+              : item.albums?.label && item.albums.label !== ''
+                ? `Sello: ${item.albums.label}`
+                : item.albums?.release_year
+                  ? `Año: ${item.albums.release_year}`
+                  : ''
+            }
+          </Text>
+          <Text style={styles.collectionDetailGrid}>
+            {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
+              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+            }
+          </Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
@@ -436,7 +451,7 @@ export const SearchScreen: React.FC = () => {
         </View>
         
         <View style={styles.headerButtons}>
-          <TouchableOpacity
+                    <TouchableOpacity
             style={[
               styles.searchButton,
               { backgroundColor: showSearch ? '#f0f0f0' : 'transparent' }
@@ -617,56 +632,85 @@ export const SearchScreen: React.FC = () => {
 
       {/* Lista combinada */}
       {user ? (
-        <SwipeListView
-          data={filteredCollection}
-          renderItem={renderCollectionItem}
-          renderHiddenItem={renderSwipeActions}
-          rightOpenValue={-180}
-          disableRightSwipe
-          keyExtractor={(item) => item.id}
-          numColumns={viewMode === 'grid' ? 2 : 1}
-          columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
-          key={viewMode}
-          showsVerticalScrollIndicator={false}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          previewOpenValue={0}
-          previewOpenDelay={0}
-          ListEmptyComponent={
-            loading ? (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Cargando...</Text>
-              </View>
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No se encontraron resultados</Text>
-              </View>
-            )
-          }
-          ListFooterComponent={
-            releases.length > 0 ? (
-              <View style={styles.footerContainer}>
-                <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
-                <FlatList
-                  data={releases}
-                  renderItem={renderRelease}
-                  keyExtractor={(item) => item.id.toString()}
-                  numColumns={viewMode === 'grid' ? 2 : 1}
-                  columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
-                  showsVerticalScrollIndicator={false}
-                />
-              </View>
-            ) : null
-          }
-        />
+        viewMode === 'list' ? (
+          <SwipeListView
+            data={filteredCollection}
+            renderItem={renderCollectionItem}
+            renderHiddenItem={renderSwipeActions}
+            rightOpenValue={-180}
+            disableRightSwipe
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            previewOpenValue={0}
+            previewOpenDelay={0}
+            ListEmptyComponent={
+              loading ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Cargando...</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No se encontraron resultados</Text>
+                </View>
+              )
+            }
+            ListFooterComponent={
+              releases.length > 0 ? (
+                <View style={styles.footerContainer}>
+                  <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
+                  <FlatList
+                    data={releases}
+                    renderItem={renderRelease}
+                    keyExtractor={(item) => item.id.toString()}
+                    showsVerticalScrollIndicator={false}
+                  />
+                </View>
+              ) : null
+            }
+          />
+        ) : (
+          <FlatList
+            data={filteredCollection}
+            renderItem={renderGridItem}
+            keyExtractor={(item) => item.id}
+            numColumns={2}
+            columnWrapperStyle={styles.gridRow}
+            showsVerticalScrollIndicator={false}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            ListEmptyComponent={
+              loading ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>Cargando...</Text>
+                </View>
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No se encontraron resultados</Text>
+                </View>
+              )
+            }
+            ListFooterComponent={
+              releases.length > 0 ? (
+                <View style={styles.footerContainer}>
+                  <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
+                  <FlatList
+                    data={releases}
+                    renderItem={renderRelease}
+                    keyExtractor={(item) => item.id.toString()}
+                    showsVerticalScrollIndicator={false}
+                  />
+                </View>
+              ) : null
+            }
+          />
+        )
       ) : (
         <FlatList
           data={releases}
           renderItem={renderRelease}
           keyExtractor={(item) => item.id.toString()}
-          numColumns={viewMode === 'grid' ? 2 : 1}
-          columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
-          key={viewMode}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={onRefresh}
@@ -794,7 +838,6 @@ const styles = StyleSheet.create({
   collectionItemContainer: {
     marginBottom: 8,
     backgroundColor: 'white',
-    
   },
   collectionItem: {
     flexDirection: 'row',
@@ -804,7 +847,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    minHeight: 80, // Altura mínima para evitar que el contenido tape los botones
+    minHeight: 80,
   },
   collectionThumbnail: {
     width: 80,
@@ -877,6 +920,7 @@ const styles = StyleSheet.create({
     color: '#999',
     marginBottom: 2,
   },
+
   gridRow: {
     justifyContent: 'space-between',
   },
