@@ -32,7 +32,6 @@ export const SearchScreen: React.FC = () => {
   const [filterByStyle, setFilterByStyle] = useState<string>('');
   const [filterByYear, setFilterByYear] = useState<string>('');
   const [filterByLabel, setFilterByLabel] = useState<string>('');
-  const [filterByArtist, setFilterByArtist] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -47,7 +46,7 @@ export const SearchScreen: React.FC = () => {
 
   useEffect(() => {
     sortCollection();
-  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByArtist, query]);
+  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, query]);
 
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
@@ -218,11 +217,6 @@ export const SearchScreen: React.FC = () => {
       filtered = filtered.filter(item => item.albums?.label === filterByLabel);
     }
 
-    // Filtrar por artista
-    if (filterByArtist) {
-      filtered = filtered.filter(item => item.albums?.artist === filterByArtist);
-    }
-
     // Ordenar
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -298,15 +292,7 @@ export const SearchScreen: React.FC = () => {
     return Array.from(labels).sort();
   };
 
-  const getUniqueArtists = () => {
-    const artists = new Set<string>();
-    collection.forEach(item => {
-      if (item.albums?.artist) {
-        artists.add(item.albums.artist);
-      }
-    });
-    return Array.from(artists).sort();
-  };
+
 
   const renderCollectionItem = ({ item }: { item: any }) => (
     <View style={styles.collectionItemContainer}>
@@ -400,17 +386,17 @@ export const SearchScreen: React.FC = () => {
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeOptions]}
         onPress={() => handleSwipeOptions(rowMap, rowData.item.id)}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
       >
-        <Ionicons name="ellipsis-horizontal" size={20} color="white" />
+        <Ionicons name="ellipsis-horizontal" size={18} color="white" />
         <Text style={styles.swipeActionText}>Opciones</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeDelete]}
         onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
-        activeOpacity={0.7}
+        activeOpacity={0.8}
       >
-        <Ionicons name="trash" size={20} color="white" />
+        <Ionicons name="trash" size={18} color="white" />
         <Text style={styles.swipeActionText}>Eliminar</Text>
       </TouchableOpacity>
     </View>
@@ -599,39 +585,7 @@ export const SearchScreen: React.FC = () => {
               </ScrollView>
             </View>
 
-            {/* Filtro por Artista */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Artista</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
-                <TouchableOpacity
-                  style={[
-                    styles.filterChip,
-                    !filterByArtist && styles.filterChipActive
-                  ]}
-                  onPress={() => setFilterByArtist('')}
-                >
-                  <Text style={[
-                    styles.filterChipText,
-                    !filterByArtist && styles.filterChipTextActive
-                  ]}>Todos</Text>
-                </TouchableOpacity>
-                {getUniqueArtists().map((artist) => (
-                  <TouchableOpacity
-                    key={artist}
-                    style={[
-                      styles.filterChip,
-                      filterByArtist === artist && styles.filterChipActive
-                    ]}
-                    onPress={() => setFilterByArtist(artist)}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByArtist === artist && styles.filterChipTextActive
-                    ]}>{artist}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+
           </ScrollView>
         </View>
       )}
@@ -642,7 +596,7 @@ export const SearchScreen: React.FC = () => {
           data={filteredCollection}
           renderItem={renderCollectionItem}
           renderHiddenItem={renderSwipeActions}
-          rightOpenValue={-160}
+          rightOpenValue={-180}
           disableRightSwipe
           keyExtractor={(item) => item.id}
           numColumns={viewMode === 'grid' ? 2 : 1}
@@ -651,6 +605,9 @@ export const SearchScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={onRefresh}
+          previewRowKey={filteredCollection.length > 0 ? filteredCollection[0].id : undefined}
+          previewOpenValue={-20}
+          previewOpenDelay={500}
           ListEmptyComponent={
             loading ? (
               <View style={styles.emptyContainer}>
@@ -811,6 +768,8 @@ const styles = StyleSheet.create({
   },
   collectionItemContainer: {
     marginBottom: 8,
+    backgroundColor: 'white',
+    
   },
   collectionItem: {
     flexDirection: 'row',
@@ -820,6 +779,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    minHeight: 80, // Altura mínima para evitar que el contenido tape los botones
   },
   collectionThumbnail: {
     width: 80,
@@ -966,29 +926,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-    height: '100%',
-    gap: 2, // Espacio entre botones
+    height: '90%',
+    gap: 0, // Sin espacio entre botones para que se vean como una barra continua
   },
   swipeAction: {
     justifyContent: 'center',
     alignItems: 'center',
     width: 90, // Botones más anchos
     height: '100%',
-    borderRadius: 0, // Sin bordes redondeados para que se vean como botones separados
+    borderRadius: 0, // Sin bordes redondeados
   },
   swipeOptions: {
     backgroundColor: '#007AFF',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.3)', // Separador sutil
+    borderRightWidth: 2,
+    borderRightColor: 'rgba(255,255,255,0.5)', // Separador más visible
   },
   swipeDelete: {
     backgroundColor: '#FF3B30',
   },
   swipeActionText: {
     color: 'white',
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '600',
-    marginTop: 4,
+    marginTop: 2,
     textAlign: 'center',
   },
 }); 
