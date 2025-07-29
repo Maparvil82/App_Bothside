@@ -7,6 +7,7 @@ import {
   RefreshControl,
   ActivityIndicator,
   Dimensions,
+  Image,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,6 +25,7 @@ interface CollectionStats {
   topLabels: Array<{ label: string; count: number }>;
   topStyles: Array<{ style: string; count: number }>;
   albumsByDecade: Array<{ decade: string; count: number }>;
+  latestAlbums: Array<{ title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
 }
 
 export default function DashboardScreen() {
@@ -38,20 +40,23 @@ export default function DashboardScreen() {
     try {
       setLoading(true);
 
-      // Obtener datos básicos de la colección con campos directos
-      const { data: collectionData, error: collectionError } = await supabase
-        .from('user_collection')
-        .select(`
-          album_id,
-          albums (
-            title,
-            release_year,
-            artist,
-            label,
-            album_styles (styles (name))
-          )
-        `)
-        .eq('user_id', user.id);
+                        // Obtener datos básicos de la colección con campos directos
+                  const { data: collectionData, error: collectionError } = await supabase
+                    .from('user_collection')
+                    .select(`
+                      album_id,
+                      added_at,
+                      albums (
+                        title,
+                        release_year,
+                        artist,
+                        label,
+                        cover_url,
+                        album_styles (styles (name))
+                      )
+                    `)
+                    .eq('user_id', user.id)
+                    .order('added_at', { ascending: false });
 
       console.log('📊 Error de consulta:', collectionError);
 
@@ -72,6 +77,7 @@ export default function DashboardScreen() {
           topLabels: [],
           topStyles: [],
           albumsByDecade: [],
+          latestAlbums: [],
         });
         return;
       }
@@ -196,16 +202,37 @@ export default function DashboardScreen() {
         .slice(0, 5)
         .map(([style, count]) => ({ style, count }));
 
-      // Álbumes por década
-      const albumsByDecade = Array.from(decades.entries())
-        .sort((a, b) => {
-          const decadeA = parseInt(a[0].replace('s', ''));
-          const decadeB = parseInt(b[0].replace('s', ''));
-          return decadeA - decadeB;
-        })
-        .map(([decade, count]) => ({ decade, count }));
+                        // Álbumes por década
+                  const albumsByDecade = Array.from(decades.entries())
+                    .sort((a, b) => {
+                      const decadeA = parseInt(a[0].replace('s', ''));
+                      const decadeB = parseInt(b[0].replace('s', ''));
+                      return decadeA - decadeB;
+                    })
+                    .map(([decade, count]) => ({ decade, count }));
 
-                        setStats({
+                  // Últimos 5 álbumes añadidos
+                  const latestAlbums = collectionData
+                    .slice(0, 5)
+                    .map((item: any) => {
+                      const album = item.albums;
+                      if (!album) return null;
+                      
+                      return {
+                        title: album.title || 'Sin título',
+                        artist: album.artist || 'Artista desconocido',
+                        year: album.release_year || 'Año desconocido',
+                        imageUrl: album.cover_url,
+                        addedAt: new Date(item.added_at).toLocaleDateString('es-ES', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })
+                      };
+                    })
+                    .filter(Boolean) as Array<{ title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
+
+                  setStats({
                     totalAlbums,
                     totalArtists,
                     totalLabels,
@@ -216,6 +243,7 @@ export default function DashboardScreen() {
                     topLabels,
                     topStyles,
                     albumsByDecade,
+                    latestAlbums,
                   });
 
     } catch (error) {
@@ -321,26 +349,56 @@ export default function DashboardScreen() {
         <TopList title="Top 5 Estilos" data={stats.topStyles} keyName="style" />
       )}
 
-      {/* Álbumes por Década */}
-      {stats.albumsByDecade.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Álbumes por Década</Text>
-          {stats.albumsByDecade.map((item, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.listItemText}>{item.decade}</Text>
-              <Text style={styles.listItemCount}>{item.count}</Text>
-            </View>
-          ))}
-        </View>
-      )}
+                        {/* Últimos Álbumes Añadidos */}
+                  {stats.latestAlbums.length > 0 && (
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
+                      {stats.latestAlbums.map((album, index) => (
+                        <View key={index} style={styles.albumItem}>
+                          <View style={styles.albumImageContainer}>
+                            {album.imageUrl ? (
+                              <Image 
+                                source={{ uri: album.imageUrl }} 
+                                style={styles.albumImage}
+                                resizeMode="cover"
+                              />
+                            ) : (
+                              <View style={styles.albumImagePlaceholder}>
+                                <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                              </View>
+                            )}
+                          </View>
+                          <View style={styles.albumInfo}>
+                            <Text style={styles.albumTitle}>{album.title}</Text>
+                            <Text style={styles.albumArtist}>{album.artist}</Text>
+                            <Text style={styles.albumYear}>{album.year}</Text>
+                          </View>
+                          <Text style={styles.albumDate}>{album.addedAt}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
 
-      {/* Mensaje si no hay datos */}
-      {stats.totalAlbums === 0 && (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
-          <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
-        </View>
-      )}
+                  {/* Álbumes por Década */}
+                  {stats.albumsByDecade.length > 0 && (
+                    <View style={styles.section}>
+                      <Text style={styles.sectionTitle}>Álbumes por Década</Text>
+                      {stats.albumsByDecade.map((item, index) => (
+                        <View key={index} style={styles.listItem}>
+                          <Text style={styles.listItemText}>{item.decade}</Text>
+                          <Text style={styles.listItemCount}>{item.count}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+
+                  {/* Mensaje si no hay datos */}
+                  {stats.totalAlbums === 0 && (
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
+                      <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
+                    </View>
+                  )}
     </ScrollView>
   );
 }
@@ -478,9 +536,64 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#adb5bd',
-    textAlign: 'center',
-  },
-}); 
+                emptySubtext: {
+                fontSize: 14,
+                color: '#adb5bd',
+                textAlign: 'center',
+              },
+              albumItem: {
+                flexDirection: 'row',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                paddingVertical: 12,
+                borderBottomWidth: 1,
+                borderBottomColor: '#f1f3f4',
+              },
+              albumInfo: {
+                flex: 1,
+                marginRight: 12,
+              },
+              albumTitle: {
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#212529',
+                marginBottom: 2,
+              },
+              albumArtist: {
+                fontSize: 14,
+                color: '#495057',
+                marginBottom: 2,
+              },
+              albumYear: {
+                fontSize: 12,
+                color: '#6c757d',
+              },
+              albumDate: {
+                fontSize: 12,
+                color: '#007AFF',
+                fontWeight: '500',
+              },
+              albumImageContainer: {
+                width: 80,
+                height: 80,
+                marginRight: 12,
+                borderRadius: 6,
+                overflow: 'hidden',
+              },
+              albumImage: {
+                width: '100%',
+                height: '100%',
+              },
+              albumImagePlaceholder: {
+                width: '100%',
+                height: '100%',
+                backgroundColor: '#e9ecef',
+                justifyContent: 'center',
+                alignItems: 'center',
+              },
+              albumImagePlaceholderText: {
+                fontSize: 10,
+                color: '#6c757d',
+                textAlign: 'center',
+              },
+            }); 
