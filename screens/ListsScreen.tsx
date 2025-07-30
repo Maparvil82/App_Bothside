@@ -3,17 +3,18 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   Alert,
   RefreshControl,
   Image,
 } from 'react-native';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { UserListService } from '../services/database';
 import { UserList } from '../services/database';
 import { useHybridLists } from '../hooks/useHybridLists';
+import { ListCoverCollage } from '../components/ListCoverCollage';
 
 interface ListsScreenProps {
   navigation: any;
@@ -139,6 +140,64 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     );
   };
 
+  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
+    const item = filteredLists.find(list => list.id === rowKey);
+    if (!item) return;
+
+    Alert.alert(
+      'Eliminar Lista',
+      `¿Estás seguro de que quieres eliminar "${item.title}"?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await UserListService.deleteList(item.id);
+              removeListLocally(item.id);
+              Alert.alert('Éxito', 'Lista eliminada correctamente');
+            } catch (error: any) {
+              console.error('❌ ListsScreen: Error deleting list:', error);
+              Alert.alert('Error', `No se pudo eliminar la lista: ${error?.message || 'Error desconocido'}`);
+            }
+          },
+        },
+      ]
+    );
+    rowMap[rowKey]?.closeRow();
+  };
+
+  const handleSwipeEdit = (rowMap: any, rowKey: string) => {
+    const item = filteredLists.find(list => list.id === rowKey);
+    if (item) {
+      handleEditList(item);
+    }
+    rowMap[rowKey]?.closeRow();
+  };
+
+  const renderSwipeActions = (rowData: any, rowMap: any) => (
+    <View style={styles.swipeActionsContainer}>
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeEdit]}
+        onPress={() => handleSwipeEdit(rowMap, rowData.item.id)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="create-outline" size={18} color="white" />
+        <Text style={styles.swipeActionText}>Editar</Text>
+      </TouchableOpacity>
+      
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeDelete]}
+        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="trash" size={18} color="white" />
+        <Text style={styles.swipeActionText}>Eliminar</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderListItem = ({ item }: { item: UserList }) => (
     <View style={styles.listItemContainer}>
       <TouchableOpacity 
@@ -146,13 +205,10 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         onPress={() => handleViewList(item)}
         activeOpacity={0.7}
       >
-        {item.cover_url ? (
-          <Image source={{ uri: item.cover_url }} style={styles.listThumbnail} />
-        ) : (
-          <View style={styles.listThumbnailPlaceholder}>
-            <Ionicons name="list" size={24} color="#666" />
-          </View>
-        )}
+        <ListCoverCollage 
+          albums={item.albums || []} 
+          size={80} 
+        />
         <View style={styles.listInfo}>
           <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
             {item.title}
@@ -294,16 +350,20 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
+        <SwipeListView
           data={filteredLists}
           renderItem={renderListItem}
+          renderHiddenItem={renderSwipeActions}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
+          rightOpenValue={-180}
+          previewOpenValue={0}
+          previewOpenDelay={0}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
           ListEmptyComponent={renderEmptyState}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContainer}
         />
       )}
     </View>
@@ -383,6 +443,32 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: 'white',
   },
+  swipeActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 0,
+  },
+  swipeAction: {
+    width: 90,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+  },
+  swipeEdit: {
+    backgroundColor: '#007AFF',
+  },
+  swipeDelete: {
+    backgroundColor: '#FF3B30',
+  },
+  swipeActionText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+    textAlign: 'center',
+  },
   listContainer: {
    
   },
@@ -403,7 +489,8 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 0,
-    marginRight: 10,
+    marginRight: 15,
+    
   },
   listThumbnailPlaceholder: {
     width: 80,
@@ -412,17 +499,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F0F0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 10,
+    marginRight: 15,
   },
   listInfo: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
+    marginLeft: 14,
   },
   listTitle: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,
+    
   },
   listDescription: {
     fontSize: 14,

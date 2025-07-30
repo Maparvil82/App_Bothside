@@ -17,7 +17,7 @@ export const useHybridLists = () => {
     try {
       console.log('🔄 useHybridLists: Manual load triggered');
       setLoading(true);
-      const userLists = await UserListService.getUserLists(user.id);
+      const userLists = await UserListService.getUserListsWithAlbums(user.id);
       console.log('✅ useHybridLists: Manual load completed, lists:', userLists.length);
       setLists(userLists || []);
       setLastManualRefresh(new Date());

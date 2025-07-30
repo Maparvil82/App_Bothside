@@ -82,6 +82,14 @@ export interface UserList {
   is_public: boolean;
   user_id: string;
   created_at: string;
+  albums?: Array<{
+    albums: {
+      id: string;
+      title: string;
+      artist: string;
+      cover_url?: string;
+    };
+  }>;
 }
 
 export interface ListAlbum {
@@ -625,6 +633,57 @@ export const UserListService = {
     
     console.log('User lists retrieved:', data);
     return data;
+  },
+
+  // Obtener listas del usuario con álbumes incluidos para collage
+  async getUserListsWithAlbums(userId: string) {
+    console.log('🔍 UserListService: Getting lists with albums for user:', userId);
+    
+    // Primero obtener las listas
+    const { data: lists, error: listsError } = await supabase
+      .from('user_lists')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (listsError) {
+      console.error('❌ UserListService: Error getting user lists:', listsError);
+      throw listsError;
+    }
+    
+    // Para cada lista, obtener sus álbumes
+    const listsWithAlbums = await Promise.all(
+      (lists || []).map(async (list) => {
+        try {
+          const { data: albums, error: albumsError } = await supabase
+            .from('list_albums')
+            .select(`
+              *,
+              albums (
+                id,
+                title,
+                artist,
+                cover_url
+              )
+            `)
+            .eq('list_id', list.id)
+            .limit(4); // Solo los últimos 4 para el collage
+          
+          if (albumsError) {
+            console.error('❌ UserListService: Error getting albums for list:', list.id, albumsError);
+            return { ...list, albums: [] };
+          }
+          
+          return { ...list, albums: albums || [] };
+        } catch (error) {
+          console.error('❌ UserListService: Error processing list:', list.id, error);
+          return { ...list, albums: [] };
+        }
+      })
+    );
+    
+    console.log('✅ UserListService: Found', listsWithAlbums.length, 'lists with albums');
+    return listsWithAlbums;
   },
 
   // Obtener lista por ID
