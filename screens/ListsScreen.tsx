@@ -387,8 +387,8 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
+    fontWeight: '600',
+    color: '#333',
   },
   createListButton: {
     padding: 8,

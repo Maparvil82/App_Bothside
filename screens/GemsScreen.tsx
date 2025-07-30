@@ -128,7 +128,7 @@ export default function GemsScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Mis Gems</Text>
+        <Text style={styles.title}>Gems</Text>
         <Text style={styles.subtitle}>
           {gems.length} {gems.length === 1 ? 'álbum favorito' : 'álbumes favoritos'}
         </Text>
@@ -178,14 +178,14 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   header: {
-    padding: 20,
+    padding: 15,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: '600',
     color: '#333',
   },
   subtitle: {

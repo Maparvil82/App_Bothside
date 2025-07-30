@@ -26,7 +26,7 @@ const SearchStack = () => (
       name="Search"
       component={SearchScreen}
       options={{
-        header: () => <CustomHeader title="Colección" />
+        header: () => <CustomHeader title="Bothside" />
       }}
     />
   </Stack.Navigator>
@@ -38,7 +38,7 @@ const GemsStack = () => (
       name="Gems"
       component={GemsScreen}
       options={{
-        header: () => <CustomHeader title="Mis Gems" />
+        header: () => <CustomHeader title="Bothside" />
       }}
     />
   </Stack.Navigator>
@@ -50,7 +50,7 @@ const ListsStack = () => (
       name="Lists"
       component={ListsScreen}
       options={{
-        header: () => <CustomHeader title="Mis Estanterías" />
+        header: () => <CustomHeader title="Bothside" />
       }}
     />
     <Stack.Screen
@@ -90,7 +90,7 @@ const DashboardStack = () => (
       name="Dashboard"
       component={DashboardScreen}
       options={{
-        header: () => <CustomHeader title="Dashboard" />
+        header: () => <CustomHeader title="Bothside" />
       }}
     />
   </Stack.Navigator>
@@ -102,7 +102,7 @@ const AddDiscStack = () => (
       name="AddDisc"
       component={AddDiscScreen}
       options={{
-        header: () => <CustomHeader title="Añadir" showAvatar={false} />
+        header: () => <CustomHeader title="Bothside" showAvatar={false} />
       }}
     />
   </Stack.Navigator>
