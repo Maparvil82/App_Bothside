@@ -338,7 +338,6 @@ const styles = StyleSheet.create({
     
   },
   albumItemContainer: {
-    
     backgroundColor: 'white',
   },
   albumItem: {

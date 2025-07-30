@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GemsProvider } from './contexts/GemsContext';
-import { AppNavigator } from './navigation/AppNavigator';
+import AppNavigator from './navigation/AppNavigator';
 import { LoginScreen } from './screens/LoginScreen';
 import { validateEnv } from './config/env';
 

@@ -15,71 +15,94 @@ import CreateListScreen from '../screens/CreateListScreen';
 import ViewListScreen from '../screens/ViewListScreen';
 import AddAlbumToListScreen from '../screens/AddAlbumToListScreen';
 import EditListScreen from '../screens/EditListScreen';
+import { CustomHeader } from '../components/CustomHeader';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const SearchStack = () => (
   <Stack.Navigator>
-    <Stack.Screen 
-      name="Search" 
+    <Stack.Screen
+      name="Search"
       component={SearchScreen}
-      options={{ title: 'Colección' }}
+      options={{
+        header: () => <CustomHeader title="Colección" />
+      }}
     />
   </Stack.Navigator>
 );
 
 const GemsStack = () => (
   <Stack.Navigator>
-    <Stack.Screen 
-      name="Gems" 
+    <Stack.Screen
+      name="Gems"
       component={GemsScreen}
-      options={{ title: 'Mis Gems' }}
+      options={{
+        header: () => <CustomHeader title="Mis Gems" />
+      }}
     />
   </Stack.Navigator>
 );
 
 const ListsStack = () => (
   <Stack.Navigator>
-    <Stack.Screen 
-      name="Lists" 
+    <Stack.Screen
+      name="Lists"
       component={ListsScreen}
-      options={{ 
-        title: 'Mis Estanterías',
-        headerLeft: () => null
+      options={{
+        header: () => <CustomHeader title="Mis Estanterías" />
       }}
     />
-    <Stack.Screen 
-      name="CreateList" 
+    <Stack.Screen
+      name="CreateList"
       component={CreateListScreen}
-      options={{ 
-        title: 'Crear Lista',
-        headerLeft: () => null
+      options={{
+        header: () => <CustomHeader title="Crear Estantería" showAvatar={false} />
       }}
     />
-    <Stack.Screen 
-      name="ViewList" 
+    <Stack.Screen
+      name="ViewList"
       component={ViewListScreen}
-      options={{ 
-        title: 'Mis Listas',
-        headerShown: true,
-        headerLeft: () => null
+      options={{
+        header: () => <CustomHeader title="Ver Estantería" showAvatar={false} />
       }}
     />
-    <Stack.Screen 
-      name="AddAlbumToList" 
+    <Stack.Screen
+      name="AddAlbumToList"
       component={AddAlbumToListScreen}
-      options={{ 
-        title: 'Añadir Álbumes',
-        headerLeft: () => null
+      options={{
+        header: () => <CustomHeader title="Añadir a Estantería" showAvatar={false} />
       }}
     />
-    <Stack.Screen 
-      name="EditList" 
+    <Stack.Screen
+      name="EditList"
       component={EditListScreen}
-      options={{ 
-        title: 'Editar Lista',
-        headerLeft: () => null
+      options={{
+        header: () => <CustomHeader title="Editar Estantería" showAvatar={false} />
+      }}
+    />
+  </Stack.Navigator>
+);
+
+const DashboardStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="Dashboard"
+      component={DashboardScreen}
+      options={{
+        header: () => <CustomHeader title="Dashboard" />
+      }}
+    />
+  </Stack.Navigator>
+);
+
+const AddDiscStack = () => (
+  <Stack.Navigator>
+    <Stack.Screen
+      name="AddDisc"
+      component={AddDiscScreen}
+      options={{
+        header: () => <CustomHeader title="Añadir" showAvatar={false} />
       }}
     />
   </Stack.Navigator>
@@ -87,101 +110,81 @@ const ListsStack = () => (
 
 const ProfileStack = () => (
   <Stack.Navigator>
-    <Stack.Screen 
-      name="Profile" 
+    <Stack.Screen
+      name="ProfileScreen"
       component={ProfileScreen}
-      options={{ title: 'Perfil' }}
+      options={{
+        title: 'Perfil',
+        headerShown: true,
+        headerBackTitle: 'Atrás'
+      }}
     />
-    <Stack.Screen 
-      name="Admin" 
+    <Stack.Screen
+      name="Admin"
       component={AdminScreen}
       options={{ title: 'Administración' }}
     />
   </Stack.Navigator>
 );
 
-const DashboardStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="Dashboard" 
-      component={DashboardScreen}
+const TabNavigator = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      tabBarIcon: ({ focused, color, size }) => {
+        let iconName: keyof typeof Ionicons.glyphMap = 'help-outline';
+        if (route.name === 'SearchTab') {
+          iconName = focused ? 'disc' : 'disc-outline';
+        } else if (route.name === 'GemsTab') {
+          iconName = focused ? 'diamond' : 'diamond-outline';
+        } else if (route.name === 'ListsTab') {
+          iconName = focused ? 'list' : 'list-outline';
+        } else if (route.name === 'DashboardTab') {
+          iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+        } else if (route.name === 'AddDiscTab') {
+          iconName = focused ? 'add-circle' : 'add-circle-outline';
+        }
+        return <Ionicons name={iconName} size={size} color={color} />;
+      },
+      tabBarActiveTintColor: '#007AFF',
+      tabBarInactiveTintColor: 'gray',
+      headerShown: false,
+    })}
+  >
+    <Tab.Screen
+      name="SearchTab"
+      component={SearchStack}
+      options={{ title: 'Colección' }}
+    />
+    <Tab.Screen
+      name="GemsTab"
+      component={GemsStack}
+      options={{ title: 'Gems' }}
+    />
+    <Tab.Screen
+      name="ListsTab"
+      component={ListsStack}
+      options={{ title: 'Mis Estanterías' }}
+    />
+    <Tab.Screen
+      name="DashboardTab"
+      component={DashboardStack}
       options={{ title: 'Dashboard' }}
     />
-  </Stack.Navigator>
-);
-
-const AddDiscStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen 
-      name="AddDisc" 
-      component={AddDiscScreen}
-      options={{ title: 'Añadir Disco' }}
+    <Tab.Screen
+      name="AddDiscTab"
+      component={AddDiscStack}
+      options={{ title: 'Añadir' }}
     />
-  </Stack.Navigator>
+  </Tab.Navigator>
 );
 
-export const AppNavigator: React.FC = () => {
-  return (
-    <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName: keyof typeof Ionicons.glyphMap;
+const AppNavigator = () => (
+  <NavigationContainer>
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="Main" component={TabNavigator} />
+      <Stack.Screen name="Profile" component={ProfileStack} />
+    </Stack.Navigator>
+  </NavigationContainer>
+);
 
-            if (route.name === 'SearchTab') {
-              iconName = focused ? 'disc' : 'disc-outline';
-            } else if (route.name === 'GemsTab') {
-              iconName = focused ? 'diamond' : 'diamond-outline';
-            } else if (route.name === 'ListsTab') {
-              iconName = focused ? 'list' : 'list-outline';
-            } else if (route.name === 'DashboardTab') {
-              iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-            } else if (route.name === 'AddDiscTab') {
-              iconName = focused ? 'add-circle' : 'add-circle-outline';
-            } else if (route.name === 'ProfileTab') {
-              iconName = focused ? 'person' : 'person-outline';
-            } else {
-              iconName = 'help-outline';
-            }
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-          tabBarActiveTintColor: '#007AFF',
-          tabBarInactiveTintColor: 'gray',
-          headerShown: false,
-        })}
-      >
-        <Tab.Screen 
-          name="SearchTab" 
-          component={SearchStack}
-          options={{ title: 'Colección' }}
-        />
-        <Tab.Screen 
-          name="GemsTab" 
-          component={GemsStack}
-          options={{ title: 'Gems' }}
-        />
-        <Tab.Screen 
-          name="ListsTab" 
-          component={ListsStack}
-          options={{ title: 'Listas' }}
-        />
-        <Tab.Screen 
-          name="DashboardTab" 
-          component={DashboardStack}
-          options={{ title: 'Dashboard' }}
-        />
-        <Tab.Screen 
-          name="AddDiscTab" 
-          component={AddDiscStack}
-          options={{ title: 'Añadir' }}
-        />
-        <Tab.Screen 
-          name="ProfileTab" 
-          component={ProfileStack}
-          options={{ title: 'Perfil' }}
-        />
-      </Tab.Navigator>
-    </NavigationContainer>
-  );
-}; 
+export default AppNavigator; 
