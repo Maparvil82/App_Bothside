@@ -23,6 +23,7 @@ import { DiscogsRelease } from '../types';
 import { supabase } from '../lib/supabase';
 import { useGems } from '../contexts/GemsContext';
 import { ListCoverCollage } from '../components/ListCoverCollage';
+import { ENV } from '../config/env';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -52,6 +53,11 @@ export const SearchScreen: React.FC = () => {
   const [newShelfTitle, setNewShelfTitle] = useState('');
   const [newShelfDescription, setNewShelfDescription] = useState('');
   const [newShelfIsPublic, setNewShelfIsPublic] = useState(false);
+
+  const [showEditionsModal, setShowEditionsModal] = useState(false);
+  const [editions, setEditions] = useState<any[]>([]);
+  const [editionsLoading, setEditionsLoading] = useState(false);
+  const [selectedAlbumForEdit, setSelectedAlbumForEdit] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -326,7 +332,7 @@ export const SearchScreen: React.FC = () => {
                 setShowAddToShelfModal(true);
                 break;
               case 3: // Editar
-                Alert.alert('Editar', 'Función de editar próximamente');
+                handleEditAlbum(item);
                 break;
               case 4: // Compartir
                 Alert.alert('Compartir', 'Función de compartir próximamente');
@@ -346,7 +352,7 @@ export const SearchScreen: React.FC = () => {
               loadUserLists();
               setShowAddToShelfModal(true);
             }},
-            { text: 'Editar', onPress: () => Alert.alert('Editar', 'Función de editar próximamente') },
+            { text: 'Editar', onPress: () => handleEditAlbum(item) },
             { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
           ]
         );
@@ -460,7 +466,148 @@ export const SearchScreen: React.FC = () => {
     return Array.from(labels).sort();
   };
 
+  const searchAlbumEditions = async (albumTitle: string, artist: string) => {
+    setEditionsLoading(true);
+    try {
+      console.log(`🔍 Buscando ediciones para: "${albumTitle}" - "${artist}"`);
+      
+      // Construir la consulta de búsqueda
+      const searchQuery = `${albumTitle} ${artist}`.trim();
+      const encodedQuery = encodeURIComponent(searchQuery);
+      
+      const response = await fetch(
+        `https://api.discogs.com/database/search?q=${encodedQuery}&type=release&format=vinyl&per_page=50`,
+        {
+          headers: {
+            'User-Agent': 'Bothside/1.0',
+            'Authorization': `Discogs token=${ENV.DISCOGS_TOKEN}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`Error de API: ${response.status} ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`📊 Respuesta de Discogs:`, data);
+      
+      const releases = data.results || [];
+      console.log(`📋 Total de resultados: ${releases.length}`);
+      
+      // Filtrar y formatear las ediciones con criterios más flexibles
+      const formattedEditions = releases
+        .filter((release: any) => {
+          // Verificar que las propiedades existan antes de usar toLowerCase()
+          const title = release.title || '';
+          const artist = release.artist || '';
+          
+          const titleMatch = title.toLowerCase().includes(albumTitle.toLowerCase());
+          const artistMatch = artist.toLowerCase().includes(artist.toLowerCase());
+          
+          // Ser más flexible con la coincidencia
+          return titleMatch || artistMatch;
+        })
+        .map((release: any) => ({
+          id: release.id,
+          title: release.title || 'Sin título',
+          artist: release.artist || 'Artista desconocido',
+          year: release.year,
+          format: release.format?.join(', ') || 'Vinyl',
+          country: release.country,
+          label: release.label?.join(', ') || 'Unknown',
+          thumb: release.thumb,
+          cover_image: release.cover_image
+        }))
+        .slice(0, 15); // Aumentar el límite a 15 ediciones
+      
+      console.log(`✅ Ediciones filtradas: ${formattedEditions.length}`);
+      setEditions(formattedEditions);
+      
+      if (formattedEditions.length === 0) {
+        Alert.alert(
+          'Sin resultados', 
+          `No se encontraron ediciones para "${albumTitle}" de "${artist}". Intenta con una búsqueda más específica.`
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error searching editions:', error);
+      Alert.alert(
+        'Error de conexión', 
+        'No se pudieron cargar las ediciones. Verifica tu conexión a internet y el token de Discogs.'
+      );
+    } finally {
+      setEditionsLoading(false);
+    }
+  };
 
+  const handleEditAlbum = async (item: any) => {
+    setSelectedAlbumForEdit(item);
+    await searchAlbumEditions(item.albums.title, item.albums.artist);
+    setShowEditionsModal(true);
+  };
+
+  const handleReplaceEdition = async (newEdition: any) => {
+    if (!user || !selectedAlbumForEdit) return;
+    
+    try {
+      console.log(`🔄 Reemplazando edición:`, {
+        currentAlbum: selectedAlbumForEdit.albums,
+        newEdition: newEdition
+      });
+      
+      // Mostrar confirmación antes de reemplazar
+      Alert.alert(
+        'Confirmar reemplazo',
+        `¿Estás seguro de que quieres reemplazar "${selectedAlbumForEdit.albums.title}" con "${newEdition.title}"?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { 
+            text: 'Reemplazar', 
+            style: 'destructive',
+            onPress: async () => {
+              try {
+                // Primero eliminar la edición actual
+                console.log('🗑️ Eliminando edición actual...');
+                await UserCollectionService.removeFromCollection(user.id, selectedAlbumForEdit.albums.id);
+                
+                // Luego añadir la nueva edición
+                console.log('➕ Añadiendo nueva edición...');
+                const releaseData = {
+                  id: newEdition.id,
+                  title: newEdition.title,
+                  artist: newEdition.artist,
+                  year: newEdition.year,
+                  format: newEdition.format,
+                  country: newEdition.country,
+                  label: newEdition.label,
+                  thumb: newEdition.thumb,
+                  cover_image: newEdition.cover_image
+                };
+                
+                await addToCollection(releaseData);
+                
+                setShowEditionsModal(false);
+                setSelectedAlbumForEdit(null);
+                setEditions([]);
+                
+                // Recargar la colección
+                await loadCollection();
+                
+                Alert.alert('✅ Éxito', 'Edición reemplazada correctamente');
+              } catch (error) {
+                console.error('❌ Error replacing edition:', error);
+                Alert.alert('❌ Error', 'No se pudo reemplazar la edición. Inténtalo de nuevo.');
+              }
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('❌ Error in handleReplaceEdition:', error);
+      Alert.alert('❌ Error', 'No se pudo procesar la solicitud. Inténtalo de nuevo.');
+    }
+  };
 
   const renderCollectionItem = ({ item }: { item: any }) => (
     <View style={styles.collectionItemContainer}>
@@ -1017,6 +1164,85 @@ export const SearchScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Modal para editar edición */}
+      <Modal
+        visible={showEditionsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditionsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Editar edición de "{selectedAlbumForEdit?.albums?.title}"
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowEditionsModal(false);
+                  setSelectedAlbumForEdit(null);
+                  setEditions([]);
+                }}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.formTitle}>
+                Ediciones disponibles ({editions.length} encontradas):
+              </Text>
+              
+              {editionsLoading ? (
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="search" size={48} color="#ccc" />
+                  <Text style={styles.emptyText}>Buscando ediciones...</Text>
+                  <Text style={styles.emptySubtext}>Esto puede tomar unos segundos</Text>
+                </View>
+              ) : editions.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Ionicons name="alert-circle" size={48} color="#ccc" />
+                  <Text style={styles.emptyText}>No se encontraron ediciones</Text>
+                  <Text style={styles.emptySubtext}>
+                    Intenta con una búsqueda más específica o verifica el nombre del álbum
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.editionsSubtitle}>
+                    Selecciona una edición para reemplazar la actual:
+                  </Text>
+                  {editions.map((edition, index) => (
+                    <TouchableOpacity
+                      key={edition.id}
+                      style={styles.editionItem}
+                      onPress={() => handleReplaceEdition(edition)}
+                    >
+                      <Image
+                        source={{ uri: edition.thumb || 'https://via.placeholder.com/60' }}
+                        style={styles.editionThumbnail}
+                      />
+                      <View style={styles.editionInfo}>
+                        <Text style={styles.editionTitle}>{edition.title}</Text>
+                        <Text style={styles.editionArtist}>{edition.artist}</Text>
+                        <Text style={styles.editionDetail}>
+                          {edition.year && `Año: ${edition.year}`}
+                          {edition.format && edition.format !== 'Vinyl' && ` | Formato: ${edition.format}`}
+                          {edition.country && ` | País: ${edition.country}`}
+                          {edition.label && edition.label !== 'Unknown' && ` | Sello: ${edition.label}`}
+                        </Text>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color="#666" />
+                    </TouchableOpacity>
+                  ))}
+                </>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1419,10 +1645,10 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   formTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 20,
+    marginBottom: 15,
   },
   formField: {
     marginBottom: 20,
@@ -1500,6 +1726,51 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
     fontWeight: '600',
+  },
+
+  // Estilos para la edición de ediciones
+  editionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  editionThumbnail: {
+    width: 60,
+    height: 60,
+    borderRadius: 4,
+    marginRight: 15,
+  },
+  editionInfo: {
+    flex: 1,
+  },
+  editionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  editionArtist: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  editionDetail: {
+    fontSize: 12,
+    color: '#999',
+  },
+  editionsSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+  },
+  emptySubtext: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 5,
+    textAlign: 'center',
   },
 
 }); 

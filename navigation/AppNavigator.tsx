@@ -138,14 +138,14 @@ const TabNavigator = () => (
         } else if (route.name === 'DashboardTab') {
           iconName = focused ? 'stats-chart' : 'stats-chart-outline';
         } else if (route.name === 'AddDiscTab') {
-          iconName = focused ? 'add-circle' : 'add-circle-outline';
+          iconName = focused ? 'add' : 'add';
         } else if (route.name === 'ListsTab') {
           iconName = focused ? 'list' : 'list-outline';
         } else if (route.name === 'GemsTab') {
           iconName = focused ? 'diamond' : 'diamond-outline';
         }
 
-        return <Ionicons name={iconName as any} size={size} color={color} />;
+        return <Ionicons name={iconName as any} size={route.name === 'AddDiscTab' ? size + 8 : size} color={color} />;
       },
       tabBarActiveTintColor: '#007AFF',
       tabBarInactiveTintColor: 'gray',
