@@ -142,6 +142,9 @@ export const SearchScreen: React.FC = () => {
       Alert.alert('Éxito', 'Álbum añadido a la estantería');
       setShowAddToShelfModal(false);
       setSelectedAlbum(null);
+      
+      // Navegar a Mis Estanterías
+      navigation.navigate('ListsTab');
     } catch (error) {
       console.error('Error adding album to list:', error);
       Alert.alert('Error', 'No se pudo añadir el álbum a la estantería');
@@ -170,6 +173,9 @@ export const SearchScreen: React.FC = () => {
       setNewShelfTitle('');
       setNewShelfDescription('');
       setNewShelfIsPublic(false);
+      
+      // Navegar a Mis Estanterías
+      navigation.navigate('ListsTab');
     } catch (error) {
       console.error('Error creating list:', error);
       Alert.alert('Error', 'No se pudo crear la estantería');
