@@ -84,6 +84,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       
       setIsLoading(true);
       setError(null);
+      setIsPlaying(false); // Resetear estado de reproducción
       
       if (sound) {
         console.log('🔍 FloatingAudioPlayer: Unloading previous sound');
@@ -140,8 +141,10 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         try {
           await newSound.playAsync();
           console.log('🔍 FloatingAudioPlayer: Auto-play started');
+          setIsPlaying(true); // Establecer estado de reproducción
         } catch (playError) {
           console.error('❌ FloatingAudioPlayer: Error starting auto-play:', playError);
+          setIsPlaying(false);
         }
       }
       
@@ -151,14 +154,22 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       console.error('❌ FloatingAudioPlayer: Error loading audio:', error);
       setError(`Error loading audio: ${error}`);
       setIsLoading(false);
+      setIsPlaying(false);
     }
   };
 
   const onPlaybackStatusUpdate = (status: any) => {
-    console.log('🔍 FloatingAudioPlayer: Playback status update:', status);
-    
     if (status.isLoaded) {
-      setIsPlaying(!status.isPaused);
+      const newIsPlaying = !status.isPaused;
+      
+      console.log('🔍 FloatingAudioPlayer: Status update:', {
+        isPlaying: newIsPlaying,
+        isPaused: status.isPaused,
+        position: status.positionMillis,
+        duration: status.durationMillis
+      });
+      
+      setIsPlaying(newIsPlaying);
       setDuration(status.durationMillis || 0);
       setPosition(status.positionMillis || 0);
 
@@ -199,10 +210,17 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         console.log('🔍 FloatingAudioPlayer: Pausing audio...');
         await sound.pauseAsync();
         console.log('🔍 FloatingAudioPlayer: Audio paused successfully');
+        // El estado isPlaying se actualizará automáticamente en onPlaybackStatusUpdate
       } else {
         console.log('🔍 FloatingAudioPlayer: Playing audio...');
+        // Verificar si el audio terminó y necesitamos reiniciarlo
+        if (status.didJustFinish || position >= duration) {
+          console.log('🔍 FloatingAudioPlayer: Audio finished, restarting from beginning...');
+          await sound.setPositionAsync(0);
+        }
         await sound.playAsync();
         console.log('🔍 FloatingAudioPlayer: Audio play command sent');
+        // El estado isPlaying se actualizará automáticamente en onPlaybackStatusUpdate
       }
     } catch (error) {
       console.error('❌ FloatingAudioPlayer: Error toggling play/pause:', error);
@@ -211,19 +229,6 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       // Intentar recargar el audio si hay error
       console.log('🔍 FloatingAudioPlayer: Attempting to reload audio...');
       await loadAudio();
-    }
-  };
-
-  const stopAudio = async () => {
-    if (sound) {
-      try {
-        await sound.stopAsync();
-        await sound.setPositionAsync(0);
-        setIsPlaying(false);
-        setPosition(0);
-      } catch (error) {
-        console.error('❌ FloatingAudioPlayer: Error stopping audio:', error);
-      }
     }
   };
 
@@ -288,13 +293,6 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               {formatTime(position)} / {formatTime(duration)}
             </Text>
           </View>
-
-          <TouchableOpacity
-            style={styles.controlButton}
-            onPress={stopAudio}
-          >
-            <Ionicons name="stop" size={20} color="#666" />
-          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.closeButton}
