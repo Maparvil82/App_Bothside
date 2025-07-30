@@ -23,7 +23,11 @@ interface ListsScreenProps {
 const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
   const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridLists();
+  const [filteredLists, setFilteredLists] = useState<UserList[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+  console.log('🔍 ListsScreen: Initial showFilters state:', false);
+  const [filterByPrivacy, setFilterByPrivacy] = useState<'all' | 'public' | 'private'>('all');
 
   // Manejar nueva lista cuando se navega de vuelta desde CreateListScreen
   useEffect(() => {
@@ -45,6 +49,32 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
     return unsubscribe;
   }, [navigation, refreshLists]);
+
+  // Aplicar filtros cuando cambien las listas o el filtro
+  useEffect(() => {
+    let filtered = [...lists];
+    
+    // Filtrar por privacidad
+    if (filterByPrivacy === 'public') {
+      filtered = filtered.filter(list => list.is_public);
+    } else if (filterByPrivacy === 'private') {
+      filtered = filtered.filter(list => !list.is_public);
+    }
+    
+    // Ordenar por fecha de creación (más recientes primero)
+    filtered.sort((a, b) => {
+      const dateA = new Date(a.created_at).getTime();
+      const dateB = new Date(b.created_at).getTime();
+      return dateB - dateA;
+    });
+    
+    setFilteredLists(filtered);
+  }, [lists, filterByPrivacy]);
+
+  // Debug para el filtro
+  useEffect(() => {
+    console.log('🔍 ListsScreen: showFilters changed to:', showFilters);
+  }, [showFilters]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -110,55 +140,38 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   };
 
   const renderListItem = ({ item }: { item: UserList }) => (
-    <TouchableOpacity
-      style={styles.listItem}
-      onPress={() => handleViewList(item)}
-      activeOpacity={0.7}
-    >
-      <View style={styles.listItemContent}>
-        <View style={styles.listItemLeft}>
-          {item.cover_url ? (
-            <Image source={{ uri: item.cover_url }} style={styles.listCover} />
-          ) : (
-            <View style={styles.listCoverPlaceholder}>
-              <Ionicons name="list" size={24} color="#666" />
-            </View>
-          )}
-          <View style={styles.listInfo}>
-            <Text style={styles.listTitle} numberOfLines={1}>
-              {item.title}
+    <View style={styles.listItemContainer}>
+      <TouchableOpacity 
+        style={styles.listItem}
+        onPress={() => handleViewList(item)}
+        activeOpacity={0.7}
+      >
+        {item.cover_url ? (
+          <Image source={{ uri: item.cover_url }} style={styles.listThumbnail} />
+        ) : (
+          <View style={styles.listThumbnailPlaceholder}>
+            <Ionicons name="list" size={24} color="#666" />
+          </View>
+        )}
+        <View style={styles.listInfo}>
+          <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
+            {item.title}
+          </Text>
+          {item.description && (
+            <Text style={styles.listDescription} numberOfLines={2}>
+              {item.description}
             </Text>
-            {item.description && (
-              <Text style={styles.listDescription} numberOfLines={2}>
-                {item.description}
+          )}
+          <View style={styles.listMeta}>
+            <View style={[styles.publicBadge, item.is_public ? styles.publicBadgePublic : styles.publicBadgePrivate]}>
+              <Text style={styles.publicBadgeText}>
+                {item.is_public ? 'Público' : 'Privado'}
               </Text>
-            )}
-            <View style={styles.listMeta}>
-              <View style={[styles.publicBadge, item.is_public ? styles.publicBadgePublic : styles.publicBadgePrivate]}>
-                <Text style={styles.publicBadgeText}>
-                  {item.is_public ? 'Público' : 'Privado'}
-                </Text>
-              </View>
-              
             </View>
           </View>
         </View>
-        <View style={styles.listActions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleEditList(item)}
-          >
-            <Ionicons name="create-outline" size={20} color="#007AFF" />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleDeleteList(item)}
-          >
-            <Ionicons name="trash-outline" size={20} color="#FF3B30" />
-          </TouchableOpacity>
-        </View>
-      </View>
-    </TouchableOpacity>
+      </TouchableOpacity>
+    </View>
   );
 
   const renderEmptyState = () => (
@@ -188,20 +201,87 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Text style={styles.headerTitle}>Mis Listas</Text>
-          <Text style={styles.listCount}>{lists.length} lista{lists.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.listCount}>{filteredLists.length} lista{filteredLists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.createListButton} onPress={handleCreateList}>
             <Ionicons name="add" size={24} color="#007AFF" />
           </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={[
+              styles.filterButton,
+              { backgroundColor: showFilters ? '#f0f0f0' : 'transparent' }
+            ]}
+            onPress={() => {
+              console.log('🔍 ListsScreen: Filter button pressed, current showFilters:', showFilters);
+              setShowFilters(!showFilters);
+              console.log('🔍 ListsScreen: showFilters will be set to:', !showFilters);
+            }}
+          >
+            <Ionicons 
+              name="filter-outline" 
+              size={24} 
+              color="#666" 
+            />
+          </TouchableOpacity>
         </View>
       </View>
+
+      {/* Filtros */}
+      {showFilters && (
+        <View style={styles.filterDropdownContent}>
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Privacidad</Text>
+            <View style={styles.filterChips}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  filterByPrivacy === 'all' && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByPrivacy('all')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  filterByPrivacy === 'all' && styles.filterChipTextActive
+                ]}>Todas</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  filterByPrivacy === 'public' && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByPrivacy('public')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  filterByPrivacy === 'public' && styles.filterChipTextActive
+                ]}>Públicas</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  filterByPrivacy === 'private' && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByPrivacy('private')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  filterByPrivacy === 'private' && styles.filterChipTextActive
+                ]}>Privadas</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      )}
 
       {loading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Cargando listas...</Text>
         </View>
-      ) : lists.length === 0 ? (
+      ) : filteredLists.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="list-outline" size={64} color="#CCC" />
           <Text style={styles.emptyStateTitle}>No tienes listas</Text>
@@ -215,7 +295,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         </View>
       ) : (
         <FlatList
-          data={lists}
+          data={filteredLists}
           renderItem={renderListItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContainer}
@@ -253,67 +333,110 @@ const styles = StyleSheet.create({
   createListButton: {
     padding: 8,
   },
+  filterButton: {
+    padding: 8,
+    marginRight: 8,
+    borderRadius: 8,
+  },
+  filterDropdownContent: {
+    backgroundColor: 'white',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    zIndex: 1000,
+    elevation: 5,
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  filterSection: {
+    marginBottom: 10,
+  },
+  filterSectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  filterChips: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  filterChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#F0F0F0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  filterChipActive: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#666',
+  },
+  filterChipTextActive: {
+    color: 'white',
+  },
   listContainer: {
-    padding: 20,
+   
+  },
+    listItemContainer: {
+    backgroundColor: 'white',
   },
   listItem: {
+    flexDirection: 'row',
     backgroundColor: 'white',
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    minHeight: 80,
   },
-  listItemContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+  listThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 0,
+    marginRight: 10,
   },
-  listItemLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  listCover: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  listCoverPlaceholder: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
+  listThumbnailPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 0,
     backgroundColor: '#F0F0F0',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   listInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   listTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: '#333',
     marginBottom: 4,
   },
   listDescription: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   listMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    marginTop: 4,
   },
   publicBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
   },
   publicBadgePublic: {
     backgroundColor: '#E8F5E8',
@@ -322,21 +445,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF3E0',
   },
   publicBadgeText: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '500',
   },
-  listStyle: {
-    fontSize: 12,
-    color: '#666',
-  },
-  listActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  actionButton: {
-    padding: 8,
-    marginLeft: 4,
-  },
+
   emptyState: {
     flex: 1,
     justifyContent: 'center',
