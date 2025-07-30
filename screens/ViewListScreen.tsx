@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
   TouchableOpacity,
   Alert,
   RefreshControl,
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import { useAuth } from '../contexts/AuthContext';
 import { UserListService } from '../services/database';
 import { useRealtimeListAlbums } from '../hooks/useRealtimeListAlbums';
@@ -86,8 +86,8 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   };
 
   const renderAlbumItem = ({ item }: { item: any }) => (
-    <View style={styles.albumItem}>
-      <View style={styles.albumItemContent}>
+    <View style={styles.albumItemContainer}>
+      <View style={styles.albumItem}>
         <Image
           source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
           style={styles.albumCover}
@@ -115,13 +115,27 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             </Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.removeButton}
-          onPress={() => handleRemoveAlbum(item.album_id)}
-        >
-          <Ionicons name="close-circle" size={24} color="#FF3B30" />
-        </TouchableOpacity>
       </View>
+    </View>
+  );
+
+  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
+    const item = albums.find(album => album.album_id === rowKey);
+    if (item) {
+      await handleRemoveAlbum(item.album_id);
+    }
+    rowMap[rowKey]?.closeRow();
+  };
+
+  const renderSwipeActions = (rowData: any, rowMap: any) => (
+    <View style={styles.swipeActionsContainer}>
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeDelete]}
+        onPress={() => handleSwipeDelete(rowMap, rowData.item.album_id)}
+      >
+        <Ionicons name="trash-outline" size={20} color="white" />
+        <Text style={styles.swipeActionText}>Eliminar</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -130,7 +144,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       <Ionicons name="musical-notes-outline" size={64} color="#CCC" />
       <Text style={styles.emptyStateTitle}>Lista Vacía</Text>
       <Text style={styles.emptyStateSubtitle}>
-        Añade álbumes de tu colección a esta lista
+        Añade álbumes de tu colección a esta estantería
       </Text>
       <TouchableOpacity style={styles.addButton} onPress={handleAddAlbum}>
         <Ionicons name="add" size={20} color="white" />
@@ -143,7 +157,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando lista...</Text>
+          <Text style={styles.loadingText}>Cargando estanterias...</Text>
         </View>
       </View>
     );
@@ -193,16 +207,17 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       </View>
 
       <View style={styles.albumsHeader}>
-        <Text style={styles.albumsTitle}>Álbumes en la Lista</Text>
+        <Text style={styles.albumsTitle}>Álbumes en la Estantería</Text>
         <TouchableOpacity onPress={handleAddAlbum} style={styles.addAlbumButton}>
           <Ionicons name="add" size={20} color="#007AFF" />
           <Text style={styles.addAlbumButtonText}>Añadir</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
+      <SwipeListView
         data={albums}
         renderItem={renderAlbumItem}
+        renderHiddenItem={renderSwipeActions}
         keyExtractor={(item) => item.album_id}
         contentContainerStyle={styles.albumsContainer}
         refreshControl={
@@ -210,6 +225,9 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
+        rightOpenValue={-90}
+        previewOpenValue={0}
+        previewOpenDelay={0}
       />
     </View>
   );
@@ -325,52 +343,51 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   albumsContainer: {
-    padding: 20,
+    
+  },
+  albumItemContainer: {
+    
+    backgroundColor: 'white',
+    
   },
   albumItem: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  albumItemContent: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
+    backgroundColor: 'white',
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    minHeight: 80,
   },
   albumCover: {
-    width: 60,
-    height: 60,
-    borderRadius: 8,
-    marginRight: 12,
+    width: 80,
+    height: '100%',
+    borderRadius: 4,
+    marginRight: 10,
   },
   albumInfo: {
     flex: 1,
+    justifyContent: 'center',
   },
   albumTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1A1A1A',
+    color: '#333',
     marginBottom: 4,
   },
   albumArtist: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   albumDetails: {
-    gap: 4,
+    marginTop: 4,
   },
   albumDetail: {
     fontSize: 12,
     color: '#999',
-  },
-  removeButton: {
-    padding: 8,
+    marginBottom: 2,
   },
   emptyState: {
     flex: 1,
@@ -423,6 +440,30 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: '#666',
+    textAlign: 'center',
+  },
+  // Estilos para swipe actions
+  swipeActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 0,
+  },
+  swipeAction: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 90,
+    height: '100%',
+    borderRadius: 0,
+  },
+  swipeDelete: {
+    backgroundColor: '#FF3B30',
+  },
+  swipeActionText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
     textAlign: 'center',
   },
 });
