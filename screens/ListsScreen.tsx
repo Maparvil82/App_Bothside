@@ -191,54 +191,9 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <Text style={styles.listCount}>{lists.length} lista{lists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity 
-            style={styles.debugButton} 
-            onPress={() => {
-              console.log('🔍 Debug - Current user:', user);
-              console.log('🔍 Debug - Current lists:', lists);
-              console.log('🔍 Debug - Loading state:', loading);
-            }}
-          >
-            <Ionicons name="bug-outline" size={20} color="#FF9500" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.debugButton} 
-            onPress={async () => {
-              console.log('🔄 Debug - Forcing manual refresh...');
-              await refreshLists();
-              console.log('✅ Debug - Manual refresh completed');
-            }}
-          >
-            <Ionicons name="refresh-outline" size={20} color="#34C759" />
-          </TouchableOpacity>
-          <TouchableOpacity 
-            style={styles.debugButton} 
-            onPress={async () => {
-              console.log('🔄 Debug - Testing auto-refresh...');
-              await refreshAfterChange();
-              console.log('✅ Debug - Auto-refresh triggered');
-            }}
-          >
-            <Ionicons name="sync-outline" size={20} color="#FF9500" />
-          </TouchableOpacity>
           <TouchableOpacity style={styles.createListButton} onPress={handleCreateList}>
             <Ionicons name="add" size={24} color="#007AFF" />
           </TouchableOpacity>
-          {lists.length > 0 && (
-            <TouchableOpacity 
-              style={styles.viewFirstListButton} 
-              onPress={() => {
-                const firstList = lists[0];
-                console.log('🔍 ListsScreen: Viewing first list:', firstList);
-                navigation.navigate('ViewList', { 
-                  listId: firstList.id, 
-                  listTitle: firstList.title 
-                });
-              }}
-            >
-              <Ionicons name="eye-outline" size={20} color="#007AFF" />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
@@ -434,14 +389,6 @@ const styles = StyleSheet.create({
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  debugButton: {
-    padding: 8,
-    marginRight: 8,
-  },
-  viewFirstListButton: {
-    padding: 8,
-    marginLeft: 8,
   },
   headerLeft: {
     flex: 1,
