@@ -11,16 +11,18 @@ import {
   ScrollView,
   ActionSheetIOS,
   Platform,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { DiscogsService } from '../services/discogs';
-import { AlbumService, UserCollectionService } from '../services/database';
+import { AlbumService, UserCollectionService, UserListService } from '../services/database';
 import { DiscogsRelease } from '../types';
 import { supabase } from '../lib/supabase';
 import { useGems } from '../contexts/GemsContext';
+import { ListCoverCollage } from '../components/ListCoverCollage';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -41,6 +43,15 @@ export const SearchScreen: React.FC = () => {
 
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Estados para el modal de añadir a estantería
+  const [showAddToShelfModal, setShowAddToShelfModal] = useState(false);
+  const [userLists, setUserLists] = useState<any[]>([]);
+  const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
+  const [showCreateShelfForm, setShowCreateShelfForm] = useState(false);
+  const [newShelfTitle, setNewShelfTitle] = useState('');
+  const [newShelfDescription, setNewShelfDescription] = useState('');
+  const [newShelfIsPublic, setNewShelfIsPublic] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -99,6 +110,69 @@ export const SearchScreen: React.FC = () => {
       console.error('Error refreshing collection:', error);
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  // Función para cargar las estanterías del usuario
+  const loadUserLists = async () => {
+    if (!user) return;
+    try {
+      const lists = await UserListService.getUserListsWithAlbums(user.id);
+      setUserLists(lists || []);
+    } catch (error) {
+      console.error('Error loading user lists:', error);
+      Alert.alert('Error', 'No se pudieron cargar las estanterías');
+    }
+  };
+
+  // Función para añadir álbum a una estantería
+  const addAlbumToShelf = async (listId: string) => {
+    if (!selectedAlbum || !user) return;
+    
+    try {
+      // Verificar si el álbum ya está en la estantería
+      const isAlreadyInList = await UserListService.isAlbumInList(listId, selectedAlbum.albums.id);
+      
+      if (isAlreadyInList) {
+        Alert.alert('Aviso', 'Este álbum ya está en esta estantería');
+        return;
+      }
+      
+      await UserListService.addAlbumToList(listId, selectedAlbum.albums.id);
+      Alert.alert('Éxito', 'Álbum añadido a la estantería');
+      setShowAddToShelfModal(false);
+      setSelectedAlbum(null);
+    } catch (error) {
+      console.error('Error adding album to list:', error);
+      Alert.alert('Error', 'No se pudo añadir el álbum a la estantería');
+    }
+  };
+
+  // Función para crear nueva estantería
+  const createNewShelf = async () => {
+    if (!user || !newShelfTitle.trim()) return;
+    
+    try {
+      const newList = await UserListService.createList({
+        title: newShelfTitle.trim(),
+        description: newShelfDescription.trim(),
+        is_public: newShelfIsPublic,
+        user_id: user.id
+      });
+      
+      // Añadir el álbum a la nueva estantería
+      await UserListService.addAlbumToList(newList.id, selectedAlbum.albums.id);
+      
+      Alert.alert('Éxito', 'Estantería creada y álbum añadido');
+      setShowAddToShelfModal(false);
+      setShowCreateShelfForm(false);
+      setSelectedAlbum(null);
+      setNewShelfTitle('');
+      setNewShelfDescription('');
+      setNewShelfIsPublic(false);
+    } catch (error) {
+      console.error('Error creating list:', error);
+      Alert.alert('Error', 'No se pudo crear la estantería');
     }
   };
 
@@ -230,7 +304,7 @@ export const SearchScreen: React.FC = () => {
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancelar', gemAction, 'Añadir a Lista', 'Editar', 'Compartir'],
+            options: ['Cancelar', gemAction, 'Añadir a Estantería', 'Editar', 'Compartir'],
             cancelButtonIndex: 0,
             title: item.albums?.title || 'Álbum',
             message: '¿Qué quieres hacer con este álbum?',
@@ -240,8 +314,10 @@ export const SearchScreen: React.FC = () => {
               case 1: // Gem action
                 handleToggleGem(item);
                 break;
-              case 2: // Añadir a Lista
-                navigation.navigate('ListsTab');
+              case 2: // Añadir a Estantería
+                setSelectedAlbum(item);
+                loadUserLists();
+                setShowAddToShelfModal(true);
                 break;
               case 3: // Editar
                 Alert.alert('Editar', 'Función de editar próximamente');
@@ -259,7 +335,11 @@ export const SearchScreen: React.FC = () => {
           [
             { text: 'Cancelar', style: 'cancel' },
             { text: gemAction, onPress: () => handleToggleGem(item) },
-            { text: 'Añadir a Lista', onPress: () => navigation.navigate('ListsTab') },
+            { text: 'Añadir a Estantería', onPress: () => {
+              setSelectedAlbum(item);
+              loadUserLists();
+              setShowAddToShelfModal(true);
+            }},
             { text: 'Editar', onPress: () => Alert.alert('Editar', 'Función de editar próximamente') },
             { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
           ]
@@ -785,6 +865,153 @@ export const SearchScreen: React.FC = () => {
           }
         />
       )}
+
+      {/* Modal para añadir álbum a estantería */}
+      <Modal
+        visible={showAddToShelfModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowAddToShelfModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Añadir "{selectedAlbum?.albums?.title}" a una estantería
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowAddToShelfModal(false);
+                  setShowCreateShelfForm(false);
+                  setSelectedAlbum(null);
+                }}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            {!showCreateShelfForm ? (
+              // Lista de estanterías existentes
+              <ScrollView style={styles.modalBody}>
+                <TouchableOpacity
+                  style={styles.createNewShelfButton}
+                  onPress={() => setShowCreateShelfForm(true)}
+                >
+                  <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+                  <Text style={styles.createNewShelfText}>Crear nueva estantería</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.shelfListTitle}>Estanterías existentes:</Text>
+                
+                {userLists.length === 0 ? (
+                  <Text style={styles.noShelvesText}>No tienes estanterías creadas</Text>
+                ) : (
+                  userLists.map((list) => (
+                    <TouchableOpacity
+                      key={list.id}
+                      style={styles.shelfItem}
+                      onPress={() => addAlbumToShelf(list.id)}
+                    >
+                      <View style={styles.shelfItemImage}>
+                        <ListCoverCollage albums={list.albums || []} size={50} />
+                      </View>
+                      <View style={styles.shelfItemInfo}>
+                        <Text style={styles.shelfItemTitle}>{list.title}</Text>
+                        {list.description && (
+                          <Text style={styles.shelfItemDescription}>{list.description}</Text>
+                        )}
+                        <View style={styles.shelfItemMeta}>
+                          <Text style={styles.shelfItemMetaText}>
+                            {list.is_public ? 'Pública' : 'Privada'}
+                          </Text>
+                        </View>
+                      </View>
+                      <Ionicons name="chevron-forward" size={20} color="#666" />
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            ) : (
+              // Formulario para crear nueva estantería
+              <ScrollView style={styles.modalBody}>
+                <Text style={styles.formTitle}>Crear nueva estantería</Text>
+                
+                <View style={styles.formField}>
+                  <Text style={styles.formLabel}>Título *</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={newShelfTitle}
+                    onChangeText={setNewShelfTitle}
+                    placeholder="Nombre de la estantería"
+                    autoFocus={true}
+                  />
+                </View>
+
+                <View style={styles.formField}>
+                  <Text style={styles.formLabel}>Descripción</Text>
+                  <TextInput
+                    style={[styles.formInput, styles.formTextArea]}
+                    value={newShelfDescription}
+                    onChangeText={setNewShelfDescription}
+                    placeholder="Descripción opcional"
+                    multiline={true}
+                    numberOfLines={3}
+                  />
+                </View>
+
+                <View style={styles.formField}>
+                  <View style={styles.publicToggleContainer}>
+                    <Text style={styles.formLabel}>Estantería pública</Text>
+                    <TouchableOpacity
+                      style={styles.toggleButton}
+                      onPress={() => setNewShelfIsPublic(!newShelfIsPublic)}
+                    >
+                      <View style={[
+                        styles.toggleTrack,
+                        { backgroundColor: newShelfIsPublic ? '#007AFF' : '#ccc' }
+                      ]}>
+                        <View style={[
+                          styles.toggleThumb,
+                          { transform: [{ translateX: newShelfIsPublic ? 20 : 0 }] }
+                        ]} />
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.toggleDescription}>
+                    Las estanterías públicas pueden ser vistas por otros usuarios
+                  </Text>
+                </View>
+
+                <View style={styles.formActions}>
+                  <TouchableOpacity
+                    style={styles.cancelButton}
+                    onPress={() => {
+                      setShowCreateShelfForm(false);
+                      setNewShelfTitle('');
+                      setNewShelfDescription('');
+                      setNewShelfIsPublic(false);
+                    }}
+                  >
+                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.createButton,
+                      { opacity: newShelfTitle.trim() ? 1 : 0.5 }
+                    ]}
+                    onPress={createNewShelf}
+                    disabled={!newShelfTitle.trim()}
+                  >
+                    <Text style={styles.createButtonText}>Crear y añadir álbum</Text>
+                  </TouchableOpacity>
+                </View>
+              </ScrollView>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -1079,6 +1306,189 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
     textAlign: 'center',
+  },
+
+  // Estilos para el modal de añadir a estantería
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    width: '90%',
+    maxHeight: '80%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    flex: 1,
+  },
+  closeButton: {
+    padding: 5,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  createNewShelfButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  createNewShelfText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#007AFF',
+    marginLeft: 10,
+  },
+  shelfListTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+  },
+  noShelvesText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    paddingVertical: 20,
+  },
+  shelfItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  shelfItemImage: {
+    marginRight: 15,
+  },
+  shelfItemInfo: {
+    flex: 1,
+  },
+  shelfItemTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 4,
+  },
+  shelfItemDescription: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 4,
+  },
+  shelfItemMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  shelfItemMetaText: {
+    fontSize: 12,
+    color: '#999',
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 20,
+  },
+  formField: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 8,
+  },
+  formInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: 'white',
+  },
+  formTextArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  publicToggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  toggleButton: {
+    padding: 5,
+  },
+  toggleTrack: {
+    width: 44,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
+  toggleThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'white',
+    marginHorizontal: 2,
+  },
+  toggleDescription: {
+    fontSize: 12,
+    color: '#666',
+  },
+  formActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    marginRight: 10,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  createButton: {
+    flex: 1,
+    padding: 15,
+    borderRadius: 8,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+  },
+  createButtonText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
   },
 
 }); 

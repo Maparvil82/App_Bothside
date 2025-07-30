@@ -106,7 +106,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     console.log('🔍 ListsScreen: Attempting to delete list:', list);
     
     Alert.alert(
-      'Eliminar Lista',
+      'Eliminar Estantería',
       `¿Estás seguro de que quieres eliminar "${list.title}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -145,7 +145,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     if (!item) return;
 
     Alert.alert(
-      'Eliminar Lista',
+      'Eliminar Estantería',
       `¿Estás seguro de que quieres eliminar "${item.title}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -233,13 +233,13 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="list-outline" size={64} color="#CCC" />
-      <Text style={styles.emptyStateTitle}>No tienes listas</Text>
+      <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
       <Text style={styles.emptyStateSubtitle}>
-        Crea tu primera lista para organizar tu colección
+        Crea tu primera estantería para organizar tu colección
       </Text>
       <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
         <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.createButtonText}>Crear Lista</Text>
+        <Text style={styles.createButtonText}>Crear Estantería</Text>
       </TouchableOpacity>
     </View>
   );
@@ -247,7 +247,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   if (!user) {
     return (
       <View style={styles.container}>
-        <Text style={styles.errorText}>Debes iniciar sesión para ver tus listas</Text>
+        <Text style={styles.errorText}>Debes iniciar sesión para ver tus estanterías</Text>
       </View>
     );
   }
@@ -256,8 +256,8 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Mis Listas</Text>
-          <Text style={styles.listCount}>{filteredLists.length} lista{filteredLists.length !== 1 ? 's' : ''}</Text>
+          <Text style={styles.headerTitle}>Estanterías</Text>
+          <Text style={styles.listCount}>{filteredLists.length} estantería{filteredLists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.createListButton} onPress={handleCreateList}>
@@ -335,19 +335,19 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando listas...</Text>
+          <Text style={styles.loadingText}>Cargando estanterías...</Text>
         </View>
       ) : filteredLists.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="list-outline" size={64} color="#CCC" />
-          <Text style={styles.emptyStateTitle}>No tienes listas</Text>
-          <Text style={styles.emptyStateSubtitle}>
-            Crea tu primera lista para organizar tu colección
-          </Text>
-          <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
-            <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.createButtonText}>Crear Lista</Text>
-          </TouchableOpacity>
+                <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
+      <Text style={styles.emptyStateSubtitle}>
+        Crea tu primera estantería para organizar tu colección
+      </Text>
+      <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
+        <Ionicons name="20" color="white" />
+        <Text style={styles.createButtonText}>Crear Estantería</Text>
+      </TouchableOpacity>
         </View>
       ) : (
         <SwipeListView

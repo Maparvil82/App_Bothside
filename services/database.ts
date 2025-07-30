@@ -768,17 +768,15 @@ export const UserListService = {
 
   // Añadir álbum a lista
   async addAlbumToList(listId: string, albumId: string) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('list_albums')
       .insert([{
         list_id: listId,
         album_id: albumId
-      }])
-      .select()
-      .single();
+      }]);
     
     if (error) throw error;
-    return data;
+    return { list_id: listId, album_id: albumId };
   },
 
   // Remover álbum de lista
@@ -796,7 +794,7 @@ export const UserListService = {
   async isAlbumInList(listId: string, albumId: string) {
     const { data, error } = await supabase
       .from('list_albums')
-      .select('id')
+      .select('list_id, album_id')
       .eq('list_id', listId)
       .eq('album_id', albumId)
       .single();
