@@ -588,10 +588,9 @@ export const SearchScreen: React.FC = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.headerContainer}>
-        <View style={styles.collectionCountContainer}>
-          <Text style={styles.collectionCountText}>
-            {filteredCollection.length} discos
-          </Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Colección</Text>
+          <Text style={styles.headerSubtitle}>{filteredCollection.length} discos</Text>
         </View>
         
         <View style={styles.headerButtons}>
@@ -1036,13 +1035,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  collectionCountContainer: {
+  headerTitleContainer: {
     flex: 1,
+    alignItems: 'flex-start',
   },
-  collectionCountText: {
-    fontSize: 16,
+  headerTitle: {
+    fontSize: 24,
     fontWeight: '600',
     color: '#333',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 2,
   },
   headerButtons: {
     flexDirection: 'row',
