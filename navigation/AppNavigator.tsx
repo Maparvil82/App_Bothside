@@ -150,6 +150,12 @@ const TabNavigator = () => (
       tabBarActiveTintColor: '#007AFF',
       tabBarInactiveTintColor: 'gray',
       headerShown: false,
+      tabBarStyle: {
+        height: 80,
+        paddingTop: 14,
+        justifyContent: 'center',
+        alignItems: 'center',
+      },
     })}
   >
     <Tab.Screen
