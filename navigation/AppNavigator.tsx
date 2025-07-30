@@ -131,19 +131,21 @@ const TabNavigator = () => (
   <Tab.Navigator
     screenOptions={({ route }) => ({
       tabBarIcon: ({ focused, color, size }) => {
-        let iconName: keyof typeof Ionicons.glyphMap = 'help-outline';
+        let iconName: string = 'help-outline';
+
         if (route.name === 'SearchTab') {
           iconName = focused ? 'disc' : 'disc-outline';
-        } else if (route.name === 'GemsTab') {
-          iconName = focused ? 'diamond' : 'diamond-outline';
-        } else if (route.name === 'ListsTab') {
-          iconName = focused ? 'list' : 'list-outline';
         } else if (route.name === 'DashboardTab') {
           iconName = focused ? 'stats-chart' : 'stats-chart-outline';
         } else if (route.name === 'AddDiscTab') {
           iconName = focused ? 'add-circle' : 'add-circle-outline';
+        } else if (route.name === 'ListsTab') {
+          iconName = focused ? 'list' : 'list-outline';
+        } else if (route.name === 'GemsTab') {
+          iconName = focused ? 'diamond' : 'diamond-outline';
         }
-        return <Ionicons name={iconName} size={size} color={color} />;
+
+        return <Ionicons name={iconName as any} size={size} color={color} />;
       },
       tabBarActiveTintColor: '#007AFF',
       tabBarInactiveTintColor: 'gray',
@@ -153,27 +155,27 @@ const TabNavigator = () => (
     <Tab.Screen
       name="SearchTab"
       component={SearchStack}
-      options={{ title: 'Colección' }}
-    />
-    <Tab.Screen
-      name="GemsTab"
-      component={GemsStack}
-      options={{ title: 'Gems' }}
-    />
-    <Tab.Screen
-      name="ListsTab"
-      component={ListsStack}
-      options={{ title: 'Mis Estanterías' }}
+      options={{ title: '' }}
     />
     <Tab.Screen
       name="DashboardTab"
       component={DashboardStack}
-      options={{ title: 'Dashboard' }}
+      options={{ title: '' }}
     />
     <Tab.Screen
       name="AddDiscTab"
       component={AddDiscStack}
-      options={{ title: 'Añadir' }}
+      options={{ title: '' }}
+    />
+    <Tab.Screen
+      name="ListsTab"
+      component={ListsStack}
+      options={{ title: '' }}
+    />
+    <Tab.Screen
+      name="GemsTab"
+      component={GemsStack}
+      options={{ title: '' }}
     />
   </Tab.Navigator>
 );
