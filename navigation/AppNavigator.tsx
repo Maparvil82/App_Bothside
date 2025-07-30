@@ -44,27 +44,43 @@ const ListsStack = () => (
     <Stack.Screen 
       name="Lists" 
       component={ListsScreen}
-      options={{ title: 'Mis Listas' }}
+      options={{ 
+        title: 'Mis Estanterías',
+        headerLeft: () => null
+      }}
     />
     <Stack.Screen 
       name="CreateList" 
       component={CreateListScreen}
-      options={{ title: 'Crear Lista' }}
+      options={{ 
+        title: 'Crear Lista',
+        headerLeft: () => null
+      }}
     />
     <Stack.Screen 
       name="ViewList" 
       component={ViewListScreen}
-      options={{ title: 'Ver Lista' }}
+      options={{ 
+        title: 'Mis Listas',
+        headerShown: true,
+        headerLeft: () => null
+      }}
     />
     <Stack.Screen 
       name="AddAlbumToList" 
       component={AddAlbumToListScreen}
-      options={{ title: 'Añadir Álbumes' }}
+      options={{ 
+        title: 'Añadir Álbumes',
+        headerLeft: () => null
+      }}
     />
     <Stack.Screen 
       name="EditList" 
       component={EditListScreen}
-      options={{ title: 'Editar Lista' }}
+      options={{ 
+        title: 'Editar Lista',
+        headerLeft: () => null
+      }}
     />
   </Stack.Navigator>
 );

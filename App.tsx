@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { GemsProvider } from './contexts/GemsContext';
 import { AppNavigator } from './navigation/AppNavigator';
 import { LoginScreen } from './screens/LoginScreen';
 import { validateEnv } from './config/env';
@@ -33,8 +34,10 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <StatusBar style="auto" />
-      <AppContent />
+      <GemsProvider>
+        <StatusBar style="auto" />
+        <AppContent />
+      </GemsProvider>
     </AuthProvider>
   );
 }

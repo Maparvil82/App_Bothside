@@ -20,9 +20,11 @@ import { DiscogsService } from '../services/discogs';
 import { AlbumService, UserCollectionService } from '../services/database';
 import { DiscogsRelease } from '../types';
 import { supabase } from '../lib/supabase';
+import { useGems } from '../contexts/GemsContext';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
+  const { addGem, removeGem, isGem } = useGems();
   const navigation = useNavigation<any>();
   const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
@@ -152,12 +154,42 @@ export const SearchScreen: React.FC = () => {
     if (!user) return;
     
     try {
-      await UserCollectionService.toggleGemStatus(user.id, item.album_id);
+      console.log('🔍 handleToggleGem: Toggling gem for item:', {
+        itemId: item.id,
+        albumId: item.albums?.id,
+        albumTitle: item.albums?.title,
+        currentGemStatus: item.is_gem
+      });
       
-      // Actualizar la colección local
-      await loadCollection();
-      
+      // Actualizar inmediatamente en la UI local
       const newStatus = !item.is_gem;
+      console.log('🔄 handleToggleGem: Updating local UI to:', newStatus);
+      
+      setCollection(prev => {
+        const updated = prev.map(col => 
+          col.id === item.id 
+            ? { ...col, is_gem: newStatus }
+            : col
+        );
+        console.log('📊 handleToggleGem: Collection updated, new count:', updated.length);
+        return updated;
+      });
+      
+      console.log('📞 handleToggleGem: Calling UserCollectionService.toggleGemStatus');
+      const result = await UserCollectionService.toggleGemStatus(user.id, item.albums.id);
+      console.log('✅ handleToggleGem: Service call successful:', result);
+      
+      // Actualizar el contexto de gems inmediatamente
+      if (newStatus) {
+        // Si se añadió un gem, añadirlo al contexto
+        console.log('📢 handleToggleGem: Adding gem to context');
+        addGem(item);
+      } else {
+        // Si se removió un gem, removerlo del contexto
+        console.log('📢 handleToggleGem: Removing gem from context');
+        removeGem(item.id);
+      }
+      
       Alert.alert(
         'Gem Status',
         newStatus 
@@ -165,15 +197,35 @@ export const SearchScreen: React.FC = () => {
           : `"${item.albums?.title}" removido de tus Gems`
       );
     } catch (error) {
-      console.error('Error toggling gem status:', error);
+      console.error('❌ handleToggleGem: Error toggling gem status:', error);
       Alert.alert('Error', 'No se pudo cambiar el estado del Gem');
+      
+      // Revertir el cambio local si hay error
+      console.log('🔄 handleToggleGem: Reverting local change due to error');
+      setCollection(prev => 
+        prev.map(col => 
+          col.id === item.id 
+            ? { ...col, is_gem: !item.is_gem }
+            : col
+        )
+      );
     }
   };
 
   const handleSwipeOptions = async (rowMap: any, rowKey: string) => {
     const item = filteredCollection.find(col => col.id === rowKey);
     if (item) {
-      const gemAction = item.is_gem ? 'Remover de Gems' : 'Añadir a Gems';
+      // Usar el contexto para determinar si es gem
+      const isItemGem = isGem(item.albums?.id);
+      const gemAction = isItemGem ? 'Remover de Gems' : 'Añadir a Gems';
+      
+      console.log('🔍 handleSwipeOptions: Item gem status:', {
+        itemId: item.id,
+        albumId: item.albums?.id,
+        albumTitle: item.albums?.title,
+        isGem: isItemGem,
+        localIsGem: item.is_gem
+      });
       
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(

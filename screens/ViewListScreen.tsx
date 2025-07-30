@@ -161,8 +161,8 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+            <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('Lists')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
@@ -222,6 +222,7 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
@@ -233,6 +234,7 @@ const styles = StyleSheet.create({
     padding: 8,
     marginRight: 8,
   },
+
   headerInfo: {
     flex: 1,
     flexDirection: 'row',

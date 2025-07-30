@@ -381,6 +381,8 @@ export const UserCollectionService = {
 
   // Toggle gem status de un álbum
   async toggleGemStatus(userId: string, albumId: string) {
+    console.log('🔍 UserCollectionService: toggleGemStatus called with:', { userId, albumId });
+    
     // Primero obtener el estado actual
     const { data: currentData, error: fetchError } = await supabase
       .from('user_collection')
@@ -389,10 +391,16 @@ export const UserCollectionService = {
       .eq('album_id', albumId)
       .single();
     
-    if (fetchError) throw fetchError;
+    if (fetchError) {
+      console.error('❌ UserCollectionService: Error fetching current gem status:', fetchError);
+      throw fetchError;
+    }
+    
+    console.log('✅ UserCollectionService: Current gem status:', currentData);
     
     // Toggle el estado
     const newGemStatus = !currentData.is_gem;
+    console.log('🔄 UserCollectionService: Toggling gem status from', currentData.is_gem, 'to', newGemStatus);
     
     const { data, error } = await supabase
       .from('user_collection')
@@ -402,12 +410,44 @@ export const UserCollectionService = {
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ UserCollectionService: Error updating gem status:', error);
+      throw error;
+    }
+    
+    console.log('✅ UserCollectionService: Gem status updated successfully:', data);
     return data;
   },
 
   // Obtener solo los gems del usuario
   async getUserGems(userId: string) {
+    console.log('🔍 UserCollectionService: getUserGems called for user:', userId);
+    
+    // Primero verificar si hay registros para este usuario
+    const { data: userRecords, error: userError } = await supabase
+      .from('user_collection')
+      .select('*')
+      .eq('user_id', userId);
+    
+    if (userError) {
+      console.error('❌ UserCollectionService: Error getting user records:', userError);
+      throw userError;
+    }
+    
+    console.log('📊 UserCollectionService: Total records for user:', userRecords?.length || 0);
+    
+    // Verificar cuántos tienen is_gem = true
+    const gemsCount = userRecords?.filter(record => record.is_gem === true).length || 0;
+    console.log('💎 UserCollectionService: Records with is_gem = true:', gemsCount);
+    
+    // Verificar cuántos tienen is_gem = false
+    const nonGemsCount = userRecords?.filter(record => record.is_gem === false).length || 0;
+    console.log('📋 UserCollectionService: Records with is_gem = false:', nonGemsCount);
+    
+    // Verificar cuántos tienen is_gem = null
+    const nullGemsCount = userRecords?.filter(record => record.is_gem === null).length || 0;
+    console.log('❓ UserCollectionService: Records with is_gem = null:', nullGemsCount);
+    
     const { data, error } = await supabase
       .from('user_collection')
       .select(`
@@ -423,7 +463,20 @@ export const UserCollectionService = {
       .eq('is_gem', true)
       .order('added_at', { ascending: false });
     
-    if (error) throw error;
+    if (error) {
+      console.error('❌ UserCollectionService: Error getting user gems:', error);
+      throw error;
+    }
+    
+    console.log('✅ UserCollectionService: Found', data?.length || 0, 'gems for user');
+    if (data && data.length > 0) {
+      console.log('📋 UserCollectionService: First gem:', {
+        id: data[0].id,
+        albumId: data[0].album_id,
+        albumTitle: data[0].albums?.title,
+        isGem: data[0].is_gem
+      });
+    }
     return data;
   }
 };

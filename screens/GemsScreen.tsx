@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -15,54 +15,34 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { UserCollectionService } from '../services/database';
+import { useGems } from '../contexts/GemsContext';
 
 export default function GemsScreen() {
   const { user } = useAuth();
-  const [gems, setGems] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadGems = async () => {
-    if (!user) return;
-    
-    try {
-      setLoading(true);
-      const gemsData = await UserCollectionService.getUserGems(user.id);
-      setGems(gemsData);
-    } catch (error) {
-      console.error('Error loading gems:', error);
-      Alert.alert('Error', 'No se pudieron cargar tus Gems');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    try {
-      await loadGems();
-    } catch (error) {
-      console.error('Error refreshing gems:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+  const { gems, loading, refreshGems, removeGem } = useGems();
 
   const handleRemoveGem = async (item: any) => {
     if (!user) return;
     
     try {
-      await UserCollectionService.toggleGemStatus(user.id, item.album_id);
+      console.log('🔍 GemsScreen: Removing gem for item:', {
+        itemId: item.id,
+        albumId: item.albums?.id,
+        albumTitle: item.albums?.title
+      });
       
-      // Actualizar la lista local
-      await loadGems();
+      await UserCollectionService.toggleGemStatus(user.id, item.albums.id);
+      
+      // Remover del contexto inmediatamente
+      console.log('📢 GemsScreen: Removing gem from context');
+      removeGem(item.id);
       
       Alert.alert(
         'Gem Removido',
         `"${item.albums?.title}" removido de tus Gems`
       );
     } catch (error) {
-      console.error('Error removing gem:', error);
+      console.error('❌ GemsScreen: Error removing gem:', error);
       Alert.alert('Error', 'No se pudo remover el Gem');
     }
   };
@@ -85,10 +65,6 @@ export default function GemsScreen() {
     );
     rowMap[rowKey]?.closeRow();
   };
-
-  useEffect(() => {
-    loadGems();
-  }, [user]);
 
   if (loading) {
     return (
@@ -176,7 +152,7 @@ export default function GemsScreen() {
           previewOpenValue={0}
           previewOpenDelay={0}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={loading} onRefresh={refreshGems} />
           }
           contentContainerStyle={styles.listContainer}
         />
