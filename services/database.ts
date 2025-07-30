@@ -45,6 +45,7 @@ export interface UserCollection {
   album_id: string;
   added_at: string;
   is_gem?: boolean;
+  audio_note?: string;
 }
 
 export interface UserWishlist {
@@ -431,10 +432,10 @@ export const UserCollectionService = {
   async getUserGems(userId: string) {
     console.log('🔍 UserCollectionService: getUserGems called for user:', userId);
     
-    // Primero verificar si hay registros para este usuario
+    // Primero obtener todas las colecciones del usuario para contar
     const { data: userRecords, error: userError } = await supabase
       .from('user_collection')
-      .select('*')
+      .select('is_gem')
       .eq('user_id', userId);
     
     if (userError) {
@@ -444,27 +445,24 @@ export const UserCollectionService = {
     
     console.log('📊 UserCollectionService: Total records for user:', userRecords?.length || 0);
     
-    // Verificar cuántos tienen is_gem = true
     const gemsCount = userRecords?.filter(record => record.is_gem === true).length || 0;
-    console.log('💎 UserCollectionService: Records with is_gem = true:', gemsCount);
-    
-    // Verificar cuántos tienen is_gem = false
     const nonGemsCount = userRecords?.filter(record => record.is_gem === false).length || 0;
-    console.log('📋 UserCollectionService: Records with is_gem = false:', nonGemsCount);
-    
-    // Verificar cuántos tienen is_gem = null
     const nullGemsCount = userRecords?.filter(record => record.is_gem === null).length || 0;
+    
+    console.log('💎 UserCollectionService: Records with is_gem = true:', gemsCount);
+    console.log('📋 UserCollectionService: Records with is_gem = false:', nonGemsCount);
     console.log('❓ UserCollectionService: Records with is_gem = null:', nullGemsCount);
     
+    // Ahora obtener solo los gems con información del álbum
     const { data, error } = await supabase
       .from('user_collection')
       .select(`
-        *,
+        id,
+        album_id,
+        is_gem,
         albums (
-          *,
-          album_styles (
-            styles (*)
-          )
+          id,
+          title
         )
       `)
       .eq('user_id', userId)
@@ -481,10 +479,46 @@ export const UserCollectionService = {
       console.log('📋 UserCollectionService: First gem:', {
         id: data[0].id,
         albumId: data[0].album_id,
-        albumTitle: data[0].albums?.title,
+        albumTitle: (data[0].albums as any)?.title || '',
         isGem: data[0].is_gem
       });
     }
+    
+    return data || [];
+  },
+
+  // Guardar nota de audio
+  async saveAudioNote(userId: string, albumId: string, audioUri: string) {
+    console.log('🔍 UserCollectionService: saveAudioNote called with:', { userId, albumId, audioUri });
+    
+    const { data, error } = await supabase
+      .from('user_collection')
+      .update({ audio_note: audioUri })
+      .eq('user_id', userId)
+      .eq('album_id', albumId)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('❌ UserCollectionService: Error saving audio note:', error);
+      throw error;
+    }
+    
+    console.log('✅ UserCollectionService: Audio note saved successfully:', data);
+    return data;
+  },
+
+  // Eliminar nota de audio
+  async deleteAudioNote(userId: string, albumId: string) {
+    const { data, error } = await supabase
+      .from('user_collection')
+      .update({ audio_note: null })
+      .eq('user_id', userId)
+      .eq('album_id', albumId)
+      .select()
+      .single();
+    
+    if (error) throw error;
     return data;
   }
 };

@@ -345,7 +345,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         Crea tu primera estantería para organizar tu colección
       </Text>
       <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
-        <Ionicons name="20" color="white" />
+        <Ionicons name="add" size={20} color="white" />
         <Text style={styles.createButtonText}>Crear Estantería</Text>
       </TouchableOpacity>
         </View>

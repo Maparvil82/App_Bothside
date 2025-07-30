@@ -12,6 +12,7 @@ import {
   ActionSheetIOS,
   Platform,
   Modal,
+  RefreshControl,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -23,7 +24,11 @@ import { DiscogsRelease } from '../types';
 import { supabase } from '../lib/supabase';
 import { useGems } from '../contexts/GemsContext';
 import { ListCoverCollage } from '../components/ListCoverCollage';
+import { AudioRecorder } from '../components/AudioRecorder';
+import { AudioPlayer } from '../components/AudioPlayer';
+import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { ENV } from '../config/env';
+import { Audio } from 'expo-av';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -58,6 +63,15 @@ export const SearchScreen: React.FC = () => {
   const [editions, setEditions] = useState<any[]>([]);
   const [editionsLoading, setEditionsLoading] = useState(false);
   const [selectedAlbumForEdit, setSelectedAlbumForEdit] = useState<any>(null);
+
+  // Estados para audio
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const [selectedAlbumForAudio, setSelectedAlbumForAudio] = useState<any>(null);
+
+  // Estados para reproductor flotante
+  const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
+  const [floatingAudioUri, setFloatingAudioUri] = useState('');
+  const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
 
   useEffect(() => {
     if (user) {
@@ -313,10 +327,20 @@ export const SearchScreen: React.FC = () => {
         localIsGem: item.is_gem
       });
       
+      // Preparar opciones dinámicas
+      const options = ['Cancelar', gemAction, 'Añadir a Estantería', 'Editar'];
+      
+      // Añadir opciones de audio
+      if (item.audio_note) {
+        options.push('Reproducir audio', 'Eliminar audio');
+      } else {
+        options.push('Grabar nota de audio');
+      }
+      
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: ['Cancelar', gemAction, 'Añadir a Estantería', 'Editar', 'Compartir'],
+            options: options,
             cancelButtonIndex: 0,
             title: item.albums?.title || 'Álbum',
             message: '¿Qué quieres hacer con este álbum?',
@@ -334,8 +358,17 @@ export const SearchScreen: React.FC = () => {
               case 3: // Editar
                 handleEditAlbum(item);
                 break;
-              case 4: // Compartir
-                Alert.alert('Compartir', 'Función de compartir próximamente');
+              case 4: // Audio options
+                if (item.audio_note) {
+                  handlePlayAudio(item);
+                } else {
+                  handleRecordAudio(item);
+                }
+                break;
+              case 5: // Delete audio (if exists)
+                if (item.audio_note) {
+                  handleDeleteAudioNote(item);
+                }
                 break;
             }
           }
@@ -353,7 +386,12 @@ export const SearchScreen: React.FC = () => {
               setShowAddToShelfModal(true);
             }},
             { text: 'Editar', onPress: () => handleEditAlbum(item) },
-            { text: 'Compartir', onPress: () => Alert.alert('Compartir', 'Función de compartir próximamente') },
+            ...(item.audio_note ? [
+              { text: 'Reproducir audio', onPress: () => handlePlayAudio(item) },
+              { text: 'Eliminar audio', onPress: () => handleDeleteAudioNote(item) }
+            ] : [
+              { text: 'Grabar nota de audio', onPress: () => handleRecordAudio(item) }
+            ])
           ]
         );
       }
@@ -609,9 +647,87 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  // Funciones para manejar audio
+  const handlePlayAudio = async (item: any) => {
+    console.log('🔍 handlePlayAudio called with item:', item);
+    console.log('🔍 item.audio_note:', item.audio_note);
+    
+    if (!item.audio_note) {
+      console.log('❌ No audio note found');
+      return;
+    }
+    
+    console.log('🔍 Setting up floating player with URI:', item.audio_note);
+    console.log('🔍 Album title:', item.albums?.title || 'Álbum');
+    
+    // Configurar el reproductor flotante
+    setFloatingAudioUri(item.audio_note);
+    setFloatingAlbumTitle(item.albums?.title || 'Álbum');
+    setShowFloatingPlayer(true);
+    
+    console.log('🔍 Floating player should now be visible');
+  };
+
+  const handleRecordAudio = async (item: any) => {
+    setSelectedAlbumForAudio(item);
+    setShowAudioRecorder(true);
+  };
+
+  const handleSaveAudioNote = async (audioUri: string) => {
+    if (!selectedAlbumForAudio) return;
+
+    try {
+      console.log('🔍 handleSaveAudioNote: Saving audio note...');
+      console.log('🔍 handleSaveAudioNote: Audio URI:', audioUri);
+      console.log('🔍 handleSaveAudioNote: Selected album:', selectedAlbumForAudio);
+      console.log('🔍 handleSaveAudioNote: Album ID:', selectedAlbumForAudio.albums?.id);
+      
+      await UserCollectionService.saveAudioNote(
+        user!.id,
+        selectedAlbumForAudio.albums.id,
+        audioUri
+      );
+      
+      console.log('🔍 handleSaveAudioNote: Audio note saved successfully');
+      
+      // Recargar la colección para mostrar el tag de audio
+      await loadCollection();
+      
+      setShowAudioRecorder(false);
+      setSelectedAlbumForAudio(null);
+    } catch (error) {
+      console.error('❌ Error saving audio note:', error);
+      Alert.alert('Error', 'No se pudo guardar la nota de audio');
+    }
+  };
+
+  const handleDeleteAudioNote = async (item: any) => {
+    if (!user) return;
+
+    try {
+      console.log('🔍 handleDeleteAudioNote: Deleting audio note for item:', item);
+      console.log('🔍 handleDeleteAudioNote: Album ID:', item.albums?.id);
+      
+      await UserCollectionService.deleteAudioNote(
+        user.id, 
+        item.albums.id
+      );
+      
+      console.log('🔍 handleDeleteAudioNote: Audio note deleted successfully');
+      
+      // Recargar la colección
+      await loadCollection();
+      
+      Alert.alert('Éxito', 'Nota de audio eliminada correctamente');
+    } catch (error) {
+      console.error('❌ Error deleting audio note:', error);
+      Alert.alert('Error', 'No se pudo eliminar la nota de audio');
+    }
+  };
+
   const renderCollectionItem = ({ item }: { item: any }) => (
     <View style={styles.collectionItemContainer}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.collectionItem}
         onLongPress={() => handleLongPress(item)}
         activeOpacity={0.7}
@@ -627,20 +743,16 @@ export const SearchScreen: React.FC = () => {
           <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
           <View style={styles.collectionDetails}>
             <Text style={styles.collectionDetail}>
-              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-                : item.albums?.label && item.albums.label !== ''
-                  ? `Sello: ${item.albums.label}`
-                  : item.albums?.release_year
-                    ? `Año: ${item.albums.release_year}`
-                    : ''
-              }
+              {item.albums?.label} • {item.albums?.release_year}
             </Text>
-            <Text style={styles.collectionDetail}>
-              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-              }
-            </Text>
+            
+            {/* Tag de nota de audio */}
+            {item.audio_note && (
+              <View style={styles.audioTag}>
+                <Ionicons name="mic" size={12} color="#007AFF" />
+                <Text style={styles.audioTagText}>Nota de audio</Text>
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -673,11 +785,14 @@ export const SearchScreen: React.FC = () => {
                   : ''
             }
           </Text>
-          <Text style={styles.collectionDetailGrid}>
-            {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-              `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-            }
-          </Text>
+          
+          {/* Tag de nota de audio */}
+          {item.audio_note && (
+            <View style={styles.audioTagGrid}>
+              <Ionicons name="mic" size={10} color="#007AFF" />
+              <Text style={styles.audioTagTextGrid}>Audio</Text>
+            </View>
+          )}
         </View>
       </View>
     </TouchableOpacity>
@@ -1243,6 +1358,25 @@ export const SearchScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Modal para grabar nota de audio */}
+      <AudioRecorder
+        visible={showAudioRecorder}
+        onClose={() => {
+          setShowAudioRecorder(false);
+          setSelectedAlbumForAudio(null);
+        }}
+        onSave={handleSaveAudioNote}
+        albumTitle={selectedAlbumForAudio?.albums?.title || ''}
+      />
+
+      {/* Reproductor flotante */}
+      <FloatingAudioPlayer
+        visible={showFloatingPlayer}
+        audioUri={floatingAudioUri}
+        albumTitle={floatingAlbumTitle}
+        onClose={() => setShowFloatingPlayer(false)}
+      />
     </View>
   );
 };
@@ -1372,14 +1506,14 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   collectionThumbnail: {
-    width: 80,
-    height: '100%',
+    width: 100,
+    height: 100,
     borderRadius: 4,
     marginRight: 10,
   },
   collectionInfo: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
   },
   collectionTitle: {
     fontSize: 16,
@@ -1773,4 +1907,37 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
+  // Estilos para el tag de nota de audio
+  audioTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  audioTagText: {
+    fontSize: 12,
+    color: '#007AFF',
+    marginLeft: 5,
+  },
+
+  // Estilos para el tag de nota de audio en grid
+  audioTagGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  audioTagTextGrid: {
+    fontSize: 10,
+    color: '#007AFF',
+    marginLeft: 5,
+  },
 }); 
