@@ -180,7 +180,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
-          <Text style={styles.headerTitle}>{list.title}</Text>
+          <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
           {list.is_public && (
             <View style={styles.publicBadge}>
               <Text style={styles.publicBadgeText}>Público</Text>
@@ -197,14 +197,6 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           <Text style={styles.descriptionText}>{list.description}</Text>
         </View>
       )}
-
-      <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <Text style={styles.statNumber}>{albums.length}</Text>
-          <Text style={styles.statLabel}>Álbumes</Text>
-        </View>
-        
-      </View>
 
       <View style={styles.albumsHeader}>
         <Text style={styles.albumsTitle}>Álbumes en la Estantería</Text>
@@ -348,7 +340,6 @@ const styles = StyleSheet.create({
   albumItemContainer: {
     
     backgroundColor: 'white',
-    
   },
   albumItem: {
     flexDirection: 'row',
