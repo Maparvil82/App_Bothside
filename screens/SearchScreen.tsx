@@ -18,11 +18,12 @@ import { useNavigation } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useGems } from '../contexts/GemsContext';
+import { useStats } from '../contexts/StatsContext';
 import { DiscogsService } from '../services/discogs';
 import { AlbumService, UserCollectionService, UserListService } from '../services/database';
 import { DiscogsRelease } from '../types';
 import { supabase } from '../lib/supabase';
-import { useGems } from '../contexts/GemsContext';
 import { ListCoverCollage } from '../components/ListCoverCollage';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
@@ -33,6 +34,7 @@ import { Audio } from 'expo-av';
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
   const { addGem, removeGem, isGem, updateGemStatus } = useGems();
+  const { refreshStats } = useStats();
   const navigation = useNavigation<any>();
   const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
@@ -130,6 +132,9 @@ export const SearchScreen: React.FC = () => {
       console.log('📊 Colección cargada:', userCollection?.length, 'álbumes');
 
       setCollection(userCollection || []);
+      
+      // Actualizar estadísticas
+      await refreshStats();
     } catch (error) {
       console.error('Error loading collection:', error);
     }

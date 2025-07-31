@@ -16,6 +16,9 @@ import ViewListScreen from '../screens/ViewListScreen';
 import AddAlbumToListScreen from '../screens/AddAlbumToListScreen';
 import EditListScreen from '../screens/EditListScreen';
 import { CustomHeader } from '../components/CustomHeader';
+import { AuthProvider } from '../contexts/AuthContext';
+import { GemsProvider } from '../contexts/GemsContext';
+import { StatsProvider } from '../contexts/StatsContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -188,10 +191,16 @@ const TabNavigator = () => (
 
 const AppNavigator = () => (
   <NavigationContainer>
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="Main" component={TabNavigator} />
-      <Stack.Screen name="Profile" component={ProfileStack} />
-    </Stack.Navigator>
+    <AuthProvider>
+      <GemsProvider>
+        <StatsProvider>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Main" component={TabNavigator} />
+            <Stack.Screen name="Profile" component={ProfileStack} />
+          </Stack.Navigator>
+        </StatsProvider>
+      </GemsProvider>
+    </AuthProvider>
   </NavigationContainer>
 );
 

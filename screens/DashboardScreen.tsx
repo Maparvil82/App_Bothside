@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { PriceByStyleChart } from '../components/PriceByStyleChart';
+import { AudioNotesSection } from '../components/AudioNotesSection';
 
 const { width } = Dimensions.get('window');
 
@@ -362,32 +364,31 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Estadísticas principales */}
+      {/* Estadísticas Básicas */}
       <View style={styles.statsGrid}>
         <StatCard title="Total Álbumes" value={stats.totalAlbums} />
         <StatCard title="Artistas Únicos" value={stats.totalArtists} />
         <StatCard title="Sellos Únicos" value={stats.totalLabels} />
         <StatCard title="Estilos Únicos" value={stats.totalStyles} />
+        <StatCard title="Álbum Más Antiguo" value={stats.oldestAlbum} />
+        <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
+        <StatCard 
+          title="Valor Total" 
+          value={`${stats.collectionValue.toFixed(2)} €`} 
+          subtitle="Estimado"
+        />
       </View>
 
-                        {/* Años */}
-                  <View style={styles.statsGrid}>
-                    <StatCard 
-                      title="Álbum Más Antiguo" 
-                      value={stats.oldestAlbum} 
-                      subtitle={stats.oldestAlbum > 0 ? "Año más antiguo" : "Sin datos"}
-                    />
-                    <StatCard 
-                      title="Álbum Más Nuevo" 
-                      value={stats.newestAlbum} 
-                      subtitle={stats.newestAlbum > 0 ? "Año más reciente" : "Sin datos"}
-                    />
-                  </View>
+      {/* Gráfica de Precios por Estilo */}
+      <PriceByStyleChart />
 
-      {/* Top 5 Discos Más Caros */}
+      {/* Sección de Notas de Audio */}
+      <AudioNotesSection />
+
+      {/* Álbumes Más Caros */}
       {stats.mostExpensiveAlbums.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Top 5 Discos Más Caros</Text>
+          <Text style={styles.sectionTitle}>Álbumes Más Caros</Text>
           {stats.mostExpensiveAlbums.map((album, index) => (
             <View key={index} style={styles.albumItem}>
               <View style={styles.albumImageContainer}>
