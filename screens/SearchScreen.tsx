@@ -32,7 +32,7 @@ import { Audio } from 'expo-av';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
-  const { addGem, removeGem, isGem } = useGems();
+  const { addGem, removeGem, isGem, updateGemStatus } = useGems();
   const navigation = useNavigation<any>();
   const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
@@ -78,6 +78,19 @@ export const SearchScreen: React.FC = () => {
       loadCollection();
     }
   }, [user]);
+
+  // Efecto para sincronizar el estado de gems cuando se navegue de vuelta
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      console.log('🔄 SearchScreen: Screen focused, syncing gem status');
+      // Recargar la colección para sincronizar el estado de gems
+      if (user) {
+        loadCollection();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation, user]);
 
   useEffect(() => {
     sortCollection();
@@ -280,6 +293,9 @@ export const SearchScreen: React.FC = () => {
       console.log('✅ handleToggleGem: Service call successful:', result);
       
       // Actualizar el contexto de gems inmediatamente
+      console.log('📢 handleToggleGem: Updating gem status in context');
+      updateGemStatus(item.albums.id, newStatus);
+      
       if (newStatus) {
         // Si se añadió un gem, añadirlo al contexto
         console.log('📢 handleToggleGem: Adding gem to context');
@@ -746,13 +762,24 @@ export const SearchScreen: React.FC = () => {
               {item.albums?.label} • {item.albums?.release_year}
             </Text>
             
-            {/* Tag de nota de audio */}
-            {item.audio_note && (
-              <View style={styles.audioTag}>
-                <Ionicons name="mic" size={12} color="#007AFF" />
-                <Text style={styles.audioTagText}>Nota de audio</Text>
-              </View>
-            )}
+            {/* Tags de audio y gem */}
+            <View style={styles.tagsContainer}>
+              {/* Tag de nota de audio */}
+              {item.audio_note && (
+                <View style={styles.audioTag}>
+                  <Ionicons name="mic" size={12} color="#007AFF" />
+                  <Text style={styles.audioTagText}>Nota de audio</Text>
+                </View>
+              )}
+              
+              {/* Tag de gem */}
+              {item.is_gem && (
+                <View style={styles.gemTag}>
+                  <Ionicons name="diamond" size={12} color="#d97706" />
+                  <Text style={styles.gemTagText}>Gem</Text>
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -786,13 +813,24 @@ export const SearchScreen: React.FC = () => {
             }
           </Text>
           
-          {/* Tag de nota de audio */}
-          {item.audio_note && (
-            <View style={styles.audioTagGrid}>
-              <Ionicons name="mic" size={10} color="#007AFF" />
-              <Text style={styles.audioTagTextGrid}>Audio</Text>
-            </View>
-          )}
+          {/* Tags de audio y gem */}
+          <View style={styles.tagsContainerGrid}>
+            {/* Tag de nota de audio */}
+            {item.audio_note && (
+              <View style={styles.audioTagGrid}>
+                <Ionicons name="mic" size={10} color="#007AFF" />
+                <Text style={styles.audioTagTextGrid}>Audio</Text>
+              </View>
+            )}
+            
+            {/* Tag de gem */}
+            {item.is_gem && (
+              <View style={styles.gemTagGrid}>
+                <Ionicons name="diamond" size={10} color="#d97706" />
+                <Text style={styles.gemTagTextGrid}>Gem</Text>
+              </View>
+            )}
+          </View>
         </View>
       </View>
     </TouchableOpacity>
@@ -1924,6 +1962,32 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 
+  // Estilos para el tag de gem
+  gemTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+  gemTagText: {
+    fontSize: 12,
+    color: '#d97706',
+    marginLeft: 5,
+  },
+
+  // Contenedor para tags en vista de lista
+  tagsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 4,
+  },
+
   // Estilos para el tag de nota de audio en grid
   audioTagGrid: {
     flexDirection: 'row',
@@ -1939,5 +2003,31 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: '#007AFF',
     marginLeft: 5,
+  },
+
+  // Estilos para el tag de gem en grid
+  gemTagGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+  gemTagTextGrid: {
+    fontSize: 10,
+    color: '#d97706',
+    marginLeft: 5,
+  },
+
+  // Contenedor para tags en vista de grid
+  tagsContainerGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    marginTop: 4,
   },
 }); 

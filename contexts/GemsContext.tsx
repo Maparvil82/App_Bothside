@@ -9,6 +9,7 @@ interface GemsContextType {
   addGem: (gem: any) => void;
   removeGem: (gemId: string) => void;
   isGem: (albumId: string) => boolean;
+  updateGemStatus: (albumId: string, isGem: boolean) => void;
 }
 
 const GemsContext = createContext<GemsContextType | undefined>(undefined);
@@ -73,6 +74,30 @@ export const GemsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setGems(prev => prev.filter(gem => gem.id !== gemId));
   }, []);
 
+  // Función para actualizar el estado de gem (para sincronizar con la colección)
+  const updateGemStatus = useCallback((albumId: string, isGem: boolean) => {
+    console.log('🔄 GemsContext: Updating gem status for album:', albumId, 'isGem:', isGem);
+    
+    if (isGem) {
+      // Si se añadió como gem, añadirlo a la lista si no existe
+      setGems(prev => {
+        const exists = prev.some(g => g.album_id === albumId);
+        if (!exists) {
+          // Buscar el item en la colección (esto se manejará desde SearchScreen)
+          console.log('✅ GemsContext: Gem status updated to true for album:', albumId);
+        }
+        return prev;
+      });
+    } else {
+      // Si se removió como gem, removerlo de la lista
+      setGems(prev => {
+        const filtered = prev.filter(gem => gem.album_id !== albumId);
+        console.log('✅ GemsContext: Gem status updated to false for album:', albumId);
+        return filtered;
+      });
+    }
+  }, []);
+
   // Función para verificar si un álbum es gem
   const isGem = useCallback((albumId: string) => {
     return gems.some(gem => gem.album_id === albumId);
@@ -89,7 +114,8 @@ export const GemsProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshGems,
     addGem,
     removeGem,
-    isGem
+    isGem,
+    updateGemStatus
   };
 
   return (

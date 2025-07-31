@@ -19,7 +19,7 @@ import { useGems } from '../contexts/GemsContext';
 
 export default function GemsScreen() {
   const { user } = useAuth();
-  const { gems, loading, refreshGems, removeGem } = useGems();
+  const { gems, loading, refreshGems, removeGem, updateGemStatus } = useGems();
 
   const handleRemoveGem = async (item: any) => {
     if (!user) return;
@@ -33,7 +33,11 @@ export default function GemsScreen() {
       
       await UserCollectionService.toggleGemStatus(user.id, item.albums.id);
       
-      // Remover del contexto inmediatamente
+      // Actualizar el estado de gem en el contexto
+      console.log('📢 GemsScreen: Updating gem status in context');
+      updateGemStatus(item.albums.id, false);
+      
+      // También remover del contexto inmediatamente
       console.log('📢 GemsScreen: Removing gem from context');
       removeGem(item.id);
       
