@@ -11,7 +11,6 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { PriceByStyleChart } from '../components/PriceByStyleChart';
 import { AudioNotesSection } from '../components/AudioNotesSection';
 
 const { width } = Dimensions.get('window');
@@ -372,18 +371,7 @@ export default function DashboardScreen() {
         <StatCard title="Estilos Únicos" value={stats.totalStyles} />
         <StatCard title="Álbum Más Antiguo" value={stats.oldestAlbum} />
         <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
-        <StatCard 
-          title="Valor Total" 
-          value={`${stats.collectionValue.toFixed(2)} €`} 
-          subtitle="Estimado"
-        />
       </View>
-
-      {/* Gráfica de Precios por Estilo */}
-      <PriceByStyleChart />
-
-      {/* Sección de Notas de Audio */}
-      <AudioNotesSection />
 
       {/* Álbumes Más Caros */}
       {stats.mostExpensiveAlbums.length > 0 && (
@@ -464,26 +452,29 @@ export default function DashboardScreen() {
         </View>
       )}
 
-                  {/* Álbumes por Década */}
-                  {stats.albumsByDecade.length > 0 && (
-                    <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>Álbumes por Década</Text>
-                      {stats.albumsByDecade.map((item, index) => (
-                        <View key={index} style={styles.listItem}>
-                          <Text style={styles.listItemText}>{item.decade}</Text>
-                          <Text style={styles.listItemCount}>{item.count}</Text>
-                        </View>
-                      ))}
-                    </View>
-                  )}
+      {/* Álbumes por Década */}
+      {stats.albumsByDecade.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Álbumes por Década</Text>
+          {stats.albumsByDecade.map((item, index) => (
+            <View key={index} style={styles.listItem}>
+              <Text style={styles.listItemText}>{item.decade}</Text>
+              <Text style={styles.listItemCount}>{item.count}</Text>
+            </View>
+          ))}
+        </View>
+      )}
 
-                  {/* Mensaje si no hay datos */}
-                  {stats.totalAlbums === 0 && (
-                    <View style={styles.emptyContainer}>
-                      <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
-                      <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
-                    </View>
-                  )}
+      {/* Sección de Notas de Audio */}
+      <AudioNotesSection />
+
+      {/* Mensaje si no hay datos */}
+      {stats.totalAlbums === 0 && (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
+          <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
