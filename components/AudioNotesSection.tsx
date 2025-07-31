@@ -53,7 +53,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
           id,
           audio_note,
           added_at,
-          albums!inner (
+          albums (
             title,
             artist,
             cover_url
@@ -69,14 +69,14 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
         return;
       }
 
-      const albumsData: AudioNoteAlbum[] = collection?.map(item => ({
+      const albumsData: AudioNoteAlbum[] = (collection || []).map(item => ({
         id: item.id,
         title: item.albums?.title || 'Sin título',
         artist: item.albums?.artist || 'Artista desconocido',
         cover_url: item.albums?.cover_url,
         audio_note: item.audio_note,
         added_at: item.added_at,
-      })) || [];
+      }));
 
       setAlbumsWithAudio(albumsData);
       console.log('🎤 Albums with audio loaded:', albumsData.length);
@@ -204,19 +204,12 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'white',
-    borderRadius: 12,
+    backgroundColor: '#fff',
+    margin: 10,
+    borderRadius: 8,
     padding: 16,
-    marginHorizontal: 16,
-    marginVertical: 8,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+   
+    
   },
   header: {
     flexDirection: 'row',
@@ -224,9 +217,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#212529',
     marginLeft: 8,
   },
   loadingContainer: {
@@ -277,13 +270,13 @@ const styles = StyleSheet.create({
   albumImagePlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#e9ecef',
     justifyContent: 'center',
     alignItems: 'center',
   },
   albumImagePlaceholderText: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: '#6c757d',
     textAlign: 'center',
   },
   playButton: {
@@ -303,16 +296,16 @@ const styles = StyleSheet.create({
   albumTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#333',
+    color: '#212529',
     marginBottom: 2,
   },
   albumArtist: {
     fontSize: 11,
-    color: '#666',
+    color: '#495057',
     marginBottom: 4,
   },
   albumDate: {
     fontSize: 10,
-    color: '#9CA3AF',
+    color: '#6c757d',
   },
 }); 
