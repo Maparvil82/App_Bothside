@@ -8,10 +8,12 @@ import {
   ActivityIndicator,
   Dimensions,
   Image,
+  TouchableOpacity,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { AudioNotesSection } from '../components/AudioNotesSection';
+import { useNavigation } from '@react-navigation/native';
 
 const { width } = Dimensions.get('window');
 
@@ -36,6 +38,7 @@ export default function DashboardScreen() {
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
 
   const fetchCollectionStats = async () => {
     if (!user) return;
@@ -252,12 +255,13 @@ export default function DashboardScreen() {
                         title: album.title || 'Sin título',
                         artist: album.artist || 'Artista desconocido',
                         price: album.album_stats.avg_price,
-                        imageUrl: album.cover_url
+                        imageUrl: album.cover_url,
+                        id: item.album_id, // Assuming album_id is the ID for navigation
                       };
                     })
                     .filter(Boolean)
                     .sort((a: any, b: any) => b.price - a.price)
-                    .slice(0, 5) as Array<{ title: string; artist: string; price: number; imageUrl?: string }>;
+                    .slice(0, 5) as Array<{ title: string; artist: string; price: number; imageUrl?: string; id: string }>;
 
                   // Calcular valor total de la colección
                   const collectionValue = collectionData
@@ -378,7 +382,11 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Álbumes Más Caros</Text>
           {stats.mostExpensiveAlbums.map((album, index) => (
-            <View key={index} style={styles.albumItem}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.albumItem}
+              onPress={() => navigation.navigate('AlbumDetail', { albumId: album.id })}
+            >
               <View style={styles.albumImageContainer}>
                 {album.imageUrl ? (
                   <Image 
@@ -402,7 +410,7 @@ export default function DashboardScreen() {
               <View style={styles.albumRank}>
                 <Text style={styles.albumRankText}>#{index + 1}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       )}
@@ -427,7 +435,11 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
           {stats.latestAlbums.map((album, index) => (
-            <View key={index} style={styles.albumItem}>
+            <TouchableOpacity 
+              key={index} 
+              style={styles.albumItem}
+              onPress={() => navigation.navigate('AlbumDetail', { albumId: album.id })}
+            >
               <View style={styles.albumImageContainer}>
                 {album.imageUrl ? (
                   <Image 
@@ -447,7 +459,7 @@ export default function DashboardScreen() {
                 <Text style={styles.albumYear}>{album.year}</Text>
               </View>
               <Text style={styles.albumDate}>{album.addedAt}</Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       )}

@@ -19,6 +19,7 @@ import { CustomHeader } from '../components/CustomHeader';
 import { AuthProvider } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
 import { StatsProvider } from '../contexts/StatsContext';
+import AlbumDetailScreen from '../screens/AlbumDetailScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -197,6 +198,7 @@ const AppNavigator = () => (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="Main" component={TabNavigator} />
             <Stack.Screen name="Profile" component={ProfileStack} />
+            <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
           </Stack.Navigator>
         </StatsProvider>
       </GemsProvider>

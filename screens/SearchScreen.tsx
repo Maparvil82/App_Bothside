@@ -751,6 +751,7 @@ export const SearchScreen: React.FC = () => {
       <TouchableOpacity
         style={styles.collectionItem}
         onLongPress={() => handleLongPress(item)}
+        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
         activeOpacity={0.7}
       >
         <Image
@@ -795,6 +796,7 @@ export const SearchScreen: React.FC = () => {
     <TouchableOpacity 
       style={styles.collectionItemGrid}
       onLongPress={() => handleLongPress(item)}
+      onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
       activeOpacity={0.7}
     >
       <Image
