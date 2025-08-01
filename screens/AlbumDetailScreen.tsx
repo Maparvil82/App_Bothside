@@ -10,12 +10,15 @@ import {
   ActivityIndicator,
   Dimensions,
   SafeAreaView,
+  Linking,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
+import { WebView } from 'react-native-webview';
 
 const { width } = Dimensions.get('window');
 
@@ -35,7 +38,7 @@ interface AlbumDetail {
     catalog_no?: string;
     country?: string;
     album_styles?: Array<{ styles: { name: string } }>;
-    album_youtube_urls?: Array<{ url: string }>;
+    album_youtube_videos?: Array<{ url: string }>;
     album_stats?: { avg_price: number };
     tracks?: Array<{ position: string; title: string; duration: string }>;
   };
@@ -56,6 +59,9 @@ export default function AlbumDetailScreen() {
   const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
   const [floatingAudioUri, setFloatingAudioUri] = useState('');
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
+  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
+  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
+  const [currentVideoTitle, setCurrentVideoTitle] = useState('');
 
   const { albumId } = route.params as { albumId: string };
 
@@ -79,7 +85,7 @@ export default function AlbumDetailScreen() {
           albums (
             *,
             album_styles (styles (name)),
-            album_youtube_urls (url),
+            album_youtube_videos (url),
             album_stats (avg_price),
             tracks (position, title, duration)
           )
@@ -166,6 +172,8 @@ export default function AlbumDetailScreen() {
       console.log('📀 Audio note:', combinedData.audio_note);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
       console.log('📀 Shelves:', combinedData.user_list_items);
+      console.log('🎥 YouTube URLs:', combinedData.albums?.album_youtube_videos);
+      console.log('🎥 YouTube URLs count:', combinedData.albums?.album_youtube_videos?.length || 0);
       console.log('📀 All album fields:', Object.keys(combinedData));
       console.log('📀 Full album data:', JSON.stringify(combinedData, null, 2));
 
@@ -204,6 +212,86 @@ export default function AlbumDetailScreen() {
     );
   };
 
+  const handleSellAlbum = async () => {
+    Alert.alert(
+      'Vender Álbum',
+      `¿Qué quieres hacer con "${album?.albums.title}"?`,
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Ver en Discogs',
+          onPress: async () => {
+            try {
+              // Buscar el álbum en Discogs
+              const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
+              const discogsUrl = `https://www.discogs.com/search/?q=${encodeURIComponent(searchQuery)}&type=release`;
+              console.log('🔗 Abriendo Discogs:', discogsUrl);
+              
+              const supported = await Linking.canOpenURL(discogsUrl);
+              if (supported) {
+                await Linking.openURL(discogsUrl);
+              } else {
+                Alert.alert('Error', 'No se pudo abrir el enlace de Discogs');
+              }
+            } catch (error) {
+              console.error('Error opening Discogs:', error);
+              Alert.alert('Error', 'No se pudo abrir Discogs');
+            }
+          },
+        },
+        {
+          text: 'Vender en Marketplace',
+          onPress: async () => {
+            try {
+              // URL del marketplace de Discogs para vender
+              const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
+              const marketplaceUrl = `https://www.discogs.com/sell/release?q=${encodeURIComponent(searchQuery)}`;
+              console.log('💰 Abriendo Marketplace:', marketplaceUrl);
+              
+              const supported = await Linking.canOpenURL(marketplaceUrl);
+              if (supported) {
+                await Linking.openURL(marketplaceUrl);
+              } else {
+                Alert.alert('Error', 'No se pudo abrir el marketplace');
+              }
+            } catch (error) {
+              console.error('Error opening marketplace:', error);
+              Alert.alert('Error', 'No se pudo abrir el marketplace');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleOpenYouTubeVideo = async (url: string, index: number) => {
+    try {
+      console.log('🎥 Abriendo video de YouTube:', url);
+      
+      // Convertir URL de YouTube a formato compatible
+      const videoId = extractYouTubeVideoId(url);
+      if (videoId) {
+        setCurrentVideoUrl(`https://www.youtube.com/embed/${videoId}`);
+        setCurrentVideoTitle(`Video ${index + 1} - ${album?.albums.artist}`);
+        setShowVideoPlayer(true);
+      } else {
+        Alert.alert('Error', 'No se pudo procesar la URL del video');
+      }
+    } catch (error) {
+      console.error('Error opening YouTube video:', error);
+      Alert.alert('Error', 'No se pudo abrir el video');
+    }
+  };
+
+  const extractYouTubeVideoId = (url: string): string | null => {
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? match[2] : null;
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -240,7 +328,9 @@ export default function AlbumDetailScreen() {
   }
 
   const stylesList = album.albums.album_styles?.map(as => as.styles?.name).filter(Boolean) || [];
-  const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
+  const youtubeUrls = album.albums.album_youtube_videos?.map(ay => ay.url).filter(Boolean) || [];
+  console.log('🎥 Processed YouTube URLs:', youtubeUrls);
+  console.log('🎥 YouTube URLs length:', youtubeUrls.length);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -295,6 +385,17 @@ export default function AlbumDetailScreen() {
               </TouchableOpacity>
             )}
           </View>
+        </View>
+
+        {/* Botón de Vender */}
+        <View style={styles.section}>
+          <TouchableOpacity 
+            style={styles.sellButton}
+            onPress={() => handleSellAlbum()}
+          >
+            <Ionicons name="cash-outline" size={20} color="#fff" />
+            <Text style={styles.sellButtonText}>Vender este álbum</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Estilos */}
@@ -388,22 +489,34 @@ export default function AlbumDetailScreen() {
         )}
 
         {/* Videos de YouTube */}
-        {youtubeUrls.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Videos de YouTube</Text>
-            {youtubeUrls.map((url, index) => (
-              <View key={index} style={styles.youtubeItem}>
-                <Ionicons name="logo-youtube" size={20} color="#FF0000" />
-                <Text style={styles.youtubeText} numberOfLines={1}>
-                  Video {index + 1}
-                </Text>
-                <TouchableOpacity style={styles.youtubeButton}>
-                  <Ionicons name="play" size={16} color="#007AFF" />
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Videos de YouTube</Text>
+          {youtubeUrls.length > 0 ? (
+            youtubeUrls.map((url, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.youtubeItem}
+                onPress={() => handleOpenYouTubeVideo(url, index)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.youtubeInfo}>
+                  <Ionicons name="logo-youtube" size={20} color="#FF0000" />
+                  <Text style={styles.youtubeText} numberOfLines={1}>
+                    Video {index + 1} - {album?.albums.artist}
+                  </Text>
+                </View>
+                <View style={styles.youtubePlayButton}>
+                  <Ionicons name="play-circle" size={24} color="#FF0000" />
+                </View>
+              </TouchableOpacity>
+            ))
+          ) : (
+            <View style={styles.emptyYouTubeContainer}>
+              <Ionicons name="logo-youtube" size={24} color="#6c757d" />
+              <Text style={styles.emptyYouTubeText}>No hay videos de YouTube disponibles</Text>
+            </View>
+          )}
+        </View>
 
         {/* Estado de gem */}
         {album.is_gem && (
@@ -423,6 +536,36 @@ export default function AlbumDetailScreen() {
         albumTitle={floatingAlbumTitle}
         onClose={() => setShowFloatingPlayer(false)}
       />
+
+      {/* Modal del reproductor de video */}
+      <Modal
+        visible={showVideoPlayer}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <SafeAreaView style={styles.videoModalContainer}>
+          <View style={styles.videoModalHeader}>
+            <TouchableOpacity 
+              onPress={() => setShowVideoPlayer(false)}
+              style={styles.videoCloseButton}
+            >
+              <Ionicons name="close" size={24} color="#fff" />
+            </TouchableOpacity>
+            <Text style={styles.videoModalTitle}>{currentVideoTitle}</Text>
+          </View>
+          
+          <View style={styles.videoContainer}>
+            <WebView
+              source={{ uri: currentVideoUrl }}
+              style={styles.videoPlayer}
+              originWhitelist={['*']}
+              allowsInlineMediaPlayback={true}
+              mediaPlaybackRequiresUserAction={false}
+              allowsFullscreenVideo={true}
+            />
+          </View>
+        </SafeAreaView>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -661,21 +804,60 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '500',
   },
+  sellButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#28a745',
+    padding: 16,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  sellButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
+  },
   youtubeItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f3f4',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  youtubeInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
   },
   youtubeText: {
-    flex: 1,
     marginLeft: 8,
     fontSize: 14,
     color: '#495057',
+    fontWeight: '500',
   },
-  youtubeButton: {
-    padding: 8,
+  youtubePlayButton: {
+    padding: 4,
   },
   gemContainer: {
     flexDirection: 'row',
@@ -745,5 +927,49 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#dc3545',
     marginBottom: 4,
+  },
+  emptyYouTubeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+  },
+  emptyYouTubeText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#6c757d',
+    fontStyle: 'italic',
+  },
+  videoModalContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
+  videoModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#000',
+  },
+  videoCloseButton: {
+    padding: 8,
+    marginRight: 12,
+  },
+  videoModalTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    flex: 1,
+  },
+  videoContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  videoPlayer: {
+    width: '100%',
+    height: '100%',
   },
 }); 
