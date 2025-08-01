@@ -392,7 +392,7 @@ export default function DashboardScreen() {
         <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
       </View>
 
-      {/* Álbumes Más Caros */}
+      {/* Álbumes más caros */}
       {stats.mostExpensiveAlbums.length > 0 && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Álbumes Más Caros</Text>
@@ -429,6 +429,26 @@ export default function DashboardScreen() {
           ))}
         </View>
       )}
+
+      {/* Sección de IA */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Asistente IA</Text>
+        <TouchableOpacity 
+          style={styles.aiCard}
+          onPress={() => (navigation as any).navigate('AIChat')}
+        >
+          <View style={styles.aiCardContent}>
+            <View style={styles.aiIconContainer}>
+              <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
+            </View>
+            <View style={styles.aiTextContainer}>
+              <Text style={styles.aiTitle}>Analiza tu Colección</Text>
+              <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+      </View>
 
       {/* Top Artistas */}
       {stats.topArtists.length > 0 && (
@@ -491,26 +511,6 @@ export default function DashboardScreen() {
           ))}
         </View>
       )}
-
-      {/* Sección de IA */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Asistente IA</Text>
-        <TouchableOpacity 
-          style={styles.aiCard}
-          onPress={() => (navigation as any).navigate('AIChat')}
-        >
-          <View style={styles.aiCardContent}>
-            <View style={styles.aiIconContainer}>
-              <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
-            </View>
-            <View style={styles.aiTextContainer}>
-              <Text style={styles.aiTitle}>Analiza tu Colección</Text>
-              <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#007AFF" />
-          </View>
-        </TouchableOpacity>
-      </View>
 
       {/* Sección de Notas de Audio */}
       <AudioNotesSection />
