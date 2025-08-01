@@ -52,27 +52,13 @@ export default function AIChatScreen() {
         }));
         setMessages(parsedMessages);
       } else {
-        // Mensaje de bienvenida solo si no hay historial
-        setMessages([
-          {
-            id: '1',
-            text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
-            isUser: false,
-            timestamp: new Date(),
-          },
-        ]);
+        // Chat vacío si no hay historial
+        setMessages([]);
       }
     } catch (error) {
       console.error('Error loading chat history:', error);
-      // Mensaje de bienvenida en caso de error
-      setMessages([
-        {
-          id: '1',
-          text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
-          isUser: false,
-          timestamp: new Date(),
-        },
-      ]);
+      // Chat vacío en caso de error
+      setMessages([]);
     }
   };
 
@@ -97,13 +83,7 @@ export default function AIChatScreen() {
           text: 'Limpiar',
           style: 'destructive',
           onPress: async () => {
-            const welcomeMessage: Message = {
-              id: Date.now().toString(),
-              text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
-              isUser: false,
-              timestamp: new Date(),
-            };
-            setMessages([welcomeMessage]);
+            setMessages([]);
             await AsyncStorage.removeItem(CHAT_STORAGE_KEY);
           },
         },
@@ -210,8 +190,31 @@ export default function AIChatScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   };
 
+  const scrollToBottomIfUserMessage = (newMessages: Message[]) => {
+    // Solo hacer scroll si el último mensaje es del usuario
+    const lastMessage = newMessages[newMessages.length - 1];
+    if (lastMessage && lastMessage.isUser) {
+      // Pequeño delay para que el mensaje se renderice primero
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 150);
+    }
+  };
+
+  const handleSendMessage = () => {
+    if (!inputText.trim() || isLoading) return;
+    
+    // Hacer scroll inmediatamente cuando el usuario envía un mensaje
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 50);
+    
+    sendMessage();
+  };
+
   useEffect(() => {
-    scrollToBottom();
+    // Solo hacer scroll automático cuando el usuario envía un mensaje
+    // Ahora se maneja manualmente en handleSendMessage para mejor control
   }, [messages]);
 
   return (
@@ -224,14 +227,14 @@ export default function AIChatScreen() {
           <Ionicons name="arrow-back" size={24} color="#333" />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Asistente IA</Text>
+          <Text style={styles.headerTitle}>Bothside IA</Text>
           <Text style={styles.headerSubtitle}>Analiza tu colección</Text>
         </View>
         <TouchableOpacity 
           style={styles.clearButton}
           onPress={clearChat}
         >
-          <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
+          <Ionicons name="refresh-outline" size={24} color="#FF6B6B" />
         </TouchableOpacity>
       </View>
 
@@ -243,6 +246,10 @@ export default function AIChatScreen() {
           ref={scrollViewRef}
           style={styles.messagesContainer}
           showsVerticalScrollIndicator={false}
+          maintainVisibleContentPosition={{
+            minIndexForVisible: 0,
+            autoscrollToTopThreshold: 10,
+          }}
         >
           {messages.map((message) => (
             <View
@@ -260,29 +267,28 @@ export default function AIChatScreen() {
               >
                 <Text
                   style={[
-                    styles.messageText,
                     message.isUser ? styles.userText : styles.aiText,
+                    styles.messageText,
                   ]}
                 >
                   {message.text}
                 </Text>
               </View>
               <Text style={styles.timestamp}>
-                {message.timestamp.toLocaleTimeString('es-ES', {
+                {message.timestamp.toLocaleTimeString([], {
                   hour: '2-digit',
                   minute: '2-digit',
                 })}
               </Text>
             </View>
           ))}
+          
           {isLoading && (
             <View style={[styles.messageContainer, styles.aiMessage]}>
               <View style={[styles.messageBubble, styles.aiBubble]}>
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#007AFF" />
-                  <Text style={[styles.messageText, styles.aiText]}>
-                    Pensando...
-                  </Text>
+                  <ActivityIndicator size="small" color="#666" />
+                  <Text style={styles.loadingText}>Pensando...</Text>
                 </View>
               </View>
             </View>
@@ -304,7 +310,7 @@ export default function AIChatScreen() {
               styles.sendButton,
               (!inputText.trim() || isLoading) && styles.sendButtonDisabled,
             ]}
-            onPress={sendMessage}
+            onPress={handleSendMessage}
             disabled={!inputText.trim() || isLoading}
           >
             <Ionicons
