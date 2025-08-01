@@ -274,7 +274,9 @@ export default function AlbumDetailScreen() {
       // Convertir URL de YouTube a formato compatible
       const videoId = extractYouTubeVideoId(url);
       if (videoId) {
-        setCurrentVideoUrl(`https://www.youtube.com/embed/${videoId}`);
+        // Crear URL de embed con parámetros para mejor reproducción
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+        setCurrentVideoUrl(embedUrl);
         setCurrentVideoTitle(`Video ${index + 1} - ${album?.albums.artist}`);
         setShowVideoPlayer(true);
       } else {
@@ -965,11 +967,10 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: '#000',
   },
   videoPlayer: {
-    width: '100%',
-    height: '100%',
+    flex: 1,
+    backgroundColor: '#000',
   },
 }); 
