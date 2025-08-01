@@ -129,9 +129,42 @@ export const SearchScreen: React.FC = () => {
         return;
       }
 
-      console.log('📊 Colección cargada:', userCollection?.length, 'álbumes');
+      // Verificar si cada álbum está en alguna estantería
+      const collectionWithShelfInfo = await Promise.all(
+        (userCollection || []).map(async (item) => {
+          try {
+            // Obtener list_items que pertenezcan a estanterías del usuario actual
+            const { data: listItems } = await supabase
+              .from('list_items')
+              .select(`
+                list_id,
+                user_lists!inner (
+                  id,
+                  user_id
+                )
+              `)
+              .eq('album_id', item.albums.id)
+              .eq('user_lists.user_id', user.id);
 
-      setCollection(userCollection || []);
+            const inShelf = listItems && listItems.length > 0;
+            
+            console.log(`🔍 Album "${item.albums.title}": in_shelf = ${inShelf}, listItems count = ${listItems?.length || 0}`);
+            
+            return {
+              ...item,
+              in_shelf: inShelf
+            };
+          } catch (error) {
+            console.error('Error checking shelf status for album:', item.albums.id, error);
+            return {
+              ...item,
+              in_shelf: false
+            };
+          }
+        })
+      );
+
+      setCollection(collectionWithShelfInfo);
       
       // Actualizar estadísticas
       await refreshStats();
@@ -754,41 +787,50 @@ export const SearchScreen: React.FC = () => {
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
         activeOpacity={0.7}
       >
-        <Image
-          source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-          style={styles.collectionThumbnail}
-        />
-        <View style={styles.collectionInfo}>
-          <Text style={styles.collectionTitle} numberOfLines={1} ellipsizeMode="tail">
-            {item.albums?.title}
-          </Text>
-          <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
-          <View style={styles.collectionDetails}>
-            <Text style={styles.collectionDetail}>
-              {item.albums?.label} • {item.albums?.release_year}
+          <Image
+            source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+            style={styles.collectionThumbnail}
+          />
+          <View style={styles.collectionInfo}>
+            <Text style={styles.collectionTitle} numberOfLines={1} ellipsizeMode="tail">
+              {item.albums?.title}
             </Text>
-            
-            {/* Tags de audio y gem */}
-            <View style={styles.tagsContainer}>
-              {/* Tag de nota de audio */}
-              {item.audio_note && (
-                <View style={styles.audioTag}>
-                  <Ionicons name="mic" size={12} color="#007AFF" />
-                  <Text style={styles.audioTagText}>Nota de audio</Text>
-                </View>
-              )}
+            <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
+            <View style={styles.collectionDetails}>
+              <Text style={styles.collectionDetail}>
+                {item.albums?.label} • {item.albums?.release_year}
+              </Text>
               
-              {/* Tag de gem */}
-              {item.is_gem && (
-                <View style={styles.gemTag}>
-                  <Ionicons name="diamond" size={12} color="#d97706" />
-                  <Text style={styles.gemTagText}>Gem</Text>
-                </View>
-              )}
+              {/* Tags de audio y gem */}
+              <View style={styles.tagsContainer}>
+                {/* Tag de nota de audio */}
+                {item.audio_note && (
+                  <View style={styles.audioTag}>
+                    <Ionicons name="mic" size={12} color="#007AFF" />
+                    <Text style={styles.audioTagText}>Nota de audio</Text>
+                  </View>
+                )}
+                
+                {/* Tag de gem */}
+                {item.is_gem && (
+                  <View style={styles.gemTag}>
+                    <Ionicons name="diamond" size={12} color="#d97706" />
+                    <Text style={styles.gemTagText}>Gem</Text>
+                  </View>
+                )}
+
+                {/* Tag de estantería */}
+                {item.in_shelf && (
+                  <View style={styles.shelfTag}>
+                    <Ionicons name="library" size={12} color="#28a745" />
+                    <Text style={styles.shelfTagText}>Estantería</Text>
+                  </View>
+                )}
+                {console.log(`🎯 Rendering shelf tag for "${item.albums?.title}": in_shelf = ${item.in_shelf}`)}
+              </View>
             </View>
           </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
     </View>
   );
 
@@ -837,6 +879,15 @@ export const SearchScreen: React.FC = () => {
                 <Text style={styles.gemTagTextGrid}>Gem</Text>
               </View>
             )}
+
+            {/* Tag de estantería */}
+            {item.in_shelf && (
+              <View style={styles.shelfTagGrid}>
+                <Ionicons name="library" size={10} color="#28a745" />
+                <Text style={styles.shelfTagTextGrid}>Shelf</Text>
+              </View>
+            )}
+            {console.log(`🎯 Grid: Rendering shelf tag for "${item.albums?.title}": in_shelf = ${item.in_shelf}`)}
           </View>
         </View>
       </View>
@@ -1987,6 +2038,24 @@ const styles = StyleSheet.create({
     marginLeft: 5,
   },
 
+  // Estilos para el tag de estantería
+  shelfTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9', // Un color más suave para la estantería
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+  shelfTagText: {
+    fontSize: 12,
+    color: '#28a745',
+    marginLeft: 5,
+  },
+
   // Contenedor para tags en vista de lista
   tagsContainer: {
     flexDirection: 'row',
@@ -2027,6 +2096,24 @@ const styles = StyleSheet.create({
   gemTagTextGrid: {
     fontSize: 10,
     color: '#d97706',
+    marginLeft: 5,
+  },
+
+  // Estilos para el tag de estantería en grid
+  shelfTagGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e8f5e9', // Un color más suave para la estantería
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+  shelfTagTextGrid: {
+    fontSize: 10,
+    color: '#28a745',
     marginLeft: 5,
   },
 

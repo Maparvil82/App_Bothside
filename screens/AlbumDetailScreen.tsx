@@ -37,7 +37,14 @@ interface AlbumDetail {
     album_styles?: Array<{ styles: { name: string } }>;
     album_youtube_urls?: Array<{ url: string }>;
     album_stats?: { avg_price: number };
+    tracks?: Array<{ position: string; title: string; duration: string }>;
   };
+  user_list_items?: Array<{
+    id: string;
+    title: string;
+    description?: string;
+    list_items: Array<{ album_id: string }>;
+  }>;
 }
 
 export default function AlbumDetailScreen() {
@@ -69,11 +76,12 @@ export default function AlbumDetailScreen() {
           added_at,
           audio_note,
           is_gem,
-          albums!inner (
+          albums (
             *,
             album_styles (styles (name)),
             album_youtube_urls (url),
-            album_stats (avg_price)
+            album_stats (avg_price),
+            tracks (position, title, duration)
           )
         `)
         .eq('user_id', user.id)
@@ -86,17 +94,80 @@ export default function AlbumDetailScreen() {
         return;
       }
 
-      setAlbum(data);
-      console.log('📀 Album detail loaded:', data.albums?.title);
-      console.log('📀 Catalog number:', data.albums?.catalog_no);
-      console.log('📀 Country:', data.albums?.country);
-      console.log('📀 Album stats:', data.albums?.album_stats);
-      console.log('📀 Avg price:', data.albums?.album_stats?.avg_price);
-      console.log('📀 User collection:', data);
-      console.log('📀 Audio note:', data.audio_note);
-      console.log('📀 Audio note exists:', !!data.audio_note);
-      console.log('📀 All album fields:', Object.keys(data));
-      console.log('📀 Full album data:', JSON.stringify(data, null, 2));
+      // Obtener las estanterías donde está este álbum
+      const { data: shelfData, error: shelfError } = await supabase
+        .from('user_lists')
+        .select(`
+          id,
+          title,
+          description
+        `)
+        .eq('user_id', user.id);
+
+      console.log('📚 Shelf query params:', { albumId, userId: user.id });
+      console.log('📚 Shelf data:', shelfData);
+      console.log('📚 Shelf error:', shelfError);
+      console.log('📚 Shelf data length:', shelfData?.length);
+
+      // Obtener list_items que pertenezcan a estanterías del usuario actual
+      const { data: listItemsData, error: listItemsError } = await supabase
+        .from('list_items')
+        .select(`
+          list_id,
+          album_id,
+          user_lists!inner (
+            id,
+            user_id
+          )
+        `)
+        .eq('album_id', albumId)
+        .eq('user_lists.user_id', user.id);
+
+      console.log('📚 List items data:', listItemsData);
+      console.log('📚 List items error:', listItemsError);
+      console.log('📚 List items length:', listItemsData?.length);
+
+      // Filtrar las estanterías que contienen este álbum
+      const shelvesWithAlbum = shelfData?.filter(shelf => {
+        return listItemsData?.some(item => 
+          item.list_id === shelf.id && item.album_id === albumId
+        );
+      }) || [];
+
+      console.log('📚 Shelves with album:', shelvesWithAlbum);
+      console.log('📚 Shelves with album length:', shelvesWithAlbum.length);
+
+      if (shelfError) {
+        console.error('Error loading shelves:', shelfError);
+      }
+
+      // Combinar los datos
+      const combinedData: AlbumDetail = {
+        id: data.id,
+        added_at: data.added_at,
+        audio_note: data.audio_note,
+        is_gem: data.is_gem,
+        albums: Array.isArray(data.albums) ? data.albums[0] : data.albums,
+        user_list_items: shelvesWithAlbum.map(shelf => ({
+          id: shelf.id,
+          title: shelf.title,
+          description: shelf.description,
+          list_items: listItemsData?.filter(item => item.list_id === shelf.id) || []
+        }))
+      };
+
+      setAlbum(combinedData);
+      console.log('📀 Album detail loaded:', combinedData.albums?.title);
+      console.log('📀 Catalog number:', combinedData.albums?.catalog_no);
+      console.log('📀 Country:', combinedData.albums?.country);
+      console.log('📀 Album stats:', combinedData.albums?.album_stats);
+      console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
+      console.log('📀 User collection:', combinedData);
+      console.log('📀 Audio note:', combinedData.audio_note);
+      console.log('📀 Audio note exists:', !!combinedData.audio_note);
+      console.log('📀 Shelves:', combinedData.user_list_items);
+      console.log('📀 All album fields:', Object.keys(combinedData));
+      console.log('📀 Full album data:', JSON.stringify(combinedData, null, 2));
 
     } catch (error) {
       console.error('Error processing album detail:', error);
@@ -108,8 +179,29 @@ export default function AlbumDetailScreen() {
 
   const handlePlayAudio = (audioUri: string) => {
     setFloatingAudioUri(audioUri);
-    setFloatingAlbumTitle(album?.albums?.title || '');
+    setFloatingAlbumTitle(album?.albums.title || '');
     setShowFloatingPlayer(true);
+  };
+
+  const handleRecordAudio = () => {
+    // Navegar a la pantalla de grabación o abrir modal
+    Alert.alert(
+      'Grabar Nota de Audio',
+      '¿Quieres grabar una nota de audio para este álbum?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Grabar',
+          onPress: () => {
+            // Aquí se implementaría la lógica de grabación
+            console.log('🎤 Iniciando grabación de audio para:', album?.albums.title);
+          },
+        },
+      ]
+    );
   };
 
   const formatDate = (dateString: string) => {
@@ -219,39 +311,81 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Nota de Audio */}
-        {album.audio_note && (
+        {/* Tracklist */}
+        {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Nota de Audio</Text>
-            <View style={styles.audioSection}>
-              <View style={styles.audioInfo}>
-                <Ionicons name="mic" size={20} color="#007AFF" />
-                <Text style={styles.audioInfoText}>Tienes una nota de audio para este álbum</Text>
+            <Text style={styles.sectionTitle}>Tracklist</Text>
+            {album.albums.tracks.map((track, index) => (
+              <View key={index} style={styles.trackItem}>
+                <View style={styles.trackInfo}>
+                  <Text style={styles.trackPosition}>{track.position}</Text>
+                  <Text style={styles.trackTitle}>{track.title}</Text>
+                </View>
+                {track.duration && (
+                  <Text style={styles.trackDuration}>{track.duration}</Text>
+                )}
               </View>
-            </View>
-            <TouchableOpacity 
-              style={styles.playAudioButton}
-              onPress={() => handlePlayAudio(album.audio_note!)}
-            >
-              <Ionicons name="play-circle" size={24} color="#007AFF" />
-              <Text style={styles.playAudioButtonText}>Reproducir nota de audio</Text>
-            </TouchableOpacity>
+            ))}
           </View>
         )}
 
-        {/* Debug temporal - Verificar audio */}
+        {/* Nota de Audio */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Debug Audio</Text>
-          <Text style={styles.debugText}>
-            Audio note value: {album.audio_note || 'NULL'}
-          </Text>
-          <Text style={styles.debugText}>
-            Audio note length: {album.audio_note?.length || 0}
-          </Text>
-          <Text style={styles.debugText}>
-            Condition result: {album.audio_note ? 'TRUE' : 'FALSE'}
-          </Text>
+          <Text style={styles.sectionTitle}>Nota de Audio</Text>
+          {album.audio_note ? (
+            // Si existe nota de audio
+            <>
+              <View style={styles.audioSection}>
+                <View style={styles.audioInfo}>
+                  <Ionicons name="mic" size={20} color="#007AFF" />
+                  <Text style={styles.audioInfoText}>Tienes una nota de audio para este álbum</Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.playAudioButton}
+                onPress={() => handlePlayAudio(album.audio_note!)}
+              >
+                <Ionicons name="play-circle" size={24} color="#007AFF" />
+                <Text style={styles.playAudioButtonText}>Reproducir nota de audio</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            // Si no existe nota de audio
+            <>
+              <View style={styles.audioSection}>
+                <View style={styles.audioInfo}>
+                  <Ionicons name="mic-outline" size={20} color="#6c757d" />
+                  <Text style={styles.audioInfoText}>No tienes una nota de audio para este álbum</Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.recordAudioButton}
+                onPress={() => handleRecordAudio()}
+              >
+                <Ionicons name="mic" size={24} color="#007AFF" />
+                <Text style={styles.recordAudioButtonText}>Grabar nota de audio</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
+
+        {/* Estanterías */}
+        {album.user_list_items && album.user_list_items.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Estanterías</Text>
+            {album.user_list_items.map((item, index) => (
+              <View key={index} style={styles.shelfItem}>
+                <Ionicons name="library" size={16} color="#007AFF" />
+                <View style={styles.shelfInfo}>
+                  <Text style={styles.shelfTitle}>{item.title}</Text>
+                  {item.description && (
+                    <Text style={styles.shelfDescription}>{item.description}</Text>
+                  )}
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
 
         {/* Videos de YouTube */}
         {youtubeUrls.length > 0 && (
@@ -511,10 +645,21 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '500',
   },
-  debugText: {
-    fontSize: 12,
-    color: '#dc3545',
-    marginBottom: 4,
+  recordAudioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  recordAudioButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
   youtubeItem: {
     flexDirection: 'row',
@@ -544,5 +689,61 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#d97706',
     fontWeight: '500',
+  },
+  trackItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  trackInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  trackPosition: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#6c757d',
+    marginRight: 12,
+    minWidth: 30,
+  },
+  trackTitle: {
+    fontSize: 14,
+    color: '#212529',
+    flex: 1,
+  },
+  trackDuration: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginLeft: 8,
+  },
+  shelfItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  shelfInfo: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  shelfTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 2,
+  },
+  shelfDescription: {
+    fontSize: 12,
+    color: '#6c757d',
+  },
+  debugText: {
+    fontSize: 12,
+    color: '#dc3545',
+    marginBottom: 4,
   },
 }); 
