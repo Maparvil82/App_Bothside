@@ -20,6 +20,7 @@ import { AuthProvider } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
 import { StatsProvider } from '../contexts/StatsContext';
 import AlbumDetailScreen from '../screens/AlbumDetailScreen';
+import AIChatScreen from '../screens/AIChatScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -199,6 +200,7 @@ const AppNavigator = () => (
             <Stack.Screen name="Main" component={TabNavigator} />
             <Stack.Screen name="Profile" component={ProfileStack} />
             <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
+            <Stack.Screen name="AIChat" component={AIChatScreen} />
           </Stack.Navigator>
         </StatsProvider>
       </GemsProvider>

@@ -4,16 +4,20 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
+  Alert,
   Dimensions,
   Image,
-  TouchableOpacity,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { AudioNotesSection } from '../components/AudioNotesSection';
+import { useStats } from '../contexts/StatsContext';
 import { useNavigation } from '@react-navigation/native';
+import { AudioNotesSection } from '../components/AudioNotesSection';
+import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 
 const { width } = Dimensions.get('window');
 
@@ -29,16 +33,26 @@ interface CollectionStats {
   topLabels: Array<{ label: string; count: number }>;
   topStyles: Array<{ style: string; count: number }>;
   albumsByDecade: Array<{ decade: string; count: number }>;
-  latestAlbums: Array<{ title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
-  mostExpensiveAlbums: Array<{ title: string; artist: string; price: number; imageUrl?: string }>;
+  latestAlbums: Array<{ id: string; title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
+  mostExpensiveAlbums: Array<{ id: string; title: string; artist: string; price: number; imageUrl?: string }>;
 }
 
 export default function DashboardScreen() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation();
+
+  // Si la autenticación aún está cargando, mostrar loading
+  if (authLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text style={styles.loadingText}>Cargando...</Text>
+      </View>
+    );
+  }
 
   const fetchCollectionStats = async () => {
     if (!user) return;
@@ -232,6 +246,7 @@ export default function DashboardScreen() {
                       if (!album) return null;
                       
                       return {
+                        id: item.album_id, // Assuming album_id is the ID for navigation
                         title: album.title || 'Sin título',
                         artist: album.artist || 'Artista desconocido',
                         year: album.release_year || 'Año desconocido',
@@ -243,7 +258,7 @@ export default function DashboardScreen() {
                         })
                       };
                     })
-                    .filter(Boolean) as Array<{ title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
+                    .filter(Boolean) as Array<{ id: string; title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
 
                   // Top 5 discos más caros (por precio medio)
                   const mostExpensiveAlbums = collectionData
@@ -252,16 +267,16 @@ export default function DashboardScreen() {
                       if (!album || !album.album_stats || !album.album_stats.avg_price) return null;
                       
                       return {
+                        id: item.album_id, // Assuming album_id is the ID for navigation
                         title: album.title || 'Sin título',
                         artist: album.artist || 'Artista desconocido',
                         price: album.album_stats.avg_price,
                         imageUrl: album.cover_url,
-                        id: item.album_id, // Assuming album_id is the ID for navigation
                       };
                     })
                     .filter(Boolean)
                     .sort((a: any, b: any) => b.price - a.price)
-                    .slice(0, 5) as Array<{ title: string; artist: string; price: number; imageUrl?: string; id: string }>;
+                    .slice(0, 5) as Array<{ id: string; title: string; artist: string; price: number; imageUrl?: string }>;
 
                   // Calcular valor total de la colección
                   const collectionValue = collectionData
@@ -476,6 +491,26 @@ export default function DashboardScreen() {
           ))}
         </View>
       )}
+
+      {/* Sección de IA */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Asistente IA</Text>
+        <TouchableOpacity 
+          style={styles.aiCard}
+          onPress={() => (navigation as any).navigate('AIChat')}
+        >
+          <View style={styles.aiCardContent}>
+            <View style={styles.aiIconContainer}>
+              <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
+            </View>
+            <View style={styles.aiTextContainer}>
+              <Text style={styles.aiTitle}>Analiza tu Colección</Text>
+              <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+      </View>
 
       {/* Sección de Notas de Audio */}
       <AudioNotesSection />
@@ -721,5 +756,45 @@ const styles = StyleSheet.create({
                 fontSize: 12,
                 color: 'rgba(255, 255, 255, 0.8)',
                 textAlign: 'center',
+              },
+              aiCard: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                backgroundColor: '#f0f7ff',
+                borderRadius: 12,
+                padding: 16,
+                margin: 16,
+                shadowColor: '#000',
+                shadowOffset: {
+                  width: 0,
+                  height: 2,
+                },
+                shadowOpacity: 0.1,
+                shadowRadius: 4,
+                elevation: 3,
+              },
+              aiCardContent: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                flex: 1,
+              },
+              aiIconContainer: {
+                marginRight: 12,
+                padding: 8,
+                backgroundColor: '#e0f2fe',
+                borderRadius: 10,
+              },
+              aiTextContainer: {
+                flex: 1,
+              },
+              aiTitle: {
+                fontSize: 16,
+                fontWeight: '600',
+                color: '#212529',
+                marginBottom: 4,
+              },
+              aiSubtitle: {
+                fontSize: 12,
+                color: '#6c757d',
               },
             }); 
