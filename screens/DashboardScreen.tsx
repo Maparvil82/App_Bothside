@@ -18,6 +18,7 @@ import { useStats } from '../contexts/StatsContext';
 import { useNavigation } from '@react-navigation/native';
 import { AudioNotesSection } from '../components/AudioNotesSection';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
+import { TopItemsLineChart } from '../components/TopItemsLineChart';
 
 const { width } = Dimensions.get('window');
 
@@ -37,11 +38,24 @@ interface CollectionStats {
   mostExpensiveAlbums: Array<{ id: string; title: string; artist: string; price: number; imageUrl?: string }>;
 }
 
+interface AudioNoteAlbum {
+  id: string;
+  title: string;
+  artist: string;
+  cover_url?: string;
+  audio_note: string;
+  added_at: string;
+}
+
 export default function DashboardScreen() {
   const { user, loading: authLoading } = useAuth();
   const [stats, setStats] = useState<CollectionStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [albumsWithAudio, setAlbumsWithAudio] = useState<AudioNoteAlbum[]>([]);
+  const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
+  const [floatingAudioUri, setFloatingAudioUri] = useState('');
+  const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
   const navigation = useNavigation();
 
   // Si la autenticación aún está cargando, mostrar loading
@@ -313,6 +327,67 @@ export default function DashboardScreen() {
     }
   };
 
+  const loadAlbumsWithAudio = async () => {
+    if (!user) return;
+
+    try {
+      const { data: collection, error } = await supabase
+        .from('user_collection')
+        .select(`
+          id,
+          audio_note,
+          added_at,
+          albums (
+            title,
+            artist,
+            cover_url
+          )
+        `)
+        .eq('user_id', user.id)
+        .not('audio_note', 'is', null)
+        .order('added_at', { ascending: false });
+
+      if (error) {
+        console.error('Error loading albums with audio:', error);
+        return;
+      }
+
+      const albumsData: AudioNoteAlbum[] = (collection || []).map(item => ({
+        id: item.id,
+        title: item.albums?.title || 'Sin título',
+        artist: item.albums?.artist || 'Artista desconocido',
+        cover_url: item.albums?.cover_url,
+        audio_note: item.audio_note,
+        added_at: item.added_at,
+      }));
+
+      setAlbumsWithAudio(albumsData);
+      console.log('🎤 Albums with audio loaded:', albumsData.length);
+
+    } catch (error) {
+      console.error('Error processing audio albums:', error);
+    }
+  };
+
+  const handlePlayAudio = async (audioUri: string, albumTitle: string) => {
+    try {
+      setFloatingAudioUri(audioUri);
+      setFloatingAlbumTitle(albumTitle);
+      setShowFloatingPlayer(true);
+    } catch (error) {
+      console.error('Error playing audio:', error);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchCollectionStats();
@@ -321,6 +396,7 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     fetchCollectionStats();
+    loadAlbumsWithAudio();
   }, [user]);
 
   if (loading) {
@@ -392,6 +468,26 @@ export default function DashboardScreen() {
         <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
       </View>
 
+      {/* Sección de IA */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Asistente IA</Text>
+        <TouchableOpacity 
+          style={styles.aiCard}
+          onPress={() => (navigation as any).navigate('AIChat')}
+        >
+          <View style={styles.aiCardContent}>
+            <View style={styles.aiIconContainer}>
+              <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
+            </View>
+            <View style={styles.aiTextContainer}>
+              <Text style={styles.aiTitle}>Analiza tu Colección</Text>
+              <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+          </View>
+        </TouchableOpacity>
+      </View>
+
       {/* Álbumes más caros */}
       {stats.mostExpensiveAlbums.length > 0 && (
         <View style={styles.section}>
@@ -430,39 +526,82 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Sección de IA */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Asistente IA</Text>
-        <TouchableOpacity 
-          style={styles.aiCard}
-          onPress={() => (navigation as any).navigate('AIChat')}
-        >
-          <View style={styles.aiCardContent}>
-            <View style={styles.aiIconContainer}>
-              <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
-            </View>
-            <View style={styles.aiTextContainer}>
-              <Text style={styles.aiTitle}>Analiza tu Colección</Text>
-              <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#007AFF" />
-          </View>
-        </TouchableOpacity>
-      </View>
+      {/* Sección de Notas de Audio */}
+      {albumsWithAudio.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Notas de Audio ({albumsWithAudio.length})</Text>
+          {albumsWithAudio.map((album, index) => (
+            <TouchableOpacity 
+              key={album.id} 
+              style={styles.albumItem}
+              onPress={() => handlePlayAudio(album.audio_note, album.title)}
+            >
+              <View style={styles.albumImageContainer}>
+                {album.cover_url ? (
+                  <Image 
+                    source={{ uri: album.cover_url }} 
+                    style={styles.albumImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.albumImagePlaceholder}>
+                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.albumInfo}>
+                <Text style={styles.albumTitle}>{album.title}</Text>
+                <Text style={styles.albumArtist}>{album.artist}</Text>
+                <Text style={styles.albumDate}>
+                  {formatDate(album.added_at)}
+                </Text>
+              </View>
+              <View style={styles.albumRank}>
+                <Ionicons name="play" size={16} color="white" />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
       {/* Top Artistas */}
       {stats.topArtists.length > 0 && (
-        <TopList title="Top 5 Artistas" data={stats.topArtists} keyName="artist" />
+        <TopItemsLineChart 
+          data={stats.topArtists} 
+          title="Top 5 Artistas" 
+          keyName="artist" 
+          icon="people" 
+        />
       )}
 
       {/* Top Sellos */}
       {stats.topLabels.length > 0 && (
-        <TopList title="Top 5 Sellos" data={stats.topLabels} keyName="label" />
+        <TopItemsLineChart 
+          data={stats.topLabels} 
+          title="Top 5 Sellos" 
+          keyName="label" 
+          icon="business" 
+        />
       )}
 
       {/* Top Estilos */}
       {stats.topStyles.length > 0 && (
-        <TopList title="Top 5 Estilos" data={stats.topStyles} keyName="style" />
+        <TopItemsLineChart 
+          data={stats.topStyles} 
+          title="Top 5 Estilos" 
+          keyName="style" 
+          icon="musical-notes" 
+        />
+      )}
+
+      {/* Álbumes por Década */}
+      {stats.albumsByDecade.length > 0 && (
+        <TopItemsLineChart 
+          data={stats.albumsByDecade} 
+          title="Álbumes por Década" 
+          keyName="decade" 
+          icon="calendar" 
+        />
       )}
 
       {/* Últimos Álbumes Añadidos */}
@@ -499,22 +638,6 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Álbumes por Década */}
-      {stats.albumsByDecade.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Álbumes por Década</Text>
-          {stats.albumsByDecade.map((item, index) => (
-            <View key={index} style={styles.listItem}>
-              <Text style={styles.listItemText}>{item.decade}</Text>
-              <Text style={styles.listItemCount}>{item.count}</Text>
-            </View>
-          ))}
-        </View>
-      )}
-
-      {/* Sección de Notas de Audio */}
-      <AudioNotesSection />
-
       {/* Mensaje si no hay datos */}
       {stats.totalAlbums === 0 && (
         <View style={styles.emptyContainer}>
@@ -522,6 +645,14 @@ export default function DashboardScreen() {
           <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
         </View>
       )}
+
+      {/* Reproductor flotante */}
+      <FloatingAudioPlayer
+        visible={showFloatingPlayer}
+        audioUri={floatingAudioUri}
+        albumTitle={floatingAlbumTitle}
+        onClose={() => setShowFloatingPlayer(false)}
+      />
     </ScrollView>
   );
 }
