@@ -13,6 +13,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
@@ -25,6 +26,8 @@ interface Message {
   timestamp: Date;
 }
 
+const CHAT_STORAGE_KEY = 'ai_chat_messages';
+
 export default function AIChatScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
@@ -36,16 +39,77 @@ export default function AIChatScreen() {
 
   useEffect(() => {
     loadCollectionData();
-    // Mensaje de bienvenida
-    setMessages([
-      {
-        id: '1',
-        text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
-        isUser: false,
-        timestamp: new Date(),
-      },
-    ]);
+    loadChatHistory();
   }, []);
+
+  const loadChatHistory = async () => {
+    try {
+      const savedMessages = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
+      if (savedMessages) {
+        const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+        setMessages(parsedMessages);
+      } else {
+        // Mensaje de bienvenida solo si no hay historial
+        setMessages([
+          {
+            id: '1',
+            text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
+            isUser: false,
+            timestamp: new Date(),
+          },
+        ]);
+      }
+    } catch (error) {
+      console.error('Error loading chat history:', error);
+      // Mensaje de bienvenida en caso de error
+      setMessages([
+        {
+          id: '1',
+          text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
+          isUser: false,
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  };
+
+  const saveChatHistory = async (messagesToSave: Message[]) => {
+    try {
+      await AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messagesToSave));
+    } catch (error) {
+      console.error('Error saving chat history:', error);
+    }
+  };
+
+  const clearChat = () => {
+    Alert.alert(
+      'Limpiar conversación',
+      '¿Estás seguro de que quieres limpiar toda la conversación?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Limpiar',
+          style: 'destructive',
+          onPress: async () => {
+            const welcomeMessage: Message = {
+              id: Date.now().toString(),
+              text: '¡Hola! Soy tu asistente de música. Puedo ayudarte a analizar tu colección de discos. ¿Qué te gustaría saber?',
+              isUser: false,
+              timestamp: new Date(),
+            };
+            setMessages([welcomeMessage]);
+            await AsyncStorage.removeItem(CHAT_STORAGE_KEY);
+          },
+        },
+      ]
+    );
+  };
 
   const loadCollectionData = async () => {
     if (!user) return;
@@ -95,9 +159,13 @@ export default function AIChatScreen() {
       timestamp: new Date(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInputText('');
     setIsLoading(true);
+
+    // Guardar inmediatamente el mensaje del usuario
+    await saveChatHistory(updatedMessages);
 
     try {
       const collectionContext = GeminiService.formatCollectionContext(collectionData);
@@ -114,7 +182,11 @@ export default function AIChatScreen() {
         timestamp: new Date(),
       };
 
-      setMessages(prev => [...prev, aiMessage]);
+      const finalMessages = [...updatedMessages, aiMessage];
+      setMessages(finalMessages);
+      
+      // Guardar la conversación completa después de la respuesta de la IA
+      await saveChatHistory(finalMessages);
     } catch (error) {
       console.error('Error generating response:', error);
       const errorMessage: Message = {
@@ -123,7 +195,12 @@ export default function AIChatScreen() {
         isUser: false,
         timestamp: new Date(),
       };
-      setMessages(prev => [...prev, errorMessage]);
+      
+      const finalMessages = [...updatedMessages, errorMessage];
+      setMessages(finalMessages);
+      
+      // Guardar también en caso de error
+      await saveChatHistory(finalMessages);
     } finally {
       setIsLoading(false);
     }
@@ -150,6 +227,12 @@ export default function AIChatScreen() {
           <Text style={styles.headerTitle}>Asistente IA</Text>
           <Text style={styles.headerSubtitle}>Analiza tu colección</Text>
         </View>
+        <TouchableOpacity 
+          style={styles.clearButton}
+          onPress={clearChat}
+        >
+          <Ionicons name="trash-outline" size={24} color="#FF6B6B" />
+        </TouchableOpacity>
       </View>
 
       <KeyboardAvoidingView 
@@ -242,13 +325,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   header: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
   },
   backButton: {
     padding: 5,
@@ -267,6 +350,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     marginTop: 2,
+  },
+  clearButton: {
+    padding: 5,
+    marginLeft: 10,
   },
   chatContainer: {
     flex: 1,
