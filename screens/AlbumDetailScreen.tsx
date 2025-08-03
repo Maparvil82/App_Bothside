@@ -285,7 +285,7 @@ export default function AlbumDetailScreen() {
     );
   };
 
-  const handleOpenYouTubeVideo = async (url: string, index: number) => {
+  const handleOpenYouTubeVideo = async (url: string) => {
     try {
       console.log('🎥 Abriendo video de YouTube:', url);
       
@@ -297,7 +297,7 @@ export default function AlbumDetailScreen() {
 
       // Usar una URL de embed más compatible con parámetros adicionales para autoplay
       const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
-      const videoTitle = `Video ${index + 1} - ${album?.albums.artist}`;
+      const videoTitle = `Video - ${album?.albums.artist}`;
       
       console.log('🎥 URL de embed creada:', embedUrl);
       
@@ -397,80 +397,64 @@ export default function AlbumDetailScreen() {
         <View style={styles.headerRight} />
       </View>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Información del álbum */}
-        <View style={styles.albumHeader}>
-          <View style={styles.coverContainer}>
-            {album.albums?.cover_url ? (
-              <Image 
-                source={{ uri: album.albums.cover_url }} 
-                style={styles.coverImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.coverPlaceholder}>
-                <Ionicons name="musical-note" size={48} color="#6c757d" />
-                <Text style={styles.coverPlaceholderText}>Sin imagen</Text>
-              </View>
-            )}
-          </View>
-          
-          <View style={styles.headerInfo}>
-            <Text style={styles.artist}>{album.albums.artist}</Text>
-            <Text style={styles.year}>{album.albums.release_year}</Text>
-            <Text style={styles.label}>{album.albums.label}</Text>
-            {album.albums.catalog_no && (
-              <Text style={styles.catalogNumber}>{album.albums.catalog_no}</Text>
-            )}
-            {album.albums.country && (
-              <Text style={styles.country}>{album.albums.country}</Text>
-            )}
-            <Text style={styles.estimatedValue}>
-              {formatPrice(album.albums.album_stats?.avg_price?.toString())}
-            </Text>
-            <Text style={styles.addedDate}>
-              Añadido: {formatDate(album.added_at)}
-            </Text>
-            {album.audio_note && (
-              <TouchableOpacity 
-                style={styles.audioNoteContainer}
-                onPress={() => handlePlayAudio(album.audio_note!)}
-              >
-                <Ionicons name="mic" size={14} color="#007AFF" />
-                <Text style={styles.audioNoteText}>Nota de audio disponible</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-
-        {/* Botón de Vender */}
-        <View style={styles.section}>
-          <TouchableOpacity 
-            style={styles.sellButton}
-            onPress={() => handleSellAlbum()}
-          >
-            <Ionicons name="cash-outline" size={20} color="#fff" />
-            <Text style={styles.sellButtonText}>Vender este álbum</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Estilos */}
-        {stylesList.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Estilos</Text>
-            <View style={styles.tagsContainer}>
-              {stylesList.map((style, index) => (
-                <View key={index} style={styles.tag}>
-                  <Text style={styles.tagText}>{style}</Text>
-                </View>
-              ))}
+        {/* Portada */}
+        <View style={styles.coverSection}>
+          {album.albums.cover_url ? (
+            <Image
+              source={{ uri: album.albums.cover_url }}
+              style={styles.fullCoverImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.fullCoverPlaceholder}>
+              <Text style={styles.fullCoverPlaceholderText}>Sin portada</Text>
             </View>
+          )}
+        </View>
+
+        {/* Sección de Valor */}
+        {album.albums.album_stats?.avg_price && (
+          <View style={styles.valueCard}>
+            <Text style={styles.valueCardTitle}>Valor de mercado</Text>
+            <Text style={styles.valueCardAmount}>
+              ${album.albums.album_stats.avg_price.toFixed(2)}
+            </Text>
+            <Text style={styles.valueCardSubtitle}>Precio promedio en el mercado basado en Discogs</Text>
           </View>
         )}
 
-        {/* Tracklist */}
+        {/* Información principal del álbum */}
+        <View style={styles.albumInfoSection}>
+          <Text style={styles.albumTitle}>{album.albums.title}</Text>
+          <Text style={styles.artist}>{album.albums.artist}</Text>
+          <View style={styles.labelYearContainer}>
+            <Text style={styles.label}>{album.albums.label}</Text>
+            {album.albums.release_year && (
+              <>
+                <Text style={styles.separator}> • </Text>
+                <Text style={styles.year}>{album.albums.release_year}</Text>
+              </>
+            )}
+          </View>
+          {(album.albums.catalog_no || album.albums.country) && (
+            <View style={styles.catalogCountryContainer}>
+              {album.albums.catalog_no && (
+                <>
+                  <Text style={styles.catalog}>{album.albums.catalog_no}</Text>
+                  {album.albums.country && <Text style={styles.separator}> • </Text>}
+                </>
+              )}
+              {album.albums.country && (
+                <Text style={styles.country}>{album.albums.country}</Text>
+              )}
+            </View>
+          )}
+        </View>
+
+        {/* Sección de Tracks */}
         {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tracklist</Text>
+            <Text style={styles.sectionTitle}>Tracks</Text>
             {album.albums.tracks.map((track, index) => (
               <View key={index} style={styles.trackItem}>
                 <View style={styles.trackInfo}>
@@ -481,6 +465,22 @@ export default function AlbumDetailScreen() {
                   <Text style={styles.trackDuration}>{track.duration}</Text>
                 )}
               </View>
+            ))}
+          </View>
+        )}
+
+        {/* Sección de YouTube Videos */}
+        {youtubeUrls.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Videos</Text>
+            {youtubeUrls.map((url, index) => (
+              <TouchableOpacity
+                key={index}
+                style={styles.videoButton}
+                onPress={() => handleOpenYouTubeVideo(url)}
+              >
+                <Text style={styles.videoButtonText}>Ver video {index + 1}</Text>
+              </TouchableOpacity>
             ))}
           </View>
         )}
@@ -542,36 +542,6 @@ export default function AlbumDetailScreen() {
             ))}
           </View>
         )}
-
-        {/* Videos de YouTube */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Videos de YouTube</Text>
-          {youtubeUrls.length > 0 ? (
-            youtubeUrls.map((url, index) => (
-              <TouchableOpacity 
-                key={index} 
-                style={styles.youtubeItem}
-                onPress={() => handleOpenYouTubeVideo(url, index)}
-                activeOpacity={0.7}
-              >
-                <View style={styles.youtubeInfo}>
-                  <Ionicons name="logo-youtube" size={20} color="#FF0000" />
-                  <Text style={styles.youtubeText} numberOfLines={1}>
-                    {`Video ${index + 1} - ${album?.albums.artist}`}
-                  </Text>
-                </View>
-                <View style={styles.youtubePlayButton}>
-                  <Ionicons name="play-circle" size={24} color="#FF0000" />
-                </View>
-              </TouchableOpacity>
-            ))
-          ) : (
-            <View style={styles.emptyYouTubeContainer}>
-              <Ionicons name="logo-youtube" size={24} color="#6c757d" />
-              <Text style={styles.emptyYouTubeText}>No hay videos de YouTube disponibles</Text>
-            </View>
-          )}
-        </View>
 
         {/* Estado de gem */}
         {album.is_gem && (
@@ -823,17 +793,20 @@ const styles = StyleSheet.create({
   },
   artist: {
     fontSize: 18,
-    color: '#495057',
+    color: '#6c757d',
     marginBottom: 4,
+    textAlign: 'left',
   },
   year: {
     fontSize: 16,
     color: '#6c757d',
     marginBottom: 4,
+    textAlign: 'left',
   },
   label: {
-    fontSize: 14,
+    fontSize: 16,
     color: '#6c757d',
+    textAlign: 'left',
   },
   catalogNumber: {
     fontSize: 12,
@@ -852,6 +825,7 @@ const styles = StyleSheet.create({
     color: '#28a745',
     fontWeight: 'bold',
     marginTop: 4,
+    backgroundColor: '#28a745',
   },
   addedDate: {
     fontSize: 11,
@@ -884,23 +858,21 @@ const styles = StyleSheet.create({
     color: '#212529',
     marginBottom: 12,
   },
+  infoSection: {
+    backgroundColor: '#fff',
+    margin: 10,
+    borderRadius: 8,
+    padding: 16,
+  },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
   },
-  infoLabel: {
+  infoText: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#495057',
+    color: '#6c757d',
     marginLeft: 8,
-    marginRight: 8,
-    minWidth: 100,
-  },
-  infoValue: {
-    fontSize: 14,
-    color: '#212529',
-    flex: 1,
   },
   tagsContainer: {
     flexDirection: 'row',
@@ -1189,5 +1161,176 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#fff',
     fontWeight: '500',
+  },
+  valueSection: {
+    backgroundColor: '#fff',
+    margin: 10,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  valueContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  valueText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#28a745',
+    marginLeft: 8,
+  },
+  valueLabel: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginTop: 4,
+  },
+  valueCard: {
+    backgroundColor: '#007AFF',
+    margin: 10,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  valueCardTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  valueCardAmount: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  valueCardSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  albumInfoSection: {
+    backgroundColor: '#fff',
+    margin: 10,
+    borderRadius: 8,
+    padding: 16,
+  },
+  albumTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 8,
+    textAlign: 'left',
+  },
+  headerInfo: {
+    alignItems: 'flex-start',
+  },
+  labelYearContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  separator: {
+    marginHorizontal: 4,
+    color: '#6c757d',
+    fontSize: 16,
+  },
+  catalogCountryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  catalog: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  country: {
+    fontSize: 12,
+    color: '#28a745',
+    fontWeight: '500',
+  },
+  stylesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 8,
+  },
+  styleTag: {
+    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  styleText: {
+    fontSize: 12,
+    color: '#1976d2',
+    fontWeight: '500',
+  },
+  coverSection: {
+    width: '100%',
+    height: width * 0.6, // Altura proporcional al ancho de la pantalla
+    backgroundColor: '#f8f9fa',
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  fullCoverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  fullCoverPlaceholder: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#e9ecef',
+  },
+  fullCoverPlaceholderText: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginTop: 8,
+  },
+  tracksSection: {
+    marginTop: 10,
+  },
+  videoButton: {
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginBottom: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#dee2e6',
+  },
+  videoButtonText: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  videosSection: {
+    marginTop: 10,
+  },
+  coverValueContainer: {
+    flexDirection: 'row',
+    margin: 10,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 }); 
