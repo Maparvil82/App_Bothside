@@ -62,6 +62,8 @@ export default function AlbumDetailScreen() {
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const [currentVideoUrl, setCurrentVideoUrl] = useState('');
   const [currentVideoTitle, setCurrentVideoTitle] = useState('');
+  const [videoLoading, setVideoLoading] = useState(false);
+  const [videoError, setVideoError] = useState(false);
 
   const { albumId } = route.params as { albumId: string };
 
@@ -176,6 +178,22 @@ export default function AlbumDetailScreen() {
       console.log('🎥 YouTube URLs count:', combinedData.albums?.album_youtube_videos?.length || 0);
       console.log('📀 All album fields:', Object.keys(combinedData));
       console.log('📀 Full album data:', JSON.stringify(combinedData, null, 2));
+      
+      // Debug específico para YouTube URLs
+      if (combinedData.albums?.album_youtube_videos) {
+        console.log('🎥 Raw YouTube videos data:', combinedData.albums.album_youtube_videos);
+        combinedData.albums.album_youtube_videos.forEach((video, index) => {
+          console.log(`🎥 Video ${index + 1} URL:`, video.url);
+          const videoId = extractYouTubeVideoId(video.url);
+          console.log(`🎥 Video ${index + 1} ID:`, videoId);
+        });
+      }
+
+      // Cargar títulos de videos de YouTube
+      const youtubeUrls = combinedData.albums.album_youtube_videos?.map(ay => ay.url).filter(Boolean) || [];
+      console.log('🎥 YouTube URLs encontradas:', youtubeUrls.length);
+
+      console.log('📚 Album detail loaded:', combinedData);
 
     } catch (error) {
       console.error('Error processing album detail:', error);
@@ -271,27 +289,62 @@ export default function AlbumDetailScreen() {
     try {
       console.log('🎥 Abriendo video de YouTube:', url);
       
-      // Convertir URL de YouTube a formato compatible
       const videoId = extractYouTubeVideoId(url);
-      if (videoId) {
-        // Crear URL de embed con parámetros para mejor reproducción
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
-        setCurrentVideoUrl(embedUrl);
-        setCurrentVideoTitle(`Video ${index + 1} - ${album?.albums.artist}`);
-        setShowVideoPlayer(true);
-      } else {
+      if (!videoId) {
         Alert.alert('Error', 'No se pudo procesar la URL del video');
+        return;
       }
+
+      // Usar una URL de embed más compatible con parámetros adicionales para autoplay
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
+      const videoTitle = `Video ${index + 1} - ${album?.albums.artist}`;
+      
+      console.log('🎥 URL de embed creada:', embedUrl);
+      
+      setCurrentVideoUrl(embedUrl);
+      setCurrentVideoTitle(videoTitle);
+      setShowVideoPlayer(true);
+      
+      console.log('🎥 Video modal abierto:', embedUrl);
     } catch (error) {
-      console.error('Error opening YouTube video:', error);
+      console.error('🎥 Error al abrir video:', error);
       Alert.alert('Error', 'No se pudo abrir el video');
     }
   };
 
+  const handleOpenInYouTube = async (url: string) => {
+    try {
+      console.log('🎥 Abriendo en YouTube app:', url);
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        Alert.alert('Error', 'No se pudo abrir YouTube');
+      }
+    } catch (error) {
+      console.error('Error opening YouTube app:', error);
+      Alert.alert('Error', 'No se pudo abrir YouTube');
+    }
+  };
+
   const extractYouTubeVideoId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
+    // Patrones más completos para extraer el video ID
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/watch\?.*&v=)([^#&?]*)/,
+      /youtube\.com\/watch\?.*v=([^#&?]*)/,
+      /youtu\.be\/([^#&?]*)/,
+      /youtube\.com\/embed\/([^#&?]*)/,
+      /youtube\.com\/v\/([^#&?]*)/
+    ];
+    
+    for (const pattern of patterns) {
+      const match = url.match(pattern);
+      if (match && match[1] && match[1].length === 11) {
+        return match[1];
+      }
+    }
+    
+    return null;
   };
 
   const formatDate = (dateString: string) => {
@@ -504,7 +557,7 @@ export default function AlbumDetailScreen() {
                 <View style={styles.youtubeInfo}>
                   <Ionicons name="logo-youtube" size={20} color="#FF0000" />
                   <Text style={styles.youtubeText} numberOfLines={1}>
-                    Video {index + 1} - {album?.albums.artist}
+                    {`Video ${index + 1} - ${album?.albums.artist}`}
                   </Text>
                 </View>
                 <View style={styles.youtubePlayButton}>
@@ -554,6 +607,18 @@ export default function AlbumDetailScreen() {
               <Ionicons name="close" size={24} color="#fff" />
             </TouchableOpacity>
             <Text style={styles.videoModalTitle}>{currentVideoTitle}</Text>
+            <TouchableOpacity 
+              onPress={() => {
+                const videoId = extractYouTubeVideoId(currentVideoUrl);
+                if (videoId) {
+                  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                  Linking.openURL(youtubeUrl);
+                }
+              }}
+              style={styles.videoYouTubeButton}
+            >
+              <Ionicons name="logo-youtube" size={24} color="#FF0000" />
+            </TouchableOpacity>
           </View>
           
           <View style={styles.videoContainer}>
@@ -564,7 +629,100 @@ export default function AlbumDetailScreen() {
               allowsInlineMediaPlayback={true}
               mediaPlaybackRequiresUserAction={false}
               allowsFullscreenVideo={true}
+              javaScriptEnabled={true}
+              domStorageEnabled={true}
+              startInLoadingState={true}
+              scalesPageToFit={true}
+              onLoadStart={() => {
+                console.log('🎥 WebView: Iniciando carga del video');
+              }}
+              onLoadEnd={() => {
+                console.log('🎥 WebView: Video cargado correctamente');
+              }}
+              onError={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                console.error('🎥 WebView error:', nativeEvent);
+                Alert.alert(
+                  'Error de Reproducción',
+                  'No se pudo reproducir el video. ¿Quieres abrirlo en YouTube?',
+                  [
+                    { text: 'Cancelar', style: 'cancel' },
+                    { 
+                      text: 'Abrir en YouTube', 
+                      onPress: () => {
+                        const videoId = extractYouTubeVideoId(currentVideoUrl);
+                        if (videoId) {
+                          const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+                          Linking.openURL(youtubeUrl);
+                        }
+                      }
+                    }
+                  ]
+                );
+              }}
+              onHttpError={(syntheticEvent) => {
+                const { nativeEvent } = syntheticEvent;
+                console.error('🎥 WebView HTTP error:', nativeEvent);
+              }}
+              onMessage={(event) => {
+                console.log('🎥 WebView message:', event.nativeEvent.data);
+              }}
+              injectedJavaScript={`
+                (function() {
+                  try {
+                    // Esperar a que el DOM esté listo
+                    setTimeout(function() {
+                      // Buscar el iframe de YouTube
+                      var iframe = document.querySelector('iframe');
+                      if (iframe) {
+                        console.log('Iframe encontrado');
+                        
+                        // Intentar reproducir el video
+                        var video = document.querySelector('video');
+                        if (video) {
+                          video.play();
+                          console.log('Video autoplay iniciado');
+                        }
+                        
+                        // También intentar con el iframe
+                        if (iframe.src) {
+                          iframe.src = iframe.src + '&autoplay=1';
+                          console.log('Iframe autoplay configurado');
+                        }
+                      }
+                      
+                      // Buscar botones de play y hacer clic
+                      var playButtons = document.querySelectorAll('button[aria-label*="Play"], button[aria-label*="Reproducir"], .ytp-play-button');
+                      playButtons.forEach(function(button) {
+                        if (button) {
+                          button.click();
+                          console.log('Botón de play clickeado');
+                        }
+                      });
+                    }, 2000);
+                  } catch(e) {
+                    console.log('Error en autoplay:', e);
+                  }
+                })();
+                true;
+              `}
             />
+            
+            {/* Botón manual para reproducir */}
+            <TouchableOpacity 
+              style={styles.playButton}
+              onPress={() => {
+                // Recargar el WebView con autoplay forzado
+                const videoId = extractYouTubeVideoId(currentVideoUrl);
+                if (videoId) {
+                  const newUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1&t=0`;
+                  setCurrentVideoUrl(newUrl);
+                }
+              }}
+            >
+              <Ionicons name="play-circle" size={48} color="#fff" />
+              <Text style={styles.playButtonText}>Reproducir</Text>
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </Modal>
@@ -965,6 +1123,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     flex: 1,
   },
+  videoYouTubeButton: {
+    padding: 8,
+  },
   videoContainer: {
     flex: 1,
     backgroundColor: '#000',
@@ -972,5 +1133,61 @@ const styles = StyleSheet.create({
   videoPlayer: {
     flex: 1,
     backgroundColor: '#000',
+  },
+  videoPlayerHidden: {
+    display: 'none',
+  },
+  videoLoadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 8,
+  },
+  videoLoadingText: {
+    marginTop: 10,
+    fontSize: 14,
+    color: '#fff',
+  },
+  videoErrorContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 8,
+  },
+  videoErrorText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+  },
+  videoErrorButton: {
+    marginTop: 15,
+    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+  },
+  videoErrorButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  playButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: '50%',
+    transform: [{ translateX: -48 }], // Centrar el botón
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 10,
+    borderRadius: 24,
+  },
+  playButtonText: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
   },
 }); 
