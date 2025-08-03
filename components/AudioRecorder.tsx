@@ -3,13 +3,16 @@ import {
   View,
   Text,
   TouchableOpacity,
+  Modal,
   StyleSheet,
   Alert,
-  Modal,
+  Dimensions,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { Ionicons } from '@expo/vector-icons';
+import { supabase } from '../lib/supabase';
+import { Buffer } from 'buffer';
 
 interface AudioRecorderProps {
   visible: boolean;
@@ -25,12 +28,12 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   albumTitle,
 }) => {
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-  const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [timer, setTimer] = useState<NodeJS.Timeout | null>(null);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [timer, setTimer] = useState<number | null>(null);
 
   useEffect(() => {
     return () => {
@@ -159,13 +162,64 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
     }
 
     try {
-      // Subir el archivo a Supabase Storage
-      const fileName = `audio_notes/${Date.now()}_${albumTitle.replace(/[^a-zA-Z0-9]/g, '_')}.m4a`;
-      const fileUri = recordingUri;
+      console.log('🎵 Iniciando guardado de audio...');
+      console.log('🎵 URI local:', recordingUri);
       
-      // Por ahora, guardamos la URI local
-      // En producción, aquí subirías el archivo a Supabase Storage
-      onSave(fileUri);
+      // Crear un nombre de archivo único
+      const fileName = `audio_notes/${Date.now()}_${albumTitle.replace(/[^a-zA-Z0-9]/g, '_')}.m4a`;
+      
+      // Leer el archivo usando FileSystem
+      const fileInfo = await FileSystem.getInfoAsync(recordingUri);
+      console.log('🎵 File info:', fileInfo);
+      
+      if (!fileInfo.exists) {
+        console.error('❌ El archivo no existe:', recordingUri);
+        Alert.alert('Error', 'El archivo de audio no existe');
+        return;
+      }
+      
+      // Leer el archivo como base64
+      const base64Data = await FileSystem.readAsStringAsync(recordingUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      
+      // Convertir base64 a Uint8Array
+      const bytes = new Uint8Array(Buffer.from(base64Data, 'base64'));
+      
+      console.log('🎵 Subiendo archivo a Supabase Storage...');
+      
+      // Subir a Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('audio_notes')
+        .upload(fileName, bytes, {
+          contentType: 'audio/m4a',
+          cacheControl: '3600',
+          upsert: false
+        });
+      
+      if (uploadError) {
+        console.error('❌ Error subiendo audio a Storage:', uploadError);
+        Alert.alert('Error', 'No se pudo subir el archivo de audio');
+        return;
+      }
+      
+      console.log('🎵 Archivo subido correctamente:', uploadData);
+      
+      // Obtener la URL pública del archivo
+      const { data: publicUrlData } = supabase.storage
+        .from('audio_notes')
+        .getPublicUrl(fileName);
+      
+      if (!publicUrlData?.publicUrl) {
+        console.error('❌ No se pudo obtener la URL pública del audio');
+        Alert.alert('Error', 'No se pudo obtener la URL del archivo de audio');
+        return;
+      }
+      
+      console.log('🎵 URL pública obtenida:', publicUrlData.publicUrl);
+      
+      // Guardar la URL pública en lugar de la URI local
+      onSave(publicUrlData.publicUrl);
       onClose();
       
       Alert.alert('Éxito', 'Nota de audio guardada correctamente');
