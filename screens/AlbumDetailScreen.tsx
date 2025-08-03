@@ -19,6 +19,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { WebView } from 'react-native-webview';
+import { Audio } from 'expo-av';
 
 const { width } = Dimensions.get('window');
 
@@ -64,12 +65,22 @@ export default function AlbumDetailScreen() {
   const [currentVideoTitle, setCurrentVideoTitle] = useState('');
   const [videoLoading, setVideoLoading] = useState(false);
   const [videoError, setVideoError] = useState(false);
+  const [showFloatingAudioButton, setShowFloatingAudioButton] = useState(false);
+  const [videoModalVisible, setVideoModalVisible] = useState(false);
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState('');
 
   const { albumId } = route.params as { albumId: string };
 
   useEffect(() => {
     loadAlbumDetail();
   }, [albumId]);
+
+  // Limpiar el audio cuando el componente se desmonte
+  useEffect(() => {
+    return () => {
+      // Cleanup si es necesario en el futuro
+    };
+  }, []);
 
   const loadAlbumDetail = async () => {
     if (!user || !albumId) return;
@@ -165,35 +176,35 @@ export default function AlbumDetailScreen() {
       };
 
       setAlbum(combinedData);
+      
+      // Logs simplificados para debug
       console.log('📀 Album detail loaded:', combinedData.albums?.title);
       console.log('📀 Catalog number:', combinedData.albums?.catalog_no);
       console.log('📀 Country:', combinedData.albums?.country);
       console.log('📀 Album stats:', combinedData.albums?.album_stats);
       console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
-      console.log('📀 User collection:', combinedData);
-      console.log('📀 Audio note:', combinedData.audio_note);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
-      console.log('📀 Shelves:', combinedData.user_list_items);
-      console.log('🎥 YouTube URLs:', combinedData.albums?.album_youtube_videos);
       console.log('🎥 YouTube URLs count:', combinedData.albums?.album_youtube_videos?.length || 0);
-      console.log('📀 All album fields:', Object.keys(combinedData));
-      console.log('📀 Full album data:', JSON.stringify(combinedData, null, 2));
       
-      // Debug específico para YouTube URLs
-      if (combinedData.albums?.album_youtube_videos) {
+      // Debug específico para YouTube URLs de forma más segura
+      if (combinedData.albums?.album_youtube_videos && Array.isArray(combinedData.albums.album_youtube_videos)) {
         console.log('🎥 Raw YouTube videos data:', combinedData.albums.album_youtube_videos);
         combinedData.albums.album_youtube_videos.forEach((video, index) => {
-          console.log(`🎥 Video ${index + 1} URL:`, video.url);
-          const videoId = extractYouTubeVideoId(video.url);
-          console.log(`🎥 Video ${index + 1} ID:`, videoId);
+          if (video && video.url) {
+            console.log(`🎥 Video ${index + 1} URL:`, video.url);
+            const videoId = extractYouTubeVideoId(video.url);
+            console.log(`🎥 Video ${index + 1} ID:`, videoId);
+          }
         });
       }
 
-      // Cargar títulos de videos de YouTube
-      const youtubeUrls = combinedData.albums.album_youtube_videos?.map(ay => ay.url).filter(Boolean) || [];
+      // Procesar URLs de YouTube de forma más segura
+      const youtubeUrls = combinedData.albums?.album_youtube_videos
+        ?.filter(video => video && video.url)
+        ?.map(video => video.url)
+        ?.filter(Boolean) || [];
+      
       console.log('🎥 YouTube URLs encontradas:', youtubeUrls.length);
-
-      console.log('📚 Album detail loaded:', combinedData);
 
     } catch (error) {
       console.error('Error processing album detail:', error);
@@ -328,23 +339,56 @@ export default function AlbumDetailScreen() {
   };
 
   const extractYouTubeVideoId = (url: string): string | null => {
-    // Patrones más completos para extraer el video ID
     const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/v\/|youtube\.com\/watch\?.*&v=)([^#&?]*)/,
-      /youtube\.com\/watch\?.*v=([^#&?]*)/,
-      /youtu\.be\/([^#&?]*)/,
-      /youtube\.com\/embed\/([^#&?]*)/,
-      /youtube\.com\/v\/([^#&?]*)/
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+      /youtube\.com\/v\/([^&\n?#]+)/,
     ];
-    
+
     for (const pattern of patterns) {
       const match = url.match(pattern);
-      if (match && match[1] && match[1].length === 11) {
-        return match[1];
-      }
+      if (match) return match[1];
     }
-    
     return null;
+  };
+
+  const handlePlayYouTubeAudio = async () => {
+    if (!album?.albums.album_youtube_videos || album.albums.album_youtube_videos.length === 0) {
+      Alert.alert('Sin video disponible', 'No hay videos de YouTube disponibles para este álbum.');
+      return;
+    }
+
+    try {
+      // Tomar el primer video de YouTube disponible
+      const firstVideo = album.albums.album_youtube_videos[0];
+      const videoId = extractYouTubeVideoId(firstVideo.url);
+      
+      if (!videoId) {
+        Alert.alert('Error', 'No se pudo extraer el ID del video de YouTube.');
+        return;
+      }
+
+      console.log('🎵 Abriendo video de YouTube en modal:', videoId);
+
+      // Construir URL de YouTube embed simplificada
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
+      
+      // Usar las variables existentes del modal
+      setCurrentVideoUrl(embedUrl);
+      setCurrentVideoTitle(`${album.albums.artist} - ${album.albums.title}`);
+      setShowVideoPlayer(true);
+
+    } catch (error) {
+      console.error('Error opening YouTube video:', error);
+      Alert.alert('Error', 'No se pudo abrir el video de YouTube.');
+    }
+  };
+
+  const handleStopYouTubeAudio = async () => {
+    // Cleanup si es necesario en el futuro
+  };
+
+  const handleToggleYouTubeAudio = () => {
+    handlePlayYouTubeAudio();
   };
 
   const formatDate = (dateString: string) => {
@@ -386,6 +430,8 @@ export default function AlbumDetailScreen() {
   const youtubeUrls = album.albums.album_youtube_videos?.map(ay => ay.url).filter(Boolean) || [];
   console.log('🎥 Processed YouTube URLs:', youtubeUrls);
   console.log('🎥 YouTube URLs length:', youtubeUrls.length);
+  console.log('🎥 Should show floating button:', youtubeUrls.length > 0);
+  console.log('🎥 Is playing audio:', false); // isPlayingAudio removed
 
   return (
     <SafeAreaView style={styles.container}>
@@ -423,6 +469,16 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
+        {/* Estado de gem */}
+        {album.is_gem && (
+          <View style={styles.section}>
+            <View style={styles.gemContainer}>
+              <Ionicons name="star" size={24} color="#fbbf24" />
+              <Text style={styles.gemText}>Este álbum está en tus gemas</Text>
+            </View>
+          </View>
+        )}
+
         {/* Información principal del álbum */}
         <View style={styles.albumInfoSection}>
           <Text style={styles.albumTitle}>{album.albums.title}</Text>
@@ -450,6 +506,20 @@ export default function AlbumDetailScreen() {
             </View>
           )}
         </View>
+
+        {/* Sección de Estilos */}
+        {stylesList.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Estilos</Text>
+            <View style={styles.stylesContainer}>
+              {stylesList.map((style, index) => (
+                <View key={index} style={styles.styleTag}>
+                  <Text style={styles.styleText}>{style}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
 
         {/* Sección de Tracks */}
         {album.albums.tracks && album.albums.tracks.length > 0 && (
@@ -542,16 +612,6 @@ export default function AlbumDetailScreen() {
             ))}
           </View>
         )}
-
-        {/* Estado de gem */}
-        {album.is_gem && (
-          <View style={styles.section}>
-            <View style={styles.gemContainer}>
-              <Ionicons name="star" size={24} color="#fbbf24" />
-              <Text style={styles.gemText}>Este álbum está en tus gemas</Text>
-            </View>
-          </View>
-        )}
       </ScrollView>
 
       {/* Reproductor flotante */}
@@ -593,7 +653,42 @@ export default function AlbumDetailScreen() {
           
           <View style={styles.videoContainer}>
             <WebView
-              source={{ uri: currentVideoUrl }}
+              source={{ 
+                html: `
+                  <!DOCTYPE html>
+                  <html>
+                  <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                      body { margin: 0; padding: 0; background: #000; }
+                      .video-container { 
+                        position: relative; 
+                        width: 100%; 
+                        height: 100vh; 
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                      }
+                      iframe { 
+                        width: 100%; 
+                        height: 100%; 
+                        border: none; 
+                      }
+                    </style>
+                  </head>
+                  <body>
+                    <div class="video-container">
+                      <iframe 
+                        src="${currentVideoUrl}"
+                        frameborder="0"
+                        allowfullscreen
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                      ></iframe>
+                    </div>
+                  </body>
+                  </html>
+                `
+              }}
               style={styles.videoPlayer}
               originWhitelist={['*']}
               allowsInlineMediaPlayback={true}
@@ -603,6 +698,7 @@ export default function AlbumDetailScreen() {
               domStorageEnabled={true}
               startInLoadingState={true}
               scalesPageToFit={true}
+              userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
               onLoadStart={() => {
                 console.log('🎥 WebView: Iniciando carga del video');
               }}
@@ -637,45 +733,6 @@ export default function AlbumDetailScreen() {
               onMessage={(event) => {
                 console.log('🎥 WebView message:', event.nativeEvent.data);
               }}
-              injectedJavaScript={`
-                (function() {
-                  try {
-                    // Esperar a que el DOM esté listo
-                    setTimeout(function() {
-                      // Buscar el iframe de YouTube
-                      var iframe = document.querySelector('iframe');
-                      if (iframe) {
-                        console.log('Iframe encontrado');
-                        
-                        // Intentar reproducir el video
-                        var video = document.querySelector('video');
-                        if (video) {
-                          video.play();
-                          console.log('Video autoplay iniciado');
-                        }
-                        
-                        // También intentar con el iframe
-                        if (iframe.src) {
-                          iframe.src = iframe.src + '&autoplay=1';
-                          console.log('Iframe autoplay configurado');
-                        }
-                      }
-                      
-                      // Buscar botones de play y hacer clic
-                      var playButtons = document.querySelectorAll('button[aria-label*="Play"], button[aria-label*="Reproducir"], .ytp-play-button');
-                      playButtons.forEach(function(button) {
-                        if (button) {
-                          button.click();
-                          console.log('Botón de play clickeado');
-                        }
-                      });
-                    }, 2000);
-                  } catch(e) {
-                    console.log('Error en autoplay:', e);
-                  }
-                })();
-                true;
-              `}
             />
             
             {/* Botón manual para reproducir */}
@@ -696,6 +753,32 @@ export default function AlbumDetailScreen() {
           </View>
         </SafeAreaView>
       </Modal>
+      
+      {/* Botón flotante para reproducir audio de YouTube */}
+      {youtubeUrls.length > 0 && (
+        <>
+          {console.log('🎥 Rendering floating button')}
+          <TouchableOpacity
+            style={styles.floatingAudioButton}
+            onPress={handleToggleYouTubeAudio}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name="play-circle"
+              size={24}
+              color="#fff"
+            />
+          </TouchableOpacity>
+        </>
+      )}
+      
+      {/* Debug info */}
+      {__DEV__ && (
+        <View style={styles.debugInfo}>
+          <Text style={styles.debugText}>YouTube URLs: {youtubeUrls.length}</Text>
+          <Text style={styles.debugText}>Is Playing: {false ? 'Yes' : 'No'}</Text> {/* isPlayingAudio removed */}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -1332,5 +1415,52 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  floatingAudioButton: {
+    position: 'absolute',
+    bottom: 120, // Cambiado de 80 a 120 para que sea más visible
+    right: 20,
+    backgroundColor: '#007AFF',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+    zIndex: 1000, // Agregado para asegurar que esté por encima
+  },
+  debugInfo: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 10,
+    borderRadius: 5,
+  },
+  debugText: {
+    color: '#fff',
+    fontSize: 12,
+    marginBottom: 2,
+  },
+  gemTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  gemTagText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#d97706',
+    fontWeight: '500',
   },
 }); 
