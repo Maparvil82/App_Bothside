@@ -43,7 +43,7 @@ interface AlbumDetail {
     country?: string;
     album_styles?: Array<{ styles: { name: string } }>;
     album_youtube_urls?: Array<{ url: string }>;
-    album_stats?: { avg_price: number };
+    album_stats?: { avg_price: number; want?: number };
     tracks?: Array<{ position: string; title: string; duration: string }>;
   };
   user_list_items?: Array<{
@@ -107,7 +107,7 @@ export default function AlbumDetailScreen() {
             *,
             album_styles (styles (name)),
             album_youtube_urls (url),
-            album_stats (avg_price),
+            album_stats (avg_price, want),
             tracks (position, title, duration)
           )
         `)
@@ -191,6 +191,7 @@ export default function AlbumDetailScreen() {
       console.log('📀 Country:', combinedData.albums?.country);
       console.log('📀 Album stats:', combinedData.albums?.album_stats);
       console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
+      console.log('📀 Want count:', combinedData.albums?.album_stats?.want);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
       
       // Procesar URLs de YouTube de forma más segura
@@ -524,6 +525,17 @@ export default function AlbumDetailScreen() {
               ${album.albums.album_stats.avg_price.toFixed(2)}
             </Text>
             <Text style={styles.valueCardSubtitle}>Precio promedio en el mercado basado en Discogs</Text>
+          </View>
+        )}
+
+        {/* Sección de Personas que quieren */}
+        {album.albums.album_stats?.want && (
+          <View style={styles.wantCard}>
+            <Text style={styles.wantCardTitle}>Personas que quieren</Text>
+            <Text style={styles.wantCardAmount}>
+              {album.albums.album_stats.want.toLocaleString()}
+            </Text>
+            <Text style={styles.wantCardSubtitle}>Usuarios de Discogs que tienen este álbum en su lista de deseos</Text>
           </View>
         )}
 
@@ -1408,6 +1420,37 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   valueCardSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+  },
+  wantCard: {
+    backgroundColor: '#4CAF50', // Un color verde más vibrante para "quieren"
+    margin: 10,
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  wantCardTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  wantCardAmount: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  wantCardSubtitle: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.8)',
   },
