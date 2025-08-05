@@ -241,13 +241,44 @@ export default function AlbumDetailScreen() {
   };
 
   const handleSaveAudioNote = async (audioUri: string) => {
-    if (!user || !albumId) return;
+    if (!user || !albumId) {
+      console.error('❌ handleSaveAudioNote: Missing user or albumId', { 
+        user: user?.id, 
+        albumId,
+        hasUser: !!user,
+        hasAlbumId: !!albumId 
+      });
+      Alert.alert('Error', 'Usuario no autenticado o álbum no válido');
+      return;
+    }
 
     try {
-      console.log('🎤 Guardando nota de audio:', audioUri);
+      console.log('🎤 Guardando nota de audio:', {
+        userId: user.id,
+        albumId,
+        audioUri,
+        userEmail: user.email
+      });
+      
+      // Verificar sesión actual
+      const { data: { user: currentUser }, error: sessionError } = await supabase.auth.getUser();
+      if (sessionError) {
+        console.error('❌ Error verificando sesión:', sessionError);
+        Alert.alert('Error', 'Sesión expirada. Por favor, inicia sesión nuevamente');
+        return;
+      }
+      
+      if (!currentUser) {
+        console.error('❌ No hay usuario autenticado');
+        Alert.alert('Error', 'No hay usuario autenticado');
+        return;
+      }
+      
+      console.log('✅ Usuario autenticado:', currentUser.id);
       
       // Guardar la URI del audio en la base de datos
-      await UserCollectionService.saveAudioNote(user.id, albumId, audioUri);
+      const result = await UserCollectionService.saveAudioNote(user.id, albumId, audioUri);
+      console.log('✅ Resultado del guardado:', result);
       
       // Recargar los datos del álbum para mostrar la nueva nota de audio
       await loadAlbumDetail();
@@ -256,6 +287,11 @@ export default function AlbumDetailScreen() {
       setShowAudioRecorder(false);
     } catch (error) {
       console.error('❌ Error guardando nota de audio:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details
+      });
       Alert.alert('Error', 'No se pudo guardar la nota de audio');
     }
   };

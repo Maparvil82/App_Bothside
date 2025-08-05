@@ -183,23 +183,66 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         encoding: FileSystem.EncodingType.Base64,
       });
       
+      console.log('🎵 Archivo leído, tamaño:', base64Data.length);
+      
       // Convertir base64 a Uint8Array
       const bytes = new Uint8Array(Buffer.from(base64Data, 'base64'));
+      console.log('🎵 Bytes convertidos, tamaño:', bytes.length);
       
       console.log('🎵 Subiendo archivo a Supabase Storage...');
+      console.log('🎵 Bucket: audio, FileName:', fileName);
       
-      // Subir a Supabase Storage
+      // Subir a Supabase Storage con mejor manejo de errores
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('audio_notes')
+        .from('files')
         .upload(fileName, bytes, {
           contentType: 'audio/m4a',
           cacheControl: '3600',
-          upsert: false
+          upsert: true // Cambiar a true para sobrescribir si existe
         });
       
       if (uploadError) {
         console.error('❌ Error subiendo audio a Storage:', uploadError);
-        Alert.alert('Error', 'No se pudo subir el archivo de audio');
+        console.error('❌ Error details:', {
+          message: uploadError.message,
+          name: uploadError.name
+        });
+        
+        // Intentar con un nombre de archivo más simple
+        const simpleFileName = `audio_${Date.now()}.m4a`;
+        console.log('🔄 Intentando con nombre simple:', simpleFileName);
+        
+        const { data: retryData, error: retryError } = await supabase.storage
+          .from('files')
+          .upload(simpleFileName, bytes, {
+            contentType: 'audio/m4a',
+            cacheControl: '3600',
+            upsert: true
+          });
+        
+        if (retryError) {
+          console.error('❌ Error en segundo intento:', retryError);
+          Alert.alert('Error', 'No se pudo subir el archivo de audio. Verifica la conexión.');
+          return;
+        }
+        
+        console.log('✅ Archivo subido en segundo intento:', retryData);
+        
+        // Obtener la URL pública del archivo
+        const { data: publicUrlData } = supabase.storage
+          .from('files')
+          .getPublicUrl(simpleFileName);
+        
+        if (!publicUrlData?.publicUrl) {
+          console.error('❌ No se pudo obtener la URL pública del audio');
+          Alert.alert('Error', 'No se pudo obtener la URL del archivo de audio');
+          return;
+        }
+        
+        console.log('🎵 URL pública obtenida:', publicUrlData.publicUrl);
+        onSave(publicUrlData.publicUrl);
+        onClose();
+        Alert.alert('Éxito', 'Nota de audio guardada correctamente');
         return;
       }
       
@@ -207,7 +250,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       
       // Obtener la URL pública del archivo
       const { data: publicUrlData } = supabase.storage
-        .from('audio_notes')
+        .from('files')
         .getPublicUrl(fileName);
       
       if (!publicUrlData?.publicUrl) {

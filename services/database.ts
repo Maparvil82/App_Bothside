@@ -491,6 +491,64 @@ export const UserCollectionService = {
   async saveAudioNote(userId: string, albumId: string, audioUri: string) {
     console.log('🔍 UserCollectionService: saveAudioNote called with:', { userId, albumId, audioUri });
     
+    // Verificar autenticación actual
+    const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
+    if (authError) {
+      console.error('❌ UserCollectionService: Auth error:', authError);
+      throw new Error('Error de autenticación');
+    }
+    
+    if (!currentUser) {
+      console.error('❌ UserCollectionService: No user authenticated');
+      throw new Error('Usuario no autenticado');
+    }
+    
+    console.log('✅ UserCollectionService: User authenticated:', currentUser.id);
+    
+    // Primero verificar si el álbum está en la colección del usuario
+    console.log('🔍 UserCollectionService: Checking if album exists in collection...');
+    const { data: existingRecord, error: checkError } = await supabase
+      .from('user_collection')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('album_id', albumId)
+      .single();
+    
+    console.log('🔍 UserCollectionService: Check result:', { existingRecord, checkError });
+    
+    if (checkError && checkError.code === 'PGRST116') {
+      // El álbum no está en la colección, agregarlo primero
+      console.log('📝 UserCollectionService: Album not in collection, adding it first...');
+      const { data: newRecord, error: insertError } = await supabase
+        .from('user_collection')
+        .insert([{
+          user_id: userId,
+          album_id: albumId,
+          audio_note: audioUri
+        }])
+        .select()
+        .single();
+      
+      if (insertError) {
+        console.error('❌ UserCollectionService: Error adding album to collection:', insertError);
+        console.error('❌ UserCollectionService: Insert error details:', {
+          message: insertError.message,
+          code: insertError.code,
+          details: insertError.details,
+          hint: insertError.hint
+        });
+        throw insertError;
+      }
+      
+      console.log('✅ UserCollectionService: Album added to collection with audio note:', newRecord);
+      return newRecord;
+    } else if (checkError) {
+      console.error('❌ UserCollectionService: Error checking collection:', checkError);
+      throw checkError;
+    }
+    
+    // El álbum ya está en la colección, actualizar la nota de audio
+    console.log('📝 UserCollectionService: Album exists, updating audio note...');
     const { data, error } = await supabase
       .from('user_collection')
       .update({ audio_note: audioUri })
@@ -501,6 +559,12 @@ export const UserCollectionService = {
     
     if (error) {
       console.error('❌ UserCollectionService: Error saving audio note:', error);
+      console.error('❌ UserCollectionService: Update error details:', {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint
+      });
       throw error;
     }
     
