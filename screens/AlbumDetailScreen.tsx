@@ -187,27 +187,11 @@ export default function AlbumDetailScreen() {
       console.log('📀 Album stats:', combinedData.albums?.album_stats);
       console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
-      console.log('🎥 YouTube URLs count:', combinedData.albums?.album_youtube_urls?.length || 0);
-      
-      // Debug específico para YouTube URLs de forma más segura
-      if (combinedData.albums?.album_youtube_urls && Array.isArray(combinedData.albums.album_youtube_urls)) {
-        console.log('🎥 Raw YouTube videos data:', combinedData.albums.album_youtube_urls);
-        combinedData.albums.album_youtube_urls.forEach((video, index) => {
-          if (video && video.url) {
-            console.log(`🎥 Video ${index + 1} URL:`, video.url);
-            const videoId = extractYouTubeVideoId(video.url);
-            console.log(`🎥 Video ${index + 1} ID:`, videoId);
-          }
-        });
-      }
-
       // Procesar URLs de YouTube de forma más segura
       const youtubeUrls = combinedData.albums?.album_youtube_urls
         ?.filter(video => video && video.url)
         ?.map(video => video.url)
         ?.filter(Boolean) || [];
-      
-      console.log('🎥 YouTube URLs encontradas:', youtubeUrls.length);
 
     } catch (error) {
       console.error('Error processing album detail:', error);
@@ -304,7 +288,6 @@ export default function AlbumDetailScreen() {
 
   const handleOpenYouTubeVideo = async (url: string) => {
     try {
-      console.log('🎥 Abriendo video de YouTube:', url);
       
       const videoId = extractYouTubeVideoId(url);
       if (!videoId) {
@@ -316,13 +299,10 @@ export default function AlbumDetailScreen() {
       const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
       const videoTitle = `Video - ${album?.albums.artist}`;
       
-      console.log('🎥 URL de embed creada:', embedUrl);
-      
       setCurrentVideoUrl(embedUrl);
       setCurrentVideoTitle(videoTitle);
       setShowVideoPlayer(true);
       
-      console.log('🎥 Video modal abierto:', embedUrl);
     } catch (error) {
       console.error('🎥 Error al abrir video:', error);
       Alert.alert('Error', 'No se pudo abrir el video');
@@ -331,7 +311,6 @@ export default function AlbumDetailScreen() {
 
   const handleOpenInYouTube = async (url: string) => {
     try {
-      console.log('🎥 Abriendo en YouTube app:', url);
       const supported = await Linking.canOpenURL(url);
       if (supported) {
         await Linking.openURL(url);
@@ -339,7 +318,7 @@ export default function AlbumDetailScreen() {
         Alert.alert('Error', 'No se pudo abrir YouTube');
       }
     } catch (error) {
-      console.error('Error opening YouTube app:', error);
+      console.error('Error opening YouTube:', error);
       Alert.alert('Error', 'No se pudo abrir YouTube');
     }
   };
@@ -372,8 +351,6 @@ export default function AlbumDetailScreen() {
         Alert.alert('Error', 'No se pudo extraer el ID del video de YouTube.');
         return;
       }
-
-      console.log('🎵 Abriendo video de YouTube en modal:', videoId);
 
       // Construir URL de YouTube embed simplificada
       const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
@@ -434,10 +411,6 @@ export default function AlbumDetailScreen() {
 
   const stylesList = album.albums.album_styles?.map(as => as.styles?.name).filter(Boolean) || [];
   const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
-  console.log('🎥 Processed YouTube URLs:', youtubeUrls);
-  console.log('🎥 YouTube URLs length:', youtubeUrls.length);
-  console.log('🎥 Should show floating button:', youtubeUrls.length > 0);
-  console.log('🎥 Is playing audio:', false); // isPlayingAudio removed
 
   return (
     <SafeAreaView style={styles.container}>
@@ -713,10 +686,8 @@ export default function AlbumDetailScreen() {
               scalesPageToFit={true}
               userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
               onLoadStart={() => {
-                console.log('🎥 WebView: Iniciando carga del video');
               }}
               onLoadEnd={() => {
-                console.log('🎥 WebView: Video cargado correctamente');
               }}
               onError={(syntheticEvent) => {
                 const { nativeEvent } = syntheticEvent;
@@ -744,7 +715,6 @@ export default function AlbumDetailScreen() {
                 console.error('🎥 WebView HTTP error:', nativeEvent);
               }}
               onMessage={(event) => {
-                console.log('🎥 WebView message:', event.nativeEvent.data);
               }}
             />
             
@@ -770,7 +740,6 @@ export default function AlbumDetailScreen() {
       {/* Botón flotante para reproducir audio de YouTube */}
       {youtubeUrls.length > 0 && (
         <>
-          {console.log('🎥 Rendering floating button')}
           <TouchableOpacity
             style={styles.floatingAudioButton}
             onPress={handleToggleYouTubeAudio}
@@ -785,14 +754,6 @@ export default function AlbumDetailScreen() {
         </>
       )}
       
-      {/* Debug info */}
-      {__DEV__ && (
-        <View style={styles.debugInfo}>
-          <Text style={styles.debugText}>YouTube URLs: {youtubeUrls.length}</Text>
-          <Text style={styles.debugText}>Is Playing: {false ? 'Yes' : 'No'}</Text> {/* isPlayingAudio removed */}
-        </View>
-      )}
-
       {/* Audio Recorder Modal */}
       <AudioRecorder
         visible={showAudioRecorder}
@@ -1439,7 +1400,7 @@ const styles = StyleSheet.create({
   },
   floatingAudioButton: {
     position: 'absolute',
-    bottom: 120, // Cambiado de 80 a 120 para que sea más visible
+    bottom: 30, // Cambiado de 120 a 30 para que esté más pegado al fondo
     right: 20,
     backgroundColor: '#007AFF',
     width: 60,
@@ -1455,19 +1416,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
     zIndex: 1000, // Agregado para asegurar que esté por encima
-  },
-  debugInfo: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    padding: 10,
-    borderRadius: 5,
-  },
-  debugText: {
-    color: '#fff',
-    fontSize: 12,
-    marginBottom: 2,
   },
   gemTag: {
     flexDirection: 'row',
