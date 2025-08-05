@@ -76,6 +76,7 @@ export default function AlbumDetailScreen() {
   const [editionsLoading, setEditionsLoading] = useState(false);
   const [showRatioModal, setShowRatioModal] = useState(false);
   const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
+  const [showAllEditions, setShowAllEditions] = useState(false);
 
   const { albumId } = route.params as { albumId: string };
 
@@ -604,7 +605,10 @@ export default function AlbumDetailScreen() {
                 }}
                 activeOpacity={0.8}
               >
-                <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
+                <View style={styles.ratioCardHeader}>
+                  <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
+                  <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
+                </View>
                 <Text style={styles.ratioCardAmount}>
                   {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
                 </Text>
@@ -703,7 +707,7 @@ export default function AlbumDetailScreen() {
             </View>
           ) : editions.length > 0 ? (
             <View style={styles.editionsContainer}>
-              {editions.map((edition, index) => (
+              {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
                 <TouchableOpacity
                   key={edition.id}
                   style={styles.editionItem}
@@ -734,6 +738,23 @@ export default function AlbumDetailScreen() {
                   <Ionicons name="open-outline" size={20} color="#007AFF" />
                 </TouchableOpacity>
               ))}
+              
+              {/* Botón "Ver más" o "Ver menos" */}
+              {editions.length > 3 && (
+                <TouchableOpacity
+                  style={styles.seeMoreButton}
+                  onPress={() => setShowAllEditions(!showAllEditions)}
+                >
+                  <Text style={styles.seeMoreButtonText}>
+                    {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
+                  </Text>
+                  <Ionicons 
+                    name={showAllEditions ? "chevron-up" : "chevron-down"} 
+                    size={16} 
+                    color="#007AFF" 
+                  />
+                </TouchableOpacity>
+              )}
             </View>
           ) : (
             <Text style={styles.noEditionsText}>No se encontraron ediciones adicionales</Text>
@@ -1569,11 +1590,18 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  ratioCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 8,
+  },
   ratioCardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-    marginBottom: 4,
+    flex: 1,
   },
   ratioCardAmount: {
     fontSize: 28,
@@ -1809,7 +1837,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   editionCatno: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#6c757d',
     fontStyle: 'italic',
   },
@@ -1880,5 +1908,23 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6c757d',
     lineHeight: 20,
+  },
+  seeMoreButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  seeMoreButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#007AFF',
+    marginRight: 4,
   },
 }); 
