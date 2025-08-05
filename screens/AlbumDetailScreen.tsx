@@ -988,7 +988,7 @@ export default function AlbumDetailScreen() {
       <Modal
         visible={showRatioModal}
         transparent={true}
-        animationType="slide"
+        animationType="fade"
         onRequestClose={() => setShowRatioModal(false)}
       >
         <View style={styles.modalOverlay}>
