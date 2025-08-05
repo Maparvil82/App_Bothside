@@ -172,3 +172,76 @@ export class DiscogsService {
     }
   }
 } 
+
+export const getAlbumEditions = async (artist: string, title: string): Promise<any[]> => {
+  try {
+    console.log('🔍 Buscando ediciones para:', `${artist} - ${title}`);
+    
+    // Buscar el álbum en Discogs usando el servicio
+    const searchQuery = `${artist} ${title}`;
+    const searchResult = await DiscogsService.searchReleases(searchQuery, 1);
+    
+    if (!searchResult || !searchResult.results) {
+      console.log('❌ No se encontraron resultados de búsqueda');
+      return [];
+    }
+
+    const releases = searchResult.results;
+    console.log(`📀 Encontradas ${releases.length} ediciones en total`);
+    
+    // Filtrar y procesar las ediciones más relevantes
+    const processedEditions = releases
+      .filter((release: any) => {
+        // Verificar que sea un release válido
+        const isValid = release.type === 'release' && release.title;
+        if (!isValid) {
+          console.log('❌ Release filtrado:', release);
+        }
+        return isValid;
+      })
+      .slice(0, 10) // Limitar a 10 ediciones
+      .map((release: any) => {
+        // Extraer artista del título si no está disponible
+        let extractedArtist = release.artist;
+        let extractedTitle = release.title;
+        
+        if (!extractedArtist && release.title) {
+          // Intentar extraer artista del título (formato: "Artista - Título")
+          const titleParts = release.title.split(' - ');
+          if (titleParts.length >= 2) {
+            extractedArtist = titleParts[0];
+            extractedTitle = titleParts.slice(1).join(' - ');
+          } else {
+            extractedArtist = 'Artista desconocido';
+          }
+        }
+        
+        console.log('📀 Procesando release:', {
+          id: release.id,
+          title: extractedTitle,
+          artist: extractedArtist,
+          year: release.year
+        });
+        
+        return {
+          id: release.id,
+          title: extractedTitle,
+          artist: extractedArtist,
+          year: release.year || 'Año desconocido',
+          country: release.country || 'País desconocido',
+          format: Array.isArray(release.format) ? release.format.join(', ') : (release.format || ''),
+          label: Array.isArray(release.label) ? release.label.join(', ') : (release.label || ''),
+          catno: release.catno || '',
+          thumb: release.thumb,
+          uri: release.uri
+        };
+      });
+
+    console.log('📀 Ediciones procesadas:', processedEditions.length);
+    console.log('📀 Primera edición procesada:', processedEditions[0]);
+    return processedEditions;
+  } catch (error) {
+    console.error('❌ Error obteniendo ediciones:', error);
+    return [];
+  }
+}; 

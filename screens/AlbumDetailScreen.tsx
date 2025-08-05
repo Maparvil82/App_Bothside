@@ -22,6 +22,7 @@ import { AudioRecorder } from '../components/AudioRecorder';
 import { WebView } from 'react-native-webview';
 import { Audio } from 'expo-av';
 import { UserCollectionService } from '../services/database';
+import { getAlbumEditions } from '../services/discogs';
 
 const { width } = Dimensions.get('window');
 
@@ -71,6 +72,8 @@ export default function AlbumDetailScreen() {
   const [videoModalVisible, setVideoModalVisible] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState('');
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
+  const [editions, setEditions] = useState<any[]>([]);
+  const [editionsLoading, setEditionsLoading] = useState(false);
 
   const { albumId } = route.params as { albumId: string };
 
@@ -87,6 +90,8 @@ export default function AlbumDetailScreen() {
 
   const loadAlbumDetail = async () => {
     if (!user || !albumId) return;
+
+    console.log('🔄 Iniciando carga de detalles del álbum:', albumId);
 
     try {
       setLoading(true);
@@ -187,17 +192,45 @@ export default function AlbumDetailScreen() {
       console.log('📀 Album stats:', combinedData.albums?.album_stats);
       console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
+      
       // Procesar URLs de YouTube de forma más segura
       const youtubeUrls = combinedData.albums?.album_youtube_urls
         ?.filter(video => video && video.url)
         ?.map(video => video.url)
         ?.filter(Boolean) || [];
 
+      // Cargar ediciones disponibles
+      console.log('🎯 Llamando loadAlbumEditions con:', {
+        artist: combinedData.albums?.artist,
+        title: combinedData.albums?.title
+      });
+      await loadAlbumEditions(combinedData.albums?.artist, combinedData.albums?.title);
+
     } catch (error) {
       console.error('Error processing album detail:', error);
       Alert.alert('Error', 'No se pudo procesar la información del álbum');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAlbumEditions = async (artist?: string, title?: string) => {
+    if (!artist || !title) {
+      console.log('❌ No artist or title provided for editions search');
+      return;
+    }
+
+    try {
+      console.log('🔍 Loading editions for:', `${artist} - ${title}`);
+      setEditionsLoading(true);
+      const editionsData = await getAlbumEditions(artist, title);
+      console.log('📀 Editions loaded:', editionsData.length);
+      console.log('📀 First edition:', editionsData[0]);
+      setEditions(editionsData);
+    } catch (error) {
+      console.error('❌ Error loading editions:', error);
+    } finally {
+      setEditionsLoading(false);
     }
   };
 
@@ -374,6 +407,20 @@ export default function AlbumDetailScreen() {
     handlePlayYouTubeAudio();
   };
 
+  const handleOpenEdition = async (uri: string) => {
+    try {
+      const supported = await Linking.canOpenURL(uri);
+      if (supported) {
+        await Linking.openURL(uri);
+      } else {
+        Alert.alert('Error', 'No se pudo abrir el enlace de la edición');
+      }
+    } catch (error) {
+      console.error('Error opening edition:', error);
+      Alert.alert('Error', 'No se pudo abrir la edición');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -499,6 +546,48 @@ export default function AlbumDetailScreen() {
             </View>
           </View>
         )}
+
+        {/* Sección de Ediciones */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ediciones Disponibles</Text>
+          <Text style={styles.debugText}>Estado: {editionsLoading ? 'Cargando...' : 'Completado'}</Text>
+          <Text style={styles.debugText}>Ediciones encontradas: {editions.length}</Text>
+          {editionsLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#007AFF" />
+              <Text style={styles.loadingText}>Cargando ediciones...</Text>
+            </View>
+          ) : editions.length > 0 ? (
+            <View style={styles.editionsContainer}>
+              {editions.map((edition, index) => (
+                <TouchableOpacity
+                  key={edition.id}
+                  style={styles.editionItem}
+                  onPress={() => handleOpenEdition(edition.uri)}
+                >
+                  <View style={styles.editionInfo}>
+                    <Text style={styles.editionTitle}>{edition.title}</Text>
+                    <Text style={styles.editionArtist}>{edition.artist}</Text>
+                    <View style={styles.editionDetails}>
+                      <Text style={styles.editionYear}>{edition.year}</Text>
+                      <Text style={styles.editionCountry}>{edition.country}</Text>
+                      <Text style={styles.editionFormat}>{edition.format}</Text>
+                    </View>
+                    {edition.label && (
+                      <Text style={styles.editionLabel}>{edition.label}</Text>
+                    )}
+                    {edition.catno && (
+                      <Text style={styles.editionCatno}>{edition.catno}</Text>
+                    )}
+                  </View>
+                  <Ionicons name="open-outline" size={20} color="#007AFF" />
+                </TouchableOpacity>
+              ))}
+            </View>
+          ) : (
+            <Text style={styles.noEditionsText}>No se encontraron ediciones adicionales</Text>
+          )}
+        </View>
 
         {/* Sección de Tracks */}
         {album.albums.tracks && album.albums.tracks.length > 0 && (
@@ -712,7 +801,7 @@ export default function AlbumDetailScreen() {
               }}
               onHttpError={(syntheticEvent) => {
                 const { nativeEvent } = syntheticEvent;
-                console.error('🎥 WebView HTTP error:', nativeEvent);
+                console.error('�� WebView HTTP error:', nativeEvent);
               }}
               onMessage={(event) => {
               }}
@@ -1431,5 +1520,68 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#d97706',
     fontWeight: '500',
+  },
+  editionsContainer: {
+    marginTop: 8,
+  },
+  editionItem: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  editionInfo: {
+    flex: 1,
+  },
+  editionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 2,
+  },
+  editionArtist: {
+    fontSize: 12,
+    color: '#6c757d',
+    marginBottom: 4,
+  },
+  editionDetails: {
+    flexDirection: 'row',
+    marginBottom: 4,
+  },
+  editionYear: {
+    fontSize: 11,
+    color: '#007AFF',
+    marginRight: 8,
+  },
+  editionCountry: {
+    fontSize: 11,
+    color: '#28a745',
+    marginRight: 8,
+  },
+  editionFormat: {
+    fontSize: 11,
+    color: '#6c757d',
+  },
+  editionLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginBottom: 2,
+  },
+  editionCatno: {
+    fontSize: 11,
+    color: '#6c757d',
+    fontStyle: 'italic',
+  },
+  noEditionsText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 8,
   },
 }); 
