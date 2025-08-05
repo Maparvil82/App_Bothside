@@ -1,10 +1,11 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
-import { AuthState } from '../types';
 import { User } from '@supabase/supabase-js';
 
-interface AuthContextType extends AuthState {
+interface AuthContextType {
+  user: User | null;
+  loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -12,56 +13,42 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    session: null,
-    loading: true,
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     // Verificar sesión actual
-    const checkSession = async () => {
+    const checkUser = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) {
-          console.error('❌ Error al obtener sesión:', error);
-          Alert.alert('Error de conexión', 'No se pudo conectar con el servidor. Verifica tu conexión a internet.');
-        }
-        setAuthState({
-          user: session?.user ?? null,
-          session,
-          loading: false,
-        });
+        const { data: { user } } = await supabase.auth.getUser();
+        setUser(user);
       } catch (error) {
-        console.error('❌ Error de red al verificar sesión:', error);
-        setAuthState({
-          user: null,
-          session: null,
-          loading: false,
-        });
+        console.error('Error checking user session:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    checkSession();
+    checkUser();
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔐 Evento de autenticación:', event);
-        setAuthState({
-          user: session?.user ?? null,
-          session,
-          loading: false,
-        });
+        setUser(session?.user ?? null);
+        setLoading(false);
+        
+        // Guardar/limpiar sesión en AsyncStorage con manejo de errores
+        try {
+          if (session?.user) {
+            await AsyncStorage.setItem('user_session', JSON.stringify(session.user));
+          } else {
+            await AsyncStorage.removeItem('user_session');
+          }
+        } catch (storageError) {
+          console.warn('Error saving session to AsyncStorage:', storageError);
+          // No fallar la aplicación por errores de storage
+        }
       }
     );
 
@@ -70,32 +57,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) {
-        console.error('❌ Error de inicio de sesión:', error);
-        throw error;
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
     } catch (error) {
-      console.error('❌ Error de red durante inicio de sesión:', error);
+      console.error('Error during sign in:', error);
       throw error;
     }
   };
 
   const signUp = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (error) {
-        console.error('❌ Error de registro:', error);
-        throw error;
-      }
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) throw error;
     } catch (error) {
-      console.error('❌ Error de red durante registro:', error);
+      console.error('Error during sign up:', error);
       throw error;
     }
   };
@@ -103,26 +78,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signOut = async () => {
     try {
       const { error } = await supabase.auth.signOut();
-      if (error) {
-        console.error('❌ Error de cierre de sesión:', error);
-        throw error;
-      }
+      if (error) throw error;
     } catch (error) {
-      console.error('❌ Error de red durante cierre de sesión:', error);
+      console.error('Error during sign out:', error);
       throw error;
     }
   };
 
-  const value: AuthContextType = {
-    ...authState,
-    signIn,
-    signUp,
-    signOut,
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }; 

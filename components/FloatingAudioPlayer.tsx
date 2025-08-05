@@ -309,27 +309,27 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
+    bottom: 20, // Distancia desde abajo
+    right: 20, // Distancia desde la derecha
     backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    borderRadius: 12, // Bordes redondeados
     paddingHorizontal: 16,
     paddingVertical: 12,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: -2,
+      height: 2,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
     elevation: 8,
+    maxWidth: 300, // Ancho máximo
+    minWidth: 200, // Ancho mínimo
   },
   content: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
   },
   albumInfo: {
     flex: 1,
@@ -346,12 +346,14 @@ const styles = StyleSheet.create({
   },
   controls: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end', // Alinear elementos hacia abajo
     flex: 1,
+    paddingBottom: 4, // Añadir padding inferior
   },
   controlButton: {
     padding: 8,
     marginHorizontal: 4,
+    marginTop: 8, // Mover el botón más abajo
   },
   disabledButton: {
     opacity: 0.5,
@@ -379,5 +381,6 @@ const styles = StyleSheet.create({
   closeButton: {
     padding: 8,
     marginLeft: 4,
+    marginTop: 4, // Mover el botón más abajo para alinearlo con el botón de play
   },
 }); 

@@ -139,16 +139,13 @@ serve(async (req)=>{
     supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     // 3. Obtener Detalles COMPLETOS del lanzamiento desde Discogs API
-    const searchParams = new URLSearchParams({
-      token: discogsToken
-    });
-    
-    const discogsReleaseUrl = `https://api.discogs.com/releases/${discogsReleaseId}?${searchParams.toString()}`;
+    const discogsReleaseUrl = `https://api.discogs.com/releases/${discogsReleaseId}`;
     console.log("Obteniendo detalles completos desde:", discogsReleaseUrl);
     
     const releaseResponse = await fetch(discogsReleaseUrl, {
       headers: {
-        "User-Agent": "BotshideApp/1.0 +http://botshide.com"
+        "Authorization": `Discogs token=${discogsToken}`,
+        "User-Agent": "BothsideApp/1.0"
       }
     });
 
@@ -175,12 +172,13 @@ serve(async (req)=>{
 
     try {
       // Obtener sugerencias de precios por condición
-      const priceSuggestionsUrl = `https://api.discogs.com/marketplace/price_suggestions/${discogsReleaseId}?${searchParams.toString()}`;
+      const priceSuggestionsUrl = `https://api.discogs.com/marketplace/price_suggestions/${discogsReleaseId}`;
       console.log("Obteniendo sugerencias de precios desde:", priceSuggestionsUrl);
       
       const priceResponse = await fetch(priceSuggestionsUrl, {
         headers: {
-          "User-Agent": "BotshideApp/1.0 +http://botshide.com"
+          "Authorization": `Discogs token=${discogsToken}`,
+          "User-Agent": "BothsideApp/1.0"
         }
       });
       
@@ -258,7 +256,8 @@ serve(async (req)=>{
         // Descargar la imagen desde Discogs
         const imageResponse = await fetch(discogsCoverUrl, {
           headers: {
-            "User-Agent": "BotshideApp/1.0"
+            "Authorization": `Discogs token=${discogsToken}`,
+            "User-Agent": "BothsideApp/1.0"
           } // User-Agent también para imagen
         });
         
@@ -530,10 +529,9 @@ serve(async (req)=>{
             album_id: internalAlbumId,
             url: video.uri,
             title: video.title || "",
-            type: video.description?.toLowerCase().includes("official") ? "official" : "other",
+            is_playlist: false,
             imported_from_discogs: true,
-            discogs_video_id: video.id?.toString() || null,
-            added_by: userId || 'system'
+            discogs_video_id: video.id?.toString() || null
           }));
           
           console.log(`Insertando ${urlsToInsert.length} URLs de YouTube como batch`);

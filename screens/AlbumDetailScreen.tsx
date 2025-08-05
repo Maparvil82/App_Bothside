@@ -18,8 +18,10 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
+import { AudioRecorder } from '../components/AudioRecorder';
 import { WebView } from 'react-native-webview';
 import { Audio } from 'expo-av';
+import { UserCollectionService } from '../services/database';
 
 const { width } = Dimensions.get('window');
 
@@ -39,7 +41,7 @@ interface AlbumDetail {
     catalog_no?: string;
     country?: string;
     album_styles?: Array<{ styles: { name: string } }>;
-    album_youtube_videos?: Array<{ url: string }>;
+    album_youtube_urls?: Array<{ url: string }>;
     album_stats?: { avg_price: number };
     tracks?: Array<{ position: string; title: string; duration: string }>;
   };
@@ -68,6 +70,7 @@ export default function AlbumDetailScreen() {
   const [showFloatingAudioButton, setShowFloatingAudioButton] = useState(false);
   const [videoModalVisible, setVideoModalVisible] = useState(false);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState('');
+  const [showAudioRecorder, setShowAudioRecorder] = useState(false);
 
   const { albumId } = route.params as { albumId: string };
 
@@ -98,7 +101,7 @@ export default function AlbumDetailScreen() {
           albums (
             *,
             album_styles (styles (name)),
-            album_youtube_videos (url),
+            album_youtube_urls (url),
             album_stats (avg_price),
             tracks (position, title, duration)
           )
@@ -184,12 +187,12 @@ export default function AlbumDetailScreen() {
       console.log('📀 Album stats:', combinedData.albums?.album_stats);
       console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
-      console.log('🎥 YouTube URLs count:', combinedData.albums?.album_youtube_videos?.length || 0);
+      console.log('🎥 YouTube URLs count:', combinedData.albums?.album_youtube_urls?.length || 0);
       
       // Debug específico para YouTube URLs de forma más segura
-      if (combinedData.albums?.album_youtube_videos && Array.isArray(combinedData.albums.album_youtube_videos)) {
-        console.log('🎥 Raw YouTube videos data:', combinedData.albums.album_youtube_videos);
-        combinedData.albums.album_youtube_videos.forEach((video, index) => {
+      if (combinedData.albums?.album_youtube_urls && Array.isArray(combinedData.albums.album_youtube_urls)) {
+        console.log('🎥 Raw YouTube videos data:', combinedData.albums.album_youtube_urls);
+        combinedData.albums.album_youtube_urls.forEach((video, index) => {
           if (video && video.url) {
             console.log(`🎥 Video ${index + 1} URL:`, video.url);
             const videoId = extractYouTubeVideoId(video.url);
@@ -199,7 +202,7 @@ export default function AlbumDetailScreen() {
       }
 
       // Procesar URLs de YouTube de forma más segura
-      const youtubeUrls = combinedData.albums?.album_youtube_videos
+      const youtubeUrls = combinedData.albums?.album_youtube_urls
         ?.filter(video => video && video.url)
         ?.map(video => video.url)
         ?.filter(Boolean) || [];
@@ -221,24 +224,27 @@ export default function AlbumDetailScreen() {
   };
 
   const handleRecordAudio = () => {
-    // Navegar a la pantalla de grabación o abrir modal
-    Alert.alert(
-      'Grabar Nota de Audio',
-      '¿Quieres grabar una nota de audio para este álbum?',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Grabar',
-          onPress: () => {
-            // Aquí se implementaría la lógica de grabación
-            console.log('🎤 Iniciando grabación de audio para:', album?.albums.title);
-          },
-        },
-      ]
-    );
+    setShowAudioRecorder(true);
+  };
+
+  const handleSaveAudioNote = async (audioUri: string) => {
+    if (!user || !albumId) return;
+
+    try {
+      console.log('🎤 Guardando nota de audio:', audioUri);
+      
+      // Guardar la URI del audio en la base de datos
+      await UserCollectionService.saveAudioNote(user.id, albumId, audioUri);
+      
+      // Recargar los datos del álbum para mostrar la nueva nota de audio
+      await loadAlbumDetail();
+      
+      Alert.alert('Éxito', 'Nota de audio guardada correctamente');
+      setShowAudioRecorder(false);
+    } catch (error) {
+      console.error('❌ Error guardando nota de audio:', error);
+      Alert.alert('Error', 'No se pudo guardar la nota de audio');
+    }
   };
 
   const handleSellAlbum = async () => {
@@ -352,14 +358,14 @@ export default function AlbumDetailScreen() {
   };
 
   const handlePlayYouTubeAudio = async () => {
-    if (!album?.albums.album_youtube_videos || album.albums.album_youtube_videos.length === 0) {
+    if (!album?.albums.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
       Alert.alert('Sin video disponible', 'No hay videos de YouTube disponibles para este álbum.');
       return;
     }
 
     try {
       // Tomar el primer video de YouTube disponible
-      const firstVideo = album.albums.album_youtube_videos[0];
+      const firstVideo = album.albums.album_youtube_urls[0];
       const videoId = extractYouTubeVideoId(firstVideo.url);
       
       if (!videoId) {
@@ -427,7 +433,7 @@ export default function AlbumDetailScreen() {
   }
 
   const stylesList = album.albums.album_styles?.map(as => as.styles?.name).filter(Boolean) || [];
-  const youtubeUrls = album.albums.album_youtube_videos?.map(ay => ay.url).filter(Boolean) || [];
+  const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
   console.log('🎥 Processed YouTube URLs:', youtubeUrls);
   console.log('🎥 YouTube URLs length:', youtubeUrls.length);
   console.log('🎥 Should show floating button:', youtubeUrls.length > 0);
@@ -653,23 +659,30 @@ export default function AlbumDetailScreen() {
           
           <View style={styles.videoContainer}>
             <WebView
-              source={{ 
+              source={{
                 html: `
                   <!DOCTYPE html>
                   <html>
                   <head>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0">
                     <style>
-                      body { margin: 0; padding: 0; background: #000; }
-                      .video-container { 
-                        position: relative; 
-                        width: 100%; 
-                        height: 100vh; 
+                      body { 
+                        margin: 0; 
+                        padding: 0; 
+                        background: #000; 
                         display: flex; 
-                        align-items: center; 
                         justify-content: center; 
+                        align-items: center; 
+                        height: 100vh; 
                       }
-                      iframe { 
+                      .video-container {
+                        width: 100%; 
+                        height: 100%; 
+                        display: flex; 
+                        justify-content: center; 
+                        align-items: center; 
+                      }
+                      iframe {
                         width: 100%; 
                         height: 100%; 
                         border: none; 
@@ -679,7 +692,7 @@ export default function AlbumDetailScreen() {
                   <body>
                     <div class="video-container">
                       <iframe 
-                        src="${currentVideoUrl}"
+                        src="${currentVideoUrl || ''}"
                         frameborder="0"
                         allowfullscreen
                         allow="autoplay; encrypted-media; picture-in-picture"
@@ -779,6 +792,14 @@ export default function AlbumDetailScreen() {
           <Text style={styles.debugText}>Is Playing: {false ? 'Yes' : 'No'}</Text> {/* isPlayingAudio removed */}
         </View>
       )}
+
+      {/* Audio Recorder Modal */}
+      <AudioRecorder
+        visible={showAudioRecorder}
+        onClose={() => setShowAudioRecorder(false)}
+        onSave={handleSaveAudioNote}
+        albumTitle={album?.albums.title || 'Álbum'}
+      />
     </SafeAreaView>
   );
 }

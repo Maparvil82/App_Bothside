@@ -37,7 +37,7 @@ export const AddDiscScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [searchTimeout, setSearchTimeout] = useState<number | null>(null);
   
   // Estados para la pestaña manual
   const [artistQuery, setArtistQuery] = useState('');
@@ -121,6 +121,15 @@ export const AddDiscScreen: React.FC = () => {
 
     setManualLoading(true);
     try {
+      // Primero probar la conexión con Discogs
+      console.log('🧪 Probando conexión con Discogs antes de buscar...');
+      const connectionTest = await DiscogsService.testConnection();
+      if (!connectionTest) {
+        Alert.alert('Error de Conexión', 'No se pudo conectar con Discogs. Verifica tu token de API.');
+        setManualLoading(false);
+        return;
+      }
+
       const searchTerm = `${artistQuery} ${albumQuery}`;
       console.log('🔍 Buscando en Discogs:', searchTerm);
       
@@ -171,7 +180,7 @@ export const AddDiscScreen: React.FC = () => {
       setManualSearchResults(vinylReleases);
     } catch (error) {
       console.error('❌ Error searching Discogs:', error);
-      Alert.alert('Error', 'No se pudo realizar la búsqueda');
+      Alert.alert('Error', 'No se pudo realizar la búsqueda. Verifica tu conexión a internet y el token de Discogs.');
       setManualSearchResults([]);
     } finally {
       setManualLoading(false);

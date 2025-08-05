@@ -8,6 +8,8 @@ const DISCOGS_TOKEN = ENV.DISCOGS_TOKEN;
 export class DiscogsService {
   private static async makeRequest(endpoint: string): Promise<any> {
     try {
+      console.log('🔑 Intentando conectar a Discogs con token:', DISCOGS_TOKEN ? 'Token configurado' : 'Sin token');
+      
       const response = await fetch(`${DISCOGS_API_URL}${endpoint}`, {
         headers: {
           'Authorization': `Discogs token=${DISCOGS_TOKEN}`,
@@ -16,44 +18,121 @@ export class DiscogsService {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorText = await response.text();
+        console.error('❌ Error de respuesta Discogs:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+          errorText: errorText,
+          headers: Object.fromEntries(response.headers.entries())
+        });
+        
+        // Si es un error de autenticación, no fallar la aplicación
+        if (response.status === 401) {
+          console.warn('⚠️ Token de Discogs inválido. Las búsquedas de Discogs no funcionarán.');
+          return null;
+        }
+        
+        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
       console.error('Error making Discogs request:', error);
-      throw error;
+      // No fallar la aplicación por errores de Discogs
+      return null;
     }
   }
 
-  static async searchReleases(query: string, page: number = 1): Promise<DiscogsSearchResponse> {
-    const encodedQuery = encodeURIComponent(query);
-    const endpoint = `/database/search?q=${encodedQuery}&type=release&page=${page}&per_page=20`;
-    
-    return this.makeRequest(endpoint);
+  // Función de prueba para verificar si el token funciona
+  static async testConnection(): Promise<boolean> {
+    try {
+      console.log('🧪 Probando conexión con Discogs...');
+      const response = await this.makeRequest('/database/search?q=test&type=release&per_page=1');
+      if (response === null) {
+        console.log('❌ Conexión con Discogs fallida - token inválido');
+        return false;
+      }
+      console.log('✅ Conexión con Discogs exitosa');
+      return true;
+    } catch (error) {
+      console.error('❌ Error de conexión con Discogs:', error);
+      return false;
+    }
   }
 
-  static async getRelease(id: number): Promise<DiscogsRelease> {
-    const endpoint = `/releases/${id}`;
-    return this.makeRequest(endpoint);
+  static async searchReleases(query: string, page: number = 1): Promise<DiscogsSearchResponse | null> {
+    try {
+      const encodedQuery = encodeURIComponent(query);
+      const endpoint = `/database/search?q=${encodedQuery}&type=release&page=${page}&per_page=20`;
+      
+      const result = await this.makeRequest(endpoint);
+      if (result === null) {
+        console.warn('⚠️ No se pudo buscar en Discogs - token inválido');
+        return null;
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('Error searching releases:', error);
+      return null;
+    }
   }
 
-  static async getArtistReleases(artistId: number, page: number = 1): Promise<DiscogsSearchResponse> {
-    const endpoint = `/artists/${artistId}/releases?page=${page}&per_page=20`;
-    return this.makeRequest(endpoint);
+  static async getRelease(id: number): Promise<DiscogsRelease | null> {
+    try {
+      const endpoint = `/releases/${id}`;
+      const result = await this.makeRequest(endpoint);
+      if (result === null) {
+        console.warn('⚠️ No se pudo obtener release de Discogs - token inválido');
+        return null;
+      }
+      return result;
+    } catch (error) {
+      console.error('Error getting release:', error);
+      return null;
+    }
+  }
+
+  static async getArtistReleases(artistId: number, page: number = 1): Promise<DiscogsSearchResponse | null> {
+    try {
+      const endpoint = `/artists/${artistId}/releases?page=${page}&per_page=20`;
+      const result = await this.makeRequest(endpoint);
+      if (result === null) {
+        console.warn('⚠️ No se pudo obtener releases del artista - token inválido');
+        return null;
+      }
+      return result;
+    } catch (error) {
+      console.error('Error getting artist releases:', error);
+      return null;
+    }
   }
 
   // Obtener estadísticas de mercado de un release (precios, valoraciones, etc.)
-  static async getReleaseMarketplaceStats(releaseId: number): Promise<any> {
-    const endpoint = `/marketplace/price_suggestions/${releaseId}`;
-    return this.makeRequest(endpoint);
+  static async getReleaseMarketplaceStats(releaseId: number): Promise<any | null> {
+    try {
+      const endpoint = `/marketplace/price_suggestions/${releaseId}`;
+      const result = await this.makeRequest(endpoint);
+      if (result === null) {
+        console.warn('⚠️ No se pudo obtener estadísticas de marketplace - token inválido');
+        return null;
+      }
+      return result;
+    } catch (error) {
+      console.error('Error getting marketplace stats:', error);
+      return null;
+    }
   }
 
   // Obtener información de precios y estadísticas de un release
-  static async getReleaseStats(releaseId: number): Promise<any> {
+  static async getReleaseStats(releaseId: number): Promise<any | null> {
     try {
       // Obtener el release completo que incluye algunos datos de marketplace
       const releaseData = await this.getRelease(releaseId);
+      if (!releaseData) {
+        return null;
+      }
       
       // Obtener sugerencias de precios por condición
       const priceSuggestions = await this.getReleaseMarketplaceStats(releaseId);
@@ -86,18 +165,10 @@ export class DiscogsService {
         }
       }
       
-      console.log('📊 Estadísticas calculadas:', {
-        lowest_price: stats.lowest_price,
-        highest_price: stats.highest_price,
-        avg_price: stats.avg_price,
-        have: stats.have,
-        want: stats.want
-      });
-      
       return stats;
     } catch (error) {
       console.error('Error getting release stats:', error);
-      throw error;
+      return null;
     }
   }
 } 
