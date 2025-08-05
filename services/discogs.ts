@@ -175,29 +175,21 @@ export class DiscogsService {
 
 export const getAlbumEditions = async (artist: string, title: string): Promise<any[]> => {
   try {
-    console.log('🔍 Buscando ediciones para:', `${artist} - ${title}`);
-    
     // Buscar el álbum en Discogs usando el servicio
     const searchQuery = `${artist} ${title}`;
     const searchResult = await DiscogsService.searchReleases(searchQuery, 1);
     
     if (!searchResult || !searchResult.results) {
-      console.log('❌ No se encontraron resultados de búsqueda');
       return [];
     }
 
     const releases = searchResult.results;
-    console.log(`📀 Encontradas ${releases.length} ediciones en total`);
     
     // Filtrar y procesar las ediciones más relevantes
     const processedEditions = releases
       .filter((release: any) => {
         // Verificar que sea un release válido
-        const isValid = release.type === 'release' && release.title;
-        if (!isValid) {
-          console.log('❌ Release filtrado:', release);
-        }
-        return isValid;
+        return release.type === 'release' && release.title;
       })
       .slice(0, 10) // Limitar a 10 ediciones
       .map((release: any) => {
@@ -216,13 +208,6 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
           }
         }
         
-        console.log('📀 Procesando release:', {
-          id: release.id,
-          title: extractedTitle,
-          artist: extractedArtist,
-          year: release.year
-        });
-        
         return {
           id: release.id,
           title: extractedTitle,
@@ -237,8 +222,6 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
         };
       });
 
-    console.log('📀 Ediciones procesadas:', processedEditions.length);
-    console.log('📀 Primera edición procesada:', processedEditions[0]);
     return processedEditions;
   } catch (error) {
     console.error('❌ Error obteniendo ediciones:', error);

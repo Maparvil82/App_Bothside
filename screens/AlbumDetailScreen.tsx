@@ -216,16 +216,12 @@ export default function AlbumDetailScreen() {
 
   const loadAlbumEditions = async (artist?: string, title?: string) => {
     if (!artist || !title) {
-      console.log('❌ No artist or title provided for editions search');
       return;
     }
 
     try {
-      console.log('🔍 Loading editions for:', `${artist} - ${title}`);
       setEditionsLoading(true);
       const editionsData = await getAlbumEditions(artist, title);
-      console.log('📀 Editions loaded:', editionsData.length);
-      console.log('📀 First edition:', editionsData[0]);
       setEditions(editionsData);
     } catch (error) {
       console.error('❌ Error loading editions:', error);
@@ -495,16 +491,6 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Estado de gem */}
-        {album.is_gem && (
-          <View style={styles.section}>
-            <View style={styles.gemContainer}>
-              <Ionicons name="star" size={24} color="#fbbf24" />
-              <Text style={styles.gemText}>Este álbum está en tus gemas</Text>
-            </View>
-          </View>
-        )}
-
         {/* Información principal del álbum */}
         <View style={styles.albumInfoSection}>
           <Text style={styles.albumTitle}>{album.albums.title}</Text>
@@ -531,12 +517,9 @@ export default function AlbumDetailScreen() {
               )}
             </View>
           )}
-        </View>
-
-        {/* Sección de Estilos */}
-        {stylesList.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Estilos</Text>
+          
+          {/* Estilos integrados en la información básica */}
+          {stylesList.length > 0 && (
             <View style={styles.stylesContainer}>
               {stylesList.map((style, index) => (
                 <View key={index} style={styles.styleTag}>
@@ -544,14 +527,46 @@ export default function AlbumDetailScreen() {
                 </View>
               ))}
             </View>
+          )}
+          
+          {/* Tags de Gem y Audio Note */}
+          <View style={styles.tagsContainer}>
+            {album.is_gem && (
+              <View style={styles.gemTag}>
+                <Ionicons name="diamond" size={16} color="#d97706" />
+                <Text style={styles.gemTagText}>Gema</Text>
+              </View>
+            )}
+            {album.audio_note && (
+              <View style={styles.audioTag}>
+                <Ionicons name="mic" size={16} color="#007AFF" />
+                <Text style={styles.audioTagText}>Audio</Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Sección de Tracks */}
+        {album.albums.tracks && album.albums.tracks.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Tracks</Text>
+            {album.albums.tracks.map((track, index) => (
+              <View key={index} style={styles.trackItem}>
+                <View style={styles.trackInfo}>
+                  <Text style={styles.trackPosition}>{track.position}</Text>
+                  <Text style={styles.trackTitle}>{track.title}</Text>
+                </View>
+                {track.duration && (
+                  <Text style={styles.trackDuration}>{track.duration}</Text>
+                )}
+              </View>
+            ))}
           </View>
         )}
 
         {/* Sección de Ediciones */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Ediciones Disponibles</Text>
-          <Text style={styles.debugText}>Estado: {editionsLoading ? 'Cargando...' : 'Completado'}</Text>
-          <Text style={styles.debugText}>Ediciones encontradas: {editions.length}</Text>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#007AFF" />
@@ -565,6 +580,13 @@ export default function AlbumDetailScreen() {
                   style={styles.editionItem}
                   onPress={() => handleOpenEdition(edition.uri)}
                 >
+                  {edition.thumb && (
+                    <Image 
+                      source={{ uri: edition.thumb }} 
+                      style={styles.editionCover}
+                      resizeMode="cover"
+                    />
+                  )}
                   <View style={styles.editionInfo}>
                     <Text style={styles.editionTitle}>{edition.title}</Text>
                     <Text style={styles.editionArtist}>{edition.artist}</Text>
@@ -588,24 +610,6 @@ export default function AlbumDetailScreen() {
             <Text style={styles.noEditionsText}>No se encontraron ediciones adicionales</Text>
           )}
         </View>
-
-        {/* Sección de Tracks */}
-        {album.albums.tracks && album.albums.tracks.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tracks</Text>
-            {album.albums.tracks.map((track, index) => (
-              <View key={index} style={styles.trackItem}>
-                <View style={styles.trackInfo}>
-                  <Text style={styles.trackPosition}>{track.position}</Text>
-                  <Text style={styles.trackTitle}>{track.title}</Text>
-                </View>
-                {track.duration && (
-                  <Text style={styles.trackDuration}>{track.duration}</Text>
-                )}
-              </View>
-            ))}
-          </View>
-        )}
 
         {/* Sección de YouTube Videos */}
         {youtubeUrls.length > 0 && (
@@ -1032,6 +1036,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
+    marginTop: 8,
   },
   tag: {
     backgroundColor: '#e3f2fd',
@@ -1521,6 +1526,21 @@ const styles = StyleSheet.create({
     color: '#d97706',
     fontWeight: '500',
   },
+  audioTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e3f2fd',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  audioTagText: {
+    marginLeft: 4,
+    fontSize: 12,
+    color: '#1976d2',
+    fontWeight: '500',
+  },
   editionsContainer: {
     marginTop: 8,
   },
@@ -1536,7 +1556,7 @@ const styles = StyleSheet.create({
     borderColor: '#e9ecef',
   },
   editionInfo: {
-    flex: 1,
+    flex: 1.5,
   },
   editionTitle: {
     fontSize: 14,
@@ -1583,5 +1603,11 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 8,
+  },
+  editionCover: {
+    width: 100,
+    height: 100,
+    borderRadius: 4,
+    marginRight: 12,
   },
 }); 
