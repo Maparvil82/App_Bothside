@@ -74,6 +74,8 @@ export default function AlbumDetailScreen() {
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [editions, setEditions] = useState<any[]>([]);
   const [editionsLoading, setEditionsLoading] = useState(false);
+  const [showRatioModal, setShowRatioModal] = useState(false);
+  const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
 
   const { albumId } = route.params as { albumId: string };
 
@@ -488,6 +490,47 @@ export default function AlbumDetailScreen() {
     }
   };
 
+  // Función para obtener la información del ratio según el nivel
+  const getRatioInfo = (level: string) => {
+    switch (level) {
+      case 'Bajo':
+        return {
+          title: 'Ratio Bajo (Menos de 2:1)',
+          significado: 'La demanda es igual o apenas superior a la oferta registrada. Hay muchos discos en esta categoría.',
+          probabilidad: 'Baja a media. La venta no es segura y puede tardar mucho tiempo.',
+          estrategia: 'Para vender, tu copia debe tener un precio muy competitivo (probablemente en el rango bajo del historial de ventas) y/o estar en un estado impecable (Near Mint). La competencia es alta.'
+        };
+      case 'Medio':
+        return {
+          title: 'Ratio Medio (Entre 2:1 y 8:1)',
+          significado: 'Hay una demanda saludable y constante. El disco tiene un público y se vende con regularidad.',
+          probabilidad: 'Media a alta. Si el precio es justo y el estado es bueno (VG+ o mejor), se venderá en un tiempo razonable (días o algunas semanas).',
+          estrategia: 'Revisa el historial de ventas para poner un precio acorde al mercado. No necesitas ser el más barato, pero sí ser razonable.'
+        };
+      case 'Alto':
+        return {
+          title: 'Ratio Alto (Entre 8:1 y 25:1)',
+          significado: 'La demanda supera claramente a la oferta. Es un disco buscado y no es fácil de encontrar.',
+          probabilidad: 'Muy alta. Una copia en buen estado y a un precio justo se venderá muy rápidamente, a menudo en cuestión de horas o pocos días.',
+          estrategia: 'Tienes más poder de negociación. Puedes fijar un precio en el rango medio-alto del historial de ventas. Los compradores están activamente esperando que aparezca una copia.'
+        };
+      case 'Excepcional':
+        return {
+          title: 'Ratio Excepcional o "Grial" (Más de 25:1)',
+          significado: 'Demanda masiva para una oferta extremadamente escasa. Es lo que se considera un "santo grial" o una pieza de coleccionista muy codiciada.',
+          probabilidad: 'Prácticamente garantizada e inmediata.',
+          estrategia: 'La venta será casi instantánea. Es probable que recibas múltiples ofertas al poco tiempo de ponerlo a la venta. Puedes fijar un precio en el rango más alto del historial, ya que los compradores saben que las oportunidades son muy raras.'
+        };
+      default:
+        return {
+          title: 'Sin datos suficientes',
+          significado: 'No hay suficientes datos para calcular un ratio confiable.',
+          probabilidad: 'No determinable.',
+          estrategia: 'Se necesitan más datos de ventas para evaluar el potencial.'
+        };
+    }
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -553,7 +596,14 @@ export default function AlbumDetailScreen() {
               album.albums.album_stats.have
             );
             return (
-              <View style={[styles.ratioCard, { backgroundColor: color }]}>
+              <TouchableOpacity 
+                style={[styles.ratioCard, { backgroundColor: color }]}
+                onPress={() => {
+                  setCurrentRatioData({ ratio, level, color });
+                  setShowRatioModal(true);
+                }}
+                activeOpacity={0.8}
+              >
                 <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
                 <Text style={styles.ratioCardAmount}>
                   {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
@@ -565,7 +615,7 @@ export default function AlbumDetailScreen() {
                     : 'Demanda vs. oferta en Discogs'
                   }
                 </Text>
-              </View>
+              </TouchableOpacity>
             );
           })()
         )}
@@ -933,6 +983,57 @@ export default function AlbumDetailScreen() {
         onSave={handleSaveAudioNote}
         albumTitle={album?.albums.title || 'Álbum'}
       />
+
+      {/* Ratio Modal */}
+      <Modal
+        visible={showRatioModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowRatioModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {currentRatioData && (
+              <>
+                <View style={styles.modalHeader}>
+                  <Text style={[styles.modalTitle, { color: currentRatioData.color }]}>
+                    {getRatioInfo(currentRatioData.level).title}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.closeButton}
+                    onPress={() => setShowRatioModal(false)}
+                  >
+                    <Ionicons name="close" size={24} color="#6c757d" />
+                  </TouchableOpacity>
+                </View>
+                
+                <ScrollView style={styles.modalBody}>
+                  <View style={styles.ratioInfoSection}>
+                    <Text style={styles.ratioInfoTitle}>Significado</Text>
+                    <Text style={styles.ratioInfoText}>
+                      {getRatioInfo(currentRatioData.level).significado}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.ratioInfoSection}>
+                    <Text style={styles.ratioInfoTitle}>Probabilidad de venta</Text>
+                    <Text style={styles.ratioInfoText}>
+                      {getRatioInfo(currentRatioData.level).probabilidad}
+                    </Text>
+                  </View>
+                  
+                  <View style={styles.ratioInfoSection}>
+                    <Text style={styles.ratioInfoTitle}>Estrategia</Text>
+                    <Text style={styles.ratioInfoText}>
+                      {getRatioInfo(currentRatioData.level).estrategia}
+                    </Text>
+                  </View>
+                </ScrollView>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1724,5 +1825,60 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 4,
     marginRight: 12,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    margin: 20,
+    maxHeight: '80%',
+    width: '90%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1,
+    textAlign: 'center',
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  ratioInfoSection: {
+    marginBottom: 20,
+  },
+  ratioInfoTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 8,
+  },
+  ratioInfoText: {
+    fontSize: 14,
+    color: '#6c757d',
+    lineHeight: 20,
   },
 }); 
