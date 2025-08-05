@@ -607,7 +607,9 @@ export default function AlbumDetailScreen() {
               >
                 <View style={styles.ratioCardHeader}>
                   <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
-                  <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
+                  <View style={styles.ratioCardIcon}>
+                    <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
+                  </View>
                 </View>
                 <Text style={styles.ratioCardAmount}>
                   {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
@@ -1591,8 +1593,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   ratioCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    position: 'relative',
     alignItems: 'center',
     width: '100%',
     marginBottom: 8,
@@ -1601,7 +1602,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
-    flex: 1,
+    textAlign: 'center',
   },
   ratioCardAmount: {
     fontSize: 28,
@@ -1926,5 +1927,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#007AFF',
     marginRight: 4,
+  },
+  ratioCardIcon: {
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    padding: 4,
   },
 }); 
