@@ -43,7 +43,7 @@ interface AlbumDetail {
     country?: string;
     album_styles?: Array<{ styles: { name: string } }>;
     album_youtube_urls?: Array<{ url: string }>;
-    album_stats?: { avg_price: number; want?: number };
+    album_stats?: { avg_price: number; want?: number; have?: number };
     tracks?: Array<{ position: string; title: string; duration: string }>;
   };
   user_list_items?: Array<{
@@ -107,7 +107,7 @@ export default function AlbumDetailScreen() {
             *,
             album_styles (styles (name)),
             album_youtube_urls (url),
-            album_stats (avg_price, want),
+            album_stats (avg_price, want, have),
             tracks (position, title, duration)
           )
         `)
@@ -192,6 +192,7 @@ export default function AlbumDetailScreen() {
       console.log('📀 Album stats:', combinedData.albums?.album_stats);
       console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
       console.log('📀 Want count:', combinedData.albums?.album_stats?.want);
+      console.log('📀 Have count:', combinedData.albums?.album_stats?.have);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
       
       // Procesar URLs de YouTube de forma más segura
@@ -464,11 +465,27 @@ export default function AlbumDetailScreen() {
   };
 
   const formatPrice = (price: string | null | undefined) => {
-    if (!price || price === 'null' || price === 'undefined' || price === '') {
-      return 'Precio no disponible';
+    if (!price) return 'N/A';
+    return `$${parseFloat(price).toFixed(2)}`;
+  };
+
+  // Función para calcular el ratio de venta
+  const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
+    if (!want || !have || have === 0) {
+      return { ratio: 0, level: 'Sin datos', color: '#6c757d' };
     }
-    const numPrice = parseFloat(price);
-    return isNaN(numPrice) || numPrice === 0 ? 'Precio no disponible' : `${numPrice.toFixed(2)} €`;
+    
+    const ratio = want / have;
+    
+    if (ratio < 2) {
+      return { ratio, level: 'Bajo', color: '#dc3545' };
+    } else if (ratio >= 2 && ratio < 8) {
+      return { ratio, level: 'Medio', color: '#ffc107' };
+    } else if (ratio >= 8 && ratio < 25) {
+      return { ratio, level: 'Alto', color: '#28a745' };
+    } else {
+      return { ratio, level: 'Excepcional', color: '#6f42c1' };
+    }
   };
 
   if (loading) {
@@ -528,15 +545,29 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Sección de Personas que quieren */}
-        {album.albums.album_stats?.want && (
-          <View style={styles.wantCard}>
-            <Text style={styles.wantCardTitle}>Personas que quieren</Text>
-            <Text style={styles.wantCardAmount}>
-              {album.albums.album_stats.want.toLocaleString()}
-            </Text>
-            <Text style={styles.wantCardSubtitle}>Usuarios de Discogs que tienen este álbum en su lista de deseos</Text>
-          </View>
+        {/* Sección de Ratio de Venta */}
+        {album.albums.album_stats?.want && album.albums.album_stats?.have && (
+          (() => {
+            const { ratio, level, color } = calculateSalesRatio(
+              album.albums.album_stats.want,
+              album.albums.album_stats.have
+            );
+            return (
+              <View style={[styles.ratioCard, { backgroundColor: color }]}>
+                <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
+                <Text style={styles.ratioCardAmount}>
+                  {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
+                </Text>
+                <Text style={styles.ratioCardLevel}>{level}</Text>
+                <Text style={styles.ratioCardSubtitle}>
+                  {ratio > 0 
+                    ? `${album.albums.album_stats.want.toLocaleString()} quieren / ${album.albums.album_stats.have.toLocaleString()} tienen`
+                    : 'Demanda vs. oferta en Discogs'
+                  }
+                </Text>
+              </View>
+            );
+          })()
         )}
 
         {/* Información principal del álbum */}
@@ -1423,8 +1454,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.8)',
   },
-  wantCard: {
-    backgroundColor: '#4CAF50', // Un color verde más vibrante para "quieren"
+  ratioCard: {
     margin: 10,
     borderRadius: 8,
     padding: 16,
@@ -1438,19 +1468,25 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  wantCardTitle: {
+  ratioCardTitle: {
     fontSize: 14,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 4,
   },
-  wantCardAmount: {
+  ratioCardAmount: {
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
     marginBottom: 4,
   },
-  wantCardSubtitle: {
+  ratioCardLevel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  ratioCardSubtitle: {
     fontSize: 12,
     color: 'rgba(255, 255, 255, 0.8)',
   },
