@@ -1,28 +1,32 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   TouchableOpacity,
+  Image,
   Alert,
-  ActivityIndicator,
-  Dimensions,
-  SafeAreaView,
-  Linking,
   Modal,
+  SafeAreaView,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Linking,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation } from '@react-navigation/native';
-import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
+import { getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
+import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
+import { UserCollectionService } from '../services/database';
 import { WebView } from 'react-native-webview';
 import { Audio } from 'expo-av';
-import { UserCollectionService } from '../services/database';
-import { getAlbumEditions } from '../services/discogs';
+import { ENV } from '../config/env';
+import { YouTubeAudioService } from '../services/youtube-audio';
 
 const { width } = Dimensions.get('window');
 
@@ -77,19 +81,51 @@ export default function AlbumDetailScreen() {
   const [showRatioModal, setShowRatioModal] = useState(false);
   const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
   const [showAllEditions, setShowAllEditions] = useState(false);
+  const [videoRef, setVideoRef] = useState<Video | null>(null);
+  const [videoStatus, setVideoStatus] = useState<AVPlaybackStatus | null>(null);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [audioPlayerVisible, setAudioPlayerVisible] = useState(false);
+  const [currentAudioTrack, setCurrentAudioTrack] = useState<{
+    title: string;
+    artist: string;
+    coverUrl: string;
+    youtubeUrl: string;
+  } | null>(null);
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const [audioProgress, setAudioProgress] = useState(0);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
 
   const { albumId } = route.params as { albumId: string };
 
   useEffect(() => {
     loadAlbumDetail();
+    
+    // Configurar audio para reproducción
+    const setupAudio = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          staysActiveInBackground: true,
+          playsInSilentModeIOS: true,
+          shouldDuckAndroid: true,
+          playThroughEarpieceAndroid: false,
+        });
+      } catch (error) {
+        console.error('Error setting up audio:', error);
+      }
+    };
+    
+    setupAudio();
   }, [albumId]);
 
   // Limpiar el audio cuando el componente se desmonte
   useEffect(() => {
     return () => {
-      // Cleanup si es necesario en el futuro
+      if (sound) {
+        sound.unloadAsync();
+      }
     };
-  }, []);
+  }, [sound]);
 
   const loadAlbumDetail = async () => {
     if (!user || !albumId) return;
@@ -144,23 +180,43 @@ export default function AlbumDetailScreen() {
         .from('list_items')
         .select(`
           list_id,
-          album_id,
-          user_lists!inner (
-            id,
-            user_id
-          )
+          album_id
         `)
-        .eq('album_id', albumId)
-        .eq('user_lists.user_id', user.id);
+        .eq('album_id', albumId);
 
       console.log('📚 List items data:', listItemsData);
       console.log('📚 List items error:', listItemsError);
       console.log('📚 List items length:', listItemsData?.length);
 
+      // También verificar listas públicas donde podría estar el álbum
+      const { data: publicListItems, error: publicListError } = await supabase
+        .from('list_items')
+        .select(`
+          list_id,
+          album_id,
+          user_lists!inner (
+            id,
+            title,
+            description,
+            is_public
+          )
+        `)
+        .eq('album_id', albumId)
+        .eq('user_lists.is_public', true);
+
+      console.log('📚 Public list items:', publicListItems);
+      console.log('📚 Public list items length:', publicListItems?.length);
+
+      // Combinar list_items del usuario y públicos
+      const allListItems = [
+        ...(listItemsData || []),
+        ...(publicListItems || [])
+      ];
+
       // Filtrar las estanterías que contienen este álbum
       const shelvesWithAlbum = shelfData?.filter(shelf => {
-        return listItemsData?.some(item => 
-          item.list_id === shelf.id && item.album_id === albumId
+        return allListItems?.some(item => 
+          item.list_id === shelf.id
         );
       }) || [];
 
@@ -182,7 +238,7 @@ export default function AlbumDetailScreen() {
           id: shelf.id,
           title: shelf.title,
           description: shelf.description,
-          list_items: listItemsData?.filter(item => item.list_id === shelf.id) || []
+          list_items: allListItems?.filter(item => item.list_id === shelf.id) || []
         }))
       };
 
@@ -197,6 +253,10 @@ export default function AlbumDetailScreen() {
       console.log('📀 Want count:', combinedData.albums?.album_stats?.want);
       console.log('📀 Have count:', combinedData.albums?.album_stats?.have);
       console.log('📀 Audio note exists:', !!combinedData.audio_note);
+      console.log('📚 Shelves with album:', shelvesWithAlbum);
+      console.log('📚 List items data:', listItemsData);
+      console.log('📚 User list items:', combinedData.user_list_items);
+      console.log('📚 User list items length:', combinedData.user_list_items?.length);
       
       // Procesar URLs de YouTube de forma más segura
       const youtubeUrls = combinedData.albums?.album_youtube_urls
@@ -293,9 +353,9 @@ export default function AlbumDetailScreen() {
     } catch (error) {
       console.error('❌ Error guardando nota de audio:', error);
       console.error('❌ Error details:', {
-        message: error.message,
-        code: error.code,
-        details: error.details
+        message: error instanceof Error ? error.message : 'Unknown error',
+        code: (error as any)?.code,
+        details: (error as any)?.details
       });
       Alert.alert('Error', 'No se pudo guardar la nota de audio');
     }
@@ -394,46 +454,179 @@ export default function AlbumDetailScreen() {
   };
 
   const extractYouTubeVideoId = (url: string): string | null => {
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
-      /youtube\.com\/v\/([^&\n?#]+)/,
-    ];
-
-    for (const pattern of patterns) {
-      const match = url.match(pattern);
-      if (match) return match[1];
-    }
-    return null;
+    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
   };
 
+  // Función para obtener URL directa del video de YouTube
+  const getDirectVideoUrl = async (youtubeUrl: string): Promise<string> => {
+    const videoId = extractYouTubeVideoId(youtubeUrl);
+    if (!videoId) return '';
+    
+    try {
+      // Usar un servicio público de extracción de YouTube
+      const response = await fetch(`https://api.vevioz.com/@api/button/videos/${videoId}`);
+      
+      if (response.ok) {
+        const html = await response.text();
+        // Extraer URL del HTML (simplificado)
+        const urlMatch = html.match(/href="([^"]*\.mp4[^"]*)"/);
+        if (urlMatch && urlMatch[1]) {
+          return urlMatch[1];
+        }
+      }
+    } catch (error) {
+      console.error('Error extracting YouTube URL:', error);
+    }
+    
+    // Fallback: usar una URL de ejemplo si falla la extracción
+    return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
+  };
+
+  // Función para reproducir audio de YouTube usando el servicio
   const handlePlayYouTubeAudio = async () => {
-    if (!album?.albums.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
-      Alert.alert('Sin video disponible', 'No hay videos de YouTube disponibles para este álbum.');
+    if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
+      Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
       return;
     }
 
     try {
-      // Tomar el primer video de YouTube disponible
+      setAudioPlayerVisible(true);
+      setVideoLoading(true);
+
+      // Tomar el primer video disponible
       const firstVideo = album.albums.album_youtube_urls[0];
-      const videoId = extractYouTubeVideoId(firstVideo.url);
-      
-      if (!videoId) {
-        Alert.alert('Error', 'No se pudo extraer el ID del video de YouTube.');
-        return;
+      console.log('🎵 Reproduciendo video:', firstVideo.url);
+
+      // Usar el servicio de YouTube Audio
+      const result = await YouTubeAudioService.extractAudioFromYouTube(firstVideo.url);
+
+      if (result.success && result.audioUrl && result.videoInfo) {
+        console.log('🎵 Audio extraído exitosamente:', result.audioUrl);
+        
+        // Configurar el track actual
+        setCurrentAudioTrack({
+          title: result.videoInfo.title,
+          artist: album.albums.artist,
+          coverUrl: album.albums.cover_url || '',
+          youtubeUrl: firstVideo.url
+        });
+
+        // Cargar y reproducir el audio
+        await loadAndPlayAudio(result.audioUrl);
+        
+      } else {
+        console.error('🎵 Error en la extracción:', result.error);
+        Alert.alert('Error', 'No se pudo extraer el audio del video. Intenta con otro video.');
+        setAudioPlayerVisible(false);
       }
 
-      // Construir URL de YouTube embed simplificada
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
-      
-      // Usar las variables existentes del modal
-      setCurrentVideoUrl(embedUrl);
-      setCurrentVideoTitle(`${album.albums.artist} - ${album.albums.title}`);
-      setShowVideoPlayer(true);
+    } catch (error) {
+      console.error('Error playing YouTube audio:', error);
+      Alert.alert('Error', 'No se pudo reproducir el audio. Intenta más tarde.');
+      setAudioPlayerVisible(false);
+    } finally {
+      setVideoLoading(false);
+    }
+  };
+
+  // Función para cargar y reproducir audio
+  const loadAndPlayAudio = async (audioUrl: string) => {
+    try {
+      console.log('🎵 Cargando audio desde:', audioUrl);
+
+      // Limpiar audio anterior si existe
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
+      // Crear nuevo objeto de audio
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { shouldPlay: true },
+        onPlaybackStatusUpdate
+      );
+
+      setSound(newSound);
+      setIsAudioPlaying(true);
+      console.log('🎵 Audio cargado y reproduciendo');
 
     } catch (error) {
-      console.error('Error opening YouTube video:', error);
-      Alert.alert('Error', 'No se pudo abrir el video de YouTube.');
+      console.error('Error loading audio:', error);
+      Alert.alert('Error', 'No se pudo cargar el audio. Verifica tu conexión a internet.');
+      setAudioPlayerVisible(false);
     }
+  };
+
+  // Función para actualizar el estado de reproducción
+  const onPlaybackStatusUpdate = (status: any) => {
+    if (status.isLoaded) {
+      setIsAudioPlaying(status.isPlaying);
+      if (status.durationMillis) {
+        const progress = status.positionMillis / status.durationMillis;
+        setAudioProgress(progress);
+      }
+    }
+  };
+
+  // Función para toggle play/pause
+  const handleToggleAudio = async () => {
+    if (!sound) {
+      console.log('🎵 No hay sonido cargado, iniciando reproducción...');
+      // Si no hay sonido cargado, intentar cargar el audio
+      if (currentAudioTrack) {
+        await loadAndPlayAudio(currentAudioTrack.youtubeUrl);
+      }
+      return;
+    }
+
+    try {
+      const status = await sound.getStatusAsync();
+      
+      if (status.isLoaded) {
+        if (isAudioPlaying) {
+          await sound.pauseAsync();
+          console.log('🎵 Audio pausado');
+        } else {
+          await sound.playAsync();
+          console.log('🎵 Audio reanudado');
+        }
+      } else {
+        console.log('🎵 Sonido no cargado, recargando...');
+        // Si el sonido no está cargado, recargarlo
+        if (currentAudioTrack) {
+          await loadAndPlayAudio(currentAudioTrack.youtubeUrl);
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling audio:', error);
+      // Si hay error, intentar recargar el audio
+      if (currentAudioTrack) {
+        await loadAndPlayAudio(currentAudioTrack.youtubeUrl);
+      }
+    }
+  };
+
+  // Función para cerrar el reproductor
+  const handleCloseAudioPlayer = async () => {
+    try {
+      if (sound) {
+        const status = await sound.getStatusAsync();
+        if (status.isLoaded) {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        }
+        setSound(null);
+      }
+    } catch (error) {
+      console.error('Error closing audio player:', error);
+    }
+    
+    setAudioPlayerVisible(false);
+    setIsAudioPlaying(false);
+    setCurrentAudioTrack(null);
+    setAudioProgress(0);
   };
 
   const handleStopYouTubeAudio = async () => {
@@ -531,6 +724,8 @@ export default function AlbumDetailScreen() {
         };
     }
   };
+
+
 
   if (loading) {
     return (
@@ -771,9 +966,9 @@ export default function AlbumDetailScreen() {
               <TouchableOpacity
                 key={index}
                 style={styles.videoButton}
-                onPress={() => handleOpenYouTubeVideo(url)}
+                onPress={() => handlePlayYouTubeAudio()}
               >
-                <Text style={styles.videoButtonText}>Ver video {index + 1}</Text>
+                <Text style={styles.videoButtonText}>Reproducir audio {index + 1}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -822,18 +1017,35 @@ export default function AlbumDetailScreen() {
         {/* Estanterías */}
         {album.user_list_items && album.user_list_items.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Estanterías</Text>
+            <Text style={styles.sectionTitle}>📚 En mis listas</Text>
             {album.user_list_items.map((item, index) => (
               <View key={index} style={styles.shelfItem}>
-                <Ionicons name="library" size={16} color="#007AFF" />
+                <Ionicons name="library" size={20} color="#007AFF" />
                 <View style={styles.shelfInfo}>
                   <Text style={styles.shelfTitle}>{item.title}</Text>
                   {item.description && (
                     <Text style={styles.shelfDescription}>{item.description}</Text>
                   )}
                 </View>
+                <Ionicons name="chevron-forward" size={16} color="#6c757d" />
               </View>
             ))}
+          </View>
+        )}
+
+        {/* Sección cuando no está en ninguna lista */}
+        {(!album.user_list_items || album.user_list_items.length === 0) && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>📚 Organizar</Text>
+            <View style={styles.noShelvesItem}>
+              <Ionicons name="add-circle-outline" size={20} color="#6c757d" />
+              <View style={styles.noShelvesInfo}>
+                <Text style={styles.noShelvesTitle}>No está en ninguna lista</Text>
+                <Text style={styles.noShelvesDescription}>
+                  Puedes agregar este álbum a una de tus estanterías para organizarlo mejor
+                </Text>
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -846,21 +1058,21 @@ export default function AlbumDetailScreen() {
         onClose={() => setShowFloatingPlayer(false)}
       />
 
-      {/* Modal del reproductor de video */}
+      {/* Modal del reproductor de audio */}
       <Modal
         visible={showVideoPlayer}
         animationType="slide"
-        presentationStyle="fullScreen"
+        presentationStyle="pageSheet"
       >
-        <SafeAreaView style={styles.videoModalContainer}>
-          <View style={styles.videoModalHeader}>
+        <SafeAreaView style={styles.audioModalContainer}>
+          <View style={styles.audioModalHeader}>
             <TouchableOpacity 
               onPress={() => setShowVideoPlayer(false)}
-              style={styles.videoCloseButton}
+              style={styles.audioCloseButton}
             >
               <Ionicons name="close" size={24} color="#fff" />
             </TouchableOpacity>
-            <Text style={styles.videoModalTitle}>{currentVideoTitle}</Text>
+            <Text style={styles.audioModalTitle}>{currentVideoTitle}</Text>
             <TouchableOpacity 
               onPress={() => {
                 const videoId = extractYouTubeVideoId(currentVideoUrl);
@@ -869,115 +1081,59 @@ export default function AlbumDetailScreen() {
                   Linking.openURL(youtubeUrl);
                 }
               }}
-              style={styles.videoYouTubeButton}
+              style={styles.audioYouTubeButton}
             >
               <Ionicons name="logo-youtube" size={24} color="#FF0000" />
             </TouchableOpacity>
           </View>
           
-          <View style={styles.videoContainer}>
-            <WebView
-              source={{
-                html: `
-                  <!DOCTYPE html>
-                  <html>
-                  <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                    <style>
-                      body { 
-                        margin: 0; 
-                        padding: 0; 
-                        background: #000; 
-                        display: flex; 
-                        justify-content: center; 
-                        align-items: center; 
-                        height: 100vh; 
-                      }
-                      .video-container {
-                        width: 100%; 
-                        height: 100%; 
-                        display: flex; 
-                        justify-content: center; 
-                        align-items: center; 
-                      }
-                      iframe {
-                        width: 100%; 
-                        height: 100%; 
-                        border: none; 
-                      }
-                    </style>
-                  </head>
-                  <body>
-                    <div class="video-container">
-                      <iframe 
-                        src="${currentVideoUrl || ''}"
-                        frameborder="0"
-                        allowfullscreen
-                        allow="autoplay; encrypted-media; picture-in-picture"
-                      ></iframe>
-                    </div>
-                  </body>
-                  </html>
-                `
-              }}
-              style={styles.videoPlayer}
-              originWhitelist={['*']}
-              allowsInlineMediaPlayback={true}
-              mediaPlaybackRequiresUserAction={false}
-              allowsFullscreenVideo={true}
-              javaScriptEnabled={true}
-              domStorageEnabled={true}
-              startInLoadingState={true}
-              scalesPageToFit={true}
-              userAgent="Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1"
-              onLoadStart={() => {
-              }}
-              onLoadEnd={() => {
-              }}
-              onError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                console.error('🎥 WebView error:', nativeEvent);
-                Alert.alert(
-                  'Error de Reproducción',
-                  'No se pudo reproducir el video. ¿Quieres abrirlo en YouTube?',
-                  [
-                    { text: 'Cancelar', style: 'cancel' },
-                    { 
-                      text: 'Abrir en YouTube', 
-                      onPress: () => {
-                        const videoId = extractYouTubeVideoId(currentVideoUrl);
-                        if (videoId) {
-                          const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-                          Linking.openURL(youtubeUrl);
-                        }
-                      }
-                    }
-                  ]
-                );
-              }}
-              onHttpError={(syntheticEvent) => {
-                const { nativeEvent } = syntheticEvent;
-                console.error('�� WebView HTTP error:', nativeEvent);
-              }}
-              onMessage={(event) => {
-              }}
-            />
+          <View style={styles.audioPlayerContainer}>
+            {/* Área de visualización del álbum */}
+            <View style={styles.audioAlbumArt}>
+              {album?.albums.cover_url ? (
+                <Image 
+                  source={{ uri: album.albums.cover_url }} 
+                  style={styles.audioAlbumImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.audioAlbumPlaceholder}>
+                  <Ionicons name="musical-notes" size={48} color="#fff" />
+                </View>
+              )}
+            </View>
             
-            {/* Botón manual para reproducir */}
-            <TouchableOpacity 
-              style={styles.playButton}
-              onPress={() => {
-                // Recargar el WebView con autoplay forzado
-                const videoId = extractYouTubeVideoId(currentVideoUrl);
-                if (videoId) {
-                  const newUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1&t=0`;
-                  setCurrentVideoUrl(newUrl);
-                }
-              }}
-            >
-              <Ionicons name="play-circle" size={48} color="#fff" />
-              <Text style={styles.playButtonText}>Reproducir</Text>
-            </TouchableOpacity>
+            {/* Información del álbum */}
+            <View style={styles.audioInfo}>
+              <Text style={styles.audioArtist}>{album?.albums.artist}</Text>
+              <Text style={styles.audioTitle}>{album?.albums.title}</Text>
+            </View>
+            
+            {/* Controles de reproducción */}
+            <View style={styles.audioControls}>
+              <TouchableOpacity style={styles.audioControlButton}>
+                <Ionicons name="play-skip-back" size={32} color="#fff" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.audioPlayButton}>
+                <Ionicons name="play" size={48} color="#fff" />
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.audioControlButton}>
+                <Ionicons name="play-skip-forward" size={32} color="#fff" />
+              </TouchableOpacity>
+            </View>
+            
+            {/* Barra de progreso */}
+            <View style={styles.audioProgress}>
+              <View style={styles.audioProgressBar}>
+                <View style={styles.audioProgressFill} />
+              </View>
+              <View style={styles.audioTimeInfo}>
+                <Text style={styles.audioTimeText}>0:00</Text>
+                <Text style={styles.audioTimeText}>0:00</Text>
+              </View>
+            </View>
           </View>
         </SafeAreaView>
       </Modal>
@@ -1057,6 +1213,58 @@ export default function AlbumDetailScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Reproductor de audio flotante */}
+      {audioPlayerVisible && currentAudioTrack && (
+        <View style={styles.floatingAudioPlayer}>
+          {/* Portada del álbum */}
+          <View style={styles.audioPlayerCover}>
+            {currentAudioTrack.coverUrl ? (
+              <Image 
+                source={{ uri: currentAudioTrack.coverUrl }} 
+                style={styles.audioPlayerCoverImage}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.audioPlayerCoverPlaceholder}>
+                <Ionicons name="musical-notes" size={20} color="#fff" />
+              </View>
+            )}
+          </View>
+          
+          {/* Información del track */}
+          <View style={styles.audioPlayerInfo}>
+            <Text style={styles.audioPlayerTitle} numberOfLines={1}>
+              {currentAudioTrack.title}
+            </Text>
+            <Text style={styles.audioPlayerArtist} numberOfLines={1}>
+              {currentAudioTrack.artist}
+            </Text>
+          </View>
+          
+          {/* Controles */}
+          <View style={styles.audioPlayerControls}>
+            <TouchableOpacity 
+              style={styles.audioPlayerPlayButton}
+              onPress={handleToggleAudio}
+            >
+              <Ionicons 
+                name={isAudioPlaying ? "pause" : "play"} 
+                size={24} 
+                color="#fff" 
+              />
+            </TouchableOpacity>
+          </View>
+          
+          {/* Botón cerrar */}
+          <TouchableOpacity 
+            style={styles.audioPlayerCloseButton}
+            onPress={handleCloseAudioPlayer}
+          >
+            <Ionicons name="close" size={20} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -1399,23 +1607,28 @@ const styles = StyleSheet.create({
   shelfItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f3f4',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#007AFF',
   },
   shelfInfo: {
-    marginLeft: 12,
     flex: 1,
+    marginLeft: 12,
   },
   shelfTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
     color: '#212529',
     marginBottom: 2,
   },
   shelfDescription: {
-    fontSize: 12,
+    fontSize: 14,
     color: '#6c757d',
+    fontStyle: 'italic',
   },
   debugText: {
     fontSize: 12,
@@ -1633,7 +1846,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: 'left',
   },
-  headerInfo: {
+  headerInfoContainer: {
     alignItems: 'flex-start',
   },
   labelYearContainer: {
@@ -1655,7 +1868,7 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     fontWeight: '500',
   },
-  country: {
+  countryText: {
     fontSize: 12,
     color: '#28a745',
     fontWeight: '500',
@@ -1932,6 +2145,277 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 0,
     top: 0,
+    padding: 4,
+  },
+  noShelvesItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#6c757d',
+  },
+  noShelvesInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  noShelvesTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#6c757d',
+    marginBottom: 2,
+  },
+  noShelvesDescription: {
+    fontSize: 14,
+    color: '#6c757d',
+    fontStyle: 'italic',
+  },
+  audioOnlyButton: {
+    position: 'absolute',
+    bottom: 20,
+    left: '50%',
+    transform: [{ translateX: -48 }], // Centrar el botón
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 10,
+    borderRadius: 24,
+    flexDirection: 'row',
+    gap: 4,
+  },
+  audioOnlyButtonText: {
+    fontSize: 12,
+    color: '#fff',
+    fontWeight: '500',
+  },
+  videoLoadingContainerModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  videoLoadingTextModal: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+  },
+  videoErrorContainerModal: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#000',
+  },
+  videoErrorTextModal: {
+    color: '#fff',
+    fontSize: 16,
+    marginTop: 10,
+    textAlign: 'center',
+  },
+  videoErrorButtonModal: {
+    marginTop: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#FF0000',
+    borderRadius: 8,
+  },
+  videoErrorButtonTextModal: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  videoControls: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 20,
+  },
+  videoControlButton: {
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    padding: 12,
+    borderRadius: 24,
+  },
+  audioModalContainer: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+  },
+  audioModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  audioCloseButton: {
+    padding: 8,
+  },
+  audioModalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#fff',
+    flex: 1,
+    textAlign: 'center',
+  },
+  audioYouTubeButton: {
+    padding: 8,
+  },
+  audioPlayerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 40,
+  },
+  audioAlbumArt: {
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    marginBottom: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  audioAlbumImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 140,
+  },
+  audioAlbumPlaceholder: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 140,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  audioInfoModal: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  audioArtist: {
+    fontSize: 16,
+    color: '#ccc',
+    marginBottom: 4,
+  },
+  audioTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  audioControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 40,
+    gap: 40,
+  },
+  audioControlButton: {
+    padding: 12,
+  },
+  audioPlayButton: {
+    backgroundColor: '#1DB954',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#1DB954',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  audioProgress: {
+    width: '100%',
+  },
+  audioProgressBar: {
+    height: 4,
+    backgroundColor: '#333',
+    borderRadius: 2,
+    marginBottom: 8,
+  },
+  audioProgressFill: {
+    height: '100%',
+    backgroundColor: '#1DB954',
+    borderRadius: 2,
+    width: '30%', // Ejemplo de progreso
+  },
+  audioTimeInfo: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  audioTimeText: {
+    fontSize: 12,
+    color: '#ccc',
+  },
+  floatingAudioPlayer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: '#1a1a1a',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  audioPlayerCover: {
+    width: 48,
+    height: 48,
+    borderRadius: 6,
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  audioPlayerCoverImage: {
+    width: '100%',
+    height: '100%',
+  },
+  audioPlayerCoverPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  audioPlayerInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  audioPlayerTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  audioPlayerArtist: {
+    fontSize: 12,
+    color: '#ccc',
+  },
+  audioPlayerControls: {
+    marginRight: 12,
+  },
+  audioPlayerPlayButton: {
+    backgroundColor: '#1DB954',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  audioPlayerCloseButton: {
     padding: 4,
   },
 }); 

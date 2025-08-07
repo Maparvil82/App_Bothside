@@ -165,10 +165,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       console.log('🎵 Iniciando guardado de audio...');
       console.log('🎵 URI local:', recordingUri);
       
-      // Crear un nombre de archivo único
-      const fileName = `audio_notes/${Date.now()}_${albumTitle.replace(/[^a-zA-Z0-9]/g, '_')}.m4a`;
-      
-      // Leer el archivo usando FileSystem
+      // Verificar que el archivo existe
       const fileInfo = await FileSystem.getInfoAsync(recordingUri);
       console.log('🎵 File info:', fileInfo);
       
@@ -178,97 +175,53 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         return;
       }
       
-      // Leer el archivo como base64
-      const base64Data = await FileSystem.readAsStringAsync(recordingUri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
+      // Verificar autenticación antes de guardar
+      console.log('🔐 Verificando autenticación...');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
       
-      console.log('🎵 Archivo leído, tamaño:', base64Data.length);
-      
-      // Convertir base64 a Uint8Array
-      const bytes = new Uint8Array(Buffer.from(base64Data, 'base64'));
-      console.log('🎵 Bytes convertidos, tamaño:', bytes.length);
-      
-      console.log('🎵 Subiendo archivo a Supabase Storage...');
-      console.log('🎵 Bucket: audio, FileName:', fileName);
-      
-      // Subir a Supabase Storage con mejor manejo de errores
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('files')
-        .upload(fileName, bytes, {
-          contentType: 'audio/m4a',
-          cacheControl: '3600',
-          upsert: true // Cambiar a true para sobrescribir si existe
-        });
-      
-      if (uploadError) {
-        console.error('❌ Error subiendo audio a Storage:', uploadError);
-        console.error('❌ Error details:', {
-          message: uploadError.message,
-          name: uploadError.name
-        });
-        
-        // Intentar con un nombre de archivo más simple
-        const simpleFileName = `audio_${Date.now()}.m4a`;
-        console.log('🔄 Intentando con nombre simple:', simpleFileName);
-        
-        const { data: retryData, error: retryError } = await supabase.storage
-          .from('files')
-          .upload(simpleFileName, bytes, {
-            contentType: 'audio/m4a',
-            cacheControl: '3600',
-            upsert: true
-          });
-        
-        if (retryError) {
-          console.error('❌ Error en segundo intento:', retryError);
-          Alert.alert('Error', 'No se pudo subir el archivo de audio. Verifica la conexión.');
-          return;
-        }
-        
-        console.log('✅ Archivo subido en segundo intento:', retryData);
-        
-        // Obtener la URL pública del archivo
-        const { data: publicUrlData } = supabase.storage
-          .from('files')
-          .getPublicUrl(simpleFileName);
-        
-        if (!publicUrlData?.publicUrl) {
-          console.error('❌ No se pudo obtener la URL pública del audio');
-          Alert.alert('Error', 'No se pudo obtener la URL del archivo de audio');
-          return;
-        }
-        
-        console.log('🎵 URL pública obtenida:', publicUrlData.publicUrl);
-        onSave(publicUrlData.publicUrl);
-        onClose();
-        Alert.alert('Éxito', 'Nota de audio guardada correctamente');
+      if (authError) {
+        console.error('❌ Error de autenticación:', authError);
+        Alert.alert(
+          'Error de Autenticación', 
+          'No se pudo verificar tu sesión. Por favor, cierra sesión y vuelve a iniciar.'
+        );
         return;
       }
       
-      console.log('🎵 Archivo subido correctamente:', uploadData);
-      
-      // Obtener la URL pública del archivo
-      const { data: publicUrlData } = supabase.storage
-        .from('files')
-        .getPublicUrl(fileName);
-      
-      if (!publicUrlData?.publicUrl) {
-        console.error('❌ No se pudo obtener la URL pública del audio');
-        Alert.alert('Error', 'No se pudo obtener la URL del archivo de audio');
+      if (!user) {
+        console.error('❌ Usuario no autenticado');
+        Alert.alert(
+          'Usuario no Autenticado', 
+          'Debes iniciar sesión para guardar notas de audio. Por favor, ve a la pantalla de login.'
+        );
         return;
       }
       
-      console.log('🎵 URL pública obtenida:', publicUrlData.publicUrl);
+      console.log('✅ Usuario autenticado:', user.id);
+      console.log('✅ Archivo de audio válido, guardando URI local...');
       
-      // Guardar la URL pública en lugar de la URI local
-      onSave(publicUrlData.publicUrl);
+      // Guardar la URI local directamente en la base de datos
+      onSave(recordingUri);
       onClose();
       
       Alert.alert('Éxito', 'Nota de audio guardada correctamente');
     } catch (error) {
       console.error('❌ Error al guardar:', error);
-      Alert.alert('Error', 'No se pudo guardar la nota de audio');
+      
+      // Mensajes de error más específicos
+      let errorMessage = 'No se pudo guardar la nota de audio';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('autenticado') || error.message.includes('authentication')) {
+          errorMessage = 'Error de autenticación. Por favor, inicia sesión nuevamente.';
+        } else if (error.message.includes('network') || error.message.includes('Network')) {
+          errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
+        } else if (error.message.includes('permission') || error.message.includes('forbidden')) {
+          errorMessage = 'No tienes permisos para realizar esta acción.';
+        }
+      }
+      
+      Alert.alert('Error', errorMessage);
     }
   };
 
