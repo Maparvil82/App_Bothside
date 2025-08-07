@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -14,13 +14,14 @@ import {
   Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { UserCollectionService } from '../services/database';
+import ShelfGrid from '../components/ShelfGrid';
 
 const { width } = Dimensions.get('window');
 
@@ -69,6 +70,7 @@ export default function AlbumDetailScreen() {
   const { user } = useAuth();
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
   const [floatingAudioUri, setFloatingAudioUri] = useState('');
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
@@ -82,136 +84,76 @@ export default function AlbumDetailScreen() {
   
   const { albumId } = route.params as { albumId: string };
 
-  useEffect(() => {
-    loadAlbumDetail();
-  }, [albumId]);
-
-  const loadAlbumDetail = async () => {
-    if (!user || !albumId) return;
-
-    console.log('🔄 Iniciando carga de detalles del álbum:', albumId);
-
-    try {
-      setLoading(true);
-
-      const { data, error } = await supabase
-        .from('user_collection')
-        .select(`
-          id,
-          added_at,
-          audio_note,
-          is_gem,
-          albums (
-            *,
-            album_styles (styles (name)),
-            album_youtube_urls (url),
-            album_stats (avg_price, want, have),
-            tracks (position, title, duration)
-          )
-        `)
-        .eq('user_id', user.id)
-        .eq('album_id', albumId)
-        .single();
-
-      if (error) {
-        console.error('Error loading album detail:', error);
-        Alert.alert('Error', 'No se pudo cargar la información del álbum');
+  const loadAlbumDetail = useCallback(() => {
+    const fetchFullAlbumData = async () => {
+      if (!albumId || !user) {
+        setError("No se proporcionó un ID de álbum o el usuario no está autenticado.");
+        setLoading(false);
         return;
       }
 
-      // Obtener las estanterías donde está este álbum
-      const { data: shelfData, error: shelfError } = await supabase
-        .from('user_lists')
-        .select(`
-          id,
-          title,
-          description
-        `)
-        .eq('user_id', user.id);
-
-      // Obtener list_items que pertenezcan a estanterías del usuario actual
-      const { data: listItemsData, error: listItemsError } = await supabase
-        .from('list_items')
-        .select(`
-          list_id,
-          album_id
-        `)
-        .eq('album_id', albumId);
-
-      // También verificar listas públicas donde podría estar el álbum
-      const { data: publicListItems, error: publicListError } = await supabase
-        .from('list_items')
-        .select(`
-          list_id,
-          album_id,
-          user_lists!inner (
-            id,
-            title,
-            description,
-            is_public
-          )
-        `)
-        .eq('album_id', albumId)
-        .eq('user_lists.is_public', true);
-
-      // Combinar list_items del usuario y públicos
-      const allListItems = [
-        ...(listItemsData || []),
-        ...(publicListItems || [])
-      ];
-
-      // Filtrar las estanterías que contienen este álbum
-      const shelvesWithAlbum = shelfData?.filter(shelf => {
-        return allListItems?.some(item => 
-          item.list_id === shelf.id
-        );
-      }) || [];
-
-      if (shelfError) {
-        console.error('Error loading shelves:', shelfError);
-      }
-
-      // Combinar los datos
-      const combinedData: AlbumDetail = {
-        id: data.id,
-        added_at: data.added_at,
-        audio_note: data.audio_note,
-        is_gem: data.is_gem,
-        albums: Array.isArray(data.albums) ? data.albums[0] : data.albums,
-        user_list_items: shelvesWithAlbum.map(shelf => ({
-          id: shelf.id,
-          title: shelf.title,
-          description: shelf.description,
-          list_items: allListItems?.filter(item => item.list_id === shelf.id) || []
-        }))
-      };
-
-      setAlbum(combinedData);
+      setLoading(true);
+      setError(null);
       
-      await loadAlbumEditions(combinedData.albums?.artist, combinedData.albums?.title);
+      try {
+        const { data: albumData, error: albumError } = await supabase
+          .from('user_collection')
+          .select(`
+            *,
+            albums (
+              *,
+              artists ( name ),
+              labels ( name ),
+              album_genres ( genres ( name ) ),
+              album_styles ( styles ( name ) ),
+              tracks ( * ),
+              album_youtube_urls ( url )
+            ),
+            shelves ( name )
+          `)
+          .eq('user_id', user.id)
+          .or(`id.eq.${albumId},album_id.eq.${albumId}`)
+          .single();
 
-      // Cargar estanterías del usuario de forma segura
-      if(user) {
-        const { data: userShelves, error: userShelvesError } = await supabase
-          .from('shelves')
-          .select('id, name, shelf_rows, shelf_columns')
-          .eq('user_id', user.id);
+        if (albumError) throw new Error(`Error al cargar el álbum: ${albumError.message}`);
+        if (!albumData) throw new Error("Álbum no encontrado en tu colección.");
         
-        if (userShelvesError) {
-          console.error('Error loading user shelves:', userShelvesError);
-        } else {
-          setShelves(userShelves || []);
+        // Normalizar estructura del álbum y asignar nombre de estantería si viene en la consulta
+        const normalizedAlbums = Array.isArray((albumData as any).albums)
+          ? (albumData as any).albums[0]
+          : ((albumData as any).albums || (albumData as any).album);
+
+        const fullAlbumData = {
+          ...albumData,
+          albums: normalizedAlbums,
+          shelf_name: (albumData as any)?.shelves?.name || null,
+        } as AlbumDetail;
+
+        const { data: shelvesData, error: shelvesError } = await supabase
+          .from('shelves')
+          .select('id, name, shelf_rows, shelf_columns');
+        
+        if (shelvesError) throw new Error(`Error al cargar las estanterías: ${shelvesError.message}`);
+
+        setAlbum(fullAlbumData);
+        setShelves(shelvesData || []);
+        
+        if (fullAlbumData.albums) {
+            await loadAlbumEditions(fullAlbumData.albums.artist, fullAlbumData.albums.title);
         }
+
+      } catch (e: any) {
+        setError(e.message);
+      } finally {
+        setLoading(false);
       }
+    };
+    
+    fetchFullAlbumData();
+  }, [albumId, user]);
 
-    } catch (error) {
-      console.error('Error processing album detail:', error);
-      Alert.alert('Error', 'No se pudo procesar la información del álbum');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  useFocusEffect(loadAlbumDetail);
+  
   const loadAlbumEditions = async (artist?: string, title?: string) => {
     if (!artist || !title) {
       return;
@@ -239,69 +181,17 @@ export default function AlbumDetailScreen() {
   };
 
   const handleSaveAudioNote = async (audioUri: string) => {
-    if (!user || !albumId) {
-      console.error('❌ handleSaveAudioNote: Missing user or albumId', { 
-        user: user?.id, 
-        albumId,
-        hasUser: !!user,
-        hasAlbumId: !!albumId 
-      });
+    if (!user || !album?.id) {
       Alert.alert('Error', 'Usuario no autenticado o álbum no válido');
       return;
     }
-
     try {
-      console.log('🎤 Guardando nota de audio:', {
-        userId: user.id,
-        albumId,
-        audioUri,
-        userEmail: user.email
-      });
-      
-      // Verificar sesión actual
-      const { data: { user: currentUser }, error: sessionError } = await supabase.auth.getUser();
-      if (sessionError) {
-        console.error('❌ Error verificando sesión:', sessionError);
-        Alert.alert('Error', 'Sesión expirada. Por favor, inicia sesión nuevamente');
-        return;
-      }
-      
-      if (!currentUser) {
-        console.error('❌ No hay usuario autenticado');
-        Alert.alert('Error', 'No hay usuario autenticado');
-        return;
-      }
-      
-      console.log('✅ Usuario autenticado:', currentUser.id);
-      
-      // Guardar la URI del audio en la base de datos
-      const result = await UserCollectionService.saveAudioNote(user.id, albumId, audioUri);
-      console.log('✅ Resultado del guardado:', result);
-      
-      // Recargar los datos del álbum para mostrar la nueva nota de audio
-      await loadAlbumDetail();
-      
+      await UserCollectionService.saveAudioNote(user.id, album.id, audioUri);
+      loadAlbumDetail();
       Alert.alert('Éxito', 'Nota de audio guardada correctamente');
       setShowAudioRecorder(false);
     } catch (error) {
-      console.error('❌ Error guardando nota de audio:', error);
-      console.error('❌ Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        code: (error as any)?.code,
-        details: (error as any)?.details
-      });
-      
-      let errorMessage = 'No se pudo guardar la nota de audio';
-      if (error instanceof Error) {
-        if (error.message.includes('autenticado') || error.message.includes('authentication')) {
-          errorMessage = 'Error de autenticación. Por favor, inicia sesión nuevamente.';
-        } else if (error.message.includes('network') || error.message.includes('Network')) {
-          errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
-        } else if (error.message.includes('permission') || error.message.includes('forbidden')) {
-          errorMessage = 'No tienes permisos para realizar esta acción.';
-        }
-      }
-      Alert.alert('Error', errorMessage);
+      Alert.alert('Error', 'No se pudo guardar la nota de audio.');
     }
   };
 
@@ -470,11 +360,14 @@ export default function AlbumDetailScreen() {
     );
   }
 
-  if (!album) {
+  if (error || !album) {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={48} color="#dc3545" />
-        <Text style={styles.errorText}>No se encontró el álbum</Text>
+        <Text style={styles.errorText}>{error || 'No se encontró el álbum'}</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
+            <Text style={styles.errorButtonText}>Volver</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -766,24 +659,47 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Nueva Sección de Ubicación */}
+        {/* Nueva Sección de Ubicación RECONSTRUIDA */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Asignar a Estantería</Text>
-          {shelves.map((shelf) => (
-            <TouchableOpacity
-              key={shelf.id}
-              style={styles.shelfSelectItem}
-              onPress={() => (navigation as any).navigate('SelectCell', { user_collection_id: album.id, shelf: shelf })}
-            >
-              <Text style={styles.shelfSelectItemText}>{shelf.name}</Text>
-              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-            </TouchableOpacity>
-          ))}
-          {shelves.length === 0 && (
-            <Text style={styles.noShelvesText}>No tienes estanterías. Crea una para poder asignar una ubicación.</Text>
-          )}
-        </View>
+            <Text style={styles.sectionTitle}>Ubicación</Text>
+            
+            {album.shelf_id && album.location_row && album.location_column ? (
+              <>
+                <Text style={styles.currentShelfTitle}>Actualmente en: {album.shelf_name || 'Estantería sin nombre'}</Text>
+                <ShelfGrid 
+                  rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0} 
+                  columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
+                  highlightRow={album.location_row}
+                  highlightColumn={album.location_column}
+                />
+                <Text style={styles.selectShelfTitle}>Cambiar ubicación:</Text>
+              </>
+            ) : (
+              <Text style={styles.selectShelfTitle}>Asignar a una estantería:</Text>
+            )}
 
+            {shelves.map((shelf) => {
+              const isCurrentShelf = album.shelf_id === shelf.id;
+              return (
+                <TouchableOpacity
+                  key={shelf.id}
+                  style={styles.shelfSelectItem}
+                  onPress={() => (navigation as any).navigate('SelectCell', { 
+                    user_collection_id: album.id, 
+                    shelf: shelf,
+                    current_row: isCurrentShelf ? album.location_row : undefined,
+                    current_column: isCurrentShelf ? album.location_column : undefined,
+                  })}
+                >
+                  <Text style={styles.shelfSelectItemText}>{shelf.name}</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                </TouchableOpacity>
+              );
+            })}
+            {shelves.length === 0 && (
+              <Text style={styles.noShelvesText}>No tienes estanterías para asignar.</Text>
+            )}
+          </View>
       </ScrollView>
 
       {/* Reproductor flotante */}
@@ -850,7 +766,7 @@ export default function AlbumDetailScreen() {
               </>
             )}
           </View>
-                  </View>
+          </View>
         </Modal>
       </SafeAreaView>
     );
@@ -901,11 +817,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f8f9fa',
+    padding: 20,
   },
   errorText: {
     marginTop: 16,
     fontSize: 16,
     color: '#dc3545',
+    textAlign: 'center',
   },
   albumHeader: {
     backgroundColor: '#fff',
@@ -2109,6 +2027,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#212529',
     marginBottom: 8,
+    marginTop: 16,
   },
   shelfSelectItem: {
     flexDirection: 'row',
@@ -2120,7 +2039,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: '#f8f9fa',
   },
   shelfSelectItemText: {
     fontSize: 14,
@@ -2133,5 +2052,23 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 8,
+  },
+  currentShelfTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 8,
+  },
+  errorButton: {
+      marginTop: 20,
+      backgroundColor: '#007AFF',
+      paddingVertical: 10,
+      paddingHorizontal: 20,
+      borderRadius: 8,
+  },
+  errorButtonText: {
+      color: '#fff',
+      fontSize: 16,
+      fontWeight: '600',
   },
 }); 

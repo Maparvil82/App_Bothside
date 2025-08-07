@@ -1,28 +1,42 @@
 import React from 'react';
-import { View, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 
 interface ShelfGridSelectableProps {
   rows: number;
   columns: number;
   onSelectCell: (row: number, column: number) => void;
+  selectedRow?: number;
+  selectedColumn?: number;
 }
 
-const ShelfGridSelectable: React.FC<ShelfGridSelectableProps> = ({ rows, columns, onSelectCell }) => {
+const ShelfGridSelectable: React.FC<ShelfGridSelectableProps> = ({
+  rows,
+  columns,
+  onSelectCell,
+  selectedRow,
+  selectedColumn,
+}) => {
   const screenWidth = Dimensions.get('window').width;
-  const containerPadding = 16 * 2; // Padding del contenedor padre
+  const containerPadding = 16 * 2;
   const gridGap = 8;
   const totalGapWidth = (columns - 1) * gridGap;
-  const cellWidth = (screenWidth - containerPadding - totalGapWidth) / columns;
+  const availableWidth = screenWidth - containerPadding;
+  const cellWidth = (availableWidth - totalGapWidth) / columns;
 
   const renderGrid = () => {
     const gridRows = [];
     for (let i = 0; i < rows; i++) {
       const rowCells = [];
       for (let j = 0; j < columns; j++) {
+        const isSelected = i === selectedRow && j === selectedColumn;
         rowCells.push(
-          <TouchableOpacity 
-            key={`${i}-${j}`} 
-            style={[styles.cell, { width: cellWidth, height: cellWidth }]} 
+          <TouchableOpacity
+            key={`${i}-${j}`}
+            style={[
+              styles.cell,
+              { width: cellWidth, height: cellWidth },
+              isSelected && styles.selectedCell,
+            ]}
             onPress={() => onSelectCell(i, j)}
           />
         );
@@ -32,28 +46,29 @@ const ShelfGridSelectable: React.FC<ShelfGridSelectableProps> = ({ rows, columns
     return gridRows;
   };
 
-  return (
-    <View style={styles.gridContainer}>
-      {renderGrid()}
-    </View>
-  );
+  return <View style={styles.gridContainer}>{renderGrid()}</View>;
 };
 
 const styles = StyleSheet.create({
   gridContainer: {
-    marginTop: 16,
+    marginTop: 20,
     gap: 8,
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 8,
   },
   cell: {
     backgroundColor: '#e9ecef',
     borderRadius: 8,
     borderWidth: 2,
-    borderColor: '#007AFF',
+    borderColor: '#dee2e6',
     borderStyle: 'dashed',
+  },
+  selectedCell: {
+    backgroundColor: '#007AFF',
+    borderColor: '#0056b3',
+    borderStyle: 'solid',
   },
 });
 

@@ -1,25 +1,33 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface ShelfGridProps {
   rows: number;
   columns: number;
+  highlightRow?: number;
+  highlightColumn?: number;
 }
 
-const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns }) => {
+const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, highlightColumn }) => {
   const screenWidth = Dimensions.get('window').width;
-  // Ajustar por el padding del contenedor padre (View con style=styles.section)
   const containerPadding = 16 * 2;
   const gridGap = 8;
   const totalGapWidth = (columns - 1) * gridGap;
-  const cellWidth = (screenWidth - containerPadding - totalGapWidth) / columns;
+  const availableWidth = screenWidth - (containerPadding * 2); 
+  const cellWidth = (availableWidth - totalGapWidth) / columns;
 
   const renderGrid = () => {
     const gridRows = [];
     for (let i = 0; i < rows; i++) {
       const rowCells = [];
       for (let j = 0; j < columns; j++) {
-        rowCells.push(<View key={`${i}-${j}`} style={[styles.cell, { width: cellWidth, height: cellWidth }]} />);
+        const isHighlighted = (i + 1) === highlightRow && (j + 1) === highlightColumn;
+        rowCells.push(
+          <View key={`${i}-${j}`} style={[styles.cell, { width: cellWidth, height: cellWidth }, isHighlighted && styles.highlightedCell]}>
+            {isHighlighted && <Ionicons name="disc" size={cellWidth * 0.6} color="white" />}
+          </View>
+        );
       }
       gridRows.push(<View key={i} style={styles.row}>{rowCells}</View>);
     }
@@ -40,7 +48,7 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 8,
   },
   cell: {
     backgroundColor: '#e9ecef',
@@ -48,6 +56,13 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#dee2e6',
     borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  highlightedCell: {
+    backgroundColor: '#007AFF',
+    borderColor: '#0056b3',
+    borderStyle: 'solid',
   },
 });
 

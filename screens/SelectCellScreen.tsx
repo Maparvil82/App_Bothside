@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons } from '@expo/vector-icons';
-import { supabase } from '../lib/supabase';
 import ShelfGridSelectable from '../components/ShelfGridSelectable';
+import { supabase } from '../lib/supabase';
 
 interface Shelf {
   id: string;
@@ -15,7 +14,12 @@ interface Shelf {
 export default function SelectCellScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { user_collection_id, shelf } = route.params as { user_collection_id: string, shelf: Shelf };
+  const { user_collection_id, shelf, current_row, current_column } = route.params as { 
+    user_collection_id: string, 
+    shelf: Shelf,
+    current_row?: number,
+    current_column?: number
+  };
   
   const [saving, setSaving] = useState(false);
 
@@ -59,6 +63,8 @@ export default function SelectCellScreen() {
         rows={shelf.shelf_rows}
         columns={shelf.shelf_columns}
         onSelectCell={handleSelectLocation}
+        selectedRow={current_row ? current_row - 1 : undefined} // Convertir a 0-indexed
+        selectedColumn={current_column ? current_column - 1 : undefined} // Convertir a 0-indexed
       />
     </ScrollView>
   );
