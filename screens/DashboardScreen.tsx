@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,12 +15,20 @@ import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useStats } from '../contexts/StatsContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { AudioNotesSection } from '../components/AudioNotesSection';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { TopItemsLineChart } from '../components/TopItemsLineChart';
+import ShelfGrid from '../components/ShelfGrid';
 
 const { width } = Dimensions.get('window');
+
+interface Shelf {
+  id: string;
+  name: string;
+  shelf_rows: number;
+  shelf_columns: number;
+}
 
 interface CollectionStats {
   totalAlbums: number;
@@ -58,6 +66,8 @@ export default function DashboardScreen() {
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
   const navigation = useNavigation();
 
+  const [shelves, setShelves] = useState<Shelf[]>([]);
+
   // Si la autenticación aún está cargando, mostrar loading
   if (authLoading) {
     return (
@@ -68,7 +78,22 @@ export default function DashboardScreen() {
     );
   }
 
-  const fetchCollectionStats = async () => {
+  const fetchShelves = useCallback(async () => {
+    if (!user) return;
+    try {
+      const { data, error } = await supabase
+        .from('shelves')
+        .select('id, name, shelf_rows, shelf_columns')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setShelves(data || []);
+    } catch (error) {
+      console.error('Error fetching shelves:', error);
+    }
+  }, [user]);
+
+  const fetchCollectionStats = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -325,9 +350,9 @@ export default function DashboardScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
-  const loadAlbumsWithAudio = async () => {
+  const loadAlbumsWithAudio = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -352,7 +377,7 @@ export default function DashboardScreen() {
         return;
       }
 
-      const albumsData: AudioNoteAlbum[] = (collection || []).map(item => ({
+      const albumsData: AudioNoteAlbum[] = (collection || []).map((item: any) => ({
         id: item.id,
         title: item.albums?.title || 'Sin título',
         artist: item.albums?.artist || 'Artista desconocido',
@@ -367,7 +392,7 @@ export default function DashboardScreen() {
     } catch (error) {
       console.error('Error processing audio albums:', error);
     }
-  };
+  }, [user]);
 
   const handlePlayAudio = async (audioUri: string, albumTitle: string) => {
     try {
@@ -396,8 +421,15 @@ export default function DashboardScreen() {
 
   useEffect(() => {
     fetchCollectionStats();
+    fetchShelves();
     loadAlbumsWithAudio();
-  }, [user]);
+  }, [user, fetchCollectionStats, fetchShelves, loadAlbumsWithAudio]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchShelves();
+    }, [fetchShelves])
+  );
 
   if (loading) {
     return (
@@ -488,6 +520,24 @@ export default function DashboardScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Sección de Estantería */}
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Mis Estanterías</Text>
+        <View style={styles.shelfStatContainer}>
+          <Text style={styles.shelfStatNumber}>{shelves.length}</Text>
+          <Text style={styles.shelfStatText}>Estanterías Creadas</Text>
+        </View>
+        <TouchableOpacity 
+          style={styles.configButton}
+          onPress={() => (navigation as any).navigate('ShelvesList')}
+        >
+          <Ionicons name="grid-outline" size={20} color="#fff" />
+          <Text style={styles.configButtonText}>
+            Gestionar Estanterías
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       {/* Álbumes más caros */}
       {stats.mostExpensiveAlbums.length > 0 && (
         <View style={styles.section}>
@@ -496,7 +546,7 @@ export default function DashboardScreen() {
             <TouchableOpacity 
               key={index} 
               style={styles.albumItem}
-              onPress={() => navigation.navigate('AlbumDetail', { albumId: album.id })}
+              onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
             >
               <View style={styles.albumImageContainer}>
                 {album.imageUrl ? (
@@ -612,7 +662,7 @@ export default function DashboardScreen() {
             <TouchableOpacity 
               key={index} 
               style={styles.albumItem}
-              onPress={() => navigation.navigate('AlbumDetail', { albumId: album.id })}
+              onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
             >
               <View style={styles.albumImageContainer}>
                 {album.imageUrl ? (
@@ -928,4 +978,41 @@ const styles = StyleSheet.create({
                 fontSize: 12,
                 color: '#6c757d',
               },
-            }); 
+              emptyShelfText: {
+                fontSize: 14,
+                color: '#6c757d',
+                textAlign: 'center',
+                marginTop: 8,
+                marginBottom: 16,
+                lineHeight: 20,
+              },
+              configButton: {
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#007AFF',
+                borderRadius: 8,
+                paddingVertical: 12,
+                marginTop: 16,
+                gap: 8,
+              },
+              configButtonText: {
+                color: '#fff',
+                fontSize: 16,
+                fontWeight: '600',
+              },
+  shelfStatContainer: {
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  shelfStatNumber: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  shelfStatText: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginTop: 4,
+  },
+}); 

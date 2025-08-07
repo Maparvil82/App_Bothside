@@ -21,6 +21,10 @@ import { GemsProvider } from '../contexts/GemsContext';
 import { StatsProvider } from '../contexts/StatsContext';
 import AlbumDetailScreen from '../screens/AlbumDetailScreen';
 import AIChatScreen from '../screens/AIChatScreen';
+import ShelfConfigScreen from '../screens/ShelfConfigScreen';
+import ShelvesListScreen from '../screens/ShelvesListScreen';
+import ShelfEditScreen from '../screens/ShelfEditScreen';
+import ShelfViewScreen from '../screens/ShelfViewScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -97,6 +101,30 @@ const DashboardStack = () => (
       options={{
         header: () => <CustomHeader title="Bothside" />
       }}
+    />
+    <Stack.Screen
+      name="ShelvesList"
+      component={ShelvesListScreen}
+      options={{
+        title: 'Mis Estanterías',
+        header: () => <CustomHeader title="Mis Estanterías" showAvatar={false} />
+      }}
+    />
+    <Stack.Screen
+      name="ShelfEdit"
+      component={ShelfEditScreen}
+      options={{
+        // El título se establece dinámicamente en la pantalla
+        header: () => <CustomHeader title="" showAvatar={false} />
+      }}
+    />
+    <Stack.Screen
+      name="ShelfView"
+      component={ShelfViewScreen}
+      options={({ route }: any) => ({
+        title: route.params?.shelfName || 'Estantería',
+        header: () => <CustomHeader title={route.params?.shelfName || 'Estantería'} showAvatar={false} />
+      })}
     />
   </Stack.Navigator>
 );
