@@ -585,22 +585,6 @@ export default function AlbumDetailScreen() {
           )}
         </View>
 
-        {/* Sección de YouTube Videos */}
-        {youtubeUrls.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Videos de YouTube</Text>
-            <TouchableOpacity
-              style={styles.youtubeButton}
-              onPress={handlePlayYouTubeVideo}
-            >
-              <Ionicons name="logo-youtube" size={24} color="#fff" />
-              <Text style={styles.youtubeButtonText}>
-                Ver en YouTube ({youtubeUrls.length} video{youtubeUrls.length > 1 ? 's' : ''})
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
         {/* Nota de Audio */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Nota de Audio</Text>
@@ -702,6 +686,17 @@ export default function AlbumDetailScreen() {
             )}
           </View>
       </ScrollView>
+
+      {/* Botón flotante de YouTube */}
+      {youtubeUrls.length > 0 && (
+        <TouchableOpacity
+          style={[styles.floatingYouTubeButton, { bottom: showFloatingPlayer ? 100 : 30 }]}
+          onPress={handlePlayYouTubeVideo}
+          activeOpacity={0.85}
+        >
+          <Ionicons name="logo-youtube" size={28} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       {/* Reproductor flotante */}
       <FloatingAudioPlayer
@@ -2071,5 +2066,24 @@ const styles = StyleSheet.create({
       color: '#fff',
       fontSize: 16,
       fontWeight: '600',
+  },
+  floatingYouTubeButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 20,
+    backgroundColor: '#FF0000',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: '#fff',
+    zIndex: 1000,
   },
 }); 
