@@ -333,20 +333,6 @@ export default function AlbumDetailScreen() {
     );
   };
 
-  const handleOpenEdition = async (uri: string) => {
-    try {
-      const supported = await Linking.canOpenURL(uri);
-      if (supported) {
-        await Linking.openURL(uri);
-      } else {
-        Alert.alert('Error', 'No se pudo abrir el enlace de la edición');
-      }
-    } catch (error) {
-      console.error('Error opening edition:', error);
-      Alert.alert('Error', 'No se pudo abrir la edición');
-    }
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('es-ES', {
@@ -620,7 +606,7 @@ export default function AlbumDetailScreen() {
 
         {/* Sección de Ediciones */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ediciones Disponibles</Text>
+          <Text style={styles.sectionTitle}>Ediciones en Vinilo</Text>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color="#007AFF" />
@@ -629,10 +615,9 @@ export default function AlbumDetailScreen() {
           ) : editions.length > 0 ? (
             <View style={styles.editionsContainer}>
               {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
-                <TouchableOpacity
+                <View
                   key={edition.id}
                   style={styles.editionItem}
-                  onPress={() => handleOpenEdition(edition.uri)}
                 >
                   {edition.thumb && (
                     <Image 
@@ -656,8 +641,7 @@ export default function AlbumDetailScreen() {
                       <Text style={styles.editionCatno}>{edition.catno}</Text>
                     )}
                   </View>
-                  <Ionicons name="open-outline" size={20} color="#007AFF" />
-                </TouchableOpacity>
+                </View>
               ))}
               
               {/* Botón "Ver más" o "Ver menos" */}
@@ -678,7 +662,7 @@ export default function AlbumDetailScreen() {
               )}
             </View>
           ) : (
-            <Text style={styles.noEditionsText}>No se encontraron ediciones adicionales</Text>
+            <Text style={styles.noEditionsText}>No se encontraron ediciones en vinilo</Text>
           )}
         </View>
 

@@ -189,7 +189,31 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
     const processedEditions = releases
       .filter((release: any) => {
         // Verificar que sea un release válido
-        return release.type === 'release' && release.title;
+        if (release.type !== 'release' || !release.title) {
+          return false;
+        }
+        
+        // Filtrar solo formatos de vinilo
+        const format = Array.isArray(release.format) ? release.format.join(', ').toLowerCase() : (release.format || '').toLowerCase();
+        const isVinyl = format.includes('vinyl') || 
+                       format.includes('lp') || 
+                       format.includes('12"') || 
+                       format.includes('7"') || 
+                       format.includes('10"') ||
+                       format.includes('single') ||
+                       format.includes('ep') ||
+                       format.includes('maxi-single');
+        
+        // Excluir explícitamente formatos que no son vinilo
+        const isNotVinyl = format.includes('cd') || 
+                          format.includes('dvd') || 
+                          format.includes('cassette') || 
+                          format.includes('mp3') || 
+                          format.includes('digital') ||
+                          format.includes('blu-ray') ||
+                          format.includes('vhs');
+        
+        return isVinyl && !isNotVinyl;
       })
       .slice(0, 10) // Limitar a 10 ediciones
       .map((release: any) => {
