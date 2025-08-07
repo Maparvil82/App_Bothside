@@ -83,6 +83,14 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
           )}
         </View>
       )}
+
+      {rank.nextTier && (
+        <View style={styles.nextTierRow}
+        >
+          <Ionicons name="star-outline" size={14} color="#6c757d" />
+          <Text style={styles.nextTierText}>Siguiente nivel: {rank.nextTier}</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -114,7 +122,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 6,
   },
   rankEmoji: {
     fontSize: 24,
@@ -123,6 +131,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#212529',
+  },
+  nextTierRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  nextTierText: {
+    fontSize: 12,
+    color: '#6c757d',
   },
   progressGroup: {
     gap: 8,

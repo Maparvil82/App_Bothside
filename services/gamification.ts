@@ -14,6 +14,7 @@ export interface CollectorRank {
     nextAlbums?: number;
     nextValue?: number;
   };
+  nextTier?: CollectorTier; // added
 }
 
 export interface CollectionSummary {
@@ -75,6 +76,8 @@ export const GamificationService = {
       }
     }
 
+    const isMaxTier = minLevel >= TIER_TITLES.length - 1;
+
     return {
       tier: TIER_TITLES[minLevel],
       levelIndex: minLevel,
@@ -84,6 +87,7 @@ export const GamificationService = {
       valueLevelIndex: value.levelIndex,
       valueProgressToNext: value.progressToNext,
       nextTargets: Object.keys(nextTargets).length ? nextTargets : undefined,
+      nextTier: isMaxTier ? undefined : TIER_TITLES[minLevel + 1],
     };
   },
 
