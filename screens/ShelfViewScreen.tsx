@@ -1,9 +1,17 @@
 import React, { useState, useCallback, useLayoutEffect } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
-import { useFocusEffect, useNavigation, useRoute } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import ShelfGrid from '../components/ShelfGrid';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  ShelfEdit: { shelf: Shelf };
+  // ... otras rutas
+};
+
+type ShelfViewNavigationProp = StackNavigationProp<RootStackParamList, 'ShelfEdit'>;
 
 interface Shelf {
   id: string;
@@ -13,9 +21,9 @@ interface Shelf {
 }
 
 export default function ShelfViewScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
-  const { shelfId, shelfName } = route.params as { shelfId: string, shelfName: string };
+  const navigation = useNavigation<ShelfViewNavigationProp>();
+  const route = useRoute<RouteProp<{ params: { shelfId: string, shelfName: string } }, 'params'>>();
+  const { shelfId, shelfName } = route.params;
 
   const [shelf, setShelf] = useState<Shelf | null>(null);
   const [loading, setLoading] = useState(true);
@@ -49,10 +57,11 @@ export default function ShelfViewScreen() {
     navigation.setOptions({
       headerRight: () => (
         <TouchableOpacity 
-          onPress={() => navigation.navigate('ShelfEdit', { shelf: shelf })}
+          onPress={() => shelf && navigation.navigate('ShelfEdit', { shelf: shelf })}
           style={{ marginRight: 15 }}
+          disabled={!shelf}
         >
-          <Ionicons name="create-outline" size={24} color="#007AFF" />
+          <Ionicons name="create-outline" size={24} color={shelf ? "#007AFF" : "#D1D1D6"} />
         </TouchableOpacity>
       ),
     });

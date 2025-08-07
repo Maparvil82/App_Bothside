@@ -23,6 +23,12 @@ export default function ShelfEditScreen() {
   }, [navigation, isEditMode]);
 
   const handleSave = async () => {
+    if (!user) {
+      Alert.alert('Error', 'Debes iniciar sesión para guardar una estantería.');
+      setSaving(false);
+      return;
+    }
+    
     if (!name.trim()) {
       Alert.alert('Nombre requerido', 'Por favor, dale un nombre a tu estantería.');
       return;

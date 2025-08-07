@@ -4,6 +4,14 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { StackNavigationProp } from '@react-navigation/stack';
+
+type RootStackParamList = {
+  ShelfView: { shelfId: string, shelfName: string };
+  ShelfEdit: undefined; // No se necesitan parámetros para la creación
+};
+
+type ShelvesListNavigationProp = StackNavigationProp<RootStackParamList, 'ShelfView', 'ShelfEdit'>;
 
 interface Shelf {
   id: string;
@@ -14,7 +22,7 @@ interface Shelf {
 
 export default function ShelvesListScreen() {
   const { user } = useAuth();
-  const navigation = useNavigation();
+  const navigation = useNavigation<ShelvesListNavigationProp>();
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [loading, setLoading] = useState(true);
 
