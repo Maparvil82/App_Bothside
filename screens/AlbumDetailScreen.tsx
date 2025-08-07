@@ -740,22 +740,6 @@ export default function AlbumDetailScreen() {
             ))}
           </View>
         )}
-
-        {/* Sección cuando no está en ninguna lista */}
-        {(!album.user_list_items || album.user_list_items.length === 0) && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📚 Organizar</Text>
-            <View style={styles.noShelvesItem}>
-              <Ionicons name="add-circle-outline" size={20} color="#6c757d" />
-              <View style={styles.noShelvesInfo}>
-                <Text style={styles.noShelvesTitle}>No está en ninguna lista</Text>
-                <Text style={styles.noShelvesDescription}>
-                  Puedes agregar este álbum a una de tus estanterías para organizarlo mejor
-                </Text>
-              </View>
-            </View>
-          </View>
-        )}
       </ScrollView>
 
       {/* Reproductor flotante */}
@@ -1705,31 +1689,6 @@ const styles = StyleSheet.create({
     right: 0,
     top: 0,
     padding: 4,
-  },
-  noShelvesItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#6c757d',
-  },
-  noShelvesInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  noShelvesTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6c757d',
-    marginBottom: 2,
-  },
-  noShelvesDescription: {
-    fontSize: 14,
-    color: '#6c757d',
-    fontStyle: 'italic',
   },
   audioOnlyButton: {
     position: 'absolute',
