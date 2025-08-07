@@ -21,8 +21,8 @@ export interface CollectionSummary {
   collectionValue: number; // suma de avg_price de album_stats
 }
 
-const ALBUM_MILESTONES = [0, 200, 600, 1200, 2400, 4800];
-const VALUE_MILESTONES = [0, 800, 15000, 30000, 15000, 30000];
+const ALBUM_MILESTONES = [0, 20, 60, 120, 240, 480];
+const VALUE_MILESTONES = [0, 800, 2500, 7000, 15000, 30000];
 const TIER_TITLES: CollectorTier[] = ['Novato', 'Aficionado', 'Coleccionista', 'Curador', 'Virtuoso', 'Legendario'];
 
 function computeLevelAndProgress(current: number, milestones: number[]) {
@@ -57,11 +57,22 @@ export const GamificationService = {
     const progressToNext = limiting === 'album' ? album.progressToNext : value.progressToNext;
 
     const nextTargets: { nextAlbums?: number; nextValue?: number } = {};
-    if (limiting === 'album' && album.levelIndex < ALBUM_MILESTONES.length - 1) {
-      nextTargets.nextAlbums = ALBUM_MILESTONES[album.levelIndex + 1];
-    }
-    if (limiting === 'value' && value.levelIndex < VALUE_MILESTONES.length - 1) {
-      nextTargets.nextValue = VALUE_MILESTONES[value.levelIndex + 1];
+
+    const sameLevel = album.levelIndex === value.levelIndex;
+    if (sameLevel) {
+      if (album.levelIndex < ALBUM_MILESTONES.length - 1) {
+        nextTargets.nextAlbums = ALBUM_MILESTONES[album.levelIndex + 1];
+      }
+      if (value.levelIndex < VALUE_MILESTONES.length - 1) {
+        nextTargets.nextValue = VALUE_MILESTONES[value.levelIndex + 1];
+      }
+    } else {
+      if (limiting === 'album' && album.levelIndex < ALBUM_MILESTONES.length - 1) {
+        nextTargets.nextAlbums = ALBUM_MILESTONES[album.levelIndex + 1];
+      }
+      if (limiting === 'value' && value.levelIndex < VALUE_MILESTONES.length - 1) {
+        nextTargets.nextValue = VALUE_MILESTONES[value.levelIndex + 1];
+      }
     }
 
     return {

@@ -21,12 +21,23 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
   const rank = GamificationService.computeCollectorRank(totalAlbums, collectionValue);
   const emoji = TIER_EMOJI[rank.tier];
 
-  const nextAlbumsMissing = rank.nextTargets?.nextAlbums !== undefined
+  const hasNextAlbums = rank.nextTargets?.nextAlbums !== undefined;
+  const hasNextValue = rank.nextTargets?.nextValue !== undefined;
+
+  const nextAlbumsMissing = hasNextAlbums
     ? Math.max(0, (rank.nextTargets!.nextAlbums as number) - totalAlbums)
-    : undefined;
-  const nextValueMissing = rank.nextTargets?.nextValue !== undefined
+    : 0;
+  const nextValueMissing = hasNextValue
     ? Math.max(0, (rank.nextTargets!.nextValue as number) - collectionValue)
-    : undefined;
+    : 0;
+
+  const formatCurrency = (value: number) => {
+    try {
+      return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.ceil(value));
+    } catch {
+      return Math.ceil(value).toString();
+    }
+  };
 
   return (
     <View style={styles.card}>
@@ -46,7 +57,7 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${rank.albumProgressToNext * 100}%` }]} />
           </View>
-          <Text style={styles.progressValue}>{totalAlbums}</Text>
+          <Text style={styles.progressValue}>-{nextAlbumsMissing}</Text>
         </View>
 
         <View style={styles.progressRow}>
@@ -54,18 +65,22 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${rank.valueProgressToNext * 100}%` }]} />
           </View>
-          <Text style={styles.progressValue}>{collectionValue.toFixed(2)} €</Text>
+          <Text style={styles.progressValue}>-{formatCurrency(nextValueMissing)} €</Text>
         </View>
       </View>
 
-      {(nextAlbumsMissing !== undefined || nextValueMissing !== undefined) && (
+      {(hasNextAlbums || hasNextValue) && (
         <View style={styles.nextRow}>
           <Ionicons name="arrow-up-circle" size={16} color="#0d6efd" />
-          <Text style={styles.nextText}>
-            Siguiente nivel: {nextAlbumsMissing !== undefined ? `${nextAlbumsMissing} álbum(es)` : ''}
-            {nextAlbumsMissing !== undefined && nextValueMissing !== undefined ? ' o ' : ''}
-            {nextValueMissing !== undefined ? `${nextValueMissing.toFixed(2)} €` : ''}
-          </Text>
+          {hasNextAlbums && hasNextValue ? (
+            <Text style={styles.nextText}>
+              Necesitas ambos: {nextAlbumsMissing} álbum(es) y {formatCurrency(nextValueMissing)} €
+            </Text>
+          ) : hasNextAlbums ? (
+            <Text style={styles.nextText}>Te faltan: {nextAlbumsMissing} álbum(es)</Text>
+          ) : (
+            <Text style={styles.nextText}>Te faltan: {formatCurrency(nextValueMissing)} €</Text>
+          )}
         </View>
       )}
     </View>
@@ -137,8 +152,8 @@ const styles = StyleSheet.create({
     minWidth: 80,
     textAlign: 'right',
     fontSize: 12,
-    color: '#212529',
-    fontWeight: '600',
+    color: '#dc3545',
+    fontWeight: '700',
   },
   nextRow: {
     flexDirection: 'row',
