@@ -25,6 +25,7 @@ import ShelfConfigScreen from '../screens/ShelfConfigScreen';
 import ShelvesListScreen from '../screens/ShelvesListScreen';
 import ShelfEditScreen from '../screens/ShelfEditScreen';
 import ShelfViewScreen from '../screens/ShelfViewScreen';
+import SelectCellScreen from '../screens/SelectCellScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -123,7 +124,7 @@ const DashboardStack = () => (
       component={ShelfViewScreen}
       options={({ route }: any) => ({
         title: route.params?.shelfName || 'Estantería',
-        header: () => <CustomHeader title={route.params?.shelfName || 'Estantería'} showAvatar={false} />
+        header: () => <CustomHeader title={route.params?.shelfName || 'Estantería'} showBackButton={true} />
       })}
     />
   </Stack.Navigator>
@@ -229,6 +230,14 @@ const AppNavigator = () => (
             <Stack.Screen name="Profile" component={ProfileStack} />
             <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
             <Stack.Screen name="AIChat" component={AIChatScreen} />
+            <Stack.Screen
+              name="SelectCell"
+              component={SelectCellScreen}
+              options={{
+                headerShown: true,
+                header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} />
+              }}
+            />
           </Stack.Navigator>
         </StatsProvider>
       </GemsProvider>

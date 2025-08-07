@@ -24,6 +24,13 @@ import { UserCollectionService } from '../services/database';
 
 const { width } = Dimensions.get('window');
 
+interface Shelf {
+  id: string;
+  name: string;
+  shelf_rows: number;
+  shelf_columns: number;
+}
+
 interface AlbumDetail {
   id: string;
   added_at: string;
@@ -50,6 +57,10 @@ interface AlbumDetail {
     description?: string;
     list_items: Array<{ album_id: string }>;
   }>;
+  shelf_id?: string;
+  shelf_name?: string;
+  location_row?: number;
+  location_column?: number;
 }
 
 export default function AlbumDetailScreen() {
@@ -67,6 +78,7 @@ export default function AlbumDetailScreen() {
   const [showRatioModal, setShowRatioModal] = useState(false);
   const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
   const [showAllEditions, setShowAllEditions] = useState(false);
+  const [shelves, setShelves] = useState<Shelf[]>([]);
   
   const { albumId } = route.params as { albumId: string };
 
@@ -176,8 +188,21 @@ export default function AlbumDetailScreen() {
 
       setAlbum(combinedData);
       
-      // Cargar ediciones disponibles
       await loadAlbumEditions(combinedData.albums?.artist, combinedData.albums?.title);
+
+      // Cargar estanterías del usuario de forma segura
+      if(user) {
+        const { data: userShelves, error: userShelvesError } = await supabase
+          .from('shelves')
+          .select('id, name, shelf_rows, shelf_columns')
+          .eq('user_id', user.id);
+        
+        if (userShelvesError) {
+          console.error('Error loading user shelves:', userShelvesError);
+        } else {
+          setShelves(userShelves || []);
+        }
+      }
 
     } catch (error) {
       console.error('Error processing album detail:', error);
@@ -740,6 +765,25 @@ export default function AlbumDetailScreen() {
             ))}
           </View>
         )}
+
+        {/* Nueva Sección de Ubicación */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Asignar a Estantería</Text>
+          {shelves.map((shelf) => (
+            <TouchableOpacity
+              key={shelf.id}
+              style={styles.shelfSelectItem}
+              onPress={() => (navigation as any).navigate('SelectCell', { user_collection_id: album.id, shelf: shelf })}
+            >
+              <Text style={styles.shelfSelectItemText}>{shelf.name}</Text>
+              <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+            </TouchableOpacity>
+          ))}
+          {shelves.length === 0 && (
+            <Text style={styles.noShelvesText}>No tienes estanterías. Crea una para poder asignar una ubicación.</Text>
+          )}
+        </View>
+
       </ScrollView>
 
       {/* Reproductor flotante */}
@@ -2038,5 +2082,56 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  currentLocationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  locationShelfName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 2,
+  },
+  locationPosition: {
+    fontSize: 12,
+    color: '#6c757d',
+  },
+  selectShelfTitle: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#212529',
+    marginBottom: 8,
+  },
+  shelfSelectItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  shelfSelectItemText: {
+    fontSize: 14,
+    color: '#212529',
+    fontWeight: '500',
+  },
+  noShelvesText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
+    fontStyle: 'italic',
+    marginTop: 8,
   },
 }); 
