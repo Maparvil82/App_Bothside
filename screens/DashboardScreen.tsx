@@ -20,6 +20,7 @@ import { AudioNotesSection } from '../components/AudioNotesSection';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { TopItemsLineChart } from '../components/TopItemsLineChart';
 import ShelfGrid from '../components/ShelfGrid';
+import { CollectorRankCard } from '../components/CollectorRankCard';
 
 const { width } = Dimensions.get('window');
 
@@ -475,8 +476,9 @@ export default function DashboardScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
+      {/* Rango de Coleccionista */}
+      <CollectorRankCard totalAlbums={stats.totalAlbums} collectionValue={stats.collectionValue} />
       
-
       {/* Valor de la colección */}
       {stats.collectionValue > 0 && (
         <View style={styles.valueCard}>

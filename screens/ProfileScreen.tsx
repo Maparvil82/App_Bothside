@@ -11,16 +11,20 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { ProfileService, UserProfile } from '../services/database';
 import * as ImagePicker from 'expo-image-picker';
+import { CollectorRankCard } from '../components/CollectorRankCard';
+import { GamificationService, CollectionSummary } from '../services/gamification';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [summary, setSummary] = useState<CollectionSummary | null>(null);
 
   useEffect(() => {
     if (user?.id) {
       loadProfile();
+      loadCollectionSummary();
     }
   }, [user?.id]);
 
@@ -33,6 +37,16 @@ export const ProfileScreen: React.FC = () => {
       console.error('Error loading profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCollectionSummary = async () => {
+    try {
+      if (!user?.id) return;
+      const result = await GamificationService.getUserCollectionSummary(user.id);
+      setSummary(result);
+    } catch (error) {
+      console.error('Error loading collection summary:', error);
     }
   };
 
@@ -132,6 +146,10 @@ export const ProfileScreen: React.FC = () => {
         <Text style={styles.email}>{user?.email}</Text>
         <Text style={styles.userId}>ID: {user?.id}</Text>
       </View>
+
+      {summary && (
+        <CollectorRankCard totalAlbums={summary.totalAlbums} collectionValue={summary.collectionValue} />
+      )}
 
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Configuración</Text>
