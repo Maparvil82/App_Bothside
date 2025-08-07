@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,6 @@ import {
   Modal,
   SafeAreaView,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Linking,
   Dimensions,
 } from 'react-native';
@@ -21,12 +20,7 @@ import { supabase } from '../lib/supabase';
 import { getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
-import { Video, ResizeMode, AVPlaybackStatus } from 'expo-av';
 import { UserCollectionService } from '../services/database';
-import { WebView } from 'react-native-webview';
-import { Audio } from 'expo-av';
-import { ENV } from '../config/env';
-import { YouTubeAudioService } from '../services/youtube-audio';
 
 const { width } = Dimensions.get('window');
 
@@ -67,65 +61,18 @@ export default function AlbumDetailScreen() {
   const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
   const [floatingAudioUri, setFloatingAudioUri] = useState('');
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
-  const [showVideoPlayer, setShowVideoPlayer] = useState(false);
-  const [currentVideoUrl, setCurrentVideoUrl] = useState('');
-  const [currentVideoTitle, setCurrentVideoTitle] = useState('');
-  const [videoLoading, setVideoLoading] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const [showFloatingAudioButton, setShowFloatingAudioButton] = useState(false);
-  const [videoModalVisible, setVideoModalVisible] = useState(false);
-  const [selectedVideoUrl, setSelectedVideoUrl] = useState('');
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [editions, setEditions] = useState<any[]>([]);
   const [editionsLoading, setEditionsLoading] = useState(false);
   const [showRatioModal, setShowRatioModal] = useState(false);
   const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
   const [showAllEditions, setShowAllEditions] = useState(false);
-  const [videoRef, setVideoRef] = useState<Video | null>(null);
-  const [videoStatus, setVideoStatus] = useState<AVPlaybackStatus | null>(null);
-  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [audioPlayerVisible, setAudioPlayerVisible] = useState(false);
-  const [currentAudioTrack, setCurrentAudioTrack] = useState<{
-    title: string;
-    artist: string;
-    coverUrl: string;
-    youtubeUrl: string;
-  } | null>(null);
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [audioProgress, setAudioProgress] = useState(0);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
-
+  
   const { albumId } = route.params as { albumId: string };
 
   useEffect(() => {
     loadAlbumDetail();
-    
-    // Configurar audio para reproducción
-    const setupAudio = async () => {
-      try {
-        await Audio.setAudioModeAsync({
-          allowsRecordingIOS: false,
-          staysActiveInBackground: true,
-          playsInSilentModeIOS: true,
-          shouldDuckAndroid: true,
-          playThroughEarpieceAndroid: false,
-        });
-      } catch (error) {
-        console.error('Error setting up audio:', error);
-      }
-    };
-    
-    setupAudio();
   }, [albumId]);
-
-  // Limpiar el audio cuando el componente se desmonte
-  useEffect(() => {
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, [sound]);
 
   const loadAlbumDetail = async () => {
     if (!user || !albumId) return;
@@ -170,11 +117,6 @@ export default function AlbumDetailScreen() {
         `)
         .eq('user_id', user.id);
 
-      console.log('📚 Shelf query params:', { albumId, userId: user.id });
-      console.log('📚 Shelf data:', shelfData);
-      console.log('📚 Shelf error:', shelfError);
-      console.log('📚 Shelf data length:', shelfData?.length);
-
       // Obtener list_items que pertenezcan a estanterías del usuario actual
       const { data: listItemsData, error: listItemsError } = await supabase
         .from('list_items')
@@ -183,10 +125,6 @@ export default function AlbumDetailScreen() {
           album_id
         `)
         .eq('album_id', albumId);
-
-      console.log('📚 List items data:', listItemsData);
-      console.log('📚 List items error:', listItemsError);
-      console.log('📚 List items length:', listItemsData?.length);
 
       // También verificar listas públicas donde podría estar el álbum
       const { data: publicListItems, error: publicListError } = await supabase
@@ -204,9 +142,6 @@ export default function AlbumDetailScreen() {
         .eq('album_id', albumId)
         .eq('user_lists.is_public', true);
 
-      console.log('📚 Public list items:', publicListItems);
-      console.log('📚 Public list items length:', publicListItems?.length);
-
       // Combinar list_items del usuario y públicos
       const allListItems = [
         ...(listItemsData || []),
@@ -219,9 +154,6 @@ export default function AlbumDetailScreen() {
           item.list_id === shelf.id
         );
       }) || [];
-
-      console.log('📚 Shelves with album:', shelvesWithAlbum);
-      console.log('📚 Shelves with album length:', shelvesWithAlbum.length);
 
       if (shelfError) {
         console.error('Error loading shelves:', shelfError);
@@ -244,31 +176,7 @@ export default function AlbumDetailScreen() {
 
       setAlbum(combinedData);
       
-      // Logs simplificados para debug
-      console.log('📀 Album detail loaded:', combinedData.albums?.title);
-      console.log('📀 Catalog number:', combinedData.albums?.catalog_no);
-      console.log('📀 Country:', combinedData.albums?.country);
-      console.log('📀 Album stats:', combinedData.albums?.album_stats);
-      console.log('📀 Avg price:', combinedData.albums?.album_stats?.avg_price);
-      console.log('📀 Want count:', combinedData.albums?.album_stats?.want);
-      console.log('📀 Have count:', combinedData.albums?.album_stats?.have);
-      console.log('📀 Audio note exists:', !!combinedData.audio_note);
-      console.log('📚 Shelves with album:', shelvesWithAlbum);
-      console.log('📚 List items data:', listItemsData);
-      console.log('📚 User list items:', combinedData.user_list_items);
-      console.log('📚 User list items length:', combinedData.user_list_items?.length);
-      
-      // Procesar URLs de YouTube de forma más segura
-      const youtubeUrls = combinedData.albums?.album_youtube_urls
-        ?.filter(video => video && video.url)
-        ?.map(video => video.url)
-        ?.filter(Boolean) || [];
-
       // Cargar ediciones disponibles
-      console.log('🎯 Llamando loadAlbumEditions con:', {
-        artist: combinedData.albums?.artist,
-        title: combinedData.albums?.title
-      });
       await loadAlbumEditions(combinedData.albums?.artist, combinedData.albums?.title);
 
     } catch (error) {
@@ -357,7 +265,18 @@ export default function AlbumDetailScreen() {
         code: (error as any)?.code,
         details: (error as any)?.details
       });
-      Alert.alert('Error', 'No se pudo guardar la nota de audio');
+      
+      let errorMessage = 'No se pudo guardar la nota de audio';
+      if (error instanceof Error) {
+        if (error.message.includes('autenticado') || error.message.includes('authentication')) {
+          errorMessage = 'Error de autenticación. Por favor, inicia sesión nuevamente.';
+        } else if (error.message.includes('network') || error.message.includes('Network')) {
+          errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
+        } else if (error.message.includes('permission') || error.message.includes('forbidden')) {
+          errorMessage = 'No tienes permisos para realizar esta acción.';
+        }
+      }
+      Alert.alert('Error', errorMessage);
     }
   };
 
@@ -374,7 +293,6 @@ export default function AlbumDetailScreen() {
           text: 'Ver en Discogs',
           onPress: async () => {
             try {
-              // Buscar el álbum en Discogs
               const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
               const discogsUrl = `https://www.discogs.com/search/?q=${encodeURIComponent(searchQuery)}&type=release`;
               console.log('🔗 Abriendo Discogs:', discogsUrl);
@@ -395,7 +313,6 @@ export default function AlbumDetailScreen() {
           text: 'Vender en Marketplace',
           onPress: async () => {
             try {
-              // URL del marketplace de Discogs para vender
               const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
               const marketplaceUrl = `https://www.discogs.com/sell/release?q=${encodeURIComponent(searchQuery)}`;
               console.log('💰 Abriendo Marketplace:', marketplaceUrl);
@@ -414,227 +331,6 @@ export default function AlbumDetailScreen() {
         },
       ]
     );
-  };
-
-  const handleOpenYouTubeVideo = async (url: string) => {
-    try {
-      
-      const videoId = extractYouTubeVideoId(url);
-      if (!videoId) {
-        Alert.alert('Error', 'No se pudo procesar la URL del video');
-        return;
-      }
-
-      // Usar una URL de embed más compatible con parámetros adicionales para autoplay
-      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent('https://www.youtube.com')}&widget_referrer=${encodeURIComponent('https://www.youtube.com')}&mute=0&controls=1&showinfo=1`;
-      const videoTitle = `Video - ${album?.albums.artist}`;
-      
-      setCurrentVideoUrl(embedUrl);
-      setCurrentVideoTitle(videoTitle);
-      setShowVideoPlayer(true);
-      
-    } catch (error) {
-      console.error('🎥 Error al abrir video:', error);
-      Alert.alert('Error', 'No se pudo abrir el video');
-    }
-  };
-
-  const handleOpenInYouTube = async (url: string) => {
-    try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert('Error', 'No se pudo abrir YouTube');
-      }
-    } catch (error) {
-      console.error('Error opening YouTube:', error);
-      Alert.alert('Error', 'No se pudo abrir YouTube');
-    }
-  };
-
-  const extractYouTubeVideoId = (url: string): string | null => {
-    const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const match = url.match(regex);
-    return match ? match[1] : null;
-  };
-
-  // Función para obtener URL directa del video de YouTube
-  const getDirectVideoUrl = async (youtubeUrl: string): Promise<string> => {
-    const videoId = extractYouTubeVideoId(youtubeUrl);
-    if (!videoId) return '';
-    
-    try {
-      // Usar un servicio público de extracción de YouTube
-      const response = await fetch(`https://api.vevioz.com/@api/button/videos/${videoId}`);
-      
-      if (response.ok) {
-        const html = await response.text();
-        // Extraer URL del HTML (simplificado)
-        const urlMatch = html.match(/href="([^"]*\.mp4[^"]*)"/);
-        if (urlMatch && urlMatch[1]) {
-          return urlMatch[1];
-        }
-      }
-    } catch (error) {
-      console.error('Error extracting YouTube URL:', error);
-    }
-    
-    // Fallback: usar una URL de ejemplo si falla la extracción
-    return `https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4`;
-  };
-
-  // Función para reproducir audio de YouTube usando el servicio
-  const handlePlayYouTubeAudio = async () => {
-    if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
-      Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
-      return;
-    }
-
-    try {
-      setAudioPlayerVisible(true);
-      setVideoLoading(true);
-
-      // Tomar el primer video disponible
-      const firstVideo = album.albums.album_youtube_urls[0];
-      console.log('🎵 Reproduciendo video:', firstVideo.url);
-
-      // Usar el servicio de YouTube Audio
-      const result = await YouTubeAudioService.extractAudioFromYouTube(firstVideo.url);
-
-      if (result.success && result.audioUrl && result.videoInfo) {
-        console.log('🎵 Audio extraído exitosamente:', result.audioUrl);
-        
-        // Configurar el track actual
-        setCurrentAudioTrack({
-          title: result.videoInfo.title,
-          artist: album.albums.artist,
-          coverUrl: album.albums.cover_url || '',
-          youtubeUrl: firstVideo.url
-        });
-
-        // Cargar y reproducir el audio
-        await loadAndPlayAudio(result.audioUrl);
-        
-      } else {
-        console.error('🎵 Error en la extracción:', result.error);
-        Alert.alert('Error', 'No se pudo extraer el audio del video. Intenta con otro video.');
-        setAudioPlayerVisible(false);
-      }
-
-    } catch (error) {
-      console.error('Error playing YouTube audio:', error);
-      Alert.alert('Error', 'No se pudo reproducir el audio. Intenta más tarde.');
-      setAudioPlayerVisible(false);
-    } finally {
-      setVideoLoading(false);
-    }
-  };
-
-  // Función para cargar y reproducir audio
-  const loadAndPlayAudio = async (audioUrl: string) => {
-    try {
-      console.log('🎵 Cargando audio desde:', audioUrl);
-
-      // Limpiar audio anterior si existe
-      if (sound) {
-        await sound.unloadAsync();
-      }
-
-      // Crear nuevo objeto de audio
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUrl },
-        { shouldPlay: true },
-        onPlaybackStatusUpdate
-      );
-
-      setSound(newSound);
-      setIsAudioPlaying(true);
-      console.log('🎵 Audio cargado y reproduciendo');
-
-    } catch (error) {
-      console.error('Error loading audio:', error);
-      Alert.alert('Error', 'No se pudo cargar el audio. Verifica tu conexión a internet.');
-      setAudioPlayerVisible(false);
-    }
-  };
-
-  // Función para actualizar el estado de reproducción
-  const onPlaybackStatusUpdate = (status: any) => {
-    if (status.isLoaded) {
-      setIsAudioPlaying(status.isPlaying);
-      if (status.durationMillis) {
-        const progress = status.positionMillis / status.durationMillis;
-        setAudioProgress(progress);
-      }
-    }
-  };
-
-  // Función para toggle play/pause
-  const handleToggleAudio = async () => {
-    if (!sound) {
-      console.log('🎵 No hay sonido cargado, iniciando reproducción...');
-      // Si no hay sonido cargado, intentar cargar el audio
-      if (currentAudioTrack) {
-        await loadAndPlayAudio(currentAudioTrack.youtubeUrl);
-      }
-      return;
-    }
-
-    try {
-      const status = await sound.getStatusAsync();
-      
-      if (status.isLoaded) {
-        if (isAudioPlaying) {
-          await sound.pauseAsync();
-          console.log('🎵 Audio pausado');
-        } else {
-          await sound.playAsync();
-          console.log('🎵 Audio reanudado');
-        }
-      } else {
-        console.log('🎵 Sonido no cargado, recargando...');
-        // Si el sonido no está cargado, recargarlo
-        if (currentAudioTrack) {
-          await loadAndPlayAudio(currentAudioTrack.youtubeUrl);
-        }
-      }
-    } catch (error) {
-      console.error('Error toggling audio:', error);
-      // Si hay error, intentar recargar el audio
-      if (currentAudioTrack) {
-        await loadAndPlayAudio(currentAudioTrack.youtubeUrl);
-      }
-    }
-  };
-
-  // Función para cerrar el reproductor
-  const handleCloseAudioPlayer = async () => {
-    try {
-      if (sound) {
-        const status = await sound.getStatusAsync();
-        if (status.isLoaded) {
-          await sound.stopAsync();
-          await sound.unloadAsync();
-        }
-        setSound(null);
-      }
-    } catch (error) {
-      console.error('Error closing audio player:', error);
-    }
-    
-    setAudioPlayerVisible(false);
-    setIsAudioPlaying(false);
-    setCurrentAudioTrack(null);
-    setAudioProgress(0);
-  };
-
-  const handleStopYouTubeAudio = async () => {
-    // Cleanup si es necesario en el futuro
-  };
-
-  const handleToggleYouTubeAudio = () => {
-    handlePlayYouTubeAudio();
   };
 
   const handleOpenEdition = async (uri: string) => {
@@ -725,7 +421,34 @@ export default function AlbumDetailScreen() {
     }
   };
 
+  // ========== FUNCIONES DE YOUTUBE (ABRIR DIRECTAMENTE) ==========
 
+  // Abrir video de YouTube en el navegador o app
+  const handlePlayYouTubeVideo = async () => {
+    if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
+      Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
+      return;
+    }
+
+    try {
+      const firstVideo = album.albums.album_youtube_urls[0];
+      const youtubeUrl = firstVideo.url;
+      
+      console.log('🎵 Abriendo YouTube:', youtubeUrl);
+      
+      const supported = await Linking.canOpenURL(youtubeUrl);
+      if (supported) {
+        await Linking.openURL(youtubeUrl);
+      } else {
+        Alert.alert('Error', 'No se pudo abrir el video de YouTube');
+      }
+    } catch (error) {
+      console.error('Error abriendo YouTube:', error);
+      Alert.alert('Error', 'No se pudo abrir el video de YouTube');
+    }
+  };
+
+  // ========== FIN FUNCIONES YOUTUBE ==========
 
   if (loading) {
     return (
@@ -757,6 +480,7 @@ export default function AlbumDetailScreen() {
         <Text style={styles.headerTitle}>{album.albums.title}</Text>
         <View style={styles.headerRight} />
       </View>
+      
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Portada */}
         <View style={styles.coverSection}>
@@ -843,7 +567,7 @@ export default function AlbumDetailScreen() {
                 </>
               )}
               {album.albums.country && (
-                <Text style={styles.country}>{album.albums.country}</Text>
+                <Text style={styles.countryText}>{album.albums.country}</Text>
               )}
             </View>
           )}
@@ -961,16 +685,16 @@ export default function AlbumDetailScreen() {
         {/* Sección de YouTube Videos */}
         {youtubeUrls.length > 0 && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Videos</Text>
-            {youtubeUrls.map((url, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.videoButton}
-                onPress={() => handlePlayYouTubeAudio()}
-              >
-                <Text style={styles.videoButtonText}>Reproducir audio {index + 1}</Text>
-              </TouchableOpacity>
-            ))}
+            <Text style={styles.sectionTitle}>Videos de YouTube</Text>
+            <TouchableOpacity
+              style={styles.youtubeButton}
+              onPress={handlePlayYouTubeVideo}
+            >
+              <Ionicons name="logo-youtube" size={24} color="#fff" />
+              <Text style={styles.youtubeButtonText}>
+                Ver en YouTube ({youtubeUrls.length} video{youtubeUrls.length > 1 ? 's' : ''})
+              </Text>
+            </TouchableOpacity>
           </View>
         )}
 
@@ -1058,103 +782,6 @@ export default function AlbumDetailScreen() {
         onClose={() => setShowFloatingPlayer(false)}
       />
 
-      {/* Modal del reproductor de audio */}
-      <Modal
-        visible={showVideoPlayer}
-        animationType="slide"
-        presentationStyle="pageSheet"
-      >
-        <SafeAreaView style={styles.audioModalContainer}>
-          <View style={styles.audioModalHeader}>
-            <TouchableOpacity 
-              onPress={() => setShowVideoPlayer(false)}
-              style={styles.audioCloseButton}
-            >
-              <Ionicons name="close" size={24} color="#fff" />
-            </TouchableOpacity>
-            <Text style={styles.audioModalTitle}>{currentVideoTitle}</Text>
-            <TouchableOpacity 
-              onPress={() => {
-                const videoId = extractYouTubeVideoId(currentVideoUrl);
-                if (videoId) {
-                  const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-                  Linking.openURL(youtubeUrl);
-                }
-              }}
-              style={styles.audioYouTubeButton}
-            >
-              <Ionicons name="logo-youtube" size={24} color="#FF0000" />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.audioPlayerContainer}>
-            {/* Área de visualización del álbum */}
-            <View style={styles.audioAlbumArt}>
-              {album?.albums.cover_url ? (
-                <Image 
-                  source={{ uri: album.albums.cover_url }} 
-                  style={styles.audioAlbumImage}
-                  resizeMode="cover"
-                />
-              ) : (
-                <View style={styles.audioAlbumPlaceholder}>
-                  <Ionicons name="musical-notes" size={48} color="#fff" />
-                </View>
-              )}
-            </View>
-            
-            {/* Información del álbum */}
-            <View style={styles.audioInfo}>
-              <Text style={styles.audioArtist}>{album?.albums.artist}</Text>
-              <Text style={styles.audioTitle}>{album?.albums.title}</Text>
-            </View>
-            
-            {/* Controles de reproducción */}
-            <View style={styles.audioControls}>
-              <TouchableOpacity style={styles.audioControlButton}>
-                <Ionicons name="play-skip-back" size={32} color="#fff" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.audioPlayButton}>
-                <Ionicons name="play" size={48} color="#fff" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity style={styles.audioControlButton}>
-                <Ionicons name="play-skip-forward" size={32} color="#fff" />
-              </TouchableOpacity>
-            </View>
-            
-            {/* Barra de progreso */}
-            <View style={styles.audioProgress}>
-              <View style={styles.audioProgressBar}>
-                <View style={styles.audioProgressFill} />
-              </View>
-              <View style={styles.audioTimeInfo}>
-                <Text style={styles.audioTimeText}>0:00</Text>
-                <Text style={styles.audioTimeText}>0:00</Text>
-              </View>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
-      
-      {/* Botón flotante para reproducir audio de YouTube */}
-      {youtubeUrls.length > 0 && (
-        <>
-          <TouchableOpacity
-            style={styles.floatingAudioButton}
-            onPress={handleToggleYouTubeAudio}
-            activeOpacity={0.8}
-          >
-            <Ionicons
-              name="play-circle"
-              size={24}
-              color="#fff"
-            />
-          </TouchableOpacity>
-        </>
-      )}
-      
       {/* Audio Recorder Modal */}
       <AudioRecorder
         visible={showAudioRecorder}
@@ -1211,63 +838,11 @@ export default function AlbumDetailScreen() {
               </>
             )}
           </View>
-        </View>
-      </Modal>
-
-      {/* Reproductor de audio flotante */}
-      {audioPlayerVisible && currentAudioTrack && (
-        <View style={styles.floatingAudioPlayer}>
-          {/* Portada del álbum */}
-          <View style={styles.audioPlayerCover}>
-            {currentAudioTrack.coverUrl ? (
-              <Image 
-                source={{ uri: currentAudioTrack.coverUrl }} 
-                style={styles.audioPlayerCoverImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.audioPlayerCoverPlaceholder}>
-                <Ionicons name="musical-notes" size={20} color="#fff" />
-              </View>
-            )}
-          </View>
-          
-          {/* Información del track */}
-          <View style={styles.audioPlayerInfo}>
-            <Text style={styles.audioPlayerTitle} numberOfLines={1}>
-              {currentAudioTrack.title}
-            </Text>
-            <Text style={styles.audioPlayerArtist} numberOfLines={1}>
-              {currentAudioTrack.artist}
-            </Text>
-          </View>
-          
-          {/* Controles */}
-          <View style={styles.audioPlayerControls}>
-            <TouchableOpacity 
-              style={styles.audioPlayerPlayButton}
-              onPress={handleToggleAudio}
-            >
-              <Ionicons 
-                name={isAudioPlaying ? "pause" : "play"} 
-                size={24} 
-                color="#fff" 
-              />
-            </TouchableOpacity>
-          </View>
-          
-          {/* Botón cerrar */}
-          <TouchableOpacity 
-            style={styles.audioPlayerCloseButton}
-            onPress={handleCloseAudioPlayer}
-          >
-            <Ionicons name="close" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
-      )}
-    </SafeAreaView>
-  );
-}
+                  </View>
+        </Modal>
+      </SafeAreaView>
+    );
+  }
 
 const styles = StyleSheet.create({
   container: {
@@ -2417,5 +1992,108 @@ const styles = StyleSheet.create({
   },
   audioPlayerCloseButton: {
     padding: 4,
+  },
+  placeholderText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  placeholderSubtext: {
+    fontSize: 12,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  youtubeButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF0000',
+    padding: 16,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  youtubeButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '600',
+  },
+  youtubePlayerModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  youtubePlayerContainer: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 12,
+    padding: 20,
+    margin: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  youtubePlayerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  youtubePlayerTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    flex: 1,
+    textAlign: 'center',
+  },
+  youtubeCloseButton: {
+    padding: 8,
+  },
+  youtubeThumbnail: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  youtubeThumbnailPlaceholder: {
+    width: 120,
+    height: 120,
+    borderRadius: 8,
+    backgroundColor: '#333',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+    alignSelf: 'center',
+  },
+  youtubeAudioInfo: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  youtubeAudioTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  youtubeAudioArtist: {
+    fontSize: 14,
+    color: '#ccc',
+    textAlign: 'center',
+  },
+  youtubeControls: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  youtubeModalPlayButton: {
+    backgroundColor: '#FF0000',
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 

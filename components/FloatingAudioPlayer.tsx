@@ -84,7 +84,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       
       setIsLoading(true);
       setError(null);
-      setIsPlaying(false); // Resetear estado de reproducción
+      setIsPlaying(false);
       
       if (sound) {
         console.log('🔍 FloatingAudioPlayer: Unloading previous sound');
@@ -93,13 +93,42 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
 
       console.log('🔍 FloatingAudioPlayer: Creating new sound...');
       
-      // Verificar si la URI es válida
-      if (!audioUri.startsWith('file://') && !audioUri.startsWith('http')) {
+      // Validación mejorada de URI
+      if (!audioUri.startsWith('file://') && !audioUri.startsWith('http://') && !audioUri.startsWith('https://')) {
         const errorMsg = `Invalid URI format: ${audioUri}`;
         console.error('❌ FloatingAudioPlayer:', errorMsg);
         setError(errorMsg);
         setIsLoading(false);
         return;
+      }
+
+      // Para URLs HTTP/HTTPS, verificar que sean accesibles
+      if (audioUri.startsWith('http')) {
+        // Skip validation for known good fallback URLs
+        const knownGoodUrls = [
+          'cs.uic.edu',
+          'sample-videos.com'
+        ];
+        
+        const isKnownGoodUrl = knownGoodUrls.some(domain => audioUri.includes(domain));
+        
+        if (!isKnownGoodUrl) {
+          try {
+            console.log('🔍 FloatingAudioPlayer: Validating HTTP URL...');
+            const response = await fetch(audioUri, { method: 'HEAD' });
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            console.log('🔍 FloatingAudioPlayer: URL validation successful');
+          } catch (fetchError) {
+            console.error('❌ FloatingAudioPlayer: URL validation failed:', fetchError);
+            setError(`URL no accesible: ${fetchError}`);
+            setIsLoading(false);
+            return;
+          }
+        } else {
+          console.log('🔍 FloatingAudioPlayer: Skipping validation for known good URL');
+        }
       }
       
       console.log('🔍 FloatingAudioPlayer: URI format is valid, creating sound...');
@@ -113,13 +142,15 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         playThroughEarpieceAndroid: false,
       });
       
+      // Crear el sonido con configuración más robusta
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUri },
         { 
-          shouldPlay: true, // Cambiar a true para reproducción automática
+          shouldPlay: false, // No reproducir automáticamente para mejor control
           progressUpdateIntervalMillis: 100,
           positionMillis: 0,
           isLooping: false,
+          volume: 1.0,
         },
         onPlaybackStatusUpdate
       );
@@ -127,7 +158,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       console.log('🔍 FloatingAudioPlayer: Sound created successfully');
       setSound(newSound);
       
-      // Intentar cargar el audio inmediatamente
+      // Verificar que el audio se cargó correctamente
       const status = await newSound.getStatusAsync();
       console.log('🔍 FloatingAudioPlayer: Initial sound status:', status);
       
@@ -135,15 +166,19 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         const errorMsg = 'Failed to load audio file';
         console.error('❌ FloatingAudioPlayer:', errorMsg);
         setError(errorMsg);
+        // Limpiar el sonido si no se pudo cargar
+        await newSound.unloadAsync();
+        setSound(null);
       } else {
-        // Si el audio se cargó correctamente, reproducir automáticamente
-        console.log('🔍 FloatingAudioPlayer: Audio loaded successfully, starting playback...');
+        console.log('🔍 FloatingAudioPlayer: Audio loaded successfully');
+        // Iniciar reproducción automáticamente
         try {
           await newSound.playAsync();
           console.log('🔍 FloatingAudioPlayer: Auto-play started');
-          setIsPlaying(true); // Establecer estado de reproducción
+          setIsPlaying(true);
         } catch (playError) {
           console.error('❌ FloatingAudioPlayer: Error starting auto-play:', playError);
+          setError(`Error de reproducción: ${playError}`);
           setIsPlaying(false);
         }
       }
@@ -152,9 +187,20 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       
     } catch (error) {
       console.error('❌ FloatingAudioPlayer: Error loading audio:', error);
-      setError(`Error loading audio: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setError(`Error loading audio: ${errorMessage}`);
       setIsLoading(false);
       setIsPlaying(false);
+      
+      // Limpiar el sonido en caso de error
+      if (sound) {
+        try {
+          await sound.unloadAsync();
+        } catch (cleanupError) {
+          console.warn('⚠️ FloatingAudioPlayer: Error during cleanup:', cleanupError);
+        }
+        setSound(null);
+      }
     }
   };
 
@@ -268,31 +314,50 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         </View>
 
         <View style={styles.controls}>
-          <TouchableOpacity
-            style={[styles.controlButton, isLoading && styles.disabledButton]}
-            onPress={togglePlayPause}
-            disabled={isLoading}
-          >
-            <Ionicons
-              name={isLoading ? 'hourglass' : (isPlaying ? 'pause' : 'play')}
-              size={20}
-              color={isLoading ? '#999' : '#007AFF'}
-            />
-          </TouchableOpacity>
-
-          <View style={styles.progressContainer}>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${progress * 100}%` },
-                ]}
-              />
+          {error ? (
+            // Mostrar error al usuario
+            <View style={styles.errorContainer}>
+              <Ionicons name="warning" size={16} color="#dc3545" />
+              <Text style={styles.errorText} numberOfLines={2}>
+                Error de audio
+              </Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={loadAudio}
+              >
+                <Ionicons name="refresh" size={16} color="#007AFF" />
+              </TouchableOpacity>
             </View>
-            <Text style={styles.timeText}>
-              {formatTime(position)} / {formatTime(duration)}
-            </Text>
-          </View>
+          ) : (
+            // Controles normales
+            <>
+              <TouchableOpacity
+                style={[styles.controlButton, isLoading && styles.disabledButton]}
+                onPress={togglePlayPause}
+                disabled={isLoading}
+              >
+                <Ionicons
+                  name={isLoading ? 'hourglass' : (isPlaying ? 'pause' : 'play')}
+                  size={20}
+                  color={isLoading ? '#999' : '#007AFF'}
+                />
+              </TouchableOpacity>
+
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View
+                    style={[
+                      styles.progressFill,
+                      { width: `${progress * 100}%` },
+                    ]}
+                  />
+                </View>
+                <Text style={styles.timeText}>
+                  {formatTime(position)} / {formatTime(duration)}
+                </Text>
+              </View>
+            </>
+          )}
 
           <TouchableOpacity
             style={styles.closeButton}
@@ -382,5 +447,22 @@ const styles = StyleSheet.create({
     padding: 8,
     marginLeft: 4,
     marginTop: 4, // Mover el botón más abajo para alinearlo con el botón de play
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f8d7da',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 8,
+  },
+  errorText: {
+    flex: 1,
+    marginLeft: 8,
+    fontSize: 12,
+    color: '#721c24',
+  },
+  retryButton: {
+    padding: 4,
   },
 }); 
