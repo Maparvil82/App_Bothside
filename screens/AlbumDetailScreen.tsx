@@ -107,7 +107,8 @@ export default function AlbumDetailScreen() {
               album_genres ( genres ( name ) ),
               album_styles ( styles ( name ) ),
               tracks ( * ),
-              album_youtube_urls ( url )
+              album_youtube_urls ( url ),
+              album_stats ( avg_price, want, have )
             ),
             shelves ( name )
           `)
