@@ -6,6 +6,8 @@ import {
   StyleSheet,
   Alert,
   Image,
+  ScrollView,
+  SafeAreaView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +27,8 @@ export const ProfileScreen: React.FC = () => {
     if (user?.id) {
       loadProfile();
       loadCollectionSummary();
+      // Actualizar ranking persistido
+      GamificationService.upsertUserRanking(user.id).catch((e) => console.warn('upsertUserRanking error:', e));
     }
   }, [user?.id]);
 
@@ -127,69 +131,71 @@ export const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.profileInfo}>
-        <TouchableOpacity style={styles.avatarContainer} onPress={handleChangeAvatar}>
-          {profile?.avatar_url ? (
-            <Image
-              source={{ uri: profile.avatar_url }}
-              style={styles.avatar}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.avatar}>
-              <Text style={styles.avatarText}>{getInitials()}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-        <Text style={styles.changeAvatarText}>Toca para cambiar foto</Text>
-        <Text style={styles.email}>{user?.email}</Text>
-        <Text style={styles.userId}>ID: {user?.id}</Text>
-      </View>
+    <SafeAreaView style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <View style={styles.profileInfo}>
+          <TouchableOpacity style={styles.avatarContainer} onPress={handleChangeAvatar}>
+            {profile?.avatar_url ? (
+              <Image
+                source={{ uri: profile.avatar_url }}
+                style={styles.avatar}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.avatar}>
+                <Text style={styles.avatarText}>{getInitials()}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.changeAvatarText}>Toca para cambiar foto</Text>
+          <Text style={styles.email}>{user?.email}</Text>
+          <Text style={styles.userId}>ID: {user?.id}</Text>
+        </View>
 
-      {summary && (
-        <CollectorRankCard totalAlbums={summary.totalAlbums} collectionValue={summary.collectionValue} />
-      )}
+        {summary && (
+          <CollectorRankCard totalAlbums={summary.totalAlbums} collectionValue={summary.collectionValue} />
+        )}
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Configuración</Text>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Notificaciones</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Privacidad</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Acerca de</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={styles.menuItem}
-          onPress={() => navigation.navigate('Admin' as never)}
-        >
-          <Text style={styles.menuItemText}>Administración</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Configuración</Text>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Notificaciones</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Privacidad</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Acerca de</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => navigation.navigate('Admin' as never)}
+          >
+            <Text style={styles.menuItemText}>Administración</Text>
+          </TouchableOpacity>
+        </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Cuenta</Text>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Cambiar contraseña</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Eliminar cuenta</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Cuenta</Text>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Cambiar contraseña</Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Eliminar cuenta</Text>
+          </TouchableOpacity>
+        </View>
 
-      <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
-        <Text style={styles.signOutButtonText}>Cerrar sesión</Text>
-      </TouchableOpacity>
-    </View>
+        <TouchableOpacity style={styles.signOutButton} onPress={handleSignOut}>
+          <Text style={styles.signOutButtonText}>Cerrar sesión</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 
@@ -197,6 +203,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  scrollContent: {
+    paddingBottom: 40,
   },
   profileInfo: {
     alignItems: 'center',
@@ -262,6 +271,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#ff3b30',
     marginHorizontal: 20,
     marginTop: 30,
+    marginBottom: 20,
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',

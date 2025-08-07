@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GamificationService, CollectorRank } from '../services/gamification';
+import { useAuth } from '../contexts/AuthContext';
 
 interface CollectorRankCardProps {
   totalAlbums: number;
@@ -18,8 +19,35 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
 };
 
 export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue }) => {
+  const { user } = useAuth();
+  const [tierShare, setTierShare] = useState<number | null>(null);
+
   const rank = GamificationService.computeCollectorRank(totalAlbums, collectionValue);
   const emoji = TIER_EMOJI[rank.tier];
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!user?.id) return;
+        // Intentar con el ranking persistido del usuario
+        const res = await GamificationService.getCurrentUserTierShare(user.id);
+        if (res && mounted) {
+          setTierShare(res.share);
+          return;
+        }
+        // Fallback: usar el tier calculado en cliente y la distribución global
+        const dist = await GamificationService.getTierDistribution();
+        const row = dist.find(d => d.tier === rank.tier);
+        if (mounted) setTierShare(row && row.total ? row.users / row.total : null);
+        // Lanzar upsert en background para futuras lecturas
+        GamificationService.upsertUserRanking(user.id).catch(() => {});
+      } catch (e) {
+        if (mounted) setTierShare(null);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [user?.id, rank.tier]);
 
   const hasNextAlbums = rank.nextTargets?.nextAlbums !== undefined;
   const hasNextValue = rank.nextTargets?.nextValue !== undefined;
@@ -84,6 +112,15 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         </View>
       )}
 
+      {tierShare !== null && (
+        <View style={styles.shareRow}>
+          <Ionicons name="people" size={14} color="#6c757d" />
+          <Text style={styles.shareText}>
+            {new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(tierShare)} de usuarios (del total global) están en este nivel
+          </Text>
+        </View>
+      )}
+
       {rank.nextTier && (
         <View style={styles.nextTierRow}
         >
@@ -101,11 +138,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     margin: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    
   },
   headerRow: {
     flexDirection: 'row',
@@ -131,6 +164,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: '#212529',
+  },
+  shareRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 8,
+  },
+  shareText: {
+    fontSize: 12,
+    color: '#6c757d',
   },
   nextTierRow: {
     flexDirection: 'row',
