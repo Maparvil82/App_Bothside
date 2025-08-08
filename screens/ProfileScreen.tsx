@@ -13,20 +13,17 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { ProfileService, UserProfile } from '../services/database';
 import * as ImagePicker from 'expo-image-picker';
-import { CollectorRankCard } from '../components/CollectorRankCard';
-import { GamificationService, CollectionSummary } from '../services/gamification';
+import { GamificationService } from '../services/gamification';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<CollectionSummary | null>(null);
 
   useEffect(() => {
     if (user?.id) {
       loadProfile();
-      loadCollectionSummary();
       // Actualizar ranking persistido
       GamificationService.upsertUserRanking(user.id).catch((e) => console.warn('upsertUserRanking error:', e));
     }
@@ -44,16 +41,6 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
-  const loadCollectionSummary = async () => {
-    try {
-      if (!user?.id) return;
-      const result = await GamificationService.getUserCollectionSummary(user.id);
-      setSummary(result);
-    } catch (error) {
-      console.error('Error loading collection summary:', error);
-    }
-  };
-
   const getInitials = () => {
     if (!profile?.full_name) return user?.email?.charAt(0).toUpperCase() || 'U';
     return profile.full_name
@@ -62,6 +49,13 @@ export const ProfileScreen: React.FC = () => {
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  const getDisplayName = () => {
+    if (profile?.full_name && profile.full_name.trim() !== '') return profile.full_name.trim();
+    if (profile?.username && profile.username.trim() !== '') return profile.username.trim();
+    if (user?.email) return user.email.split('@')[0];
+    return 'Usuario';
   };
 
   const handleChangeAvatar = async () => {
@@ -143,13 +137,8 @@ export const ProfileScreen: React.FC = () => {
             )}
           </TouchableOpacity>
           <Text style={styles.changeAvatarText}>Toca para cambiar foto</Text>
-          <Text style={styles.email}>{user?.email}</Text>
-          <Text style={styles.userId}>ID: {user?.id}</Text>
+          <Text style={styles.displayName}>{getDisplayName()}</Text>
         </View>
-
-        {summary && (
-          <CollectorRankCard totalAlbums={summary.totalAlbums} collectionValue={summary.collectionValue} />
-        )}
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Configuración</Text>
@@ -232,15 +221,11 @@ const styles = StyleSheet.create({
     color: '#007AFF',
     marginBottom: 15,
   },
-  email: {
+  displayName: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
     marginBottom: 5,
-  },
-  userId: {
-    fontSize: 14,
-    color: '#666',
   },
   section: {
     backgroundColor: 'white',
