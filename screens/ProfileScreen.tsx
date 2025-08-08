@@ -10,7 +10,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { ProfileService, UserProfile } from '../services/database';
 import * as ImagePicker from 'expo-image-picker';
 import { GamificationService } from '../services/gamification';
@@ -28,6 +28,12 @@ export const ProfileScreen: React.FC = () => {
       GamificationService.upsertUserRanking(user.id).catch((e) => console.warn('upsertUserRanking error:', e));
     }
   }, [user?.id]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id) loadProfile();
+    }, [user?.id])
+  );
 
   const loadProfile = async () => {
     try {
@@ -73,13 +79,16 @@ export const ProfileScreen: React.FC = () => {
         allowsEditing: true,
         aspect: [1, 1],
         quality: 0.8,
+        base64: true,
       });
 
       if (!result.canceled && result.assets[0]) {
         const file = result.assets[0];
-        
-        // Subir avatar (React Native): usar URI
-        const avatarUrl = await ProfileService.uploadAvatarFromUri(user!.id, file.uri);
+        // Subir avatar (React Native): usar base64 para evitar blobs vacíos
+        const mime = file.mimeType || (file.uri.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg');
+        const avatarUrl = file.base64
+          ? await ProfileService.uploadAvatarFromBase64(user!.id, file.base64, mime)
+          : await ProfileService.uploadAvatarFromUri(user!.id, file.uri);
         
         // Actualizar perfil
         await ProfileService.updateUserProfile(user!.id, { avatar_url: avatarUrl, updated_at: new Date().toISOString() });

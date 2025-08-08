@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import * as FileSystem from 'expo-file-system';
 
 // Tipos para la base de datos
 export interface Album {
@@ -926,6 +927,32 @@ export interface UserProfile {
   updated_at?: string | null;
 }
 
+// Utilidad: convertir base64 (sin prefijo) a Uint8Array sin usar atob/Buffer
+function base64ToUint8Array(base64: string): Uint8Array {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+  let str = base64.replace(/\s/g, '');
+  // eliminar padding extra
+  while (str.endsWith('=')) str = str.slice(0, -1);
+
+  const bytes: number[] = [];
+  let i = 0;
+  while (i < str.length) {
+    const enc1 = chars.indexOf(str.charAt(i++));
+    const enc2 = chars.indexOf(str.charAt(i++));
+    const enc3 = chars.indexOf(str.charAt(i++));
+    const enc4 = chars.indexOf(str.charAt(i++));
+
+    const chr1 = (enc1 << 2) | (enc2 >> 4);
+    const chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+    const chr3 = ((enc3 & 3) << 6) | enc4;
+
+    bytes.push(chr1);
+    if (enc3 !== 64 && !Number.isNaN(enc3)) bytes.push(chr2);
+    if (enc4 !== 64 && !Number.isNaN(enc4)) bytes.push(chr3);
+  }
+  return new Uint8Array(bytes);
+}
+
 export const ProfileService = {
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
@@ -966,19 +993,49 @@ export const ProfileService = {
     // Inferir extensión
     const urlParts = uri.split('?')[0].split('#')[0];
     const extMatch = urlParts.match(/\.([a-zA-Z0-9]+)$/);
-    const fileExt = extMatch ? extMatch[1] : 'jpg';
+    const fileExt = (extMatch ? extMatch[1] : 'jpg').toLowerCase();
+    const mimeType = fileExt === 'png' ? 'image/png' : 'image/jpeg';
 
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = `avatars/${fileName}`;
 
-    // Descargar como blob
-    const response = await fetch(uri);
-    const blob = await response.blob();
+    // Leer como base64 para evitar blobs vacíos en iOS/Android
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const bytes = base64ToUint8Array(base64);
 
     const { error: uploadError } = await supabase.storage
       .from('avatars')
-      .upload(filePath, blob, {
-        contentType: blob.type || `image/${fileExt}`,
+      .upload(filePath, bytes, {
+        contentType: mimeType,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error(`Error uploading avatar: ${uploadError.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  },
+
+  // Alternativa directa: subir desde base64 proporcionado por expo-image-picker
+  async uploadAvatarFromBase64(userId: string, base64: string, mimeType: string = 'image/jpeg'): Promise<string> {
+    const ext = (mimeType.split('/')[1] || 'jpg').toLowerCase();
+    const fileName = `${userId}-${Date.now()}.${ext}`;
+    const filePath = `avatars/${fileName}`;
+
+    const bytes = base64ToUint8Array(base64);
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, bytes, {
+        contentType: mimeType,
         upsert: false,
       });
 
