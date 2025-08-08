@@ -84,16 +84,11 @@ export const ProfileScreen: React.FC = () => {
       if (!result.canceled && result.assets[0]) {
         const file = result.assets[0];
         
-        // Crear un objeto File desde la URI
-        const response = await fetch(file.uri);
-        const blob = await response.blob();
-        const fileObj = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
-
-        // Subir avatar
-        const avatarUrl = await ProfileService.uploadAvatar(user!.id, fileObj);
+        // Subir avatar (React Native): usar URI
+        const avatarUrl = await ProfileService.uploadAvatarFromUri(user!.id, file.uri);
         
         // Actualizar perfil
-        await ProfileService.updateUserProfile(user!.id, { avatar_url: avatarUrl });
+        await ProfileService.updateUserProfile(user!.id, { avatar_url: avatarUrl, updated_at: new Date().toISOString() });
         
         // Recargar perfil
         await loadProfile();
@@ -137,7 +132,7 @@ export const ProfileScreen: React.FC = () => {
           <TouchableOpacity style={styles.avatarContainer} onPress={handleChangeAvatar}>
             {profile?.avatar_url ? (
               <Image
-                source={{ uri: profile.avatar_url }}
+                source={{ uri: `${profile.avatar_url}?t=${profile?.updated_at || Date.now()}` }}
                 style={styles.avatar}
                 resizeMode="cover"
               />

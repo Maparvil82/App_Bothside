@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -26,14 +26,9 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (user?.id) {
-      loadProfile();
-    }
-  }, [user?.id]);
-
   const loadProfile = async () => {
     try {
+      if (!user?.id) return;
       setLoading(true);
       const userProfile = await ProfileService.getUserProfile(user!.id);
       setProfile(userProfile);
@@ -43,6 +38,18 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user?.id) {
+      loadProfile();
+    }
+  }, [user?.id]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfile();
+    }, [user?.id])
+  );
 
   const getInitials = () => {
     if (!profile?.full_name) return 'U';
@@ -92,7 +99,7 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
           >
             {profile?.avatar_url ? (
               <Image
-                source={{ uri: profile.avatar_url }}
+                source={{ uri: `${profile.avatar_url}` }}
                 style={styles.avatarImage}
                 resizeMode="cover"
               />

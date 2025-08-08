@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface UserAvatarProps {
   size?: number;
@@ -17,26 +18,34 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const loadProfile = async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userProfile = await ProfileService.getUserProfile(user.id);
+      setProfile(userProfile);
+      setImageFailed(false);
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const loadProfile = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const userProfile = await ProfileService.getUserProfile(user.id);
-        setProfile(userProfile);
-      } catch (error) {
-        console.error('Error loading user profile:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadProfile();
   }, [user?.id]);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      loadProfile();
+    }, [user?.id])
+  );
 
   const getInitials = () => {
     if (profile?.full_name) {
@@ -56,7 +65,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     borderRadius: size / 2,
     borderWidth: showBorder ? 2 : 0,
     borderColor: showBorder ? '#007AFF' : 'transparent',
-  };
+  } as const;
 
   if (loading) {
     return (
@@ -64,13 +73,20 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     );
   }
 
+  const showImage = !!profile?.avatar_url && !imageFailed;
+  const uriWithBust = profile?.avatar_url ? `${profile.avatar_url}?t=${profile?.updated_at || Date.now()}` : undefined;
+
   const AvatarContent = () => (
     <>
-      {profile?.avatar_url ? (
+      {showImage ? (
         <Image
-          source={{ uri: profile.avatar_url }}
+          source={{ uri: uriWithBust }}
           style={[styles.avatarImage, avatarStyle]}
           resizeMode="cover"
+          onError={() => {
+            console.warn('Avatar image failed to load:', uriWithBust);
+            setImageFailed(true);
+          }}
         />
       ) : (
         <View style={[styles.avatarPlaceholder, avatarStyle]}>

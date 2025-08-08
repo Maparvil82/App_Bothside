@@ -950,8 +950,7 @@ export const ProfileService = {
   async updateUserProfile(userId: string, updates: Partial<UserProfile>): Promise<UserProfile> {
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
-      .eq('id', userId)
+      .upsert({ id: userId, ...updates, updated_at: new Date().toISOString() }, { onConflict: 'id' })
       .select()
       .single();
 
@@ -962,6 +961,39 @@ export const ProfileService = {
     return data;
   },
 
+  // Nueva versión compatible con React Native/Expo: sube desde una URI local
+  async uploadAvatarFromUri(userId: string, uri: string): Promise<string> {
+    // Inferir extensión
+    const urlParts = uri.split('?')[0].split('#')[0];
+    const extMatch = urlParts.match(/\.([a-zA-Z0-9]+)$/);
+    const fileExt = extMatch ? extMatch[1] : 'jpg';
+
+    const fileName = `${userId}-${Date.now()}.${fileExt}`;
+    const filePath = `avatars/${fileName}`;
+
+    // Descargar como blob
+    const response = await fetch(uri);
+    const blob = await response.blob();
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, blob, {
+        contentType: blob.type || `image/${fileExt}`,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      throw new Error(`Error uploading avatar: ${uploadError.message}`);
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  },
+
+  // Método previo (mantenido por compatibilidad en caso de uso web)
   async uploadAvatar(userId: string, file: File): Promise<string> {
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
