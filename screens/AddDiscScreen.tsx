@@ -135,10 +135,10 @@ export const AddDiscScreen: React.FC = () => {
       
       const response = await DiscogsService.searchReleases(searchTerm);
       console.log('📦 Respuesta completa de Discogs:', response);
-      console.log('📊 Total de resultados:', response.results?.length || 0);
+      console.log('📊 Total de resultados:', response?.results ? response.results.length : 0);
       
       // Mostrar todos los formatos disponibles para debugging
-      if (response.results && response.results.length > 0) {
+      if (response?.results && response.results.length > 0) {
         console.log('🎵 Formatos disponibles:');
         response.results.forEach((release: any, index: number) => {
           console.log(`${index + 1}. "${release.title}" - Formato: "${release.format}" - Año: ${release.year}`);
@@ -146,7 +146,7 @@ export const AddDiscScreen: React.FC = () => {
       }
       
       // Filtrar solo versiones en vinilo y con artista y álbum exactos
-      const vinylReleases = response.results?.filter((release: any) => {
+      const vinylReleases = response?.results?.filter((release: any) => {
         // Extraer artista y álbum del título (formato: "Artista - Álbum")
         const titleParts = release.title?.split(' - ');
         const releaseArtist = titleParts?.[0]?.toLowerCase().trim();
@@ -204,6 +204,48 @@ export const AddDiscScreen: React.FC = () => {
       
       if (error) {
         console.error('❌ Error llamando a Edge Function:', error);
+        // Fallback: intentar añadir directamente si el álbum ya existe en la tabla global
+        try {
+          console.log('🛟 Fallback: buscando álbum por discogs_id para inserción directa en user_collection...');
+          const { data: albumRow, error: findErr } = await supabase
+            .from('albums')
+            .select('id')
+            .eq('discogs_id', release.id)
+            .maybeSingle();
+          if (findErr) throw findErr;
+          if (albumRow?.id) {
+            await UserCollectionService.addToCollection(user.id, albumRow.id);
+            Alert.alert('Éxito', 'Disco añadido a tu colección');
+            setArtistQuery('');
+            setAlbumQuery('');
+            setManualSearchResults([]);
+            return;
+          } else {
+            // Crear álbum mínimo en catálogo y luego añadir a colección
+            console.log('🧩 Creando álbum mínimo en albums (fallback)...');
+            const titleParts = (release.title || '').split(' - ');
+            const artistName = titleParts?.[0]?.trim() || release.artist || '';
+            const albumTitle = titleParts?.[1]?.trim() || release.title || '';
+            const newAlbum = await AlbumService.createAlbum({
+              title: albumTitle,
+              artist: artistName,
+              label: Array.isArray(release.label) ? release.label[0] : (release.label || undefined),
+              release_year: release.year ? String(release.year) : undefined,
+              cover_url: release.cover_image || release.thumb,
+              discogs_id: release.id
+            } as any);
+            if (newAlbum?.id) {
+              await UserCollectionService.addToCollection(user.id, newAlbum.id);
+              Alert.alert('Éxito', 'Disco añadido a tu colección');
+              setArtistQuery('');
+              setAlbumQuery('');
+              setManualSearchResults([]);
+              return;
+            }
+          }
+        } catch (fbErr) {
+          console.error('❌ Fallback directo/creación mínima falló:', fbErr);
+        }
         throw error;
       }
       
@@ -232,11 +274,28 @@ export const AddDiscScreen: React.FC = () => {
         setAlbumQuery('');
         setManualSearchResults([]);
       } else {
+        // Si la función respondió 2xx pero con success false, intentar fallback
+        try {
+          console.log('🛟 Fallback: función respondió sin éxito; buscando álbum por discogs_id...');
+          const { data: albumRow } = await supabase
+            .from('albums')
+            .select('id')
+            .eq('discogs_id', release.id)
+            .maybeSingle();
+          if (albumRow?.id) {
+            await UserCollectionService.addToCollection(user.id, albumRow.id);
+            Alert.alert('Éxito', 'Disco añadido a tu colección');
+            setArtistQuery('');
+            setAlbumQuery('');
+            setManualSearchResults([]);
+            return;
+          }
+        } catch {}
         throw new Error(data?.error || 'Error desconocido');
       }
-    } catch (error) {
-      console.error('❌ Error adding Discogs release to collection:', error);
-      Alert.alert('Error', 'No se pudo añadir el disco a la colección');
+    } catch (error: any) {
+      console.error('❌ Error adding Discogs release to collection:', error?.message || error);
+      Alert.alert('Error', error?.message || 'No se pudo añadir el disco a la colección');
     }
   };
 
@@ -259,6 +318,42 @@ export const AddDiscScreen: React.FC = () => {
         
         if (error) {
           console.error('❌ Error llamando a Edge Function:', error);
+          // Fallback directo a inserción en user_collection si el álbum ya existe en catálogo
+          try {
+            console.log('🛟 Fallback: buscando álbum por discogs_id para inserción directa en user_collection...');
+            const { data: albumRow, error: findErr } = await supabase
+              .from('albums')
+              .select('id')
+              .eq('discogs_id', album.discogs_id)
+              .maybeSingle();
+            if (findErr) throw findErr;
+            if (albumRow?.id) {
+              await UserCollectionService.addToCollection(user.id, albumRow.id);
+              Alert.alert('Éxito', 'Disco añadido a tu colección');
+              setQuery('');
+              setAlbums([]);
+              return;
+            } else {
+              console.log('🧩 Creando álbum mínimo en albums (fallback)...');
+              const newAlbum = await AlbumService.createAlbum({
+                title: album.title,
+                artist: album.artist,
+                label: album.label,
+                release_year: album.release_year,
+                cover_url: album.cover_url,
+                discogs_id: album.discogs_id
+              } as any);
+              if (newAlbum?.id) {
+                await UserCollectionService.addToCollection(user.id, newAlbum.id);
+                Alert.alert('Éxito', 'Disco añadido a tu colección');
+                setQuery('');
+                setAlbums([]);
+                return;
+              }
+            }
+          } catch (fbErr) {
+            console.error('❌ Fallback directo/creación mínima falló:', fbErr);
+          }
           throw error;
         }
         
@@ -286,6 +381,22 @@ export const AddDiscScreen: React.FC = () => {
           setQuery('');
           setAlbums([]);
         } else {
+          // Si la función respondió 2xx pero sin success, intentar fallback
+          try {
+            console.log('🛟 Fallback: función respondió sin éxito; buscando álbum por discogs_id...');
+            const { data: albumRow } = await supabase
+              .from('albums')
+              .select('id')
+              .eq('discogs_id', album.discogs_id)
+              .maybeSingle();
+            if (albumRow?.id) {
+              await UserCollectionService.addToCollection(user.id, albumRow.id);
+              Alert.alert('Éxito', 'Disco añadido a tu colección');
+              setQuery('');
+              setAlbums([]);
+              return;
+            }
+          } catch {}
           throw new Error(data?.error || 'Error desconocido');
         }
       } else {

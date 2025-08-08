@@ -1,8 +1,9 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
+import { useColorScheme } from 'react-native';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -26,9 +27,24 @@ import ShelvesListScreen from '../screens/ShelvesListScreen';
 import ShelfEditScreen from '../screens/ShelfEditScreen';
 import ShelfViewScreen from '../screens/ShelfViewScreen';
 import SelectCellScreen from '../screens/SelectCellScreen';
+import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
+
+// Custom dark theme keeping brand color
+const AppDarkTheme: Theme = {
+  ...DarkTheme,
+  colors: {
+    ...DarkTheme.colors,
+    primary: '#0A84FF',
+    background: '#121212',
+    card: '#1E1E1E',
+    text: '#FFFFFF',
+    border: '#2C2C2C',
+    notification: '#FF453A',
+  },
+};
 
 const SearchStack = () => (
   <Stack.Navigator>
@@ -192,57 +208,45 @@ const TabNavigator = () => (
       },
     })}
   >
-    <Tab.Screen
-      name="SearchTab"
-      component={SearchStack}
-      options={{ title: '' }}
-    />
-    <Tab.Screen
-      name="DashboardTab"
-      component={DashboardStack}
-      options={{ title: '' }}
-    />
-    <Tab.Screen
-      name="AddDiscTab"
-      component={AddDiscStack}
-      options={{ title: '' }}
-    />
-    <Tab.Screen
-      name="ListsTab"
-      component={ListsStack}
-      options={{ title: '' }}
-    />
-    <Tab.Screen
-      name="GemsTab"
-      component={GemsStack}
-      options={{ title: '' }}
-    />
+    <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: '' }} />
+    <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ title: '' }} />
+    <Tab.Screen name="AddDiscTab" component={AddDiscStack} options={{ title: '' }} />
+    <Tab.Screen name="ListsTab" component={ListsStack} options={{ title: '' }} />
+    <Tab.Screen name="GemsTab" component={GemsStack} options={{ title: '' }} />
   </Tab.Navigator>
 );
 
+const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { mode } = useThemeMode();
+  const theme = mode === 'dark' ? AppDarkTheme : DefaultTheme; // light remains existing
+  return <NavigationContainer theme={theme}>{children}</NavigationContainer>;
+};
+
 const AppNavigator = () => (
-  <NavigationContainer>
-    <AuthProvider>
-      <GemsProvider>
-        <StatsProvider>
-          <Stack.Navigator screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="Main" component={TabNavigator} />
-            <Stack.Screen name="Profile" component={ProfileStack} />
-            <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
-            <Stack.Screen name="AIChat" component={AIChatScreen} />
-            <Stack.Screen
-              name="SelectCell"
-              component={SelectCellScreen}
-              options={{
-                headerShown: true,
-                header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} />
-              }}
-            />
-          </Stack.Navigator>
-        </StatsProvider>
-      </GemsProvider>
-    </AuthProvider>
-  </NavigationContainer>
+  <ThemeProvider>
+    <ThemedNavigationContainer>
+      <AuthProvider>
+        <GemsProvider>
+          <StatsProvider>
+            <Stack.Navigator screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="Main" component={TabNavigator} />
+              <Stack.Screen name="Profile" component={ProfileStack} />
+              <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
+              <Stack.Screen name="AIChat" component={AIChatScreen} />
+              <Stack.Screen
+                name="SelectCell"
+                component={SelectCellScreen}
+                options={{
+                  headerShown: true,
+                  header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} />
+                }}
+              />
+            </Stack.Navigator>
+          </StatsProvider>
+        </GemsProvider>
+      </AuthProvider>
+    </ThemedNavigationContainer>
+  </ThemeProvider>
 );
 
 export default AppNavigator; 

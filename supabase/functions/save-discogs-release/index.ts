@@ -119,9 +119,9 @@ serve(async (req)=>{
 
     // 2. Obtener credenciales y crear cliente Supabase Admin
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseServiceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
-    // Obtener credencial de Discogs (token personal)
-    const discogsToken = Deno.env.get("DISCOGS_TOKEN") || "YOUR_PERSONAL_ACCESS_TOKEN";
+    const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || Deno.env.get("SERVICE_ROLE_KEY");
+    // Obtener credencial de Discogs (token personal, opcional)
+    const discogsToken = Deno.env.get("DISCOGS_TOKEN") || null;
 
     if (!supabaseUrl || !supabaseServiceRoleKey) {
       console.error("¡ERROR CRÍTICO! Faltan variables de entorno Supabase.");
@@ -142,12 +142,11 @@ serve(async (req)=>{
     const discogsReleaseUrl = `https://api.discogs.com/releases/${discogsReleaseId}`;
     console.log("Obteniendo detalles completos desde:", discogsReleaseUrl);
     
-    const releaseResponse = await fetch(discogsReleaseUrl, {
-      headers: {
-        "Authorization": `Discogs token=${discogsToken}`,
-        "User-Agent": "BothsideApp/1.0"
-      }
-    });
+    const commonHeaders: Record<string, string> = { "User-Agent": "BothsideApp/1.0" };
+    if (discogsToken) {
+      commonHeaders["Authorization"] = `Discogs token=${discogsToken}`;
+    }
+    const releaseResponse = await fetch(discogsReleaseUrl, { headers: commonHeaders });
 
     if (!releaseResponse.ok) {
       const errorText = await releaseResponse.text();
@@ -175,12 +174,7 @@ serve(async (req)=>{
       const priceSuggestionsUrl = `https://api.discogs.com/marketplace/price_suggestions/${discogsReleaseId}`;
       console.log("Obteniendo sugerencias de precios desde:", priceSuggestionsUrl);
       
-      const priceResponse = await fetch(priceSuggestionsUrl, {
-        headers: {
-          "Authorization": `Discogs token=${discogsToken}`,
-          "User-Agent": "BothsideApp/1.0"
-        }
-      });
+      const priceResponse = await fetch(priceSuggestionsUrl, { headers: commonHeaders });
       
       if (priceResponse.ok) {
         const priceSuggestions = await priceResponse.json();
@@ -254,12 +248,7 @@ serve(async (req)=>{
       console.log("Intentando descargar imagen desde:", discogsCoverUrl);
       try {
         // Descargar la imagen desde Discogs
-        const imageResponse = await fetch(discogsCoverUrl, {
-          headers: {
-            "Authorization": `Discogs token=${discogsToken}`,
-            "User-Agent": "BothsideApp/1.0"
-          } // User-Agent también para imagen
-        });
+        const imageResponse = await fetch(discogsCoverUrl, { headers: commonHeaders });
         
         if (!imageResponse.ok) throw new Error(`Fallo al descargar imagen: ${imageResponse.status}`);
         
