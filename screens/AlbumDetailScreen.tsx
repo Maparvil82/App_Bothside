@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,7 +22,6 @@ import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { UserCollectionService } from '../services/database';
 import ShelfGrid from '../components/ShelfGrid';
-import AlbumQRSticker from '../components/AlbumQRSticker';
 
 const { width } = Dimensions.get('window');
 
@@ -82,6 +81,8 @@ export default function AlbumDetailScreen() {
   const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
   const [showAllEditions, setShowAllEditions] = useState(false);
   const [shelves, setShelves] = useState<Shelf[]>([]);
+  const [fallbackGenres, setFallbackGenres] = useState<string[]>([]);
+  const [fallbackStyles, setFallbackStyles] = useState<string[]>([]);
   
   const { albumId } = route.params as { albumId: string };
 
@@ -155,7 +156,36 @@ export default function AlbumDetailScreen() {
   }, [albumId, user]);
 
   useFocusEffect(loadAlbumDetail);
-  
+
+  // Ensure hooks are declared before any conditional returns
+  useEffect(() => {
+    const fetchGenresStyles = async () => {
+      try {
+        const discogsId = (album as any)?.albums?.discogs_id;
+        if (!discogsId) return;
+
+        const computedGenresList = (album as any)?.albums?.album_genres?.map((ag: any) => ag.genres?.name).filter(Boolean) || [];
+        const computedStylesList = album?.albums?.album_styles?.map(as => as.styles?.name).filter(Boolean) || [];
+
+        if (computedGenresList.length === 0 || computedStylesList.length === 0) {
+          const { DiscogsService } = await import('../services/discogs');
+          const release: any = await DiscogsService.getRelease(discogsId);
+          if (release) {
+            if (computedGenresList.length === 0 && Array.isArray(release.genres)) {
+              setFallbackGenres(release.genres.filter((g: any) => typeof g === 'string'));
+            }
+            if (computedStylesList.length === 0 && Array.isArray(release.styles)) {
+              setFallbackStyles(release.styles.filter((s: any) => typeof s === 'string'));
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('No se pudieron cargar géneros/estilos de Discogs como fallback');
+      }
+    };
+    if (album?.albums) fetchGenresStyles();
+  }, [album?.albums?.id]);
+
   const loadAlbumEditions = async (artist?: string, title?: string) => {
     if (!artist || !title) {
       return;
@@ -375,6 +405,10 @@ export default function AlbumDetailScreen() {
   }
 
   const stylesList = album.albums.album_styles?.map(as => as.styles?.name).filter(Boolean) || [];
+  const genresList = (album as any)?.albums?.album_genres?.map((ag: any) => ag.genres?.name).filter(Boolean) || [];
+  const mergedGenres = genresList.length > 0 ? genresList : fallbackGenres;
+  const mergedStyles = stylesList.length > 0 ? stylesList : fallbackStyles;
+
   const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
 
   return (
@@ -478,11 +512,16 @@ export default function AlbumDetailScreen() {
             </View>
           )}
           
-          {/* Estilos integrados en la información básica */}
-          {stylesList.length > 0 && (
+          {/* Géneros y Estilos */}
+          {(mergedGenres.length > 0 || mergedStyles.length > 0) && (
             <View style={styles.stylesContainer}>
-              {stylesList.map((style, index) => (
-                <View key={index} style={styles.styleTag}>
+              {mergedGenres.map((genre: string, index: number) => (
+                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: '#eef6ff' }]}> 
+                  <Text style={[styles.styleText, { color: '#1d4ed8' }]}>{genre}</Text>
+                </View>
+              ))}
+              {mergedStyles.map((style: string, index: number) => (
+                <View key={`s-${index}`} style={styles.styleTag}>
                   <Text style={styles.styleText}>{style}</Text>
                 </View>
               ))}
@@ -503,11 +542,7 @@ export default function AlbumDetailScreen() {
                 <Text style={styles.audioTagText}>Audio</Text>
               </View>
             )}
-            <AlbumQRSticker
-              albumId={album.albums.id}
-              title={album.albums.title}
-              artist={album.albums.artist}
-            />
+            {/* Sticker QR eliminado */}
           </View>
         </View>
 

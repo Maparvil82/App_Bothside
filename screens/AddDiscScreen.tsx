@@ -255,6 +255,21 @@ export const AddDiscScreen: React.FC = () => {
                   }));
                   await supabase.from('album_youtube_urls').insert(payload);
                 }
+                // Importar tracklist
+                const tracklist = (fullRelease as any)?.tracklist || [];
+                if (Array.isArray(tracklist) && tracklist.length > 0) {
+                  const tracksPayload = tracklist
+                    .filter((t: any) => t?.title)
+                    .map((t: any) => ({
+                      album_id: newAlbum.id,
+                      position: t.position?.toString() || null,
+                      title: t.title?.toString() || '',
+                      duration: t.duration?.toString() || null,
+                    }));
+                  if (tracksPayload.length > 0) {
+                    await supabase.from('tracks').insert(tracksPayload);
+                  }
+                }
               } catch {}
               await UserCollectionService.addToCollection(user.id, newAlbum.id);
               Alert.alert('Éxito', 'Disco añadido a tu colección');
@@ -384,6 +399,21 @@ export const AddDiscScreen: React.FC = () => {
                         discogs_video_id: v.id ? String(v.id) : null,
                       }));
                       await supabase.from('album_youtube_urls').insert(payload);
+                    }
+                    // Importar tracklist
+                    const tracklist = (fullRelease as any)?.tracklist || [];
+                    if (Array.isArray(tracklist) && tracklist.length > 0) {
+                      const tracksPayload = tracklist
+                        .filter((t: any) => t?.title)
+                        .map((t: any) => ({
+                          album_id: newAlbum.id,
+                          position: t.position?.toString() || null,
+                          title: t.title?.toString() || '',
+                          duration: t.duration?.toString() || null,
+                        }));
+                      if (tracksPayload.length > 0) {
+                        await supabase.from('tracks').insert(tracksPayload);
+                      }
                     }
                   } catch {}
                 }
