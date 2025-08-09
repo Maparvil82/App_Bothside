@@ -22,6 +22,7 @@ import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { UserCollectionService } from '../services/database';
 import ShelfGrid from '../components/ShelfGrid';
+import AlbumQRSticker from '../components/AlbumQRSticker';
 
 const { width } = Dimensions.get('window');
 
@@ -502,6 +503,11 @@ export default function AlbumDetailScreen() {
                 <Text style={styles.audioTagText}>Audio</Text>
               </View>
             )}
+            <AlbumQRSticker
+              albumId={album.albums.id}
+              title={album.albums.title}
+              artist={album.albums.artist}
+            />
           </View>
         </View>
 

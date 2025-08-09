@@ -232,9 +232,30 @@ export const AddDiscScreen: React.FC = () => {
               label: Array.isArray(release.label) ? release.label[0] : (release.label || undefined),
               release_year: release.year ? String(release.year) : undefined,
               cover_url: release.cover_image || release.thumb,
+              catalog_no: (release.catno || undefined) as any,
+              country: (release.country || undefined) as any,
               discogs_id: release.id
             } as any);
             if (newAlbum?.id) {
+              // Obtener estadísticas en segundo plano y guardarlas
+              DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, release.id).catch(()=>{});
+              // Importar vídeos de YouTube desde Discogs y guardarlos
+              try {
+                const fullRelease = await DiscogsService.getRelease(release.id);
+                const videos = (fullRelease as any)?.videos || [];
+                const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
+                if (youtubeVideos.length > 0) {
+                  const payload = youtubeVideos.map((v: any) => ({
+                    album_id: newAlbum.id,
+                    url: v.uri,
+                    title: v.title || '',
+                    is_playlist: false,
+                    imported_from_discogs: true,
+                    discogs_video_id: v.id ? String(v.id) : null,
+                  }));
+                  await supabase.from('album_youtube_urls').insert(payload);
+                }
+              } catch {}
               await UserCollectionService.addToCollection(user.id, newAlbum.id);
               Alert.alert('Éxito', 'Disco añadido a tu colección');
               setArtistQuery('');
@@ -341,9 +362,31 @@ export const AddDiscScreen: React.FC = () => {
                 label: album.label,
                 release_year: album.release_year,
                 cover_url: album.cover_url,
+                catalog_no: (album as any).catalog_no,
+                country: (album as any).country,
                 discogs_id: album.discogs_id
               } as any);
               if (newAlbum?.id) {
+                // Obtener estadísticas en segundo plano y guardarlas
+                if (album.discogs_id) {
+                  DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, album.discogs_id).catch(()=>{});
+                  try {
+                    const fullRelease = await DiscogsService.getRelease(album.discogs_id);
+                    const videos = (fullRelease as any)?.videos || [];
+                    const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
+                    if (youtubeVideos.length > 0) {
+                      const payload = youtubeVideos.map((v: any) => ({
+                        album_id: newAlbum.id,
+                        url: v.uri,
+                        title: v.title || '',
+                        is_playlist: false,
+                        imported_from_discogs: true,
+                        discogs_video_id: v.id ? String(v.id) : null,
+                      }));
+                      await supabase.from('album_youtube_urls').insert(payload);
+                    }
+                  } catch {}
+                }
                 await UserCollectionService.addToCollection(user.id, newAlbum.id);
                 Alert.alert('Éxito', 'Disco añadido a tu colección');
                 setQuery('');
