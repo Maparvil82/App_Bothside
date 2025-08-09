@@ -356,28 +356,47 @@ export default function AlbumDetailScreen() {
 
   // ========== FUNCIONES DE YOUTUBE (ABRIR DIRECTAMENTE) ==========
 
-  // Abrir video de YouTube en el navegador o app
-  const handlePlayYouTubeVideo = async () => {
+  // Extraer audio vía Supabase y reproducir en el FloatingAudioPlayer
+  const handleExtractYouTubeAudio = async () => {
     if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
       Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
       return;
     }
 
     try {
-      const firstVideo = album.albums.album_youtube_urls[0];
-      const youtubeUrl = firstVideo.url;
-      
-      console.log('🎵 Abriendo YouTube:', youtubeUrl);
-      
-      const supported = await Linking.canOpenURL(youtubeUrl);
-      if (supported) {
-        await Linking.openURL(youtubeUrl);
-      } else {
-        Alert.alert('Error', 'No se pudo abrir el video de YouTube');
+      const youtubeUrl = album.albums.album_youtube_urls[0].url;
+      if (!youtubeUrl) {
+        Alert.alert('Error', 'URL de YouTube inválida.');
+        return;
       }
-    } catch (error) {
-      console.error('Error abriendo YouTube:', error);
-      Alert.alert('Error', 'No se pudo abrir el video de YouTube');
+
+      setShowFloatingPlayer(true);
+      setFloatingAlbumTitle(album.albums.title || 'YouTube');
+
+      // Llamar a la función de Supabase que devuelve la URL de audio extraída
+      const { data, error } = await supabase.functions.invoke('extract-youtube-audio', {
+        body: { url: youtubeUrl },
+      });
+
+      if (error) {
+        console.error('❌ Error desde extract-youtube-audio:', error);
+        Alert.alert('Error', 'No se pudo extraer el audio de YouTube.');
+        setShowFloatingPlayer(false);
+        return;
+      }
+
+      const audioUrl = (data && (data.audioUrl || data.audio_url)) as string | undefined;
+      if (!audioUrl) {
+        Alert.alert('Error', 'La función no devolvió una URL de audio.');
+        setShowFloatingPlayer(false);
+        return;
+      }
+
+      setFloatingAudioUri(audioUrl);
+    } catch (err) {
+      console.error('❌ Error general extrayendo audio de YouTube:', err);
+      Alert.alert('Error', 'Ocurrió un error al intentar extraer el audio.');
+      setShowFloatingPlayer(false);
     }
   };
 
@@ -732,7 +751,7 @@ export default function AlbumDetailScreen() {
       {youtubeUrls.length > 0 && (
         <TouchableOpacity
           style={[styles.floatingYouTubeButton, { bottom: showFloatingPlayer ? 100 : 30 }]}
-          onPress={handlePlayYouTubeVideo}
+          onPress={handleExtractYouTubeAudio}
           activeOpacity={0.85}
         >
           <Ionicons name="logo-youtube" size={28} color="#fff" />
