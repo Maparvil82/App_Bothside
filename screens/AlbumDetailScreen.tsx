@@ -168,6 +168,19 @@ export default function AlbumDetailScreen() {
 
   useFocusEffect(loadAlbumDetail);
 
+  // Monitor YouTube URLs for debugging
+  useEffect(() => {
+    if (album?.albums?.album_youtube_urls) {
+      const urlCount = album.albums.album_youtube_urls.length;
+      console.log('🔍 Album YouTube URLs updated:', urlCount, 'URLs found');
+      if (urlCount > 0) {
+        console.log('✅ Botón flotante de YouTube debería estar visible');
+      } else {
+        console.log('❌ No hay URLs de YouTube, botón no visible');
+      }
+    }
+  }, [album?.albums?.album_youtube_urls]);
+
   // Descarga desde Discogs y guarda tracks/YouTube si faltan
   const backfillDiscogsDetails = async (internalAlbumId: string, discogsId: number | string) => {
     try {
@@ -191,11 +204,38 @@ export default function AlbumDetailScreen() {
 
       if (fnData && fnData.success) {
         console.log('✅ Edge function completada exitosamente:', fnData);
-        // Recargar el detalle para mostrar las URLs insertadas
+        // Consultar las URLs recién insertadas y actualizar el estado inmediatamente
+        try {
+          const { data: newUrls, error: urlsError } = await supabase
+            .from('album_youtube_urls')
+            .select('url, title')
+            .eq('album_id', internalAlbumId);
+            
+          if (urlsError) {
+            console.warn('Error consultando URLs después del backfill:', urlsError);
+          } else if (newUrls && newUrls.length > 0) {
+            console.log('🎯 URLs encontradas después del backfill:', newUrls.length);
+            // Actualizar el estado actual del álbum para mostrar el botón inmediatamente
+            setAlbum(prevAlbum => {
+              if (!prevAlbum) return prevAlbum;
+              return {
+                ...prevAlbum,
+                albums: {
+                  ...prevAlbum.albums,
+                  album_youtube_urls: newUrls.map(u => ({ url: u.url }))
+                }
+              };
+            });
+          }
+        } catch (urlError) {
+          console.warn('Error actualizando URLs en estado:', urlError);
+        }
+        
+        // También recargar el detalle completo como respaldo
         setTimeout(() => {
           console.log('🔄 Recargando detalle del álbum después de backfill exitoso...');
           loadAlbumDetail();
-        }, 500);
+        }, 1000);
       } else {
         console.warn('⚠️ Edge function no devolvió success:', fnData);
       }
