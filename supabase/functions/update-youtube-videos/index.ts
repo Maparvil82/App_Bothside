@@ -80,28 +80,49 @@ serve(async (req) => {
     }
 
     if (albumId && discogsId) {
+      let currentAlbumId = albumId; // Variable mutable para poder actualizarla
       // Procesar un álbum específico
-      console.log(`Procesando álbum específico: ${albumId} (Discogs ID: ${discogsId})`);
+      console.log(`Procesando álbum específico: ${currentAlbumId} (Discogs ID: ${discogsId})`);
       
       try {
         // Verificar que el álbum existe en la base de datos
-        const { data: albumExists, error: albumError } = await supabaseAdmin
+        let { data: albumExists, error: albumError } = await supabaseAdmin
           .from('albums')
-          .select('id, title, artist')
-          .eq('id', albumId)
+          .select('id, title, artist, discogs_id')
+          .eq('id', currentAlbumId)
           .single();
 
         if (albumError || !albumExists) {
-          console.error(`Álbum no encontrado: ${albumId}`, albumError);
-          return new Response(JSON.stringify({ 
-            error: `Álbum no encontrado: ${albumId}` 
-          }), {
-            status: 404,
-            headers: { ...corsHeaders, "Content-Type": "application/json" }
-          });
+          console.error(`Álbum no encontrado en BD: ${currentAlbumId}`, albumError?.message || albumError);
+          
+          // Intentar buscar por discogs_id como alternativa
+          const { data: albumByDiscogs, error: discogsError } = await supabaseAdmin
+            .from('albums')
+            .select('id, title, artist, discogs_id')
+            .eq('discogs_id', discogsId)
+            .single();
+            
+          if (discogsError || !albumByDiscogs) {
+            console.error(`Álbum tampoco encontrado por discogs_id ${discogsId}:`, discogsError?.message || discogsError);
+            return new Response(JSON.stringify({ 
+              error: `Álbum no encontrado: ${currentAlbumId} ni por discogs_id: ${discogsId}`,
+              success: false
+            }), {
+              status: 404,
+              headers: { ...corsHeaders, "Content-Type": "application/json" }
+            });
+          } else {
+            // Usar el álbum encontrado por discogs_id
+            console.log(`✅ Álbum encontrado por discogs_id: ${albumByDiscogs.title}`);
+            albumExists = albumByDiscogs;
+            currentAlbumId = albumByDiscogs.id; // Actualizar albumId para las siguientes operaciones
+          }
         }
 
+        console.log(`📀 Procesando álbum: "${albumExists.title}" (ID: ${currentAlbumId}, Discogs: ${discogsId})`);
+
         // Obtener datos del release desde Discogs
+        console.log(`🌐 Obteniendo release ${discogsId} desde Discogs...`);
         const releaseResponse = await fetch(`https://api.discogs.com/releases/${discogsId}`, {
           headers: {
             "Authorization": `Discogs token=${discogsToken}`,
@@ -110,13 +131,13 @@ serve(async (req) => {
         });
 
         if (!releaseResponse.ok) {
-          console.error(`Error obteniendo release ${discogsId}:`, releaseResponse.status);
           const errorText = await releaseResponse.text();
-          console.error(`Discogs API response:`, errorText);
+          console.error(`❌ Error obteniendo release ${discogsId}: ${releaseResponse.status} - ${errorText}`);
           
           return new Response(JSON.stringify({ 
-            error: `Error obteniendo release: ${releaseResponse.status}`,
-            details: errorText
+            error: `Error obteniendo release de Discogs: ${releaseResponse.status}`,
+            details: errorText,
+            success: false
           }), {
             status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -126,7 +147,7 @@ serve(async (req) => {
         const releaseData = await releaseResponse.json();
         const videos = releaseData.videos || [];
 
-        console.log(`Encontrados ${videos.length} videos en el release`);
+        console.log(`🎬 Encontrados ${videos.length} videos en el release`);
 
         if (videos.length > 0) {
           // Filtrar videos de YouTube con validación mejorada
@@ -146,7 +167,7 @@ serve(async (req) => {
             const { error: deleteError } = await supabaseAdmin
               .from("album_youtube_urls")
               .delete()
-              .eq("album_id", albumId)
+              .eq("album_id", currentAlbumId)
               .eq("imported_from_discogs", true);
 
             if (deleteError) {
@@ -157,7 +178,7 @@ serve(async (req) => {
             const urlsToInsert = youtubeVideos
               .filter((video: any) => video.uri) // Filtrar videos sin URI
               .map((video: any) => ({
-                album_id: albumId,
+                album_id: currentAlbumId,
                 url: video.uri,
                 title: video.title || `Video para ${albumExists.title}`,
                 is_playlist: false,
