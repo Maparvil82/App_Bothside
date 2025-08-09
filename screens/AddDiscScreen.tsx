@@ -385,11 +385,33 @@ export const AddDiscScreen: React.FC = () => {
                 // Obtener estadísticas en segundo plano y guardarlas
                 if (album.discogs_id) {
                   DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, album.discogs_id).catch(()=>{});
+                  
+                  console.log('📀 Importando datos completos de Discogs para álbum creado localmente...');
                   try {
                     const fullRelease = await DiscogsService.getRelease(album.discogs_id);
+                    if (!fullRelease) {
+                      console.warn('⚠️ No se pudo obtener release de Discogs');
+                      throw new Error('Release no disponible');
+                    }
+                    
+                    console.log('✅ Release obtenido:', fullRelease.title);
+                    
+                    // Importar YouTube URLs (con eliminación previa como save-discogs-release)
                     const videos = (fullRelease as any)?.videos || [];
+                    console.log('🎬 Videos encontrados:', videos.length);
+                    
                     const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
+                    console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
+                    
                     if (youtubeVideos.length > 0) {
+                      // Eliminar URLs existentes importadas desde Discogs (como save-discogs-release)
+                      console.log('🧹 Eliminando URLs de YouTube previas...');
+                      await supabase
+                        .from('album_youtube_urls')
+                        .delete()
+                        .eq('album_id', newAlbum.id)
+                        .eq('imported_from_discogs', true);
+                      
                       const payload = youtubeVideos.map((v: any) => ({
                         album_id: newAlbum.id,
                         url: v.uri,
@@ -398,11 +420,26 @@ export const AddDiscScreen: React.FC = () => {
                         imported_from_discogs: true,
                         discogs_video_id: v.id ? String(v.id) : null,
                       }));
-                      await supabase.from('album_youtube_urls').insert(payload);
+                      const { error: urlError } = await supabase.from('album_youtube_urls').insert(payload);
+                      if (urlError) {
+                        console.error('❌ Error insertando URLs de YouTube:', urlError.message);
+                      } else {
+                        console.log('✅ URLs de YouTube insertadas:', payload.length);
+                      }
                     }
+                    
                     // Importar tracklist
                     const tracklist = (fullRelease as any)?.tracklist || [];
+                    console.log('🎵 Tracks encontrados:', tracklist.length);
+                    
                     if (Array.isArray(tracklist) && tracklist.length > 0) {
+                      // Eliminar tracks existentes para evitar duplicados
+                      console.log('🧹 Eliminando tracks previos...');
+                      await supabase
+                        .from('tracks')
+                        .delete()
+                        .eq('album_id', newAlbum.id);
+                      
                       const tracksPayload = tracklist
                         .filter((t: any) => t?.title)
                         .map((t: any) => ({
@@ -412,10 +449,21 @@ export const AddDiscScreen: React.FC = () => {
                           duration: t.duration?.toString() || null,
                         }));
                       if (tracksPayload.length > 0) {
-                        await supabase.from('tracks').insert(tracksPayload);
+                        const { error: tracksError } = await supabase.from('tracks').insert(tracksPayload);
+                        if (tracksError) {
+                          console.error('❌ Error insertando tracks:', tracksError.message);
+                        } else {
+                          console.log('✅ Tracks insertados:', tracksPayload.length);
+                        }
                       }
                     }
-                  } catch {}
+                    
+                    console.log('🎉 Importación completa de Discogs finalizada exitosamente');
+                    
+                  } catch (importError) {
+                    console.error('❌ Error importando datos de Discogs:', importError);
+                    // No fallar toda la operación, el álbum básico ya está creado
+                  }
                 }
                 await UserCollectionService.addToCollection(user.id, newAlbum.id);
                 Alert.alert('Éxito', 'Disco añadido a tu colección');
