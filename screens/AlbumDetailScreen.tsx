@@ -184,60 +184,123 @@ export default function AlbumDetailScreen() {
   // Descarga desde Discogs y guarda tracks/YouTube si faltan
   const backfillDiscogsDetails = async (internalAlbumId: string, discogsId: number | string) => {
     try {
-      // Intentar la Edge Function que inserta URLs de YouTube con Service Role
-      console.log('🎵 Intentando backfill con edge function para álbum:', internalAlbumId, 'discogs:', discogsId);
+      // Backfill directo desde el cliente usando DiscogsService
+      console.log('🎵 Iniciando backfill directo para álbum:', internalAlbumId, 'discogs:', discogsId);
       
-      const payload = { albumId: internalAlbumId, discogsId: String(discogsId) };
-      console.log('📤 Payload enviado a edge function:', payload);
+      // Importar y usar DiscogsService directamente
+      const { DiscogsService } = await import('../services/discogs');
+      const release: any = await DiscogsService.getRelease(Number(discogsId));
       
-      const { data: fnData, error: fnError } = await supabase.functions.invoke('update-youtube-videos', {
-        body: payload,
-      });
-      
-      console.log('📥 Respuesta de edge function - data:', fnData, 'error:', fnError);
-      
-      if (fnError) {
-        console.warn('❌ Edge function update-youtube-videos error:', fnError.message || fnError);
-        console.warn('❌ Detalles del error:', JSON.stringify(fnError, null, 2));
-        return; // No hacer fallback cliente, solo usar edge function
+      if (!release) {
+        console.warn('❌ No se pudo obtener release de Discogs');
+        return;
       }
-
-      if (fnData && fnData.success) {
-        console.log('✅ Edge function completada exitosamente:', fnData);
-        // Consultar las URLs recién insertadas y actualizar el estado inmediatamente
-        try {
-          const { data: newUrls, error: urlsError } = await supabase
-            .from('album_youtube_urls')
-            .select('url, title')
-            .eq('album_id', internalAlbumId);
-            
-          if (urlsError) {
-            console.warn('Error consultando URLs después del backfill:', urlsError);
-          } else if (newUrls && newUrls.length > 0) {
-            console.log('🎯 URLs encontradas después del backfill:', newUrls.length);
-            // Actualizar el estado actual del álbum para mostrar el botón inmediatamente
-            setAlbum(prevAlbum => {
-              if (!prevAlbum) return prevAlbum;
-              return {
-                ...prevAlbum,
-                albums: {
-                  ...prevAlbum.albums,
-                  album_youtube_urls: newUrls.map(u => ({ url: u.url }))
-                }
-              };
-            });
-          }
-        } catch (urlError) {
-          console.warn('Error actualizando URLs en estado:', urlError);
-        }
+      
+      console.log('📀 Release obtenido de Discogs:', release.title);
+      
+      // Procesar videos de YouTube
+      const videos = release.videos || [];
+      console.log('🎬 Videos encontrados:', videos.length);
+      
+      if (videos.length > 0) {
+        const youtubeVideos = videos.filter((v: any) => 
+          v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be'))
+        );
         
-        // También recargar el detalle completo como respaldo
-        setTimeout(() => {
-          console.log('🔄 Recargando detalle del álbum después de backfill exitoso...');
-          loadAlbumDetail();
-        }, 1000);
-      } else {
-        console.warn('⚠️ Edge function no devolvió success:', fnData);
+        console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
+        
+        if (youtubeVideos.length > 0) {
+          // Consultar URLs existentes para evitar duplicados
+          const { data: existingUrls } = await supabase
+            .from('album_youtube_urls')
+            .select('url')
+            .eq('album_id', internalAlbumId);
+          
+          const existingUrlSet = new Set((existingUrls || []).map((u: any) => u.url));
+          
+          const urlsToInsert = youtubeVideos
+            .filter((v: any) => !existingUrlSet.has(v.uri))
+            .map((v: any) => ({
+              album_id: internalAlbumId,
+              url: v.uri,
+              title: v.title || 'Video de YouTube',
+              is_playlist: false,
+              imported_from_discogs: true,
+              discogs_video_id: v.id?.toString() || null
+            }));
+          
+          console.log('➕ URLs a insertar:', urlsToInsert.length);
+          
+          if (urlsToInsert.length > 0) {
+            const { error: insertError } = await supabase
+              .from('album_youtube_urls')
+              .insert(urlsToInsert);
+            
+            if (insertError) {
+              console.warn('❌ Error insertando URLs:', insertError.message);
+            } else {
+              console.log('✅ URLs de YouTube insertadas exitosamente');
+              
+              // Actualizar el estado inmediatamente
+              setAlbum(prevAlbum => {
+                if (!prevAlbum) return prevAlbum;
+                const newUrls = urlsToInsert.map((u: any) => ({ url: u.url }));
+                return {
+                  ...prevAlbum,
+                  albums: {
+                    ...prevAlbum.albums,
+                    album_youtube_urls: [...(prevAlbum.albums.album_youtube_urls || []), ...newUrls]
+                  }
+                };
+              });
+              
+              // Recargar después de un momento
+              setTimeout(() => {
+                console.log('🔄 Recargando detalle completo...');
+                loadAlbumDetail();
+              }, 1000);
+            }
+          }
+        }
+      }
+      
+      // Procesar tracks si faltan
+      const tracklist = release.tracklist || [];
+      if (tracklist.length > 0) {
+        const { data: existingTracks } = await supabase
+          .from('tracks')
+          .select('position, title, duration')
+          .eq('album_id', internalAlbumId);
+        
+        const existingTrackKeys = new Set(
+          (existingTracks || []).map((t: any) => 
+            `${(t.position || '').toString().trim()}|${(t.title || '').toString().trim()}|${(t.duration || '').toString().trim()}`
+          )
+        );
+        
+        const tracksToInsert = tracklist
+          .filter((t: any) => t?.title)
+          .map((t: any) => ({
+            album_id: internalAlbumId,
+            position: t.position?.toString() || null,
+            title: t.title?.toString() || '',
+            duration: t.duration?.toString() || null
+          }))
+          .filter((t: any) => !existingTrackKeys.has(
+            `${(t.position || '').toString().trim()}|${(t.title || '').toString().trim()}|${(t.duration || '').toString().trim()}`
+          ));
+        
+        if (tracksToInsert.length > 0) {
+          const { error: tracksError } = await supabase
+            .from('tracks')
+            .insert(tracksToInsert);
+          
+          if (tracksError) {
+            console.warn('❌ Error insertando tracks:', tracksError.message);
+          } else {
+            console.log('✅ Tracks insertados exitosamente');
+          }
+        }
       }
 
     } catch (error) {
