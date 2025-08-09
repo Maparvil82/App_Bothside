@@ -210,17 +210,22 @@ export default function AlbumDetailScreen() {
         console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
         
         if (youtubeVideos.length > 0) {
-          // Consultar URLs existentes para evitar duplicados
-          const { data: existingUrls } = await supabase
+          // Eliminar URLs existentes importadas desde Discogs (como hace save-discogs-release)
+          console.log('🧹 Eliminando URLs de YouTube importadas previamente desde Discogs...');
+          const { error: deleteError } = await supabase
             .from('album_youtube_urls')
-            .select('url')
-            .eq('album_id', internalAlbumId);
+            .delete()
+            .eq('album_id', internalAlbumId)
+            .eq('imported_from_discogs', true);
           
-          const existingUrlSet = new Set((existingUrls || []).map((u: any) => u.url));
+          if (deleteError) {
+            console.warn('❌ Error eliminando URLs anteriores:', deleteError.message);
+          } else {
+            console.log('✅ URLs anteriores eliminadas');
+          }
           
-          const urlsToInsert = youtubeVideos
-            .filter((v: any) => !existingUrlSet.has(v.uri))
-            .map((v: any) => ({
+          // Preparar todas las URLs para inserción (sin filtrar duplicados ya que las eliminamos)
+          const urlsToInsert = youtubeVideos.map((v: any) => ({
               album_id: internalAlbumId,
               url: v.uri,
               title: v.title || 'Video de YouTube',
@@ -249,7 +254,7 @@ export default function AlbumDetailScreen() {
                   ...prevAlbum,
                   albums: {
                     ...prevAlbum.albums,
-                    album_youtube_urls: [...(prevAlbum.albums.album_youtube_urls || []), ...newUrls]
+                    album_youtube_urls: newUrls // Reemplazar completamente ya que eliminamos las anteriores
                   }
                 };
               });
