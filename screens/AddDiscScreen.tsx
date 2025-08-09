@@ -341,191 +341,123 @@ export const AddDiscScreen: React.FC = () => {
     if (!user) return;
 
     try {
-      // Si el álbum ya tiene discogs_id, usar la Edge Function
+      // Usar siempre el flujo local robusto para todos los usuarios
       if (album.discogs_id) {
-        console.log('🎵 Llamando a Edge Function para álbum existente:', album.discogs_id);
+        console.log('🎵 Procesando álbum con discogs_id:', album.discogs_id);
         
-        const { data, error } = await supabase.functions.invoke('save-discogs-release', {
-          body: {
-            discogsReleaseId: album.discogs_id,
-            userId: user.id
-          }
-        });
+        // Primero verificar si el álbum ya existe en el catálogo
+        console.log('🔍 Buscando álbum existente por discogs_id...');
+        const { data: albumRow, error: findErr } = await supabase
+          .from('albums')
+          .select('id')
+          .eq('discogs_id', album.discogs_id)
+          .maybeSingle();
+         
+        if (findErr) throw findErr;
         
-        if (error) {
-          console.error('❌ Error llamando a Edge Function:', error);
-          // Fallback directo a inserción en user_collection si el álbum ya existe en catálogo
-          try {
-            console.log('🛟 Fallback: buscando álbum por discogs_id para inserción directa en user_collection...');
-            const { data: albumRow, error: findErr } = await supabase
-              .from('albums')
-              .select('id')
-              .eq('discogs_id', album.discogs_id)
-              .maybeSingle();
-            if (findErr) throw findErr;
-            if (albumRow?.id) {
-              await UserCollectionService.addToCollection(user.id, albumRow.id);
-              Alert.alert('Éxito', 'Disco añadido a tu colección');
-              setQuery('');
-              setAlbums([]);
-              return;
-            } else {
-              console.log('🧩 Creando álbum mínimo en albums (fallback)...');
-              const newAlbum = await AlbumService.createAlbum({
-                title: album.title,
-                artist: album.artist,
-                label: album.label,
-                release_year: album.release_year,
-                cover_url: album.cover_url,
-                catalog_no: (album as any).catalog_no,
-                country: (album as any).country,
-                discogs_id: album.discogs_id
-              } as any);
-              if (newAlbum?.id) {
-                // Obtener estadísticas en segundo plano y guardarlas
-                if (album.discogs_id) {
-                  DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, album.discogs_id).catch(()=>{});
-                  
-                  console.log('📀 Importando datos completos de Discogs para álbum creado localmente...');
-                  try {
-                    const fullRelease = await DiscogsService.getRelease(album.discogs_id);
-                    if (!fullRelease) {
-                      console.warn('⚠️ No se pudo obtener release de Discogs');
-                      throw new Error('Release no disponible');
-                    }
-                    
-                    console.log('✅ Release obtenido:', fullRelease.title);
-                    
-                    // Importar YouTube URLs (con eliminación previa como save-discogs-release)
-                    const videos = (fullRelease as any)?.videos || [];
-                    console.log('🎬 Videos encontrados:', videos.length);
-                    
-                    const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
-                    console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
-                    
-                    if (youtubeVideos.length > 0) {
-                      // Eliminar URLs existentes importadas desde Discogs (como save-discogs-release)
-                      console.log('🧹 Eliminando URLs de YouTube previas...');
-                      await supabase
-                        .from('album_youtube_urls')
-                        .delete()
-                        .eq('album_id', newAlbum.id)
-                        .eq('imported_from_discogs', true);
-                      
-                      const payload = youtubeVideos.map((v: any) => ({
-                        album_id: newAlbum.id,
-                        url: v.uri,
-                        title: v.title || '',
-                        is_playlist: false,
-                        imported_from_discogs: true,
-                        discogs_video_id: v.id ? String(v.id) : null,
-                      }));
-                      const { error: urlError } = await supabase.from('album_youtube_urls').insert(payload);
-                      if (urlError) {
-                        console.error('❌ Error insertando URLs de YouTube:', urlError.message);
-                      } else {
-                        console.log('✅ URLs de YouTube insertadas:', payload.length);
-                      }
-                    }
-                    
-                    // Importar tracklist
-                    const tracklist = (fullRelease as any)?.tracklist || [];
-                    console.log('🎵 Tracks encontrados:', tracklist.length);
-                    
-                    if (Array.isArray(tracklist) && tracklist.length > 0) {
-                      // Eliminar tracks existentes para evitar duplicados
-                      console.log('🧹 Eliminando tracks previos...');
-                      await supabase
-                        .from('tracks')
-                        .delete()
-                        .eq('album_id', newAlbum.id);
-                      
-                      const tracksPayload = tracklist
-                        .filter((t: any) => t?.title)
-                        .map((t: any) => ({
-                          album_id: newAlbum.id,
-                          position: t.position?.toString() || null,
-                          title: t.title?.toString() || '',
-                          duration: t.duration?.toString() || null,
-                        }));
-                      if (tracksPayload.length > 0) {
-                        const { error: tracksError } = await supabase.from('tracks').insert(tracksPayload);
-                        if (tracksError) {
-                          console.error('❌ Error insertando tracks:', tracksError.message);
-                        } else {
-                          console.log('✅ Tracks insertados:', tracksPayload.length);
-                        }
-                      }
-                    }
-                    
-                    console.log('🎉 Importación completa de Discogs finalizada exitosamente');
-                    
-                  } catch (importError) {
-                    console.error('❌ Error importando datos de Discogs:', importError);
-                    // No fallar toda la operación, el álbum básico ya está creado
-                  }
-                }
-                await UserCollectionService.addToCollection(user.id, newAlbum.id);
-                Alert.alert('Éxito', 'Disco añadido a tu colección');
-                setQuery('');
-                setAlbums([]);
-                return;
-              }
-            }
-          } catch (fbErr) {
-            console.error('❌ Fallback directo/creación mínima falló:', fbErr);
-          }
-          throw error;
-        }
-        
-        if (data?.success) {
-          console.log('✅ Disco añadido exitosamente a la colección');
-          
-          // Obtener estadísticas de Discogs en segundo plano (no bloquear la UI)
-          if (data.albumId && album.discogs_id) {
-            DiscogsStatsService.fetchAndSaveDiscogsStats(data.albumId, album.discogs_id)
-              .then((success) => {
-                if (success) {
-                  console.log('✅ Estadísticas de Discogs obtenidas y guardadas');
-                } else {
-                  console.log('⚠️ No se pudieron obtener estadísticas de Discogs');
-                }
-              })
-              .catch((error) => {
-                console.error('❌ Error obteniendo estadísticas de Discogs:', error);
-              });
-          }
-          
+        if (albumRow?.id) {
+          // El álbum ya existe, solo añadirlo a la colección
+          console.log('✅ Álbum encontrado en catálogo, añadiendo a colección...');
+          await UserCollectionService.addToCollection(user.id, albumRow.id);
           Alert.alert('Éxito', 'Disco añadido a tu colección');
-          
-          // Limpiar búsqueda
           setQuery('');
           setAlbums([]);
+          return;
         } else {
-          // Si la función respondió 2xx pero sin success, intentar fallback
-          try {
-            console.log('🛟 Fallback: función respondió sin éxito; buscando álbum por discogs_id...');
-            const { data: albumRow } = await supabase
-              .from('albums')
-              .select('id')
-              .eq('discogs_id', album.discogs_id)
-              .maybeSingle();
-            if (albumRow?.id) {
-              await UserCollectionService.addToCollection(user.id, albumRow.id);
-              Alert.alert('Éxito', 'Disco añadido a tu colección');
-              setQuery('');
-              setAlbums([]);
-              return;
+          // El álbum no existe, crearlo con datos completos
+          console.log('🧩 Creando álbum completo con datos de Discogs...');
+          const newAlbum = await AlbumService.createAlbum({
+            title: album.title,
+            artist: album.artist,
+            label: album.label,
+            release_year: album.release_year,
+            cover_url: album.cover_url,
+            catalog_no: (album as any).catalog_no,
+            country: (album as any).country,
+            discogs_id: album.discogs_id
+          } as any);
+          
+          if (newAlbum?.id) {
+            // Obtener estadísticas en segundo plano
+            DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, album.discogs_id).catch(()=>{});
+            
+            // Importar datos completos de Discogs
+            console.log('📀 Importando datos completos de Discogs...');
+            try {
+              const fullRelease = await DiscogsService.getRelease(album.discogs_id);
+              if (!fullRelease) {
+                console.warn('⚠️ No se pudo obtener release de Discogs');
+                throw new Error('Release no disponible');
+              }
+              
+              console.log('✅ Release obtenido:', fullRelease.title);
+              
+              // Importar YouTube URLs
+              const videos = (fullRelease as any)?.videos || [];
+              console.log('🎬 Videos encontrados:', videos.length);
+              
+              const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
+              console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
+              
+              if (youtubeVideos.length > 0) {
+                const payload = youtubeVideos.map((v: any) => ({
+                  album_id: newAlbum.id,
+                  url: v.uri,
+                  title: v.title || '',
+                  is_playlist: false,
+                  imported_from_discogs: true,
+                  discogs_video_id: v.id ? String(v.id) : null,
+                }));
+                const { error: urlError } = await supabase.from('album_youtube_urls').insert(payload);
+                if (urlError) {
+                  console.error('❌ Error insertando URLs de YouTube:', urlError.message);
+                } else {
+                  console.log('✅ URLs de YouTube insertadas:', payload.length);
+                }
+              }
+              
+              // Importar tracklist
+              const tracklist = (fullRelease as any)?.tracklist || [];
+              console.log('🎵 Tracks encontrados:', tracklist.length);
+              
+              if (Array.isArray(tracklist) && tracklist.length > 0) {
+                const tracksPayload = tracklist
+                  .filter((t: any) => t?.title)
+                  .map((t: any) => ({
+                    album_id: newAlbum.id,
+                    position: t.position?.toString() || null,
+                    title: t.title?.toString() || '',
+                    duration: t.duration?.toString() || null,
+                  }));
+                if (tracksPayload.length > 0) {
+                  const { error: tracksError } = await supabase.from('tracks').insert(tracksPayload);
+                  if (tracksError) {
+                    console.error('❌ Error insertando tracks:', tracksError.message);
+                  } else {
+                    console.log('✅ Tracks insertados:', tracksPayload.length);
+                  }
+                }
+              }
+              
+              console.log('🎉 Importación completa de Discogs finalizada exitosamente');
+              
+            } catch (importError) {
+              console.error('❌ Error importando datos de Discogs:', importError);
+              // No fallar toda la operación, el álbum básico ya está creado
             }
-          } catch {}
-          throw new Error(data?.error || 'Error desconocido');
+            
+            // Añadir a la colección del usuario
+            await UserCollectionService.addToCollection(user.id, newAlbum.id);
+            Alert.alert('Éxito', 'Disco añadido a tu colección');
+            setQuery('');
+            setAlbums([]);
+            return;
+          }
         }
       } else {
-        // Para álbumes sin discogs_id, usar el método directo
+        // Para álbumes sin discogs_id (casos raros)
         await UserCollectionService.addToCollection(user.id, album.id);
         Alert.alert('Éxito', 'Disco añadido a tu colección');
-        
-        // Limpiar búsqueda
         setQuery('');
         setAlbums([]);
       }
