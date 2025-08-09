@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -83,6 +83,7 @@ export default function AlbumDetailScreen() {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [fallbackGenres, setFallbackGenres] = useState<string[]>([]);
   const [fallbackStyles, setFallbackStyles] = useState<string[]>([]);
+  const lastBackfilledAlbumIdRef = useRef<string | null>(null);
   
   const { albumId } = route.params as { albumId: string };
 
@@ -143,6 +144,16 @@ export default function AlbumDetailScreen() {
         
         if (fullAlbumData.albums) {
             await loadAlbumEditions(fullAlbumData.albums.artist, fullAlbumData.albums.title);
+            // Backfill de tracks y YouTube para usuarios nuevos si faltan datos
+            const hasTracks = Array.isArray((fullAlbumData.albums as any)?.tracks) && (fullAlbumData.albums as any)?.tracks.length > 0;
+            const hasYouTube = Array.isArray((fullAlbumData.albums as any)?.album_youtube_urls) && (fullAlbumData.albums as any)?.album_youtube_urls.length > 0;
+            const discogsId = (fullAlbumData as any)?.albums?.discogs_id;
+            if ((!hasTracks || !hasYouTube) && discogsId && lastBackfilledAlbumIdRef.current !== fullAlbumData.albums.id) {
+              lastBackfilledAlbumIdRef.current = fullAlbumData.albums.id;
+              backfillDiscogsDetails(fullAlbumData.albums.id, discogsId).catch(() => {
+                // noop
+              });
+            }
         }
 
       } catch (e: any) {
@@ -153,9 +164,46 @@ export default function AlbumDetailScreen() {
     };
     
     fetchFullAlbumData();
-  }, [albumId, user]);
+  }, [albumId, user?.id]);
 
   useFocusEffect(loadAlbumDetail);
+
+  // Descarga desde Discogs y guarda tracks/YouTube si faltan
+  const backfillDiscogsDetails = async (internalAlbumId: string, discogsId: number | string) => {
+    try {
+      // Intentar la Edge Function que inserta URLs de YouTube con Service Role
+      console.log('🎵 Intentando backfill con edge function para álbum:', internalAlbumId, 'discogs:', discogsId);
+      
+      const payload = { albumId: internalAlbumId, discogsId: String(discogsId) };
+      console.log('📤 Payload enviado a edge function:', payload);
+      
+      const { data: fnData, error: fnError } = await supabase.functions.invoke('update-youtube-videos', {
+        body: payload,
+      });
+      
+      console.log('📥 Respuesta de edge function - data:', fnData, 'error:', fnError);
+      
+      if (fnError) {
+        console.warn('❌ Edge function update-youtube-videos error:', fnError.message || fnError);
+        console.warn('❌ Detalles del error:', JSON.stringify(fnError, null, 2));
+        return; // No hacer fallback cliente, solo usar edge function
+      }
+
+      if (fnData && fnData.success) {
+        console.log('✅ Edge function completada exitosamente:', fnData);
+        // Recargar el detalle para mostrar las URLs insertadas
+        setTimeout(() => {
+          console.log('🔄 Recargando detalle del álbum después de backfill exitoso...');
+          loadAlbumDetail();
+        }, 500);
+      } else {
+        console.warn('⚠️ Edge function no devolvió success:', fnData);
+      }
+
+    } catch (error) {
+      console.error('💥 Error en backfill:', error);
+    }
+  };
 
   // Ensure hooks are declared before any conditional returns
   useEffect(() => {
@@ -569,17 +617,26 @@ export default function AlbumDetailScreen() {
         {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tracks</Text>
-            {album.albums.tracks.map((track, index) => (
-              <View key={index} style={styles.trackItem}>
-                <View style={styles.trackInfo}>
-                  <Text style={styles.trackPosition}>{track.position}</Text>
-                  <Text style={styles.trackTitle}>{track.title}</Text>
+            {(() => {
+              const seen = new Set<string>();
+              const uniqueTracks = (album.albums.tracks || []).filter((t) => {
+                const key = `${(t.position || '').toString().trim()}|${(t.title || '').toString().trim()}|${(t.duration || '').toString().trim()}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              });
+              return uniqueTracks.map((track, index) => (
+                <View key={index} style={styles.trackItem}>
+                  <View style={styles.trackInfo}>
+                    <Text style={styles.trackPosition}>{track.position}</Text>
+                    <Text style={styles.trackTitle}>{track.title}</Text>
+                  </View>
+                  {track.duration && (
+                    <Text style={styles.trackDuration}>{track.duration}</Text>
+                  )}
                 </View>
-                {track.duration && (
-                  <Text style={styles.trackDuration}>{track.duration}</Text>
-                )}
-              </View>
-            ))}
+              ));
+            })()}
           </View>
         )}
 
