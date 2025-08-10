@@ -45,6 +45,7 @@ interface CollectionStats {
   albumsByDecade: Array<{ decade: string; count: number }>;
   latestAlbums: Array<{ id: string; title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
   mostExpensiveAlbums: Array<{ id: string; title: string; artist: string; price: number; imageUrl?: string }>;
+  highestRatioAlbums: Array<{ id: string; title: string; artist: string; ratio: number; level: string; color: string; want: number; have: number; imageUrl?: string }>;
 }
 
 interface AudioNoteAlbum {
@@ -116,7 +117,9 @@ export default function DashboardScreen() {
             album_stats (
               avg_price,
               low_price,
-              high_price
+              high_price,
+              want,
+              have
             )
           )
         `)
@@ -145,6 +148,7 @@ export default function DashboardScreen() {
           albumsByDecade: [],
           latestAlbums: [],
           mostExpensiveAlbums: [],
+          highestRatioAlbums: [],
         });
         return;
       }
@@ -330,6 +334,53 @@ export default function DashboardScreen() {
 
                   console.log('💰 Valor total de la colección:', collectionValue.toFixed(2), '€');
 
+                  // Función para calcular el ratio de venta
+                  const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
+                    if (!want || !have || have === 0) {
+                      return { ratio: 0, level: 'Sin datos', color: '#6c757d' };
+                    }
+                    
+                    const ratio = want / have;
+                    
+                    if (ratio < 2) {
+                      return { ratio, level: 'Bajo', color: '#dc3545' };
+                    } else if (ratio >= 2 && ratio < 8) {
+                      return { ratio, level: 'Medio', color: '#ffc107' };
+                    } else if (ratio >= 8 && ratio < 25) {
+                      return { ratio, level: 'Alto', color: '#28a745' };
+                    } else {
+                      return { ratio, level: 'Excepcional', color: '#6f42c1' };
+                    }
+                  };
+
+                  // Top 5 discos con mayor ratio de venta
+                  const highestRatioAlbums = collectionData
+                    .map((item: any) => {
+                      const album = item.albums;
+                      if (!album || !album.album_stats || !album.album_stats.want || !album.album_stats.have) return null;
+                      
+                      const { ratio, level, color } = calculateSalesRatio(album.album_stats.want, album.album_stats.have);
+                      
+                      if (ratio === 0) return null; // Excluir los que no tienen datos
+                      
+                      return {
+                        id: item.album_id,
+                        title: album.title || 'Sin título',
+                        artist: album.artist || 'Artista desconocido',
+                        ratio,
+                        level,
+                        color,
+                        want: album.album_stats.want,
+                        have: album.album_stats.have,
+                        imageUrl: album.cover_url,
+                      };
+                    })
+                    .filter(Boolean)
+                    .sort((a: any, b: any) => b.ratio - a.ratio)
+                    .slice(0, 5) as Array<{ id: string; title: string; artist: string; ratio: number; level: string; color: string; want: number; have: number; imageUrl?: string }>;
+
+                  console.log('📈 Álbumes con mayor ratio de venta:', highestRatioAlbums.length);
+
                   setStats({
                     totalAlbums,
                     totalArtists,
@@ -344,6 +395,7 @@ export default function DashboardScreen() {
                     albumsByDecade,
                     latestAlbums,
                     mostExpensiveAlbums,
+                    highestRatioAlbums,
                   });
 
     } catch (error) {
@@ -578,6 +630,55 @@ export default function DashboardScreen() {
         </View>
       )}
 
+      {/* Álbumes con mayor ratio de venta */}
+      {stats.highestRatioAlbums.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Discos con Mayor Ratio de Venta</Text>
+          <Text style={styles.sectionSubtitle}>
+            Basado en la relación entre demanda (want) y disponibilidad (have) en Discogs
+          </Text>
+          {stats.highestRatioAlbums.map((album, index) => (
+            <TouchableOpacity 
+              key={index} 
+              style={styles.albumItem}
+              onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
+            >
+              <View style={styles.albumImageContainer}>
+                {album.imageUrl ? (
+                  <Image 
+                    source={{ uri: album.imageUrl }} 
+                    style={styles.albumImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.albumImagePlaceholder}>
+                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                  </View>
+                )}
+              </View>
+              <View style={styles.albumInfo}>
+                <Text style={styles.albumTitle}>{album.title}</Text>
+                <Text style={styles.albumArtist}>{album.artist}</Text>
+                <View style={styles.ratioContainer}>
+                  <View style={[styles.ratioLevelBadge, { backgroundColor: album.color }]}>
+                    <Text style={styles.ratioLevelText}>{album.level}</Text>
+                  </View>
+                  <Text style={styles.ratioText}>
+                    Ratio: {album.ratio.toFixed(1)}
+                  </Text>
+                </View>
+                <Text style={styles.ratioStats}>
+                  Want: {album.want} • Have: {album.have}
+                </Text>
+              </View>
+              <View style={styles.albumRank}>
+                <Text style={styles.albumRankText}>#{index + 1}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+
       {/* Sección de Notas de Audio */}
       {albumsWithAudio.length > 0 && (
         <View style={styles.section}>
@@ -799,6 +900,12 @@ const styles = StyleSheet.create({
     color: '#212529',
     marginBottom: 12,
   },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: '#6c757d',
+    marginBottom: 16,
+    lineHeight: 20,
+  },
   listItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -1014,6 +1121,32 @@ const styles = StyleSheet.create({
   },
   shelfStatText: {
     fontSize: 14,
+    color: '#6c757d',
+    marginTop: 4,
+  },
+  ratioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  ratioLevelBadge: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    marginRight: 8,
+  },
+  ratioLevelText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  ratioText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#212529',
+  },
+  ratioStats: {
+    fontSize: 12,
     color: '#6c757d',
     marginTop: 4,
   },
