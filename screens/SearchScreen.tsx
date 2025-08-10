@@ -1783,16 +1783,20 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#007AFF',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
+    minWidth: 160,
+    flexWrap: 'nowrap',
   },
   createButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
     marginLeft: 8,
+    flexShrink: 0,
   },
   footerContainer: {
     padding: 15,
