@@ -1795,7 +1795,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: 10,
     flexShrink: 0,
   },
   footerContainer: {
