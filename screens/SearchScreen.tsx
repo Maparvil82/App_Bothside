@@ -453,6 +453,38 @@ export const SearchScreen: React.FC = () => {
     rowMap[rowKey]?.closeRow();
   };
 
+  const renderEmptyState = () => {
+    if (loading) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>Cargando...</Text>
+        </View>
+      );
+    }
+    
+    if (collection.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Ionicons name="musical-notes-outline" size={64} color="#CCC" />
+          <Text style={styles.emptyStateTitle}>No tienes discos</Text>
+          <Text style={styles.emptyStateSubtitle}>
+            Añade tu primer disco para empezar tu colección
+          </Text>
+          <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('AddDisc')}>
+            <Ionicons name="add" size={20} color="white" />
+            <Text style={styles.createButtonText}>Añadir Disco</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+    
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>No se encontraron resultados</Text>
+      </View>
+    );
+  };
+
   const sortCollection = () => {
     let filtered = [...collection];
 
@@ -1160,17 +1192,7 @@ export const SearchScreen: React.FC = () => {
             onRefresh={onRefresh}
             previewOpenValue={0}
             previewOpenDelay={0}
-            ListEmptyComponent={
-              loading ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>Cargando...</Text>
-                </View>
-              ) : (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No se encontraron resultados</Text>
-                </View>
-              )
-            }
+            ListEmptyComponent={renderEmptyState}
             ListFooterComponent={
               releases.length > 0 ? (
                 <View style={styles.footerContainer}>
@@ -1195,17 +1217,7 @@ export const SearchScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             refreshing={refreshing}
             onRefresh={onRefresh}
-            ListEmptyComponent={
-              loading ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>Cargando...</Text>
-                </View>
-              ) : (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No se encontraron resultados</Text>
-                </View>
-              )
-            }
+            ListEmptyComponent={renderEmptyState}
             ListFooterComponent={
               releases.length > 0 ? (
                 <View style={styles.footerContainer}>
@@ -1747,6 +1759,40 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#999',
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  createButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
   },
   footerContainer: {
     padding: 15,
