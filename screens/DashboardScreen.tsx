@@ -342,14 +342,15 @@ export default function DashboardScreen() {
                     
                     const ratio = want / have;
                     
-                    if (ratio < 2) {
-                      return { ratio, level: 'Bajo', color: '#dc3545' };
-                    } else if (ratio >= 2 && ratio < 8) {
-                      return { ratio, level: 'Medio', color: '#ffc107' };
+                    // Ratio alto = más demanda que disponibilidad = MEJOR
+                    if (ratio >= 25) {
+                      return { ratio, level: 'Excepcional', color: '#6f42c1' };
                     } else if (ratio >= 8 && ratio < 25) {
                       return { ratio, level: 'Alto', color: '#28a745' };
+                    } else if (ratio >= 2 && ratio < 8) {
+                      return { ratio, level: 'Medio', color: '#ffc107' };
                     } else {
-                      return { ratio, level: 'Excepcional', color: '#6f42c1' };
+                      return { ratio, level: 'Bajo', color: '#dc3545' };
                     }
                   };
 
@@ -635,7 +636,7 @@ export default function DashboardScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Discos con Mayor Ratio de Venta</Text>
           <Text style={styles.sectionSubtitle}>
-            Basado en la relación entre demanda (want) y disponibilidad (have) en Discogs
+            Discos más cotizados: mayor demanda que disponibilidad en Discogs. Ratio alto = más valioso.
           </Text>
           {stats.highestRatioAlbums.map((album, index) => (
             <TouchableOpacity 
