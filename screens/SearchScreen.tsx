@@ -465,7 +465,7 @@ export const SearchScreen: React.FC = () => {
     if (collection.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <Ionicons name="musical-notes-outline" size={64} color="#CCC" />
+          <Ionicons name="disc-outline" size={64} color="#CCC" />
           <Text style={styles.emptyStateTitle}>No tienes discos</Text>
           <Text style={styles.emptyStateSubtitle}>
             Añade tu primer disco para empezar tu colección
@@ -1387,13 +1387,13 @@ export const SearchScreen: React.FC = () => {
                   
                   <TouchableOpacity
                     style={[
-                      styles.createButton,
+                      styles.formCreateButton,
                       { opacity: newShelfTitle.trim() ? 1 : 0.5 }
                     ]}
                     onPress={createNewShelf}
                     disabled={!newShelfTitle.trim()}
                   >
-                    <Text style={styles.createButtonText}>Crear y añadir álbum</Text>
+                    <Text style={styles.formCreateButtonText}>Crear y añadir álbum</Text>
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -2009,14 +2009,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  createButton: {
+  formCreateButton: {
     flex: 1,
     padding: 15,
     borderRadius: 8,
     backgroundColor: '#007AFF',
     alignItems: 'center',
   },
-  createButtonText: {
+  formCreateButtonText: {
     fontSize: 16,
     color: 'white',
     fontWeight: '600',
