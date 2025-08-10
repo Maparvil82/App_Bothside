@@ -21,8 +21,19 @@ import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { TopItemsLineChart } from '../components/TopItemsLineChart';
 import ShelfGrid from '../components/ShelfGrid';
 import { CollectorRankCard } from '../components/CollectorRankCard';
+import { GamificationService } from '../services/gamification';
 
 const { width } = Dimensions.get('window');
+
+interface LeaderboardUser {
+  user_id: string;
+  tier: string;
+  level_index: number;
+  total_albums: number;
+  collection_value: number;
+  username?: string;
+  avatar_url?: string;
+}
 
 interface Shelf {
   id: string;
@@ -69,6 +80,7 @@ export default function DashboardScreen() {
   const navigation = useNavigation();
 
   const [shelves, setShelves] = useState<Shelf[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
 
   // Si la autenticación aún está cargando, mostrar loading
   if (authLoading) {
@@ -92,6 +104,51 @@ export default function DashboardScreen() {
       setShelves(data || []);
     } catch (error) {
       console.error('Error fetching shelves:', error);
+    }
+  }, [user]);
+
+  const fetchLeaderboard = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      console.log('📊 Obteniendo leaderboard de coleccionistas...');
+      
+      // Obtener top 5 del ranking
+      const rankingData = await GamificationService.getLeaderboard(5);
+      
+      if (!rankingData || rankingData.length === 0) {
+        console.log('📊 No hay datos de leaderboard disponibles');
+        setLeaderboard([]);
+        return;
+      }
+      
+      // Obtener información de perfiles para cada usuario
+      const userIds = rankingData.map(r => r.user_id);
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('user_profiles')
+        .select('id, username, avatar_url')
+        .in('id', userIds);
+      
+      if (profilesError) {
+        console.warn('Error obteniendo perfiles:', profilesError);
+      }
+      
+      // Combinar datos de ranking con perfiles
+      const leaderboardWithProfiles: LeaderboardUser[] = rankingData.map(ranking => {
+        const profile = profilesData?.find(p => p.id === ranking.user_id);
+        return {
+          ...ranking,
+          username: profile?.username || 'Usuario Anónimo',
+          avatar_url: profile?.avatar_url,
+        };
+      });
+      
+      console.log('📊 Leaderboard cargado:', leaderboardWithProfiles.length, 'usuarios');
+      setLeaderboard(leaderboardWithProfiles);
+      
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error);
+      setLeaderboard([]);
     }
   }, [user]);
 
@@ -470,6 +527,7 @@ export default function DashboardScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchCollectionStats();
+    await fetchLeaderboard();
     setRefreshing(false);
   };
 
@@ -477,7 +535,8 @@ export default function DashboardScreen() {
     fetchCollectionStats();
     fetchShelves();
     loadAlbumsWithAudio();
-  }, [user, fetchCollectionStats, fetchShelves, loadAlbumsWithAudio]);
+    fetchLeaderboard();
+  }, [user, fetchCollectionStats, fetchShelves, loadAlbumsWithAudio, fetchLeaderboard]);
 
   useFocusEffect(
     useCallback(() => {
@@ -532,6 +591,71 @@ export default function DashboardScreen() {
       {/* Rango de Coleccionista */}
       <CollectorRankCard totalAlbums={stats.totalAlbums} collectionValue={stats.collectionValue} />
       
+      {/* Leaderboard de Coleccionistas */}
+      {leaderboard.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>🏆 Top 5 Coleccionistas</Text>
+          <Text style={styles.sectionSubtitle}>
+            Los coleccionistas con mayor rango en la comunidad
+          </Text>
+          {leaderboard.map((collector, index) => {
+            const isCurrentUser = collector.user_id === user?.id;
+            const tierEmoji = {
+              'Novato': '🌱',
+              'Aficionado': '��', 
+              'Coleccionista': '💿',
+              'Curador': '📚',
+              'Virtuoso': '🏆',
+              'Legendario': '👑'
+            }[collector.tier] || '🎵';
+            
+            return (
+              <View 
+                key={collector.user_id} 
+                style={[styles.leaderboardItem, isCurrentUser && styles.leaderboardCurrentUser]}
+              >
+                <View style={styles.leaderboardRank}>
+                  <Text style={styles.leaderboardRankText}>#{index + 1}</Text>
+                </View>
+                
+                <View style={styles.leaderboardAvatar}>
+                  {collector.avatar_url ? (
+                    <Image 
+                      source={{ uri: collector.avatar_url }} 
+                      style={styles.leaderboardAvatarImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.leaderboardAvatarPlaceholder}>
+                      <Ionicons name="person" size={20} color="#6c757d" />
+                    </View>
+                  )}
+                </View>
+                
+                <View style={styles.leaderboardInfo}>
+                  <Text style={[styles.leaderboardUsername, isCurrentUser && styles.leaderboardCurrentUserText]}>
+                    {collector.username} {isCurrentUser && '(Tú)'}
+                  </Text>
+                  <View style={styles.leaderboardTier}>
+                    <Text style={styles.leaderboardTierEmoji}>{tierEmoji}</Text>
+                    <Text style={styles.leaderboardTierText}>{collector.tier}</Text>
+                  </View>
+                  <Text style={styles.leaderboardStats}>
+                    {collector.total_albums} álbumes • {collector.collection_value.toFixed(0)} €
+                  </Text>
+                </View>
+                
+                {index === 0 && (
+                  <View style={styles.leaderboardCrown}>
+                    <Ionicons name="trophy" size={20} color="#FFD700" />
+                  </View>
+                )}
+              </View>
+            );
+          })}
+        </View>
+      )}
+
       {/* Valor de la colección */}
       {stats.collectionValue > 0 && (
         <View style={styles.valueCard}>
@@ -1150,5 +1274,76 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6c757d',
     marginTop: 4,
+  },
+  leaderboardItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  leaderboardCurrentUser: {
+    backgroundColor: '#e9ecef',
+  },
+  leaderboardRank: {
+    width: 40,
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  leaderboardRankText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  leaderboardAvatar: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    overflow: 'hidden',
+    marginRight: 12,
+  },
+  leaderboardAvatarImage: {
+    width: '100%',
+    height: '100%',
+  },
+  leaderboardAvatarPlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#e9ecef',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  leaderboardInfo: {
+    flex: 1,
+  },
+  leaderboardUsername: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 4,
+  },
+  leaderboardCurrentUserText: {
+    color: '#007AFF',
+  },
+  leaderboardTier: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  leaderboardTierEmoji: {
+    fontSize: 18,
+    marginRight: 4,
+  },
+  leaderboardTierText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#495057',
+  },
+  leaderboardStats: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  leaderboardCrown: {
+    marginLeft: 12,
   },
 }); 
