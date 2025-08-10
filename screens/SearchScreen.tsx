@@ -439,7 +439,7 @@ export const SearchScreen: React.FC = () => {
               loadUserLists();
               setShowAddToShelfModal(true);
             }},
-            { text: 'Editar', onPress: () => handleEditAlbum(item) },
+            { text: 'Cambiar edición', onPress: () => handleEditAlbum(item) },
             ...(item.audio_note ? [
               { text: 'Reproducir audio', onPress: () => handlePlayAudio(item) },
               { text: 'Eliminar audio', onPress: () => handleDeleteAudioNote(item) }
