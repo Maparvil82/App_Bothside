@@ -598,17 +598,35 @@ export const SearchScreen: React.FC = () => {
           // Ser más flexible con la coincidencia
           return titleMatch || artistMatch;
         })
-        .map((release: any) => ({
-          id: release.id,
-          title: release.title || 'Sin título',
-          artist: release.artist || 'Artista desconocido',
-          year: release.year,
-          format: release.format?.join(', ') || 'Vinyl',
-          country: release.country,
-          label: release.label?.join(', ') || 'Unknown',
-          thumb: release.thumb,
-          cover_image: release.cover_image
-        }))
+        .map((release: any) => {
+          // Extraer artista del título si no está disponible directamente
+          let extractedArtist = release.artist;
+          let extractedTitle = release.title || 'Sin título';
+          
+          if (!extractedArtist && release.title) {
+            // Intentar extraer artista del título (formato: "Artista - Título")
+            const titleParts = release.title.split(' - ');
+            if (titleParts.length >= 2) {
+              extractedArtist = titleParts[0].trim();
+              extractedTitle = titleParts.slice(1).join(' - ').trim();
+            } else {
+              // Si no hay separador, usar el artista original del álbum que se está editando
+              extractedArtist = artist; // Usar el artista del álbum original
+            }
+          }
+          
+          return {
+            id: release.id,
+            title: extractedTitle,
+            artist: extractedArtist || artist, // Fallback al artista original
+            year: release.year,
+            format: release.format?.join(', ') || 'Vinyl',
+            country: release.country,
+            label: release.label?.join(', ') || 'Unknown',
+            thumb: release.thumb,
+            cover_image: release.cover_image
+          };
+        })
         .slice(0, 15); // Aumentar el límite a 15 ediciones
       
       console.log(`✅ Ediciones filtradas: ${formattedEditions.length}`);
