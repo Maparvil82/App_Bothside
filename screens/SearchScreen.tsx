@@ -470,7 +470,7 @@ export const SearchScreen: React.FC = () => {
           <Text style={styles.emptyStateSubtitle}>
             Añade tu primer disco para empezar tu colección
           </Text>
-          <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('AddDisc')}>
+          <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
             <Ionicons name="add" size={20} color="white" />
             <Text style={styles.createButtonText}>Añadir Disco</Text>
           </TouchableOpacity>
