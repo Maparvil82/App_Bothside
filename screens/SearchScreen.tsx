@@ -382,7 +382,7 @@ export const SearchScreen: React.FC = () => {
       });
       
       // Preparar opciones dinámicas
-      const options = ['Cancelar', gemAction, 'Añadir a Estantería', 'Editar'];
+              const options = ['Cancelar', gemAction, 'Añadir a Estantería', 'Cambiar versión'];
       
       // Añadir opciones de audio
       if (item.audio_note) {
@@ -409,7 +409,7 @@ export const SearchScreen: React.FC = () => {
                 loadUserLists();
                 setShowAddToShelfModal(true);
                 break;
-              case 3: // Editar
+              case 3: // Cambiar versión
                 handleEditAlbum(item);
                 break;
               case 4: // Audio options
@@ -439,7 +439,7 @@ export const SearchScreen: React.FC = () => {
               loadUserLists();
               setShowAddToShelfModal(true);
             }},
-            { text: 'Cambiar edición', onPress: () => handleEditAlbum(item) },
+            { text: 'Cambiar versión', onPress: () => handleEditAlbum(item) },
             ...(item.audio_note ? [
               { text: 'Reproducir audio', onPress: () => handlePlayAudio(item) },
               { text: 'Eliminar audio', onPress: () => handleDeleteAudioNote(item) }
@@ -1401,7 +1401,7 @@ export const SearchScreen: React.FC = () => {
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>
-                Editar edición de "{selectedAlbumForEdit?.albums?.title}"
+                Cambiar versión de "{selectedAlbumForEdit?.albums?.title}"
               </Text>
               <TouchableOpacity
                 onPress={() => {
