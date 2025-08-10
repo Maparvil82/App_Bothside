@@ -6,40 +6,85 @@ const DISCOGS_API_URL = 'https://api.discogs.com';
 const DISCOGS_TOKEN = ENV.DISCOGS_TOKEN;
 
 export class DiscogsService {
-  private static async makeRequest(endpoint: string): Promise<any> {
+  private static cache = new Map<string, { expiresAt: number; data: any }>();
+  private static async sleep(ms: number) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private static getFromCache(endpoint: string) {
+    const entry = this.cache.get(endpoint);
+    if (!entry) return null;
+    if (Date.now() > entry.expiresAt) {
+      this.cache.delete(endpoint);
+      return null;
+    }
+    return entry.data;
+  }
+
+  private static setCache(endpoint: string, data: any, ttlMs: number) {
+    if (ttlMs <= 0) return;
+    this.cache.set(endpoint, { expiresAt: Date.now() + ttlMs, data });
+  }
+
+  private static async makeRequest(
+    endpoint: string,
+    options?: { cacheTtlMs?: number; retries?: number }
+  ): Promise<any> {
+    const cacheTtlMs = options?.cacheTtlMs ?? 5 * 60 * 1000; // 5 min por defecto
+    const retries = options?.retries ?? 1; // 1 reintento por defecto
+
     try {
-      console.log('🔑 Intentando conectar a Discogs con token:', DISCOGS_TOKEN ? 'Token configurado' : 'Sin token');
-      
+      // Cache in-memory por endpoint
+      const cached = this.getFromCache(endpoint);
+      if (cached) {
+        return cached;
+      }
+
       const response = await fetch(`${DISCOGS_API_URL}${endpoint}`, {
         headers: {
-          'Authorization': `Discogs token=${DISCOGS_TOKEN}`,
+          Authorization: `Discogs token=${DISCOGS_TOKEN}`,
           'User-Agent': 'BothsideApp/1.0',
         },
       });
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ Error de respuesta Discogs:', {
-          status: response.status,
-          statusText: response.statusText,
-          url: response.url,
-          errorText: errorText,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-        
+        // Manejo especial de rate limit
+        if (response.status === 429 && retries > 0) {
+          const retryAfterHeader = response.headers.get('Retry-After');
+          const retryAfterMs = retryAfterHeader
+            ? parseInt(retryAfterHeader, 10) * 1000
+            : 1500; // fallback 1.5s
+          console.warn(`⏳ Discogs 429. Reintentando en ${retryAfterMs}ms...`);
+          await this.sleep(retryAfterMs);
+          return this.makeRequest(endpoint, { cacheTtlMs, retries: retries - 1 });
+        }
+
         // Si es un error de autenticación, no fallar la aplicación
         if (response.status === 401) {
           console.warn('⚠️ Token de Discogs inválido. Las búsquedas de Discogs no funcionarán.');
           return null;
         }
-        
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+
+        const errorText = await response.text().catch(() => '');
+        console.warn('❌ Error de respuesta Discogs:', {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url,
+        });
+        return null; // degradar a null para no interrumpir la app
       }
 
-      return await response.json();
+      const data = await response.json();
+      this.setCache(endpoint, data, cacheTtlMs);
+      return data;
     } catch (error) {
-      console.error('Error making Discogs request:', error);
-      // No fallar la aplicación por errores de Discogs
+      if (retries > 0) {
+        const backoffMs = 1000;
+        console.warn(`⚠️ Error de red Discogs. Reintentando en ${backoffMs}ms...`);
+        await this.sleep(backoffMs);
+        return this.makeRequest(endpoint, { cacheTtlMs, retries: retries - 1 });
+      }
+      console.warn('Error making Discogs request (degradado a null):', error);
       return null;
     }
   }
@@ -66,7 +111,7 @@ export class DiscogsService {
       const encodedQuery = encodeURIComponent(query);
       const endpoint = `/database/search?q=${encodedQuery}&type=release&page=${page}&per_page=20`;
       
-      const result = await this.makeRequest(endpoint);
+      const result = await this.makeRequest(endpoint, { cacheTtlMs: 2 * 60 * 1000, retries: 1 });
       if (result === null) {
         console.warn('⚠️ No se pudo buscar en Discogs - token inválido');
         return null;
@@ -82,7 +127,7 @@ export class DiscogsService {
   static async getRelease(id: number): Promise<DiscogsRelease | null> {
     try {
       const endpoint = `/releases/${id}`;
-      const result = await this.makeRequest(endpoint);
+      const result = await this.makeRequest(endpoint, { cacheTtlMs: 10 * 60 * 1000, retries: 1 });
       if (result === null) {
         console.warn('⚠️ No se pudo obtener release de Discogs - token inválido');
         return null;
@@ -97,7 +142,7 @@ export class DiscogsService {
   static async getArtistReleases(artistId: number, page: number = 1): Promise<DiscogsSearchResponse | null> {
     try {
       const endpoint = `/artists/${artistId}/releases?page=${page}&per_page=20`;
-      const result = await this.makeRequest(endpoint);
+      const result = await this.makeRequest(endpoint, { cacheTtlMs: 5 * 60 * 1000, retries: 1 });
       if (result === null) {
         console.warn('⚠️ No se pudo obtener releases del artista - token inválido');
         return null;
@@ -113,7 +158,7 @@ export class DiscogsService {
   static async getReleaseMarketplaceStats(releaseId: number): Promise<any | null> {
     try {
       const endpoint = `/marketplace/price_suggestions/${releaseId}`;
-      const result = await this.makeRequest(endpoint);
+      const result = await this.makeRequest(endpoint, { cacheTtlMs: 10 * 60 * 1000, retries: 1 });
       if (result === null) {
         console.warn('⚠️ No se pudo obtener estadísticas de marketplace - token inválido');
         return null;
