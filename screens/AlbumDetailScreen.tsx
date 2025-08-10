@@ -773,16 +773,45 @@ export default function AlbumDetailScreen() {
                   <View style={styles.editionInfo}>
                     <Text style={styles.editionTitle}>{edition.title}</Text>
                     <Text style={styles.editionArtist}>{edition.artist}</Text>
-                    <View style={styles.editionDetails}>
-                      <Text style={styles.editionYear}>{edition.year}</Text>
-                      <Text style={styles.editionCountry}>{edition.country}</Text>
-                      <Text style={styles.editionFormat}>{edition.format}</Text>
-                    </View>
-                    {edition.label && (
-                      <Text style={styles.editionLabel}>{edition.label}</Text>
+                    
+                    {/* Formato */}
+                    {edition.format && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel}>Formato:</Text>
+                        <Text style={styles.editionDetailValue}>{edition.format}</Text>
+                      </View>
                     )}
+                    
+                    {/* Sello */}
+                    {edition.label && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel}>Sello:</Text>
+                        <Text style={styles.editionDetailValue}>{edition.label}</Text>
+                      </View>
+                    )}
+                    
+                    {/* Año */}
+                    {edition.year && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel}>Año:</Text>
+                        <Text style={styles.editionDetailValue}>{edition.year}</Text>
+                      </View>
+                    )}
+                    
+                    {/* País */}
+                    {edition.country && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel}>País:</Text>
+                        <Text style={styles.editionDetailValue}>{edition.country}</Text>
+                      </View>
+                    )}
+                    
+                    {/* Catálogo */}
                     {edition.catno && (
-                      <Text style={styles.editionCatno}>{edition.catno}</Text>
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel}>Catálogo:</Text>
+                        <Text style={styles.editionDetailValue}>{edition.catno}</Text>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -1793,6 +1822,23 @@ const styles = StyleSheet.create({
     height: 100,
     borderRadius: 4,
     marginRight: 12,
+  },
+  editionDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  editionDetailLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#495057',
+    minWidth: 70,
+    marginRight: 8,
+  },
+  editionDetailValue: {
+    fontSize: 12,
+    color: '#6c757d',
+    flex: 1,
   },
   modalOverlay: {
     flex: 1,
