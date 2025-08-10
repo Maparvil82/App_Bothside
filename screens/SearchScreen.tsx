@@ -509,8 +509,6 @@ export const SearchScreen: React.FC = () => {
         artist: release.artists?.[0]?.name || 'Unknown Artist',
         release_year: release.year?.toString() || '',
         label: release.labels?.[0]?.name || '',
-        genre: release.genres?.join(', ') || '',
-        styles: release.styles?.join(', ') || '',
         cover_url: release.cover_image || release.thumb,
         discogs_id: release.id,
       };
@@ -668,14 +666,12 @@ export const SearchScreen: React.FC = () => {
                 const releaseData = {
                   id: newEdition.id,
                   title: newEdition.title,
-                  artist: newEdition.artist,
+                  artists: [{ name: newEdition.artist, id: 0 }],
                   year: newEdition.year,
-                  format: newEdition.format,
-                  country: newEdition.country,
-                  label: newEdition.label,
-                  thumb: newEdition.thumb,
-                  cover_image: newEdition.cover_image
-                };
+                  labels: [{ name: newEdition.label }],
+                  cover_image: newEdition.cover_image,
+                  thumb: newEdition.thumb
+                } as any;
                 
                 await addToCollection(releaseData);
                 
