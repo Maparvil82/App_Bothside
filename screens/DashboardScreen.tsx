@@ -113,13 +113,70 @@ export default function DashboardScreen() {
     try {
       console.log('📊 Obteniendo leaderboard de coleccionistas...');
       
-      // Obtener top 5 del ranking
-      const rankingData = await GamificationService.getLeaderboard(5);
+      // Intentar obtener top 5 del ranking persistido
+      let rankingData = await GamificationService.getLeaderboard(5);
       
-      if (!rankingData || rankingData.length === 0) {
-        console.log('📊 No hay datos de leaderboard disponibles');
-        setLeaderboard([]);
-        return;
+      // Si no hay suficientes datos en user_rankings, calcular en tiempo real
+      if (!rankingData || rankingData.length < 2) {
+        console.log('📊 Pocos datos en user_rankings, calculando leaderboard en tiempo real...');
+        
+        // Obtener todos los usuarios con colecciones
+        const { data: allUsers, error: usersError } = await supabase
+          .from('user_collection')
+          .select(`
+            user_id,
+            albums (
+              album_stats (
+                avg_price
+              )
+            )
+          `);
+        
+        if (usersError) {
+          console.error('Error obteniendo usuarios:', usersError);
+          setLeaderboard([]);
+          return;
+        }
+        
+        // Calcular estadísticas por usuario
+        const userStats = new Map<string, { totalAlbums: number; collectionValue: number }>();
+        
+        allUsers?.forEach(item => {
+          const userId = item.user_id;
+          const currentStats = userStats.get(userId) || { totalAlbums: 0, collectionValue: 0 };
+          
+          currentStats.totalAlbums += 1;
+          
+          if ((item.albums as any)?.album_stats?.avg_price) {
+            currentStats.collectionValue += (item.albums as any).album_stats.avg_price;
+          }
+          
+          userStats.set(userId, currentStats);
+        });
+        
+        // Calcular rangos y ordenar
+        const calculatedRankings = Array.from(userStats.entries())
+          .map(([userId, stats]) => {
+            const rank = GamificationService.computeCollectorRank(stats.totalAlbums, stats.collectionValue);
+            return {
+              user_id: userId,
+              tier: rank.tier,
+              level_index: rank.levelIndex,
+              total_albums: stats.totalAlbums,
+              collection_value: stats.collectionValue,
+              updated_at: new Date().toISOString(),
+            };
+          })
+          .sort((a, b) => {
+            if (a.level_index !== b.level_index) {
+              return b.level_index - a.level_index; // Mayor nivel primero
+            }
+            return b.collection_value - a.collection_value; // Mayor valor como desempate
+          })
+          .slice(0, 5);
+        
+        rankingData = calculatedRankings;
+        console.log('📊 Leaderboard calculado en tiempo real:', rankingData.length, 'usuarios');
       }
       
       // Obtener información de perfiles para cada usuario
@@ -143,7 +200,7 @@ export default function DashboardScreen() {
         };
       });
       
-      console.log('📊 Leaderboard cargado:', leaderboardWithProfiles.length, 'usuarios');
+      console.log('📊 Leaderboard final cargado:', leaderboardWithProfiles.length, 'usuarios');
       setLeaderboard(leaderboardWithProfiles);
       
     } catch (error) {
@@ -602,7 +659,7 @@ export default function DashboardScreen() {
             const isCurrentUser = collector.user_id === user?.id;
             const tierEmoji = {
               'Novato': '🌱',
-              'Aficionado': '��', 
+              'Aficionado': '🎸', 
               'Coleccionista': '💿',
               'Curador': '📚',
               'Virtuoso': '🏆',
