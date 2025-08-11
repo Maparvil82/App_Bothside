@@ -7,7 +7,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -65,10 +65,62 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, username: string) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password });
+      // First create the auth user
+      const { data, error } = await supabase.auth.signUp({ 
+        email, 
+        password,
+        options: {
+          data: {
+            username: username
+          }
+        }
+      });
+      
       if (error) throw error;
+      
+      // If user is created, wait a moment for triggers to complete, then update profile
+      if (data.user) {
+        // Small delay to allow database triggers to create the profile
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Update the profile with username (profile should exist from trigger)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            username: username,
+            full_name: username,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', data.user.id);
+        
+        if (profileError) {
+          console.error('Error updating profile:', profileError);
+          console.log('Attempting upsert as fallback...');
+          
+          // Fallback: try upsert in case profile doesn't exist yet
+          const { error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: data.user.id,
+              username: username,
+              full_name: username,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'id'
+            });
+            
+          if (upsertError) {
+            console.error('Error with upsert fallback:', upsertError);
+          } else {
+            console.log('✅ Profile created/updated successfully with upsert');
+          }
+        } else {
+          console.log('✅ Profile updated successfully');
+        }
+      }
     } catch (error) {
       console.error('Error during sign up:', error);
       throw error;

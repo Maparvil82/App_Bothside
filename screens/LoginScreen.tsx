@@ -14,9 +14,30 @@ import { useAuth } from '../contexts/AuthContext';
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [username, setUsername] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
+
+  const validateUsername = (username: string): string | null => {
+    if (!username.trim()) {
+      return 'Por favor ingresa un nombre de usuario';
+    }
+    
+    if (username.length < 3) {
+      return 'El nombre de usuario debe tener al menos 3 caracteres';
+    }
+    
+    if (username.length > 20) {
+      return 'El nombre de usuario no puede tener más de 20 caracteres';
+    }
+    
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+    }
+    
+    return null;
+  };
 
   const handleAuth = async () => {
     if (!email || !password) {
@@ -24,10 +45,18 @@ export const LoginScreen: React.FC = () => {
       return;
     }
 
+    if (isSignUp) {
+      const usernameError = validateUsername(username);
+      if (usernameError) {
+        Alert.alert('Error', usernameError);
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       if (isSignUp) {
-        await signUp(email, password);
+        await signUp(email, password, username.trim());
         Alert.alert('Éxito', 'Cuenta creada. Revisa tu email para confirmar.');
       } else {
         await signIn(email, password);
@@ -59,6 +88,18 @@ export const LoginScreen: React.FC = () => {
           autoCapitalize="none"
           autoCorrect={false}
         />
+
+        {isSignUp && (
+          <TextInput
+            style={styles.input}
+            placeholder="Nombre de usuario (ej: juan_perez123)"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={20}
+          />
+        )}
 
         <TextInput
           style={styles.input}

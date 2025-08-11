@@ -876,7 +876,7 @@ export const SearchScreen: React.FC = () => {
               </View>
             </View>
           </View>
-        </TouchableOpacity>
+          </TouchableOpacity>
     </View>
   );
 
@@ -1193,6 +1193,7 @@ export const SearchScreen: React.FC = () => {
             previewOpenValue={0}
             previewOpenDelay={0}
             ListEmptyComponent={renderEmptyState}
+            contentContainerStyle={filteredCollection.length === 0 ? { flexGrow: 1 } : undefined}
             ListFooterComponent={
               releases.length > 0 ? (
                 <View style={styles.footerContainer}>
@@ -1218,6 +1219,7 @@ export const SearchScreen: React.FC = () => {
             refreshing={refreshing}
             onRefresh={onRefresh}
             ListEmptyComponent={renderEmptyState}
+            contentContainerStyle={filteredCollection.length === 0 ? { flexGrow: 1 } : undefined}
             ListFooterComponent={
               releases.length > 0 ? (
                 <View style={styles.footerContainer}>
