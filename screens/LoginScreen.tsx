@@ -79,6 +79,18 @@ export const LoginScreen: React.FC = () => {
           {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
         </Text>
 
+        {isSignUp && (
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            value={username}
+            onChangeText={setUsername}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={20}
+          />
+        )}
+
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -88,18 +100,6 @@ export const LoginScreen: React.FC = () => {
           autoCapitalize="none"
           autoCorrect={false}
         />
-
-        {isSignUp && (
-          <TextInput
-            style={styles.input}
-            placeholder="Nombre de usuario (ej: juan_perez123)"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            autoCorrect={false}
-            maxLength={20}
-          />
-        )}
 
         <TextInput
           style={styles.input}
@@ -136,7 +136,7 @@ export const LoginScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#ffffff',
   },
   content: {
     flex: 1,
@@ -186,8 +186,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   switchText: {
-    color: '#007AFF',
-    textAlign: 'center',
+    color: '#666',
     fontSize: 14,
   },
 }); 
