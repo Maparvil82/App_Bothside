@@ -157,7 +157,7 @@ export default function LeaderboardScreen() {
       case 3:
         return '🥉';
       default:
-        return `#${position}`;
+        return position.toString();
     }
   };
 
@@ -244,23 +244,6 @@ export default function LeaderboardScreen() {
         <View style={styles.backButton} />
       </View>
 
-      {currentUserRank && (
-        <View style={styles.currentUserCard}>
-          <Text style={styles.currentUserCardTitle}>Tu Posición</Text>
-          <View style={styles.currentUserStats}>
-            <Text style={styles.currentUserPosition}>
-              {getRankIcon(currentUserRank.position)}
-            </Text>
-            <View>
-              <Text style={styles.currentUserName}>{currentUserRank.full_name}</Text>
-              <Text style={[styles.currentUserRank, { color: currentUserRank.rank_color }]}>
-                {currentUserRank.rank_title}
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
-
       <FlatList
         data={collectors}
         keyExtractor={(item) => item.id}
@@ -283,7 +266,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
     paddingVertical: 15,
     backgroundColor: '#fff',
     borderBottomWidth: 1,
@@ -309,42 +292,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#666',
-  },
-  currentUserCard: {
-    backgroundColor: '#fff',
-    margin: 20,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 2,
-    borderColor: '#007AFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  currentUserCardTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#007AFF',
-    marginBottom: 8,
-  },
-  currentUserStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  currentUserPosition: {
-    fontSize: 24,
-    marginRight: 12,
-  },
-  currentUserName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  currentUserRank: {
-    fontSize: 14,
-    fontWeight: '600',
   },
   listContainer: {
     paddingBottom: 20,
