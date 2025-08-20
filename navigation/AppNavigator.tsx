@@ -27,6 +27,7 @@ import ShelvesListScreen from '../screens/ShelvesListScreen';
 import ShelfEditScreen from '../screens/ShelfEditScreen';
 import ShelfViewScreen from '../screens/ShelfViewScreen';
 import SelectCellScreen from '../screens/SelectCellScreen';
+import LeaderboardScreen from '../screens/LeaderboardScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -233,6 +234,7 @@ const AppNavigator = () => (
               <Stack.Screen name="Profile" component={ProfileStack} />
               <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
               <Stack.Screen name="AIChat" component={AIChatScreen} />
+              <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
               <Stack.Screen
                 name="SelectCell"
                 component={SelectCellScreen}

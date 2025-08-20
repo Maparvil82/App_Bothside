@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GamificationService, CollectorRank } from '../services/gamification';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 interface CollectorRankCardProps {
   totalAlbums: number;
   collectionValue: number;
+  onPress?: () => void;
 }
 
 const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
@@ -18,7 +19,7 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
   Legendario: '👑',
 };
 
-export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue }) => {
+export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue, onPress }) => {
   const { user } = useAuth();
   const [tierShare, setTierShare] = useState<number | null>(null);
 
@@ -67,11 +68,18 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
     }
   };
 
+  const CardComponent = onPress ? TouchableOpacity : View;
+
   return (
-    <View style={styles.card}>
+    <CardComponent style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Rango de Coleccionista</Text>
-        <Ionicons name="trophy" size={20} color="#FFD700" />
+        <View style={styles.headerIcons}>
+          <Ionicons name="trophy" size={20} color="#FFD700" />
+          {onPress && (
+            <Ionicons name="chevron-forward" size={16} color="#666" style={{ marginLeft: 4 }} />
+          )}
+        </View>
       </View>
 
       <View style={styles.rankRow}>
@@ -128,7 +136,7 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
           <Text style={styles.nextTierText}>Siguiente nivel: {rank.nextTier}</Text>
         </View>
       )}
-    </View>
+    </CardComponent>
   );
 };
 
@@ -150,6 +158,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#212529',
+  },
+  headerIcons: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   rankRow: {
     flexDirection: 'row',

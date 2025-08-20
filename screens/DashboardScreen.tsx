@@ -532,7 +532,11 @@ export default function DashboardScreen() {
         }
       >
         {/* Rango de Coleccionista */}
-        <CollectorRankCard totalAlbums={stats.totalAlbums} collectionValue={stats.collectionValue} />
+        <CollectorRankCard 
+          totalAlbums={stats.totalAlbums} 
+          collectionValue={stats.collectionValue} 
+          onPress={() => (navigation as any).navigate('Leaderboard')}
+        />
         
         {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
