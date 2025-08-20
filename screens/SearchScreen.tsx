@@ -125,7 +125,8 @@ export const SearchScreen: React.FC = () => {
             album_styles (
               styles (*)
             )
-          )
+          ),
+          shelves ( name )
         `)
         .eq('user_id', user.id)
         .order('added_at', { ascending: false });
@@ -135,40 +136,19 @@ export const SearchScreen: React.FC = () => {
         return;
       }
 
-      // Verificar si cada álbum está en alguna estantería
-      const collectionWithShelfInfo = await Promise.all(
-        (userCollection || []).map(async (item) => {
-          try {
-            // Obtener list_items que pertenezcan a estanterías del usuario actual
-            const { data: listItems } = await supabase
-              .from('list_items')
-              .select(`
-                list_id,
-                user_lists!inner (
-                  id,
-                  user_id
-                )
-              `)
-              .eq('album_id', item.albums.id)
-              .eq('user_lists.user_id', user.id);
-
-            const inShelf = listItems && listItems.length > 0;
-            
-            console.log(`🔍 Album "${item.albums.title}": in_shelf = ${inShelf}, listItems count = ${listItems?.length || 0}`);
-            
-            return {
-              ...item,
-              in_shelf: inShelf
-            };
-          } catch (error) {
-            console.error('Error checking shelf status for album:', item.albums.id, error);
-            return {
-              ...item,
-              in_shelf: false
-            };
-          }
-        })
-      );
+      // Procesar la colección con información de ubicación física
+      const collectionWithShelfInfo = (userCollection || []).map((item) => {
+        const hasLocation = item.shelves && item.shelves.name;
+        const shelfName = hasLocation ? (item.shelves as any).name : null;
+        
+        console.log(`🔍 Album "${item.albums?.title}": in_shelf = ${hasLocation}, shelf_name = ${shelfName}`);
+        
+        return {
+          ...item,
+          in_shelf: hasLocation,
+          shelf_name: shelfName
+        };
+      });
 
       setCollection(collectionWithShelfInfo);
       
@@ -900,14 +880,13 @@ export const SearchScreen: React.FC = () => {
                   </View>
                 )}
 
-                {/* Tag de estantería */}
+                {/* Tag de ubicación física */}
                 {item.in_shelf && (
                   <View style={styles.shelfTag}>
-                    <Ionicons name="library" size={12} color="#28a745" />
-                    <Text style={styles.shelfTagText}>Estantería</Text>
+                    <Ionicons name="location" size={12} color="#28a745" />
+                    <Text style={styles.shelfTagText}>{item.shelf_name || 'Ubicación física'}</Text>
                   </View>
                 )}
-                {console.log(`🎯 Rendering shelf tag for "${item.albums?.title}": in_shelf = ${item.in_shelf}`)}
               </View>
             </View>
           </View>
