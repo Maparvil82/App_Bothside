@@ -28,6 +28,39 @@ interface Message {
 
 const CHAT_STORAGE_KEY = 'ai_chat_messages';
 
+const PREDEFINED_QUESTIONS = [
+  {
+    id: 1,
+    title: "Álbumes más valiosos",
+    question: "¿Cuáles son mis álbumes más valiosos y cuánto valen?",
+    icon: "diamond-outline"
+  },
+  {
+    id: 2,
+    title: "Géneros favoritos",
+    question: "¿Qué géneros musicales predominan en mi colección?",
+    icon: "musical-notes-outline"
+  },
+  {
+    id: 3,
+    title: "Artistas frecuentes",
+    question: "¿Qué artistas tengo más representados en mi colección?",
+    icon: "person-outline"
+  },
+  {
+    id: 4,
+    title: "Décadas populares",
+    question: "¿De qué décadas son la mayoría de mis discos?",
+    icon: "time-outline"
+  },
+  {
+    id: 5,
+    title: "Estadísticas generales",
+    question: "Dame un resumen completo de las estadísticas de mi colección",
+    icon: "stats-chart-outline"
+  }
+];
+
 export default function AIChatScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
@@ -190,6 +223,18 @@ export default function AIChatScreen() {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   };
 
+  const handlePredefinedQuestion = (question: string) => {
+    if (!question.trim() || isLoading) return;
+    
+    // Set the input text and trigger send
+    setInputText(question);
+    
+    // Use a small delay to ensure the input is set before sending
+    setTimeout(() => {
+      sendMessage();
+    }, 50);
+  };
+
   const scrollToBottomIfUserMessage = (newMessages: Message[]) => {
     // Solo hacer scroll si el último mensaje es del usuario
     const lastMessage = newMessages[newMessages.length - 1];
@@ -300,6 +345,30 @@ export default function AIChatScreen() {
             </View>
           )}
         </ScrollView>
+
+        {/* Preguntas preestablecidas flotantes - Solo mostrar cuando no hay mensajes */}
+        {messages.length === 0 && (
+          <View style={styles.predefinedQuestionsContainer}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.predefinedQuestionsScroll}
+            >
+              {PREDEFINED_QUESTIONS.map((item) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.predefinedQuestionCard}
+                  onPress={() => handlePredefinedQuestion(item.question)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.predefinedQuestionText} numberOfLines={2}>
+                    {item.question}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         <View style={styles.inputContainer}>
           <TextInput
@@ -434,13 +503,19 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e9ecef',
+    marginBottom: 10,
+    marginLeft: 16,
+    marginRight: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
   },
   textInput: {
     flex: 1,
     backgroundColor: '#f8f9fa',
-    borderRadius: 20,
+    borderRadius: 10,
     paddingHorizontal: 15,
-    paddingVertical: 10,
+    paddingVertical: 16,
     marginRight: 10,
     fontSize: 16,
     maxHeight: 100,
@@ -449,12 +524,38 @@ const styles = StyleSheet.create({
   sendButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+    borderRadius: 10,
     backgroundColor: '#007AFF',
     justifyContent: 'center',
     alignItems: 'center',
   },
   sendButtonDisabled: {
     backgroundColor: '#f0f0f0',
+  },
+  predefinedQuestionsContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    backgroundColor: 'transparent',
+  },
+  predefinedQuestionsScroll: {
+    paddingVertical: 5,
+  },
+  predefinedQuestionCard: {
+    width: 220, // Fixed width
+    backgroundColor: 'white',
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    minHeight: 50, // Minimum height to accommodate 2 lines
+  },
+  predefinedQuestionText: {
+    fontSize: 16,
+    color: '#333',
+    textAlign: 'left',
+    fontWeight: '400',
+    lineHeight: 22, // Better line spacing for readability
   },
 }); 
