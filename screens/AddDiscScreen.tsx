@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
@@ -971,7 +972,7 @@ Progressive Rock`;
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Tabs */}
       <View style={styles.tabContainer}>
         <TouchableOpacity
@@ -1021,7 +1022,7 @@ Progressive Rock`;
       {activeTab === 'search' && renderSearchTab()}
       {activeTab === 'manual' && renderManualTab()}
       {activeTab === 'camera' && renderCameraTab()}
-    </View>
+    </SafeAreaView>
   );
 };
 

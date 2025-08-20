@@ -230,12 +230,18 @@ export default function AIChatScreen() {
           <Text style={styles.headerTitle}>Bothside IA</Text>
           <Text style={styles.headerSubtitle}>Analiza tu colección</Text>
         </View>
-        <TouchableOpacity 
-          style={styles.clearButton}
-          onPress={clearChat}
-        >
-          <Ionicons name="refresh-outline" size={24} color="#FF6B6B" />
-        </TouchableOpacity>
+        <View style={styles.rightButtonContainer}>
+          {messages.length > 0 ? (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={clearChat}
+            >
+              <Ionicons name="refresh-outline" size={24} color="#FF6B6B" />
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.clearButton} />
+          )}
+        </View>
       </View>
 
       <KeyboardAvoidingView 
@@ -359,7 +365,11 @@ const styles = StyleSheet.create({
   },
   clearButton: {
     padding: 5,
-    marginLeft: 10,
+  },
+  rightButtonContainer: {
+    width: 44, // Same width as backButton (24px icon + 10px padding each side)
+    alignItems: 'flex-end',
+    justifyContent: 'center',
   },
   chatContainer: {
     flex: 1,

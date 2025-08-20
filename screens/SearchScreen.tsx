@@ -13,6 +13,7 @@ import {
   Platform,
   Modal,
   RefreshControl,
+  SafeAreaView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -989,7 +990,7 @@ export const SearchScreen: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.headerContainer}>
         <View style={styles.headerTitleContainer}>
@@ -1501,7 +1502,7 @@ export const SearchScreen: React.FC = () => {
         albumTitle={floatingAlbumTitle}
         onClose={() => setShowFloatingPlayer(false)}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

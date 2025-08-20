@@ -10,6 +10,7 @@ import {
   Alert,
   Dimensions,
   Image,
+  SafeAreaView,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -523,291 +524,293 @@ export default function DashboardScreen() {
   );
 
   return (
-    <ScrollView
-      style={styles.container}
-      refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-      }
-    >
-      {/* Rango de Coleccionista */}
-      <CollectorRankCard totalAlbums={stats.totalAlbums} collectionValue={stats.collectionValue} />
-      
-      {/* Valor de la colección */}
-      {stats.collectionValue > 0 && (
-        <View style={styles.valueCard}>
-          <Text style={styles.valueCardTitle}>Valor de tu Colección</Text>
-          <Text style={styles.valueCardAmount}>
-            {stats.collectionValue.toFixed(2)} €
-          </Text>
-          <Text style={styles.valueCardSubtitle}>
-            Basado en precios medios de Discogs
-          </Text>
-        </View>
-      )}
-
-      {/* Estadísticas Básicas */}
-      <View style={styles.statsGrid}>
-        <StatCard title="Total Álbumes" value={stats.totalAlbums} />
-        <StatCard title="Artistas Únicos" value={stats.totalArtists} />
-        <StatCard title="Sellos Únicos" value={stats.totalLabels} />
-        <StatCard title="Estilos Únicos" value={stats.totalStyles} />
-        <StatCard title="Álbum Más Antiguo" value={stats.oldestAlbum} />
-        <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
-      </View>
-
-      {/* Sección de IA */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Asistente IA</Text>
-        <TouchableOpacity 
-          style={styles.aiCard}
-          onPress={() => (navigation as any).navigate('AIChat')}
-        >
-          <View style={styles.aiCardContent}>
-            <View style={styles.aiIconContainer}>
-              <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
-            </View>
-            <View style={styles.aiTextContainer}>
-              <Text style={styles.aiTitle}>Analiza tu Colección</Text>
-              <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+    <SafeAreaView style={styles.container}>
+      <ScrollView
+        style={styles.container}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
+        {/* Rango de Coleccionista */}
+        <CollectorRankCard totalAlbums={stats.totalAlbums} collectionValue={stats.collectionValue} />
+        
+        {/* Valor de la colección */}
+        {stats.collectionValue > 0 && (
+          <View style={styles.valueCard}>
+            <Text style={styles.valueCardTitle}>Valor de tu Colección</Text>
+            <Text style={styles.valueCardAmount}>
+              {stats.collectionValue.toFixed(2)} €
+            </Text>
+            <Text style={styles.valueCardSubtitle}>
+              Basado en precios medios de Discogs
+            </Text>
           </View>
-        </TouchableOpacity>
-      </View>
+        )}
 
-      {/* Sección de Estantería */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Mis Estanterías</Text>
-        <View style={styles.shelfStatContainer}>
-          <Text style={styles.shelfStatNumber}>{shelves.length}</Text>
-          <Text style={styles.shelfStatText}>Estanterías Creadas</Text>
+        {/* Estadísticas Básicas */}
+        <View style={styles.statsGrid}>
+          <StatCard title="Total Álbumes" value={stats.totalAlbums} />
+          <StatCard title="Artistas Únicos" value={stats.totalArtists} />
+          <StatCard title="Sellos Únicos" value={stats.totalLabels} />
+          <StatCard title="Estilos Únicos" value={stats.totalStyles} />
+          <StatCard title="Álbum Más Antiguo" value={stats.oldestAlbum} />
+          <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
         </View>
-        <TouchableOpacity 
-          style={styles.configButton}
-          onPress={() => (navigation as any).navigate('ShelvesList')}
-        >
-          <Ionicons name="grid-outline" size={20} color="#fff" />
-          <Text style={styles.configButtonText}>
-            Gestionar Estanterías
-          </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Álbumes más caros */}
-      {stats.mostExpensiveAlbums.length > 0 && (
+        {/* Sección de IA */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Álbumes Más Caros</Text>
-          {stats.mostExpensiveAlbums.map((album, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.albumItem}
-              onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
-            >
-              <View style={styles.albumImageContainer}>
-                {album.imageUrl ? (
-                  <Image 
-                    source={{ uri: album.imageUrl }} 
-                    style={styles.albumImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.albumImagePlaceholder}>
-                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
-                  </View>
-                )}
+          <Text style={styles.sectionTitle}>Asistente IA</Text>
+          <TouchableOpacity 
+            style={styles.aiCard}
+            onPress={() => (navigation as any).navigate('AIChat')}
+          >
+            <View style={styles.aiCardContent}>
+              <View style={styles.aiIconContainer}>
+                <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
               </View>
-              <View style={styles.albumInfo}>
-                <Text style={styles.albumTitle}>{album.title}</Text>
-                <Text style={styles.albumArtist}>{album.artist}</Text>
-                <Text style={styles.albumPrice}>
-                  {album.price ? `${album.price.toFixed(2)} €` : 'Precio no disponible'}
-                </Text>
+              <View style={styles.aiTextContainer}>
+                <Text style={styles.aiTitle}>Analiza tu Colección</Text>
+                <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
               </View>
-              <View style={styles.albumRank}>
-                <Text style={styles.albumRankText}>#{index + 1}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
+              <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+            </View>
+          </TouchableOpacity>
         </View>
-      )}
 
-      {/* Álbumes con mayor ratio de venta */}
-      {stats.highestRatioAlbums.length > 0 && (
+        {/* Sección de Estantería */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Discos con Mayor Ratio de Venta</Text>
-          <Text style={styles.sectionSubtitle}>
-            Discos más cotizados: mayor demanda que disponibilidad en Discogs. Ratio alto = más valioso.
-          </Text>
-          {stats.highestRatioAlbums.map((album, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.albumItem}
-              onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
-            >
-              <View style={styles.albumImageContainer}>
-                {album.imageUrl ? (
-                  <Image 
-                    source={{ uri: album.imageUrl }} 
-                    style={styles.albumImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.albumImagePlaceholder}>
-                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.albumInfo}>
-                <Text style={styles.albumTitle}>{album.title}</Text>
-                <Text style={styles.albumArtist}>{album.artist}</Text>
-                <View style={styles.ratioContainer}>
-                  <View style={[styles.ratioLevelBadge, { backgroundColor: album.color }]}>
-                    <Text style={styles.ratioLevelText}>{album.level}</Text>
-                  </View>
-                  <Text style={styles.ratioText}>
-                    Ratio: {album.ratio.toFixed(1)}
+          <Text style={styles.sectionTitle}>Mis Estanterías</Text>
+          <View style={styles.shelfStatContainer}>
+            <Text style={styles.shelfStatNumber}>{shelves.length}</Text>
+            <Text style={styles.shelfStatText}>Estanterías Creadas</Text>
+          </View>
+          <TouchableOpacity 
+            style={styles.configButton}
+            onPress={() => (navigation as any).navigate('ShelvesList')}
+          >
+            <Ionicons name="grid-outline" size={20} color="#fff" />
+            <Text style={styles.configButtonText}>
+              Gestionar Estanterías
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Álbumes más caros */}
+        {stats.mostExpensiveAlbums.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Álbumes Más Caros</Text>
+            {stats.mostExpensiveAlbums.map((album, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.albumItem}
+                onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
+              >
+                <View style={styles.albumImageContainer}>
+                  {album.imageUrl ? (
+                    <Image 
+                      source={{ uri: album.imageUrl }} 
+                      style={styles.albumImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.albumImagePlaceholder}>
+                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.albumInfo}>
+                  <Text style={styles.albumTitle}>{album.title}</Text>
+                  <Text style={styles.albumArtist}>{album.artist}</Text>
+                  <Text style={styles.albumPrice}>
+                    {album.price ? `${album.price.toFixed(2)} €` : 'Precio no disponible'}
                   </Text>
                 </View>
-                <Text style={styles.ratioStats}>
-                  Want: {album.want} • Have: {album.have}
-                </Text>
-              </View>
-              <View style={styles.albumRank}>
-                <Text style={styles.albumRankText}>#{index + 1}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+                <View style={styles.albumRank}>
+                  <Text style={styles.albumRankText}>#{index + 1}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
-      {/* Sección de Notas de Audio */}
-      {albumsWithAudio.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Notas de Audio ({albumsWithAudio.length})</Text>
-          {albumsWithAudio.map((album, index) => (
-            <TouchableOpacity 
-              key={album.id} 
-              style={styles.albumItem}
-              onPress={() => handlePlayAudio(album.audio_note, album.title)}
-            >
-              <View style={styles.albumImageContainer}>
-                {album.cover_url ? (
-                  <Image 
-                    source={{ uri: album.cover_url }} 
-                    style={styles.albumImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.albumImagePlaceholder}>
-                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+        {/* Álbumes con mayor ratio de venta */}
+        {stats.highestRatioAlbums.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Discos con Mayor Ratio de Venta</Text>
+            <Text style={styles.sectionSubtitle}>
+              Discos más cotizados: mayor demanda que disponibilidad en Discogs. Ratio alto = más valioso.
+            </Text>
+            {stats.highestRatioAlbums.map((album, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.albumItem}
+                onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
+              >
+                <View style={styles.albumImageContainer}>
+                  {album.imageUrl ? (
+                    <Image 
+                      source={{ uri: album.imageUrl }} 
+                      style={styles.albumImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.albumImagePlaceholder}>
+                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.albumInfo}>
+                  <Text style={styles.albumTitle}>{album.title}</Text>
+                  <Text style={styles.albumArtist}>{album.artist}</Text>
+                  <View style={styles.ratioContainer}>
+                    <View style={[styles.ratioLevelBadge, { backgroundColor: album.color }]}>
+                      <Text style={styles.ratioLevelText}>{album.level}</Text>
+                    </View>
+                    <Text style={styles.ratioText}>
+                      Ratio: {album.ratio.toFixed(1)}
+                    </Text>
                   </View>
-                )}
-              </View>
-              <View style={styles.albumInfo}>
-                <Text style={styles.albumTitle}>{album.title}</Text>
-                <Text style={styles.albumArtist}>{album.artist}</Text>
-                <Text style={styles.albumDate}>
-                  {formatDate(album.added_at)}
-                </Text>
-              </View>
-              <View style={styles.albumRank}>
-                <Ionicons name="play" size={16} color="white" />
-              </View>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
+                  <Text style={styles.ratioStats}>
+                    Want: {album.want} • Have: {album.have}
+                  </Text>
+                </View>
+                <View style={styles.albumRank}>
+                  <Text style={styles.albumRankText}>#{index + 1}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
-      {/* Top Artistas */}
-      {stats.topArtists.length > 0 && (
-        <TopItemsLineChart 
-          data={stats.topArtists} 
-          title="Top 5 Artistas" 
-          keyName="artist" 
-          icon="people" 
+        {/* Sección de Notas de Audio */}
+        {albumsWithAudio.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notas de Audio ({albumsWithAudio.length})</Text>
+            {albumsWithAudio.map((album, index) => (
+              <TouchableOpacity 
+                key={album.id} 
+                style={styles.albumItem}
+                onPress={() => handlePlayAudio(album.audio_note, album.title)}
+              >
+                <View style={styles.albumImageContainer}>
+                  {album.cover_url ? (
+                    <Image 
+                      source={{ uri: album.cover_url }} 
+                      style={styles.albumImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.albumImagePlaceholder}>
+                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.albumInfo}>
+                  <Text style={styles.albumTitle}>{album.title}</Text>
+                  <Text style={styles.albumArtist}>{album.artist}</Text>
+                  <Text style={styles.albumDate}>
+                    {formatDate(album.added_at)}
+                  </Text>
+                </View>
+                <View style={styles.albumRank}>
+                  <Ionicons name="play" size={16} color="white" />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Top Artistas */}
+        {stats.topArtists.length > 0 && (
+          <TopItemsLineChart 
+            data={stats.topArtists} 
+            title="Top 5 Artistas" 
+            keyName="artist" 
+            icon="people" 
+          />
+        )}
+
+        {/* Top Sellos */}
+        {stats.topLabels.length > 0 && (
+          <TopItemsLineChart 
+            data={stats.topLabels} 
+            title="Top 5 Sellos" 
+            keyName="label" 
+            icon="business" 
+          />
+        )}
+
+        {/* Top Estilos */}
+        {stats.topStyles.length > 0 && (
+          <TopItemsLineChart 
+            data={stats.topStyles} 
+            title="Top 5 Estilos" 
+            keyName="style" 
+            icon="musical-notes" 
+          />
+        )}
+
+        {/* Álbumes por Década */}
+        {stats.albumsByDecade.length > 0 && (
+          <TopItemsLineChart 
+            data={stats.albumsByDecade} 
+            title="Álbumes por Década" 
+            keyName="decade" 
+            icon="calendar" 
+          />
+        )}
+
+        {/* Últimos Álbumes Añadidos */}
+        {stats.latestAlbums.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
+            {stats.latestAlbums.map((album, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.albumItem}
+                onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
+              >
+                <View style={styles.albumImageContainer}>
+                  {album.imageUrl ? (
+                    <Image 
+                      source={{ uri: album.imageUrl }} 
+                      style={styles.albumImage}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <View style={styles.albumImagePlaceholder}>
+                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                    </View>
+                  )}
+                </View>
+                <View style={styles.albumInfo}>
+                  <Text style={styles.albumTitle}>{album.title}</Text>
+                  <Text style={styles.albumArtist}>{album.artist}</Text>
+                  <Text style={styles.albumYear}>{album.year}</Text>
+                </View>
+                <Text style={styles.albumDate}>{album.addedAt}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Mensaje si no hay datos */}
+        {stats.totalAlbums === 0 && (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
+            <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
+          </View>
+        )}
+
+        {/* Reproductor flotante */}
+        <FloatingAudioPlayer
+          visible={showFloatingPlayer}
+          audioUri={floatingAudioUri}
+          albumTitle={floatingAlbumTitle}
+          onClose={() => setShowFloatingPlayer(false)}
         />
-      )}
-
-      {/* Top Sellos */}
-      {stats.topLabels.length > 0 && (
-        <TopItemsLineChart 
-          data={stats.topLabels} 
-          title="Top 5 Sellos" 
-          keyName="label" 
-          icon="business" 
-        />
-      )}
-
-      {/* Top Estilos */}
-      {stats.topStyles.length > 0 && (
-        <TopItemsLineChart 
-          data={stats.topStyles} 
-          title="Top 5 Estilos" 
-          keyName="style" 
-          icon="musical-notes" 
-        />
-      )}
-
-      {/* Álbumes por Década */}
-      {stats.albumsByDecade.length > 0 && (
-        <TopItemsLineChart 
-          data={stats.albumsByDecade} 
-          title="Álbumes por Década" 
-          keyName="decade" 
-          icon="calendar" 
-        />
-      )}
-
-      {/* Últimos Álbumes Añadidos */}
-      {stats.latestAlbums.length > 0 && (
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
-          {stats.latestAlbums.map((album, index) => (
-            <TouchableOpacity 
-              key={index} 
-              style={styles.albumItem}
-              onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
-            >
-              <View style={styles.albumImageContainer}>
-                {album.imageUrl ? (
-                  <Image 
-                    source={{ uri: album.imageUrl }} 
-                    style={styles.albumImage}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <View style={styles.albumImagePlaceholder}>
-                    <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.albumInfo}>
-                <Text style={styles.albumTitle}>{album.title}</Text>
-                <Text style={styles.albumArtist}>{album.artist}</Text>
-                <Text style={styles.albumYear}>{album.year}</Text>
-              </View>
-              <Text style={styles.albumDate}>{album.addedAt}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      )}
-
-      {/* Mensaje si no hay datos */}
-      {stats.totalAlbums === 0 && (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
-          <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
-        </View>
-      )}
-
-      {/* Reproductor flotante */}
-      <FloatingAudioPlayer
-        visible={showFloatingPlayer}
-        audioUri={floatingAudioUri}
-        albumTitle={floatingAlbumTitle}
-        onClose={() => setShowFloatingPlayer(false)}
-      />
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
