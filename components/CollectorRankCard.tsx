@@ -8,6 +8,7 @@ interface CollectorRankCardProps {
   totalAlbums: number;
   collectionValue: number;
   onPress?: () => void;
+  userPosition?: number;
 }
 
 const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
@@ -19,7 +20,7 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
   Legendario: '👑',
 };
 
-export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue, onPress }) => {
+export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue, onPress, userPosition }) => {
   const { user } = useAuth();
   const [tierShare, setTierShare] = useState<number | null>(null);
 
@@ -75,9 +76,14 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
       <View style={styles.headerRow}>
         <Text style={styles.title}>Rango de Coleccionista</Text>
         <View style={styles.headerIcons}>
-          <Ionicons name="trophy" size={20} color="#FFD700" />
+          <View style={styles.rankingContainer}>
+            {userPosition && (
+              <Text style={styles.positionNumber}>#{userPosition}</Text>
+            )}
+            <Text style={styles.rankingText}>Ranking</Text>
+          </View>
           {onPress && (
-            <Ionicons name="chevron-forward" size={16} color="#666" style={{ marginLeft: 4 }} />
+            <Ionicons name="chevron-forward" size={16} color="#666" style={{ marginLeft: 8 }} />
           )}
         </View>
       </View>
@@ -162,6 +168,21 @@ const styles = StyleSheet.create({
   headerIcons: {
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  rankingContainer: {
+    alignItems: 'center',
+    marginRight: 4,
+  },
+  positionNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+  },
+  rankingText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#666',
+    textTransform: 'uppercase',
   },
   rankRow: {
     flexDirection: 'row',

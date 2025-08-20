@@ -67,6 +67,7 @@ export default function DashboardScreen() {
   const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
   const [floatingAudioUri, setFloatingAudioUri] = useState('');
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
+  const [userPosition, setUserPosition] = useState<number | null>(null);
   const navigation = useNavigation();
 
   const [shelves, setShelves] = useState<Shelf[]>([]);
@@ -400,6 +401,9 @@ export default function DashboardScreen() {
                     highestRatioAlbums,
                   });
 
+                  // Fetch user position after stats are loaded
+                  fetchUserPosition();
+
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
     } finally {
@@ -474,6 +478,66 @@ export default function DashboardScreen() {
     setRefreshing(false);
   };
 
+  const fetchUserPosition = useCallback(async () => {
+    if (!user?.id || !stats) return;
+
+    try {
+      // Get all users with their collection stats
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, username')
+        .not('username', 'is', null);
+
+      if (error) throw error;
+
+      const usersWithStats = await Promise.all(
+        profiles.map(async (profile) => {
+          const { data: collection } = await supabase
+            .from('user_collection')
+            .select(`
+              album_id,
+              albums!inner (
+                album_stats (
+                  avg_price
+                )
+              )
+            `)
+            .eq('user_id', profile.id);
+
+          const totalAlbums = collection?.length || 0;
+          const collectionValue = collection?.reduce((sum, item) => {
+            const albumStats = item.albums?.album_stats?.[0];
+            const avgPrice = albumStats?.avg_price;
+            return sum + (avgPrice || 0);
+          }, 0) || 0;
+
+          return {
+            id: profile.id,
+            totalAlbums,
+            collectionValue,
+          };
+        })
+      );
+
+      // Sort by collection value, then by total albums
+      const sortedUsers = usersWithStats
+        .sort((a, b) => {
+          if (b.collectionValue !== a.collectionValue) {
+            return b.collectionValue - a.collectionValue;
+          }
+          return b.totalAlbums - a.totalAlbums;
+        });
+
+      // Find current user's position
+      const position = sortedUsers.findIndex(u => u.id === user.id) + 1;
+      setUserPosition(position > 0 ? position : null);
+
+    } catch (error) {
+      console.error('Error fetching user position:', error);
+      setUserPosition(null);
+    }
+  }, [user?.id, stats]);
+
   useEffect(() => {
     fetchCollectionStats();
     fetchShelves();
@@ -536,6 +600,7 @@ export default function DashboardScreen() {
           totalAlbums={stats.totalAlbums} 
           collectionValue={stats.collectionValue} 
           onPress={() => (navigation as any).navigate('Leaderboard')}
+          userPosition={userPosition || undefined}
         />
         
         {/* Valor de la colección */}

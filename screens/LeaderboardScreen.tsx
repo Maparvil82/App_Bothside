@@ -33,6 +33,11 @@ export default function LeaderboardScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentUserRank, setCurrentUserRank] = useState<CollectorData | null>(null);
 
+  const capitalizeFirstLetter = (str: string) => {
+    if (!str) return str;
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  };
+
   const getRankInfo = (totalAlbums: number, collectionValue: number) => {
     if (totalAlbums >= 1000 || collectionValue >= 50000) {
       return { title: 'Maestro Coleccionista', color: '#FFD700' };
@@ -86,7 +91,8 @@ export default function LeaderboardScreen() {
 
           const totalAlbums = collection?.length || 0;
           const collectionValue = collection?.reduce((sum, item) => {
-            const avgPrice = item.albums?.album_stats?.avg_price;
+            const albumStats = item.albums?.album_stats?.[0];
+            const avgPrice = albumStats?.avg_price;
             return sum + (avgPrice || 0);
           }, 0) || 0;
 
@@ -94,8 +100,8 @@ export default function LeaderboardScreen() {
 
           return {
             id: profile.id,
-            username: profile.username || 'Usuario',
-            full_name: profile.full_name || profile.username || 'Usuario',
+            username: capitalizeFirstLetter(profile.username || 'Usuario'),
+            full_name: capitalizeFirstLetter(profile.full_name || profile.username || 'Usuario'),
             total_albums: totalAlbums,
             collection_value: collectionValue,
             rank_title: rankInfo.title,
@@ -399,7 +405,7 @@ const styles = StyleSheet.create({
     marginBottom: 2,
   },
   statNumber: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#333',
   },
