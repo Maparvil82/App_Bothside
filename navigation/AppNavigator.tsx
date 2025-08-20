@@ -98,7 +98,7 @@ const ListsStack = () => (
       name="AddAlbumToList"
       component={AddAlbumToListScreen}
       options={{
-        header: () => <CustomHeader title="Añadir a Estantería" showAvatar={false} />
+        header: () => <CustomHeader title="Añadir a Maleta" showAvatar={false} />
       }}
     />
     <Stack.Screen

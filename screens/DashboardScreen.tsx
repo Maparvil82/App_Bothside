@@ -646,12 +646,12 @@ export default function DashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Sección de Estantería */}
+        {/* Sección de Ubicaciones */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Mis Estanterías</Text>
+          <Text style={styles.sectionTitle}>Ubicaciones</Text>
           <View style={styles.shelfStatContainer}>
             <Text style={styles.shelfStatNumber}>{shelves.length}</Text>
-            <Text style={styles.shelfStatText}>Estanterías Creadas</Text>
+            <Text style={styles.shelfStatText}>Ubicaciones Creadas</Text>
           </View>
           <TouchableOpacity 
             style={styles.configButton}
@@ -659,7 +659,7 @@ export default function DashboardScreen() {
           >
             <Ionicons name="grid-outline" size={20} color="#fff" />
             <Text style={styles.configButtonText}>
-              Gestionar Estanterías
+              Gestionar Ubicaciones
             </Text>
           </TouchableOpacity>
         </View>

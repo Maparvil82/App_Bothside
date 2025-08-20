@@ -53,7 +53,7 @@ export const SearchScreen: React.FC = () => {
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   
-  // Estados para el modal de añadir a estantería
+  // Estados para el modal de añadir a maleta
   const [showAddToShelfModal, setShowAddToShelfModal] = useState(false);
   const [userLists, setUserLists] = useState<any[]>([]);
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
@@ -61,6 +61,11 @@ export const SearchScreen: React.FC = () => {
   const [newShelfTitle, setNewShelfTitle] = useState('');
   const [newShelfDescription, setNewShelfDescription] = useState('');
   const [newShelfIsPublic, setNewShelfIsPublic] = useState(false);
+
+  // Estados para el modal de asignar Ubicación física
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [physicalShelves, setPhysicalShelves] = useState<any[]>([]);
+  const [selectedAlbumForLocation, setSelectedAlbumForLocation] = useState<any>(null);
 
   const [showEditionsModal, setShowEditionsModal] = useState(false);
   const [editions, setEditions] = useState<any[]>([]);
@@ -254,6 +259,25 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  // Función para cargar las estanterías físicas (shelves)
+  const loadPhysicalShelves = async () => {
+    if (!user) return;
+    
+    try {
+      const { data: shelvesData, error: shelvesError } = await supabase
+        .from('shelves')
+        .select('id, name, shelf_rows, shelf_columns')
+        .eq('user_id', user.id);
+      
+      if (shelvesError) throw shelvesError;
+      
+      setPhysicalShelves(shelvesData || []);
+    } catch (error) {
+      console.error('Error loading physical shelves:', error);
+      Alert.alert('Error', 'No se pudieron cargar las ubicaciones físicas');
+    }
+  };
+
   const handleLongPress = (item: any) => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -383,7 +407,7 @@ export const SearchScreen: React.FC = () => {
       });
       
       // Preparar opciones dinámicas
-              const options = ['Cancelar', gemAction, 'Añadir a Estantería', 'Cambiar versión'];
+              const options = ['Cancelar', 'Asignar Ubicación', 'Añadir a Maleta', gemAction, 'Cambiar versión'];
       
       // Añadir opciones de audio
       if (item.audio_note) {
@@ -402,25 +426,30 @@ export const SearchScreen: React.FC = () => {
           },
           (buttonIndex) => {
             switch (buttonIndex) {
-              case 1: // Gem action
-                handleToggleGem(item);
+              case 1: // Asignar Ubicación
+                setSelectedAlbumForLocation(item);
+                loadPhysicalShelves();
+                setShowLocationModal(true);
                 break;
-              case 2: // Añadir a Estantería
+              case 2: // Añadir a Maleta
                 setSelectedAlbum(item);
                 loadUserLists();
                 setShowAddToShelfModal(true);
                 break;
-              case 3: // Cambiar versión
+              case 3: // Gem action
+                handleToggleGem(item);
+                break;
+              case 4: // Cambiar versión
                 handleEditAlbum(item);
                 break;
-              case 4: // Audio options
+              case 5: // Audio options
                 if (item.audio_note) {
                   handlePlayAudio(item);
                 } else {
                   handleRecordAudio(item);
                 }
                 break;
-              case 5: // Delete audio (if exists)
+              case 6: // Delete audio (if exists)
                 if (item.audio_note) {
                   handleDeleteAudioNote(item);
                 }
@@ -434,12 +463,17 @@ export const SearchScreen: React.FC = () => {
           '¿Qué quieres hacer con este álbum?',
           [
             { text: 'Cancelar', style: 'cancel' },
-            { text: gemAction, onPress: () => handleToggleGem(item) },
-            { text: 'Añadir a Estantería', onPress: () => {
+            { text: 'Asignar Ubicación', onPress: () => {
+              setSelectedAlbumForLocation(item);
+              loadPhysicalShelves();
+              setShowLocationModal(true);
+            }},
+            { text: 'Añadir a Maleta', onPress: () => {
               setSelectedAlbum(item);
               loadUserLists();
               setShowAddToShelfModal(true);
             }},
+            { text: gemAction, onPress: () => handleToggleGem(item) },
             { text: 'Cambiar versión', onPress: () => handleEditAlbum(item) },
             ...(item.audio_note ? [
               { text: 'Reproducir audio', onPress: () => handlePlayAudio(item) },
@@ -877,7 +911,7 @@ export const SearchScreen: React.FC = () => {
               </View>
             </View>
           </View>
-          </TouchableOpacity>
+      </TouchableOpacity>
     </View>
   );
 
@@ -1405,6 +1439,79 @@ export const SearchScreen: React.FC = () => {
         </View>
       </Modal>
 
+      {/* Modal para asignar Ubicación física */}
+      <Modal
+        visible={showLocationModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowLocationModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Asignar Ubicación para "{selectedAlbumForLocation?.albums?.title}"
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowLocationModal(false);
+                  setSelectedAlbumForLocation(null);
+                }}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={styles.selectShelfTitle}>Selecciona una ubicación física:</Text>
+              
+              {physicalShelves.length === 0 ? (
+                <View style={styles.emptyShelvesContainer}>
+                  <Ionicons name="grid-outline" size={48} color="#ccc" />
+                  <Text style={styles.emptyShelvesTitle}>Sin ubicaciones físicas</Text>
+                  <Text style={styles.emptyShelvesSubtitle}>
+                    Crea ubicaciones físicas para organizar tu colección
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.createShelfButton}
+                    onPress={() => {
+                      setShowLocationModal(false);
+                      navigation.navigate('ShelvesList');
+                    }}
+                  >
+                    <Text style={styles.createShelfButtonText}>Crear ubicación física</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                physicalShelves.map((shelf) => (
+                  <TouchableOpacity
+                    key={shelf.id}
+                    style={styles.shelfSelectItem}
+                    onPress={() => {
+                      setShowLocationModal(false);
+                      navigation.navigate('SelectCell', { 
+                        user_collection_id: selectedAlbumForLocation?.id, 
+                        shelf: shelf,
+                        current_row: undefined,
+                        current_column: undefined,
+                      });
+                    }}
+                  >
+                    <View style={styles.shelfSelectInfo}>
+                      <Text style={styles.shelfSelectItemText}>{shelf.name}</Text>
+                      <Text style={styles.shelfDimensions}>
+                        {shelf.shelf_rows}x{shelf.shelf_columns}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
       {/* Modal para editar edición */}
       <Modal
         visible={showEditionsModal}
@@ -1842,7 +1949,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Estilos para el modal de añadir a estantería
+  // Estilos para el modal de añadir a maleta
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -2175,7 +2282,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     marginTop: 8,
-    marginLeft: 8,
     alignSelf: 'flex-start',
   },
   shelfTagTextGrid: {
@@ -2190,5 +2296,68 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexWrap: 'wrap',
     marginTop: 4,
+  },
+
+  // Estilos para la selección de ubicación física
+  selectShelfTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 15,
+    marginTop: 10,
+  },
+  emptyShelvesContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    paddingHorizontal: 20,
+  },
+  emptyShelvesTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 15,
+    marginBottom: 5,
+  },
+  emptyShelvesSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  createShelfButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 8,
+  },
+  createShelfButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  shelfSelectItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  shelfSelectInfo: {
+    flex: 1,
+  },
+  shelfSelectItemText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#333',
+    marginBottom: 2,
+  },
+  shelfDimensions: {
+    fontSize: 14,
+    color: '#666',
   },
 }); 
