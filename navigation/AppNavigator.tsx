@@ -3,9 +3,10 @@ import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navi
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -225,7 +226,38 @@ const TabNavigator = () => (
 const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { mode } = useThemeMode();
   const theme = mode === 'dark' ? AppDarkTheme : DefaultTheme; // light remains existing
-  return <NavigationContainer theme={theme}>{children}</NavigationContainer>;
+  
+  // Configuración de deep linking
+  const linking = {
+    prefixes: [Linking.createURL('/'), 'bothside://'],
+    config: {
+      screens: {
+        Main: {
+          screens: {
+            SearchTab: 'search',
+            DashboardTab: 'dashboard',
+            AddDiscTab: 'add-disc',
+            ListsTab: 'lists',
+            GemsTab: 'gems',
+          },
+        },
+        AlbumDetail: 'album/:albumId',
+        AIChat: 'ai-chat',
+        Leaderboard: 'leaderboard',
+        Profile: 'profile',
+      },
+    },
+  };
+
+  return (
+    <NavigationContainer 
+      theme={theme} 
+      linking={linking}
+      fallback={<ActivityIndicator size="large" color="#007AFF" />}
+    >
+      {children}
+    </NavigationContainer>
+  );
 };
 
 // Wrapper para las pantallas principales con StatsProvider

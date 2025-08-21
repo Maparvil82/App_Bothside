@@ -46,6 +46,7 @@ export const SearchScreen: React.FC = () => {
   const [filterByStyle, setFilterByStyle] = useState<string>('');
   const [filterByYear, setFilterByYear] = useState<string>('');
   const [filterByLabel, setFilterByLabel] = useState<string>('');
+  const [filterByLocation, setFilterByLocation] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
@@ -102,7 +103,7 @@ export const SearchScreen: React.FC = () => {
 
   useEffect(() => {
     sortCollection();
-  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, query]);
+  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByLocation, query]);
 
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
@@ -530,6 +531,16 @@ export const SearchScreen: React.FC = () => {
       filtered = filtered.filter(item => item.albums?.label === filterByLabel);
     }
 
+    // Filtrar por ubicación
+    if (filterByLocation) {
+      filtered = filtered.filter(item => {
+        if (filterByLocation === 'Sin ubicación') {
+          return !item.shelf_name;
+        }
+        return item.shelf_name === filterByLocation;
+      });
+    }
+
     // Ordenar
     filtered.sort((a, b) => {
       switch (sortBy) {
@@ -601,6 +612,21 @@ export const SearchScreen: React.FC = () => {
       }
     });
     return Array.from(labels).sort();
+  };
+
+  const getUniqueLocations = () => {
+    const locations = new Set<string>();
+    collection.forEach(item => {
+      if (item.shelf_name) {
+        locations.add(item.shelf_name);
+      }
+    });
+    // Añadir "Sin ubicación" si hay álbumes sin ubicación
+    const hasUnlocatedAlbums = collection.some(item => !item.shelf_name);
+    if (hasUnlocatedAlbums) {
+      locations.add('Sin ubicación');
+    }
+    return Array.from(locations).sort();
   };
 
   const searchAlbumEditions = async (albumTitle: string, artist: string) => {
@@ -1181,6 +1207,39 @@ export const SearchScreen: React.FC = () => {
               </ScrollView>
             </View>
 
+            {/* Filtro por Ubicación */}
+            <View style={styles.filterSection}>
+              <Text style={styles.filterSectionTitle}>Ubicación</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+                <TouchableOpacity
+                  style={[
+                    styles.filterChip,
+                    !filterByLocation && styles.filterChipActive
+                  ]}
+                  onPress={() => setFilterByLocation('')}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    !filterByLocation && styles.filterChipTextActive
+                  ]}>Todas</Text>
+                </TouchableOpacity>
+                {getUniqueLocations().map((location) => (
+                  <TouchableOpacity
+                    key={location}
+                    style={[
+                      styles.filterChip,
+                      filterByLocation === location && styles.filterChipActive
+                    ]}
+                    onPress={() => setFilterByLocation(location)}
+                  >
+                    <Text style={[
+                      styles.filterChipText,
+                      filterByLocation === location && styles.filterChipTextActive
+                    ]}>{location}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
 
           </ScrollView>
         </View>
