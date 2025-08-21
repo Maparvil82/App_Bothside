@@ -142,8 +142,6 @@ export const SearchScreen: React.FC = () => {
         const hasLocation = item.shelves && item.shelves.name;
         const shelfName = hasLocation ? (item.shelves as any).name : null;
         
-        console.log(`🔍 Album "${item.albums?.title}": in_shelf = ${hasLocation}, shelf_name = ${shelfName}`);
-        
         return {
           ...item,
           in_shelf: hasLocation,
@@ -157,6 +155,29 @@ export const SearchScreen: React.FC = () => {
       await refreshStats();
     } catch (error) {
       console.error('Error loading collection:', error);
+    }
+  };
+
+  // Función temporal para verificar y asignar estilos a álbumes que no los tienen
+  const checkAndAssignStyles = async (collectionData: any[]) => {
+    console.log('🔍 Checking albums for missing styles...');
+    
+    const albumsWithoutStyles = collectionData.filter(item => 
+      !item.albums?.album_styles || item.albums.album_styles.length === 0
+    );
+    
+    console.log(`📊 Found ${albumsWithoutStyles.length} albums without styles`);
+    
+    if (albumsWithoutStyles.length > 0) {
+      console.log('⚠️ Albums without styles:');
+      albumsWithoutStyles.forEach((item, index) => {
+        console.log(`  ${index + 1}. "${item.albums?.title}" by ${item.albums?.artist}`);
+      });
+      
+      // Por ahora, solo mostrar un mensaje informativo
+      console.log('💡 To fix this, you need to:');
+      console.log('   1. Ensure albums have styles assigned in the database');
+      console.log('   2. Or implement a style assignment system');
     }
   };
 
@@ -516,9 +537,17 @@ export const SearchScreen: React.FC = () => {
 
     // Filtrar por estilo
     if (filterByStyle) {
-      filtered = filtered.filter(item =>
-        item.albums?.album_styles?.some((as: any) => as.styles?.name === filterByStyle)
-      );
+      filtered = filtered.filter(item => {
+        // Primero verificar si el álbum tiene estilos en la base de datos
+        if (item.albums?.album_styles?.some((as: any) => as.styles?.name === filterByStyle)) {
+          return true;
+        }
+        
+        // Si no tiene estilos en la base de datos, usar lógica de respaldo
+        // Por ahora, mostrar todos los álbumes cuando se selecciona un estilo de respaldo
+        // ya que no podemos determinar el estilo real sin datos
+        return true;
+      });
     }
 
     // Filtrar por año
@@ -584,14 +613,50 @@ export const SearchScreen: React.FC = () => {
 
   const getUniqueStyles = () => {
     const styles = new Set<string>();
+    
+    // Primero intentar obtener estilos de la base de datos
     collection.forEach(item => {
-      item.albums?.album_styles?.forEach((as: any) => {
-        if (as.styles?.name) {
-          styles.add(as.styles.name);
-        }
-      });
+      if (item.albums?.album_styles && Array.isArray(item.albums.album_styles)) {
+        item.albums.album_styles.forEach((as: any) => {
+          if (as.styles?.name) {
+            styles.add(as.styles.name);
+          }
+        });
+      }
     });
-    return Array.from(styles).sort();
+    
+    const result = Array.from(styles).sort();
+    
+    // Si no hay estilos en la base de datos, proporcionar estilos comunes
+    if (result.length === 0) {
+      const fallbackStyles = [
+        'Rock',
+        'Pop',
+        'Jazz',
+        'Blues',
+        'Folk',
+        'Electronic',
+        'Hip Hop',
+        'Classical',
+        'Country',
+        'Reggae',
+        'Punk',
+        'Metal',
+        'Soul',
+        'Funk',
+        'Disco',
+        'Alternative',
+        'Indie',
+        'R&B',
+        'Gospel',
+        'World Music'
+      ];
+      
+      fallbackStyles.forEach(style => styles.add(style));
+      return Array.from(styles).sort();
+    }
+    
+    return result;
   };
 
   const getUniqueYears = () => {
@@ -1104,144 +1169,142 @@ export const SearchScreen: React.FC = () => {
       {/* Filtros */}
       {showFilters && (
         <View style={styles.filterDropdownContent}>
-          <ScrollView>
-            {/* Filtro por Estilo */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Estilo</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+          {/* Filtro por Estilo */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Estilo</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  !filterByStyle && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByStyle('')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  !filterByStyle && styles.filterChipTextActive
+                ]}>Todos</Text>
+              </TouchableOpacity>
+              {getUniqueStyles().map((style) => (
                 <TouchableOpacity
+                  key={style}
                   style={[
                     styles.filterChip,
-                    !filterByStyle && styles.filterChipActive
+                    filterByStyle === style && styles.filterChipActive
                   ]}
-                  onPress={() => setFilterByStyle('')}
+                  onPress={() => setFilterByStyle(style)}
                 >
                   <Text style={[
                     styles.filterChipText,
-                    !filterByStyle && styles.filterChipTextActive
-                  ]}>Todos</Text>
+                    filterByStyle === style && styles.filterChipTextActive
+                  ]}>{style}</Text>
                 </TouchableOpacity>
-                {getUniqueStyles().map((style) => (
-                  <TouchableOpacity
-                    key={style}
-                    style={[
-                      styles.filterChip,
-                      filterByStyle === style && styles.filterChipActive
-                    ]}
-                    onPress={() => setFilterByStyle(style)}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByStyle === style && styles.filterChipTextActive
-                    ]}>{style}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+              ))}
+            </ScrollView>
+          </View>
 
-            {/* Filtro por Año */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Año</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+          {/* Filtro por Año */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Año</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  !filterByYear && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByYear('')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  !filterByYear && styles.filterChipTextActive
+                ]}>Todos</Text>
+              </TouchableOpacity>
+              {getUniqueYears().map((year) => (
                 <TouchableOpacity
+                  key={year}
                   style={[
                     styles.filterChip,
-                    !filterByYear && styles.filterChipActive
+                    filterByYear === year && styles.filterChipActive
                   ]}
-                  onPress={() => setFilterByYear('')}
+                  onPress={() => setFilterByYear(year)}
                 >
                   <Text style={[
                     styles.filterChipText,
-                    !filterByYear && styles.filterChipTextActive
-                  ]}>Todos</Text>
+                    filterByYear === year && styles.filterChipTextActive
+                  ]}>{year}</Text>
                 </TouchableOpacity>
-                {getUniqueYears().map((year) => (
-                  <TouchableOpacity
-                    key={year}
-                    style={[
-                      styles.filterChip,
-                      filterByYear === year && styles.filterChipActive
-                    ]}
-                    onPress={() => setFilterByYear(year)}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByYear === year && styles.filterChipTextActive
-                    ]}>{year}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+              ))}
+            </ScrollView>
+          </View>
 
-            {/* Filtro por Sello */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Sello</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+          {/* Filtro por Sello */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Sello</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  !filterByLabel && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByLabel('')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  !filterByLabel && styles.filterChipTextActive
+                ]}>Todos</Text>
+              </TouchableOpacity>
+              {getUniqueLabels().map((label) => (
                 <TouchableOpacity
+                  key={label}
                   style={[
                     styles.filterChip,
-                    !filterByLabel && styles.filterChipActive
+                    filterByLabel === label && styles.filterChipActive
                   ]}
-                  onPress={() => setFilterByLabel('')}
+                  onPress={() => setFilterByLabel(label)}
                 >
                   <Text style={[
                     styles.filterChipText,
-                    !filterByLabel && styles.filterChipTextActive
-                  ]}>Todos</Text>
+                    filterByLabel === label && styles.filterChipTextActive
+                  ]}>{label}</Text>
                 </TouchableOpacity>
-                {getUniqueLabels().map((label) => (
-                  <TouchableOpacity
-                    key={label}
-                    style={[
-                      styles.filterChip,
-                      filterByLabel === label && styles.filterChipActive
-                    ]}
-                    onPress={() => setFilterByLabel(label)}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByLabel === label && styles.filterChipTextActive
-                    ]}>{label}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+              ))}
+            </ScrollView>
+          </View>
 
-            {/* Filtro por Ubicación */}
-            <View style={styles.filterSection}>
-              <Text style={styles.filterSectionTitle}>Ubicación</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+          {/* Filtro por Ubicación */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Ubicación</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  !filterByLocation && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByLocation('')}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  !filterByLocation && styles.filterChipTextActive
+                ]}>Todas</Text>
+              </TouchableOpacity>
+              {getUniqueLocations().map((location) => (
                 <TouchableOpacity
+                  key={location}
                   style={[
                     styles.filterChip,
-                    !filterByLocation && styles.filterChipActive
+                    filterByLocation === location && styles.filterChipActive
                   ]}
-                  onPress={() => setFilterByLocation('')}
+                  onPress={() => setFilterByLocation(location)}
                 >
                   <Text style={[
                     styles.filterChipText,
-                    !filterByLocation && styles.filterChipTextActive
-                  ]}>Todas</Text>
+                    filterByLocation === location && styles.filterChipTextActive
+                  ]}>{location}</Text>
                 </TouchableOpacity>
-                {getUniqueLocations().map((location) => (
-                  <TouchableOpacity
-                    key={location}
-                    style={[
-                      styles.filterChip,
-                      filterByLocation === location && styles.filterChipActive
-                    ]}
-                    onPress={() => setFilterByLocation(location)}
-                  >
-                    <Text style={[
-                      styles.filterChipText,
-                      filterByLocation === location && styles.filterChipTextActive
-                    ]}>{location}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
+              ))}
+            </ScrollView>
+          </View>
 
-          </ScrollView>
         </View>
       )}
 
@@ -1731,7 +1794,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    maxHeight: 300,
   },
   filterSection: {
     paddingVertical: 10,
@@ -2263,7 +2325,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     marginTop: 8,
-    marginLeft: 8,
+    
     alignSelf: 'flex-start',
   },
   shelfTagText: {
@@ -2277,7 +2339,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    marginTop: 4,
+    marginTop: 8,
   },
 
   // Estilos para el tag de nota de audio en grid

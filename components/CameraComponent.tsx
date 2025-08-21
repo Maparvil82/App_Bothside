@@ -30,24 +30,52 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       // Simular procesamiento de OCR
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      // Texto simulado extraído de una imagen de álbum
-      const simulatedText = `The Dark Side of the Moon
-Pink Floyd
-1973
-Harvest Records
-Progressive Rock`;
+      // Simular diferentes álbumes reconocidos aleatoriamente
+      const simulatedAlbums = [
+        {
+          text: `The Dark Side of the Moon\nPink Floyd\n1973\nHarvest Records\nProgressive Rock`,
+          artist: 'Pink Floyd',
+          album: 'The Dark Side of the Moon'
+        },
+        {
+          text: `Abbey Road\nThe Beatles\n1969\nApple Records\nRock`,
+          artist: 'The Beatles',
+          album: 'Abbey Road'
+        },
+        {
+          text: `Thriller\nMichael Jackson\n1982\nEpic Records\nPop`,
+          artist: 'Michael Jackson',
+          album: 'Thriller'
+        },
+        {
+          text: `Nevermind\nNirvana\n1991\nDGC Records\nGrunge`,
+          artist: 'Nirvana',
+          album: 'Nevermind'
+        },
+        {
+          text: `OK Computer\nRadiohead\n1997\nParlophone\nAlternative Rock`,
+          artist: 'Radiohead',
+          album: 'OK Computer'
+        },
+        {
+          text: `Kind of Blue\nMiles Davis\n1959\nColumbia Records\nJazz`,
+          artist: 'Miles Davis',
+          album: 'Kind of Blue'
+        }
+      ];
       
-      console.log('📝 Texto extraído (simulado):', simulatedText);
-      setOcrText(simulatedText);
+      // Seleccionar un álbum aleatorio
+      const randomAlbum = simulatedAlbums[Math.floor(Math.random() * simulatedAlbums.length)];
+      
+      console.log('📝 Texto extraído (simulado):', randomAlbum.text);
+      setOcrText(randomAlbum.text);
 
-      // Intentar extraer artista y álbum del texto
-      const { artist, album } = extractArtistAndAlbum(simulatedText);
-      
-      if (artist && album && onOCRResult) {
-        onOCRResult(artist, album);
+      // Usar los datos del álbum simulado
+      if (randomAlbum.artist && randomAlbum.album && onOCRResult) {
+        onOCRResult(randomAlbum.artist, randomAlbum.album);
       }
 
-      return simulatedText;
+      return randomAlbum.text;
     } catch (error) {
       console.error('❌ Error en OCR:', error);
       Alert.alert('Error', 'No se pudo procesar la imagen con OCR');

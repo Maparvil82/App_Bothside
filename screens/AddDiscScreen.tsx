@@ -587,12 +587,22 @@ Progressive Rock`;
       if (results && results.results && results.results.length > 0) {
         // Filtrar solo versiones en vinilo
         const vinylResults = results.results.filter((release: any) => {
-          const formats = release.format || '';
-          return formats.toLowerCase().includes('vinyl') || 
-                 formats.toLowerCase().includes('lp') ||
-                 formats.toLowerCase().includes('12"') ||
-                 formats.toLowerCase().includes('12"') ||
-                 formats.toLowerCase().includes('7"');
+          const formats = release.format;
+          
+          // Manejar diferentes tipos de formato
+          let formatString = '';
+          if (Array.isArray(formats)) {
+            formatString = formats.join(',').toLowerCase();
+          } else if (typeof formats === 'string') {
+            formatString = formats.toLowerCase();
+          } else {
+            formatString = '';
+          }
+          
+          return formatString.includes('vinyl') || 
+                 formatString.includes('lp') ||
+                 formatString.includes('12"') ||
+                 formatString.includes('7"');
         });
         
         console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
@@ -651,8 +661,8 @@ Progressive Rock`;
         </Text>
         <Text style={styles.albumDetails}>
           {item.year && `${item.year} • `}
-          {item.format && `${item.format} • `}
-          {item.label && `${item.label}`}
+          {item.format && `${Array.isArray(item.format) ? item.format.join(', ') : item.format} • `}
+          {item.label && `${Array.isArray(item.label) ? item.label.join(', ') : item.label}`}
         </Text>
       </View>
       <TouchableOpacity
