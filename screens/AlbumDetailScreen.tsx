@@ -771,46 +771,46 @@ export default function AlbumDetailScreen() {
                     />
                   )}
                   <View style={styles.editionInfo}>
-                    <Text style={styles.editionTitle}>{edition.title}</Text>
-                    <Text style={styles.editionArtist}>{edition.artist}</Text>
+                    <Text style={styles.editionTitle} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
+                    <Text style={styles.editionArtist} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
                     
                     {/* Formato */}
                     {edition.format && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel}>Formato:</Text>
-                        <Text style={styles.editionDetailValue}>{edition.format}</Text>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
                       </View>
                     )}
                     
                     {/* Sello */}
                     {edition.label && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel}>Sello:</Text>
-                        <Text style={styles.editionDetailValue}>{edition.label}</Text>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
                       </View>
                     )}
                     
                     {/* Año */}
                     {edition.year && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel}>Año:</Text>
-                        <Text style={styles.editionDetailValue}>{edition.year}</Text>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
                       </View>
                     )}
                     
                     {/* País */}
                     {edition.country && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel}>País:</Text>
-                        <Text style={styles.editionDetailValue}>{edition.country}</Text>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">País:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
                       </View>
                     )}
                     
                     {/* Catálogo */}
                     {edition.catno && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel}>Catálogo:</Text>
-                        <Text style={styles.editionDetailValue}>{edition.catno}</Text>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
                       </View>
                     )}
                   </View>
@@ -1758,57 +1758,49 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   editionItem: {
-    backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#e9ecef',
+    backgroundColor: 'white',
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    minHeight: 80,
+  },
+  editionCover: {
+    width: 100,
+    height: 100,
+    borderRadius: 4,
+    marginRight: 10,
   },
   editionInfo: {
-    flex: 1.5,
+    flex: 1,
+    justifyContent: 'flex-start',
   },
   editionTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
-    marginBottom: 2,
+    color: '#333',
+    marginBottom: 4,
   },
   editionArtist: {
-    fontSize: 12,
-    color: '#6c757d',
+    fontSize: 14,
+    color: '#666',
     marginBottom: 4,
   },
-  editionDetails: {
+  editionDetailRow: {
     flexDirection: 'row',
-    marginBottom: 4,
-  },
-  editionYear: {
-    fontSize: 11,
-    color: '#007AFF',
-    marginRight: 8,
-  },
-  editionCountry: {
-    fontSize: 11,
-    color: '#28a745',
-    marginRight: 8,
-  },
-  editionFormat: {
-    fontSize: 11,
-    color: '#6c757d',
-  },
-  editionLabel: {
-    fontSize: 11,
-    color: '#6c757d',
     marginBottom: 2,
   },
-  editionCatno: {
+  editionDetailLabel: {
     fontSize: 12,
-    color: '#6c757d',
-    fontStyle: 'italic',
+    color: '#999',
+    marginRight: 4,
+  },
+  editionDetailValue: {
+    fontSize: 12,
+    color: '#999',
+    flex: 1,
   },
   noEditionsText: {
     fontSize: 14,
@@ -1816,29 +1808,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 8,
-  },
-  editionCover: {
-    width: 100,
-    height: 100,
-    borderRadius: 4,
-    marginRight: 12,
-  },
-  editionDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  editionDetailLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#495057',
-    minWidth: 70,
-    marginRight: 8,
-  },
-  editionDetailValue: {
-    fontSize: 12,
-    color: '#6c757d',
-    flex: 1,
   },
   modalOverlay: {
     flex: 1,
