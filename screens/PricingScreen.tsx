@@ -37,7 +37,7 @@ const pricingPlans: PricingPlan[] = [
       'Análisis de estadísticas',
       'IA personalizada',
       'Funciones avanzadas por cámara y voz',
-      
+
     ],
   },
   {
@@ -57,7 +57,7 @@ const pricingPlans: PricingPlan[] = [
 
 export const PricingScreen: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string>('annual');
-  const [includeTrial, setIncludeTrial] = useState<boolean>(true);
+  const [includeTrial, setIncludeTrial] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
 
@@ -191,7 +191,7 @@ export const PricingScreen: React.FC = () => {
             <View style={styles.trialTextContainer}>
               <Text style={styles.trialTitle}>Prueba gratuita de 7 días</Text>
               <Text style={styles.trialSubtitle}>
-                Prueba todas las funciones sin compromiso
+                Prueba todas las funciones sin compromiso, cancela cuando quieras
               </Text>
             </View>
           </TouchableOpacity>
