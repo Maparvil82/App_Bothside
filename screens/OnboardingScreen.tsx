@@ -201,22 +201,22 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#333',
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 16,
     lineHeight: 36,
   },
   subtitle: {
     fontSize: 18,
     color: '#666',
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 26,
-    paddingHorizontal: 10,
+   
   },
   bottomSection: {
     flexDirection: 'row',
