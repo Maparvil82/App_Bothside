@@ -273,7 +273,7 @@ export default function AIChatScreen() {
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
           <Text style={styles.headerTitle}>Bothside IA</Text>
-          <Text style={styles.headerSubtitle}>Analiza tu colección</Text>
+       
         </View>
         <View style={styles.rightButtonContainer}>
           {messages.length > 0 ? (
@@ -417,7 +417,7 @@ export default function AIChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   headerTitle: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#333',
   },
@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333(',
+    color: '#333',
     textAlign: 'center',
     marginBottom: 5,
   },
