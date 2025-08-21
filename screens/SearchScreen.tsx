@@ -862,29 +862,27 @@ export const SearchScreen: React.FC = () => {
                 {item.albums?.label} • {item.albums?.release_year}
               </Text>
               
-              {/* Tags de audio y gem */}
+              {/* Tags reordenados */}
               <View style={styles.tagsContainer}>
-                {/* Tag de nota de audio */}
-                {item.audio_note && (
-                  <View style={styles.audioTag}>
-                    <Ionicons name="mic" size={12} color="#007AFF" />
-                    <Text style={styles.audioTagText}>Nota de audio</Text>
-                  </View>
-                )}
-                
-                {/* Tag de gem */}
-                {item.is_gem && (
-                  <View style={styles.gemTag}>
-                    <Ionicons name="diamond" size={12} color="#d97706" />
-                    <Text style={styles.gemTagText}>Gem</Text>
-                  </View>
-                )}
-
-                {/* Tag de ubicación física */}
+                {/* Tag de ubicación física - PRIMERO */}
                 {item.in_shelf && (
                   <View style={styles.shelfTag}>
                     <Ionicons name="location" size={12} color="#28a745" />
                     <Text style={styles.shelfTagText}>{item.shelf_name || 'Ubicación física'}</Text>
+                  </View>
+                )}
+
+                {/* Tag de audio - SEGUNDO (solo icono) */}
+                {item.audio_note && (
+                  <View style={styles.audioTagIconOnly}>
+                    <Ionicons name="mic" size={12} color="#007AFF" />
+                  </View>
+                )}
+                
+                {/* Tag de gem - TERCERO (solo icono) */}
+                {item.is_gem && (
+                  <View style={styles.gemTagIconOnly}>
+                    <Ionicons name="diamond" size={12} color="#d97706" />
                   </View>
                 )}
               </View>
@@ -922,32 +920,29 @@ export const SearchScreen: React.FC = () => {
             }
           </Text>
           
-          {/* Tags de audio y gem */}
+          {/* Tags reordenados */}
           <View style={styles.tagsContainerGrid}>
-            {/* Tag de nota de audio */}
-            {item.audio_note && (
-              <View style={styles.audioTagGrid}>
-                <Ionicons name="mic" size={10} color="#007AFF" />
-                <Text style={styles.audioTagTextGrid}>Audio</Text>
-              </View>
-            )}
-            
-            {/* Tag de gem */}
-            {item.is_gem && (
-              <View style={styles.gemTagGrid}>
-                <Ionicons name="diamond" size={10} color="#d97706" />
-                <Text style={styles.gemTagTextGrid}>Gem</Text>
+            {/* Tag de ubicación física - PRIMERO */}
+            {item.in_shelf && (
+              <View style={styles.shelfTagGrid}>
+                <Ionicons name="location" size={10} color="#28a745" />
+                <Text style={styles.shelfTagTextGrid}>{item.shelf_name || 'Ubicación'}</Text>
               </View>
             )}
 
-            {/* Tag de estantería */}
-            {item.in_shelf && (
-              <View style={styles.shelfTagGrid}>
-                <Ionicons name="library" size={10} color="#28a745" />
-                <Text style={styles.shelfTagTextGrid}>Shelf</Text>
+            {/* Tag de audio - SEGUNDO (solo icono) */}
+            {item.audio_note && (
+              <View style={styles.audioTagGridIconOnly}>
+                <Ionicons name="mic" size={10} color="#007AFF" />
               </View>
             )}
-            {console.log(`🎯 Grid: Rendering shelf tag for "${item.albums?.title}": in_shelf = ${item.in_shelf}`)}
+            
+            {/* Tag de gem - TERCERO (solo icono) */}
+            {item.is_gem && (
+              <View style={styles.gemTagGridIconOnly}>
+                <Ionicons name="diamond" size={10} color="#d97706" />
+              </View>
+            )}
           </View>
         </View>
       </View>
@@ -2277,6 +2272,30 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
+  // Estilos para tags de solo icono en grid
+  audioTagGridIconOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+  gemTagGridIconOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+
   // Estilos para la selección de ubicación física
   selectShelfTitle: {
     fontSize: 16,
@@ -2338,5 +2357,50 @@ const styles = StyleSheet.create({
   shelfDimensions: {
     fontSize: 14,
     color: '#666',
+  },
+  audioTagIconOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  gemTagIconOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    marginTop: 8,
+    marginLeft: 8,
+    alignSelf: 'flex-start',
+  },
+
+  // Estilos para tags de solo icono en grid
+  audioTagGridIconOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e0f7fa',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginTop: 8,
+    marginLeft: 6,
+    alignSelf: 'flex-start',
+  },
+  gemTagGridIconOnly: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 12,
+    paddingVertical: 4,
+    paddingHorizontal: 6,
+    marginTop: 8,
+    marginLeft: 6,
+    alignSelf: 'flex-start',
   },
 }); 
