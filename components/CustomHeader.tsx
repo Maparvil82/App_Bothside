@@ -125,10 +125,10 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    height: 44,
+    height: 50,
   },
   backButton: {
     padding: 8,
