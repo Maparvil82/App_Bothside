@@ -346,6 +346,20 @@ export default function AIChatScreen() {
           )}
         </ScrollView>
 
+        {/* Estado vacío con titular y subtitular centrados - Solo mostrar cuando no hay mensajes */}
+        {messages.length === 0 && (
+          <View style={styles.emptyStateContainer}>
+            <View style={styles.emptyStateTextContainer}>
+              <Text style={styles.emptyStateTitle}>
+                Tu colección te conoce bien
+              </Text>
+              <Text style={styles.emptyStateSubtitle}>
+                He memorizado cada disco de tu estantería, es maravillosa, llena de datos sorprendentes.
+              </Text>
+            </View>
+          </View>
+        )}
+
         {/* Preguntas preestablecidas flotantes - Solo mostrar cuando no hay mensajes */}
         {messages.length === 0 && (
           <View style={styles.predefinedQuestionsContainer}>
@@ -375,7 +389,7 @@ export default function AIChatScreen() {
             style={styles.textInput}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Escribe tu pregunta..."
+            placeholder="Pregunga sobre tu colección..."
             placeholderTextColor="#999"
             multiline
             maxLength={500}
@@ -557,5 +571,28 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     fontWeight: '400',
     lineHeight: 22, // Better line spacing for readability
+  },
+  emptyStateContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    paddingHorizontal: 20,
+    paddingVertical: 40,
+  },
+  emptyStateTextContainer: {
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  emptyStateTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333(',
+    textAlign: 'center',
+    marginBottom: 5,
+  },
+  emptyStateSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    lineHeight: 22,
   },
 }); 
