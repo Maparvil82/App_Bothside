@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -17,7 +19,7 @@ import ViewListScreen from '../screens/ViewListScreen';
 import AddAlbumToListScreen from '../screens/AddAlbumToListScreen';
 import EditListScreen from '../screens/EditListScreen';
 import { CustomHeader } from '../components/CustomHeader';
-import { AuthProvider } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
 import { StatsProvider } from '../contexts/StatsContext';
 import AlbumDetailScreen from '../screens/AlbumDetailScreen';
@@ -28,6 +30,8 @@ import ShelfEditScreen from '../screens/ShelfEditScreen';
 import ShelfViewScreen from '../screens/ShelfViewScreen';
 import SelectCellScreen from '../screens/SelectCellScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
+import { OnboardingScreen } from '../screens/OnboardingScreen';
+import { LoginScreen } from '../screens/LoginScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -223,32 +227,55 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
   return <NavigationContainer theme={theme}>{children}</NavigationContainer>;
 };
 
-const AppNavigator = () => (
-  <ThemeProvider>
-    <ThemedNavigationContainer>
-      <AuthProvider>
-        <GemsProvider>
-          <StatsProvider>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="Main" component={TabNavigator} />
-              <Stack.Screen name="Profile" component={ProfileStack} />
-              <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
-              <Stack.Screen name="AIChat" component={AIChatScreen} />
-              <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
-              <Stack.Screen
-                name="SelectCell"
-                component={SelectCellScreen}
-                options={{
-                  headerShown: true,
-                  header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} />
-                }}
-              />
-            </Stack.Navigator>
-          </StatsProvider>
-        </GemsProvider>
-      </AuthProvider>
-    </ThemedNavigationContainer>
-  </ThemeProvider>
+// Wrapper para las pantallas principales con StatsProvider
+const MainAppWrapper = () => (
+  <StatsProvider>
+    <TabNavigator />
+  </StatsProvider>
 );
+
+const AppNavigator = () => {
+  const { user, loading } = useAuth();
+
+  // Mostrar loading mientras se verifica la autenticación
+  if (loading) {
+    return null; // O un componente de loading
+  }
+
+  return (
+    <ThemeProvider>
+      <ThemedNavigationContainer>
+        <GemsProvider>
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            {user ? (
+              // Usuario autenticado - Pantallas principales
+              <>
+                <Stack.Screen name="Main" component={MainAppWrapper} />
+                <Stack.Screen name="Profile" component={ProfileStack} />
+                <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
+                <Stack.Screen name="AIChat" component={AIChatScreen} />
+                <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+                <Stack.Screen
+                  name="SelectCell"
+                  component={SelectCellScreen}
+                  options={{
+                    headerShown: true,
+                    header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} />
+                  }}
+                />
+              </>
+            ) : (
+              // Usuario no autenticado - Pantallas de autenticación
+              <>
+                <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                <Stack.Screen name="Login" component={LoginScreen} />
+              </>
+            )}
+          </Stack.Navigator>
+        </GemsProvider>
+      </ThemedNavigationContainer>
+    </ThemeProvider>
+  );
+};
 
 export default AppNavigator; 

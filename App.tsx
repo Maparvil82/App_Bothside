@@ -18,7 +18,7 @@ const AppContent: React.FC = () => {
     );
   }
 
-  return user ? <AppNavigator /> : <LoginScreen />;
+  return <AppNavigator />;
 };
 
 export default function App() {
