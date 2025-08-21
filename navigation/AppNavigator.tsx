@@ -32,6 +32,7 @@ import SelectCellScreen from '../screens/SelectCellScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { LoginScreen } from '../screens/LoginScreen';
+import { PricingScreen } from '../screens/PricingScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -268,6 +269,7 @@ const AppNavigator = () => {
               // Usuario no autenticado - Pantallas de autenticación
               <>
                 <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+                <Stack.Screen name="Pricing" component={PricingScreen} />
                 <Stack.Screen name="Login" component={LoginScreen} />
               </>
             )}

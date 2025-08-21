@@ -66,14 +66,14 @@ export const OnboardingScreen: React.FC = () => {
         animated: true,
       });
     } else {
-      // Ir a la pantalla de login
-      navigation.navigate('Login');
+      // Ir a la pantalla de pricing
+      navigation.navigate('Pricing');
     }
   };
 
   const handleSkip = () => {
-    // Ir directamente a la pantalla de login
-    navigation.navigate('Login');
+    // Ir directamente a la pantalla de pricing
+    navigation.navigate('Pricing');
   };
 
   const handleDotPress = (index: number) => {

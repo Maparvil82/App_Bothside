@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useRoute } from '@react-navigation/native';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,6 +20,14 @@ export const LoginScreen: React.FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
+  const route = useRoute<any>();
+
+  // Verificar si venimos de pricing con modo registro
+  useEffect(() => {
+    if (route.params?.isSignUp) {
+      setIsSignUp(true);
+    }
+  }, [route.params?.isSignUp]);
 
   const validateUsername = (username: string): string | null => {
     if (!username.trim()) {
