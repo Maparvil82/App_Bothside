@@ -1590,7 +1590,7 @@ export const SearchScreen: React.FC = () => {
         onPress={() => navigation.navigate('AIChat')}
         activeOpacity={0.8}
       >
-        <Ionicons name="chatbubble-ellipses" size={24} color="#fff" />
+        <Ionicons name="sparkles" size={24} color="#fff" />
       </TouchableOpacity>
     </SafeAreaView>
   );
