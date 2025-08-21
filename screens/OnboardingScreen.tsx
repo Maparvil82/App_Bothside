@@ -7,6 +7,7 @@ import {
   Dimensions,
   ScrollView,
   SafeAreaView,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -18,35 +19,35 @@ const onboardingSteps = [
     id: 1,
     title: 'Tu colección te conoce mejor que nadie',
     subtitle: 'Descubre insights únicos sobre tu música y encuentra joyas olvidadas en tu colección',
-    icon: 'disc-outline',
+    image: require('../assets/icon.png'),
     color: '#007AFF',
   },
   {
     id: 2,
     title: 'Organiza tu música físicamente',
     subtitle: 'Crea ubicaciones físicas para tus discos y nunca más pierdas un álbum',
-    icon: 'grid-outline',
+    image: require('../assets/adaptive-icon.png'),
     color: '#28a745',
   },
   {
     id: 3,
     title: 'Comparte tu pasión',
     subtitle: 'Crea maletas temáticas y comparte tu música con otros coleccionistas',
-    icon: 'share-social-outline',
+    image: require('../assets/splash-icon.png'),
     color: '#ff6b6b',
   },
   {
     id: 4,
     title: 'Analiza tus estadísticas',
     subtitle: 'Conoce tus géneros favoritos, artistas más escuchados y el valor de tu colección',
-    icon: 'stats-chart-outline',
+    image: require('../assets/favicon.png'),
     color: '#f39c12',
   },
   {
     id: 5,
     title: 'IA que entiende tu música',
     subtitle: 'Pregunta a nuestra IA sobre tu colección y descubre recomendaciones personalizadas',
-    icon: 'sparkles',
+    image: require('../assets/icon.png'),
     color: '#9b59b6',
   },
 ];
@@ -106,8 +107,8 @@ export const OnboardingScreen: React.FC = () => {
           <View key={step.id} style={styles.slide}>
             {/* Illustration */}
             <View style={styles.illustrationContainer}>
-              <View style={[styles.iconContainer, { backgroundColor: step.color }]}>
-                <Ionicons name={step.icon as any} size={80} color="#fff" />
+              <View>
+                <Image source={step.image} style={styles.image} />
               </View>
             </View>
 
@@ -138,11 +139,19 @@ export const OnboardingScreen: React.FC = () => {
 
         {/* Next button */}
         <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
-          <Ionicons 
-            name={currentStep === onboardingSteps.length - 1 ? "checkmark" : "arrow-forward"} 
-            size={24} 
-            color="#fff" 
+          <Ionicons
+            name={currentStep === onboardingSteps.length - 1 ? "checkmark" : "arrow-forward"}
+            size={24}
+            color="#fff"
           />
+        </TouchableOpacity>
+      </View>
+
+      {/* Account section */}
+      <View style={styles.accountSection}>
+        <Text style={styles.accountText}>¿Tiene una cuenta en Bothside?</Text>
+        <TouchableOpacity onPress={handleSkip}>
+          <Text style={styles.loginLink}>Iniciar sesión</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -182,26 +191,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 40,
   },
-  iconContainer: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 8,
+
+  image: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
   },
   textContainer: {
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    
+
   },
   title: {
     fontSize: 28,
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'left',
     lineHeight: 26,
-   
+
   },
   bottomSection: {
     flexDirection: 'row',
@@ -256,5 +256,22 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 4,
+  },
+  accountSection: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 20,
+    backgroundColor: 'white',
+  },
+  accountText: {
+    fontSize: 14,
+    color: '#666',
+    marginRight: 10,
+  },
+  loginLink: {
+    fontSize: 14,
+    color: '#007AFF',
+    fontWeight: '500',
   },
 }); 
