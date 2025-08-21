@@ -1583,6 +1583,15 @@ export const SearchScreen: React.FC = () => {
         albumTitle={floatingAlbumTitle}
         onClose={() => setShowFloatingPlayer(false)}
       />
+
+      {/* Botón flotante de IA */}
+      <TouchableOpacity
+        style={styles.floatingAIButton}
+        onPress={() => navigation.navigate('AIChat')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="chatbubble-ellipses" size={24} color="#fff" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -2366,6 +2375,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     marginTop: 8,
+    marginLeft: 8,
     alignSelf: 'flex-start',
   },
   gemTagIconOnly: {
@@ -2380,27 +2390,19 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
 
-  // Estilos para tags de solo icono en grid
-  audioTagGridIconOnly: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e0f7fa',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    marginTop: 8,
-    marginLeft: 6,
-    alignSelf: 'flex-start',
-  },
-  gemTagGridIconOnly: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef3c7',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    marginTop: 8,
-    marginLeft: 6,
-    alignSelf: 'flex-start',
+
+
+  floatingAIButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 50,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
 }); 
