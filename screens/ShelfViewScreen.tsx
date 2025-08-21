@@ -79,7 +79,9 @@ export default function ShelfViewScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{shelf.name}</Text>
-      <ShelfGrid rows={shelf.shelf_rows} columns={shelf.shelf_columns} />
+      <View style={styles.gridWrapper}>
+        <ShelfGrid rows={shelf.shelf_rows} columns={shelf.shelf_columns} />
+      </View>
     </View>
   );
 }
@@ -100,5 +102,10 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 16,
     textAlign: 'center',
+  },
+  gridWrapper: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 }); 

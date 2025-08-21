@@ -11,11 +11,11 @@ interface ShelfGridProps {
 
 const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, highlightColumn }) => {
   const screenWidth = Dimensions.get('window').width;
-  const containerPadding = 16 * 2;
-  const gridGap = 8;
+  const containerPadding = 32; // Padding total (16 * 2)
+  const gridGap = 12; // Espaciado unificado
   const totalGapWidth = (columns - 1) * gridGap;
-  const availableWidth = screenWidth - (containerPadding * 2); 
-  const cellWidth = (availableWidth - totalGapWidth) / columns;
+  const availableWidth = screenWidth - containerPadding; 
+  const cellWidth = Math.min((availableWidth - totalGapWidth) / columns, 80); // Máximo 80px por celda
 
   const renderGrid = () => {
     const gridRows = [];
@@ -29,14 +29,16 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, high
           </View>
         );
       }
-      gridRows.push(<View key={i} style={styles.row}>{rowCells}</View>);
+      gridRows.push(<View key={i} style={[styles.row, { marginBottom: i < rows - 1 ? gridGap : 0 }]}>{rowCells}</View>);
     }
     return gridRows;
   };
 
   return (
     <View style={styles.gridContainer}>
-      {renderGrid()}
+      <View style={styles.gridContent}>
+        {renderGrid()}
+      </View>
     </View>
   );
 };
@@ -44,11 +46,13 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, high
 const styles = StyleSheet.create({
   gridContainer: {
     marginTop: 16,
-    gap: 8,
+  },
+  gridContent: {
+    alignItems: 'center',
   },
   row: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 12,
   },
   cell: {
     backgroundColor: '#e9ecef',
