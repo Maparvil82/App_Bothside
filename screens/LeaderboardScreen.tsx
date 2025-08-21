@@ -56,86 +56,36 @@ export default function LeaderboardScreen() {
 
   const fetchLeaderboard = async () => {
     try {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select(`
-          id,
-          username,
-          full_name
-        `)
-        .not('username', 'is', null);
+      setLoading(true);
+      console.log('🏆 Iniciando fetch del leaderboard...');
+      console.log('👤 Usuario actual ID:', user?.id);
+      console.log('👤 Usuario actual email:', user?.email);
 
-      if (error) throw error;
+      // Use Edge Function to bypass RLS restrictions
+      const { data, error } = await supabase.functions.invoke('get-leaderboard', {
+        method: 'POST',
+        body: {}
+      });
 
-      const collectorsWithStats = await Promise.all(
-        profiles.map(async (profile) => {
-          // Get collection stats for each user
-          const { data: collection, error: collectionError } = await supabase
-            .from('user_collection')
-            .select(`
-              album_id,
-              albums!inner (
-                title,
-                artist,
-                album_stats (
-                  avg_price
-                )
-              )
-            `)
-            .eq('user_id', profile.id);
+      if (error) {
+        console.error('❌ Error calling leaderboard function:', error);
+        setLoading(false);
+        return;
+      }
 
-          if (collectionError) {
-            console.error(`Error fetching collection for ${profile.username}:`, collectionError);
-            return null;
-          }
+      if (!data || !data.success) {
+        console.error('❌ Invalid response from leaderboard function:', data);
+        setLoading(false);
+        return;
+      }
 
-          const totalAlbums = collection?.length || 0;
-          const collectionValue = collection?.reduce((sum, item) => {
-            const albumStats = item.albums?.album_stats?.[0];
-            const avgPrice = albumStats?.avg_price;
-            return sum + (avgPrice || 0);
-          }, 0) || 0;
-
-          const rankInfo = getRankInfo(totalAlbums, collectionValue);
-
-          return {
-            id: profile.id,
-            username: capitalizeFirstLetter(profile.username || 'Usuario'),
-            full_name: capitalizeFirstLetter(profile.full_name || profile.username || 'Usuario'),
-            total_albums: totalAlbums,
-            collection_value: collectionValue,
-            rank_title: rankInfo.title,
-            rank_color: rankInfo.color,
-            position: 0, // Will be set after sorting
-          };
-        })
-      );
-
-      // Filter out null results and sort by collection value, then by total albums
-      const validCollectors = collectorsWithStats
-        .filter((collector): collector is CollectorData => collector !== null)
-        .sort((a, b) => {
-          if (b.collection_value !== a.collection_value) {
-            return b.collection_value - a.collection_value;
-          }
-          return b.total_albums - a.total_albums;
-        })
-        .map((collector, index) => ({
-          ...collector,
-          position: index + 1,
-        }));
-
-      setCollectors(validCollectors);
-
-      // Find current user's rank
-      const userRank = validCollectors.find(collector => collector.id === user?.id);
-      setCurrentUserRank(userRank || null);
+      console.log('✅ Leaderboard data received:', data.data);
+      setCollectors(data.data);
+      setLoading(false);
 
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
-    } finally {
+      console.error('❌ Error fetching leaderboard:', error);
       setLoading(false);
-      setRefreshing(false);
     }
   };
 

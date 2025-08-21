@@ -1090,17 +1090,18 @@ export const SearchScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerContainer}>
-        <View style={styles.headerTitleContainer}>
-          <Text style={styles.headerTitle}>Colección</Text>
-          <Text style={styles.headerSubtitle}>{filteredCollection.length} discos</Text>
-        </View>
+      {/* Toolbar con botones de búsqueda, vista y filtros */}
+      <View style={styles.toolbarContainer}>
+        {/* Contador de discos a la izquierda */}
+        <Text style={styles.collectionCount}>
+          {filteredCollection.length} discos
+        </Text>
         
-        <View style={styles.headerButtons}>
-                    <TouchableOpacity
+        {/* Botones de búsqueda, vista y filtros a la derecha */}
+        <View style={styles.toolbarButtons}>
+          <TouchableOpacity
             style={[
-              styles.searchButton,
+              styles.toolbarButton,
               { backgroundColor: showSearch ? '#f0f0f0' : 'transparent' }
             ]}
             onPress={() => setShowSearch(!showSearch)}
@@ -1113,11 +1114,11 @@ export const SearchScreen: React.FC = () => {
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={styles.viewButton}
-            onPress={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
+            style={styles.toolbarButton}
+            onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
           >
             <Ionicons 
-              name={viewMode === 'list' ? 'grid-outline' : 'list-outline'} 
+              name={viewMode === 'grid' ? 'list-outline' : 'grid-outline'} 
               size={24} 
               color="#666" 
             />
@@ -1125,7 +1126,7 @@ export const SearchScreen: React.FC = () => {
           
           <TouchableOpacity
             style={[
-              styles.filterButton,
+              styles.toolbarButton,
               { backgroundColor: showFilters ? '#f0f0f0' : 'transparent' }
             ]}
             onPress={() => setShowFilters(!showFilters)}
@@ -1136,8 +1137,6 @@ export const SearchScreen: React.FC = () => {
               color="#666" 
             />
           </TouchableOpacity>
-          
-
         </View>
       </View>
       
@@ -1723,49 +1722,31 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  headerContainer: {
+  toolbarContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
-  headerTitleContainer: {
-    flex: 1,
-    alignItems: 'flex-start',
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-    color: '#333',
-  },
-  headerSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
-  },
-  headerButtons: {
+  toolbarButtons: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
   },
-  searchButton: {
+  toolbarButton: {
     padding: 8,
-    borderRadius: 4,
+    borderRadius: 6,
     backgroundColor: 'transparent',
   },
-  viewButton: {
-    padding: 8,
-    borderRadius: 4,
-    backgroundColor: 'transparent',
+  collectionCount: {
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
   },
-  filterButton: {
-    padding: 8,
-    borderRadius: 4,
-    backgroundColor: 'transparent',
-  },
-
   searchContainer: {
     padding: 15,
     backgroundColor: '#f9f9f9',

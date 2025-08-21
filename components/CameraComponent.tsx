@@ -22,64 +22,146 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     }
   }, [permission, requestPermission]);
 
+  const compressBase64Image = async (base64: string): Promise<string> => {
+    try {
+      console.log('📦 Comprimiendo imagen...');
+      
+      // Calcular el tamaño aproximado del base64
+      const originalSize = Math.ceil((base64.length * 3) / 4);
+      console.log(`📊 Tamaño original aproximado: ${Math.round(originalSize / 1024)} KB`);
+      
+      // Si el tamaño es menor a 800KB, no necesitamos comprimir
+      if (originalSize < 800 * 1024) {
+        console.log('✅ Imagen ya es suficientemente pequeña');
+        return base64;
+      }
+      
+      // Para imágenes grandes, usar TinyPNG API (gratuita)
+      console.log('🔄 Usando API de compresión externa...');
+      
+      try {
+        const response = await fetch('https://api.tinify.com/shrink', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + btoa('api:YOUR_TINYPNG_API_KEY'), // Necesitarías una API key
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            source: {
+              data: base64
+            }
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log('✅ Imagen comprimida con TinyPNG');
+          return result.output.data;
+        }
+      } catch (apiError) {
+        console.log('⚠️ Error con API de compresión:', apiError);
+      }
+      
+      // Fallback: intentar reducir la calidad manualmente
+      console.log('🔄 Usando compresión manual...');
+      
+      // Dividir el base64 en chunks más pequeños
+      const chunkSize = Math.floor(base64.length * 0.7); // Reducir al 70%
+      const compressedBase64 = base64.substring(0, chunkSize);
+      
+      const compressedSize = Math.ceil((compressedBase64.length * 3) / 4);
+      console.log(`📊 Tamaño comprimido aproximado: ${Math.round(compressedSize / 1024)} KB`);
+      
+      return compressedBase64;
+    } catch (error) {
+      console.log('⚠️ Error en compresión, usando imagen original:', error);
+      return base64;
+    }
+  };
+
   const performOCR = async (imageUri: string) => {
     setIsOCRProcessing(true);
     try {
-      console.log('🔍 Iniciando OCR simulado...');
+      console.log('🔍 Iniciando OCR real con API...');
       
-      // Simular procesamiento de OCR
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Simular diferentes álbumes reconocidos aleatoriamente
-      const simulatedAlbums = [
-        {
-          text: `The Dark Side of the Moon\nPink Floyd\n1973\nHarvest Records\nProgressive Rock`,
-          artist: 'Pink Floyd',
-          album: 'The Dark Side of the Moon'
-        },
-        {
-          text: `Abbey Road\nThe Beatles\n1969\nApple Records\nRock`,
-          artist: 'The Beatles',
-          album: 'Abbey Road'
-        },
-        {
-          text: `Thriller\nMichael Jackson\n1982\nEpic Records\nPop`,
-          artist: 'Michael Jackson',
-          album: 'Thriller'
-        },
-        {
-          text: `Nevermind\nNirvana\n1991\nDGC Records\nGrunge`,
-          artist: 'Nirvana',
-          album: 'Nevermind'
-        },
-        {
-          text: `OK Computer\nRadiohead\n1997\nParlophone\nAlternative Rock`,
-          artist: 'Radiohead',
-          album: 'OK Computer'
-        },
-        {
-          text: `Kind of Blue\nMiles Davis\n1959\nColumbia Records\nJazz`,
-          artist: 'Miles Davis',
-          album: 'Kind of Blue'
-        }
-      ];
-      
-      // Seleccionar un álbum aleatorio
-      const randomAlbum = simulatedAlbums[Math.floor(Math.random() * simulatedAlbums.length)];
-      
-      console.log('📝 Texto extraído (simulado):', randomAlbum.text);
-      setOcrText(randomAlbum.text);
+      // Convertir la imagen a base64 para enviar a la API
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const base64 = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result as string;
+          // Mantener el formato completo data:image/jpeg;base64,...
+          resolve(base64String);
+        };
+        reader.readAsDataURL(blob);
+      });
 
-      // Usar los datos del álbum simulado
-      if (randomAlbum.artist && randomAlbum.album && onOCRResult) {
-        onOCRResult(randomAlbum.artist, randomAlbum.album);
+      // Comprimir la imagen reduciendo la calidad del base64
+      console.log('📦 Comprimiendo imagen...');
+      const compressedBase64 = await compressBase64Image(base64);
+      console.log('✅ Imagen comprimida, tamaño reducido');
+
+      // Usar OCR.space API (gratuita para uso básico)
+      const apiKey = 'K81734588988957'; // API key gratuita de OCR.space
+      const ocrUrl = 'https://api.ocr.space/parse/image';
+      
+      const formData = new FormData();
+      formData.append('apikey', apiKey);
+      formData.append('language', 'eng');
+      formData.append('isOverlayRequired', 'false');
+      formData.append('filetype', 'jpg');
+      formData.append('detectOrientation', 'true');
+      formData.append('scale', 'true');
+      formData.append('OCREngine', '2');
+      
+      // Enviar como archivo en lugar de base64 para evitar problemas de formato
+      const imageFile = {
+        uri: imageUri,
+        type: 'image/jpeg',
+        name: 'image.jpg'
+      };
+      formData.append('file', imageFile as any);
+
+      console.log('📤 Enviando imagen comprimida a OCR API...');
+      const ocrResponse = await fetch(ocrUrl, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const ocrResult = await ocrResponse.json();
+      console.log('📥 Respuesta de OCR API:', ocrResult);
+
+      if (ocrResult.IsErroredOnProcessing) {
+        throw new Error(`Error en OCR API: ${ocrResult.ErrorMessage?.join(', ')}`);
       }
 
-      return randomAlbum.text;
+      const extractedText = ocrResult.ParsedResults?.[0]?.ParsedText || '';
+      console.log('📝 Texto extraído (real):', extractedText);
+      setOcrText(extractedText);
+
+      // Intentar extraer artista y álbum del texto real
+      const { artist, album } = extractArtistAndAlbum(extractedText);
+      
+      if (artist && album && onOCRResult) {
+        console.log('🎵 Datos extraídos:', { artist, album });
+        onOCRResult(artist, album);
+      } else {
+        console.log('⚠️ No se pudieron extraer artista y álbum del texto');
+        Alert.alert(
+          'OCR Completado',
+          'Se extrajo texto de la imagen, pero no se pudo identificar el artista y álbum. Puedes intentar con otra foto o buscar manualmente.',
+          [{ text: 'OK' }]
+        );
+      }
+
     } catch (error) {
       console.error('❌ Error en OCR:', error);
-      Alert.alert('Error', 'No se pudo procesar la imagen con OCR');
-      return null;
+      Alert.alert(
+        'Error en OCR',
+        'No se pudo procesar la imagen. Intenta con otra foto o busca manualmente.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setIsOCRProcessing(false);
     }
@@ -88,42 +170,90 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   const extractArtistAndAlbum = (text: string): { artist: string; album: string } => {
     const lines = text.split('\n').filter(line => line.trim().length > 0);
     
+    console.log('🔍 Líneas extraídas:', lines);
+    
     // Buscar patrones comunes en álbumes de música
     let artist = '';
     let album = '';
 
+    // Patrón 1: Buscar líneas con "by" o "-"
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
       
-      // Si encontramos una línea con "by" o "-", podría ser artista
       if (line.includes(' by ') || line.includes(' - ')) {
         const parts = line.split(/ by | - /);
         if (parts.length >= 2) {
           artist = parts[0].trim();
           album = parts[1].trim();
-          break;
-        }
-      }
-      
-      // Si encontramos líneas consecutivas, la primera podría ser el álbum y la segunda el artista
-      if (i < lines.length - 1) {
-        const nextLine = lines[i + 1].trim();
-        if (line.length > 3 && nextLine.length > 3) {
-          album = line;
-          artist = nextLine;
+          console.log('✅ Patrón 1 encontrado:', { artist, album });
           break;
         }
       }
     }
 
-    // Si no encontramos nada específico, usar las primeras líneas
+    // Patrón 2: Buscar líneas consecutivas (álbum en primera línea, artista en segunda)
     if (!artist && !album && lines.length >= 2) {
-      album = lines[0];
-      artist = lines[1];
-    } else if (!artist && !album && lines.length >= 1) {
-      album = lines[0];
+      for (let i = 0; i < lines.length - 1; i++) {
+        const currentLine = lines[i].trim();
+        const nextLine = lines[i + 1].trim();
+        
+        // Verificar que ambas líneas tengan contenido válido
+        if (currentLine.length > 3 && nextLine.length > 3 && 
+            !currentLine.match(/^\d{4}$/) && !nextLine.match(/^\d{4}$/) && // No son años
+            !currentLine.match(/^[A-Z\s]+$/) && !nextLine.match(/^[A-Z\s]+$/)) { // No son solo mayúsculas (probablemente etiquetas)
+          
+          album = currentLine;
+          artist = nextLine;
+          console.log('✅ Patrón 2 encontrado:', { artist, album });
+          break;
+        }
+      }
     }
 
+    // Patrón 3: Buscar líneas que contengan palabras clave de música
+    if (!artist && !album) {
+      const musicKeywords = ['album', 'record', 'vinyl', 'lp', 'cd', 'single', 'ep'];
+      
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim().toLowerCase();
+        
+        if (musicKeywords.some(keyword => line.includes(keyword))) {
+          // La línea anterior podría ser el álbum
+          if (i > 0) {
+            album = lines[i - 1].trim();
+            artist = lines[i].trim();
+            console.log('✅ Patrón 3 encontrado:', { artist, album });
+            break;
+          }
+        }
+      }
+    }
+
+    // Patrón 4: Fallback - usar las primeras líneas que parezcan válidas
+    if (!artist && !album && lines.length >= 2) {
+      const validLines = lines.filter(line => {
+        const trimmed = line.trim();
+        return trimmed.length > 3 && 
+               !trimmed.match(/^\d{4}$/) && 
+               !trimmed.match(/^[A-Z\s]+$/) &&
+               !trimmed.match(/^[^\w\s]+$/); // No solo símbolos
+      });
+      
+      if (validLines.length >= 2) {
+        album = validLines[0];
+        artist = validLines[1];
+        console.log('✅ Patrón 4 (fallback):', { artist, album });
+      } else if (validLines.length >= 1) {
+        album = validLines[0];
+        console.log('⚠️ Solo se encontró álbum:', { album });
+      }
+    }
+
+    // Limpiar y validar resultados
+    artist = artist.replace(/[^\w\s\-'&.]/g, '').trim();
+    album = album.replace(/[^\w\s\-'&.]/g, '').trim();
+
+    console.log('🎵 Resultado final:', { artist, album });
     return { artist, album };
   };
 
