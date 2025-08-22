@@ -761,6 +761,8 @@ export const SearchScreen: React.FC = () => {
             format: release.format?.join(', ') || 'Vinyl',
             country: release.country,
             label: release.label?.join(', ') || 'Unknown',
+            genres: release.genre || [],
+            styles: release.style || [],
             thumb: release.thumb,
             cover_image: release.cover_image
           };
@@ -1671,9 +1673,8 @@ export const SearchScreen: React.FC = () => {
                         <Text style={styles.editionArtist}>{edition.artist}</Text>
                         <Text style={styles.editionDetail}>
                           {edition.year && `Año: ${edition.year}`}
-                          {edition.format && edition.format !== 'Vinyl' && ` | Formato: ${edition.format}`}
-                          {edition.country && ` | País: ${edition.country}`}
-                          {edition.label && edition.label !== 'Unknown' && ` | Sello: ${edition.label}`}
+                          {edition.genres && edition.genres.length > 0 && ` | Género: ${edition.genres.join(', ')}`}
+                          {edition.styles && edition.styles.length > 0 && ` | Estilo: ${edition.styles.join(', ')}`}
                         </Text>
                       </View>
                       <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -2224,12 +2225,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
+    minHeight: 80,
   },
   editionThumbnail: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 4,
-    marginRight: 15,
+    marginRight: 10,
   },
   editionInfo: {
     flex: 1,
@@ -2248,6 +2250,7 @@ const styles = StyleSheet.create({
   editionDetail: {
     fontSize: 12,
     color: '#999',
+    marginTop: 2,
   },
   editionsSubtitle: {
     fontSize: 14,

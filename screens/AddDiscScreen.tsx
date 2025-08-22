@@ -113,6 +113,51 @@ export const AddDiscScreen: React.FC = () => {
     }
   }, [permission, requestPermission]);
 
+  // Función para extraer artista del título
+  const extractArtistFromTitle = (title: string): string | null => {
+    if (!title) return null;
+    
+    // Intentar extraer artista del título (formato: "Artista - Título")
+    const titleParts = title.split(' - ');
+    if (titleParts.length >= 2) {
+      return titleParts[0].trim();
+    }
+    
+    // Si no hay separador, intentar con otros formatos comunes
+    const otherSeparators = [' – ', ' / ', ' | ', ' • '];
+    for (const separator of otherSeparators) {
+      const parts = title.split(separator);
+      if (parts.length >= 2) {
+        return parts[0].trim();
+      }
+    }
+    
+    return null;
+  };
+
+  // Función para extraer solo el título del álbum
+  const extractAlbumTitle = (title: string): string => {
+    if (!title) return 'Sin título';
+    
+    // Intentar extraer título del álbum (formato: "Artista - Título")
+    const titleParts = title.split(' - ');
+    if (titleParts.length >= 2) {
+      return titleParts.slice(1).join(' - ').trim();
+    }
+    
+    // Si no hay separador, intentar con otros formatos comunes
+    const otherSeparators = [' – ', ' / ', ' | ', ' • '];
+    for (const separator of otherSeparators) {
+      const parts = title.split(separator);
+      if (parts.length >= 2) {
+        return parts.slice(1).join(separator).trim();
+      }
+    }
+    
+    // Si no se puede extraer, devolver el título completo
+    return title;
+  };
+
   // Función para buscar en Discogs manualmente
   const searchDiscogsManual = async () => {
     if (!artistQuery.trim() || !albumQuery.trim()) {
@@ -654,10 +699,10 @@ Progressive Rock`;
       />
       <View style={styles.albumInfo}>
         <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
-          {item.title}
+          {extractAlbumTitle(item.title)}
         </Text>
         <Text style={styles.albumArtist}>
-          {item.artists?.[0]?.name || 'Unknown Artist'}
+          {item.artists?.[0]?.name || item.artist || extractArtistFromTitle(item.title) || 'Unknown Artist'}
         </Text>
         <Text style={styles.albumDetails}>
           {item.year && `${item.year} • `}
