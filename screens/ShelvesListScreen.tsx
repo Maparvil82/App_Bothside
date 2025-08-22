@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
@@ -46,6 +47,8 @@ export default function ShelvesListScreen() {
     }
   }, [user]);
 
+
+
   useFocusEffect(
     useCallback(() => {
       fetchShelves();
@@ -68,6 +71,56 @@ export default function ShelvesListScreen() {
     </TouchableOpacity>
   );
 
+  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
+    const item = shelves.find(shelf => shelf.id === rowKey);
+    if (!item) return;
+
+    Alert.alert(
+      'Eliminar Estantería',
+      `¿Estás seguro de que quieres eliminar "${item.name}"? Esta acción no se puede deshacer.`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const { error } = await supabase
+                .from('shelves')
+                .delete()
+                .eq('id', item.id)
+                .eq('user_id', user!.id);
+
+              if (error) throw error;
+              
+              // Actualizar la lista local
+              setShelves(prevShelves => prevShelves.filter(shelf => shelf.id !== item.id));
+              
+              Alert.alert('Éxito', 'Estantería eliminada correctamente.');
+            } catch (error: any) {
+              Alert.alert('Error', 'No se pudo eliminar la estantería.');
+              console.error('Error deleting shelf:', error.message);
+            }
+          }
+        }
+      ]
+    );
+    rowMap[rowKey]?.closeRow();
+  };
+
+  const renderSwipeActions = (rowData: any, rowMap: any) => (
+    <View style={styles.swipeActionsContainer}>
+      <TouchableOpacity
+        style={[styles.swipeAction, styles.swipeDelete]}
+        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="trash" size={18} color="white" />
+        <Text style={styles.swipeActionText}>Eliminar</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -78,10 +131,14 @@ export default function ShelvesListScreen() {
 
   return (
     <View style={styles.container}>
-      <FlatList
+      <SwipeListView
         data={shelves}
         renderItem={renderItem}
+        renderHiddenItem={renderSwipeActions}
         keyExtractor={(item) => item.id}
+        rightOpenValue={-90}
+        previewOpenValue={0}
+        previewOpenDelay={0}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No tienes ninguna estantería.</Text>
@@ -118,6 +175,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+  },
+  swipeActionsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 0,
+  },
+  swipeAction: {
+    width: 90,
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 0,
+  },
+  swipeDelete: {
+    backgroundColor: '#FF3B30',
+  },
+  swipeActionText: {
+    color: 'white',
+    fontSize: 11,
+    fontWeight: '600',
+    marginTop: 2,
+    textAlign: 'center',
   },
   itemTextContainer: {
     flexDirection: 'row',

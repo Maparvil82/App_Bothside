@@ -1163,7 +1163,7 @@ const styles = StyleSheet.create({
   },
   albumThumbnail: {
     width: 80,
-    height: '100%',
+    height: 80,
     borderRadius: 4,
     marginRight: 10,
   },

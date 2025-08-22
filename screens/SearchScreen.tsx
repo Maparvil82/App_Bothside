@@ -1908,7 +1908,7 @@ const styles = StyleSheet.create({
   },
   releaseThumbnail: {
     width: 80,
-    height: '100%',
+    height: 80,
     borderRadius: 4,
     marginRight: 10,
   },

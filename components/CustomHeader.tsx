@@ -128,16 +128,23 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
     paddingHorizontal: 16,
     paddingVertical: 8,
-    height: 50,
+    height: 56,
+    position: 'relative',
   },
   backButton: {
     padding: 8,
     marginRight: 8,
+    zIndex: 1,
   },
   titleContainer: {
-    flex: 1,
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 0,
   },
   title: {
     fontSize: 18,
@@ -149,6 +156,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 16,
     top: 6,
+    zIndex: 1,
   },
   avatarImage: {
     width: 32,
