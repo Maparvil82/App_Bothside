@@ -1,6 +1,6 @@
 import { supabase } from '../lib/supabase';
 
-export type CollectorTier = 'Novato' | 'Aficionado' | 'Coleccionista' | 'Curador' | 'Virtuoso' | 'Legendario';
+export type CollectorTier = 'Novato' | 'Aficionado' | 'Coleccionista' | 'Experto' | 'Virtuoso' | 'Legendario';
 
 export interface CollectorRank {
   tier: CollectorTier;
@@ -24,7 +24,7 @@ export interface CollectionSummary {
 
 const ALBUM_MILESTONES = [0, 20, 60, 120, 240, 480];
 const VALUE_MILESTONES = [0, 800, 2500, 7000, 15000, 30000];
-const TIER_TITLES: CollectorTier[] = ['Novato', 'Aficionado', 'Coleccionista', 'Curador', 'Virtuoso', 'Legendario'];
+const TIER_TITLES: CollectorTier[] = ['Novato', 'Aficionado', 'Coleccionista', 'Experto', 'Virtuoso', 'Legendario'];
 
 function computeLevelAndProgress(current: number, milestones: number[]) {
   let level = 0;

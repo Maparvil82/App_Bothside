@@ -715,6 +715,14 @@ export const SearchScreen: React.FC = () => {
     return Array.from(locations).sort();
   };
 
+  const getLocatedPercentage = () => {
+    if (collection.length === 0) return 0;
+    
+    const locatedAlbums = collection.filter(item => item.shelf_name);
+    const percentage = (locatedAlbums.length / collection.length) * 100;
+    return Math.round(percentage);
+  };
+
   const searchAlbumEditions = async (albumTitle: string, artist: string) => {
     setEditionsLoading(true);
     try {
@@ -1115,9 +1123,14 @@ export const SearchScreen: React.FC = () => {
     <SafeAreaView style={styles.container}>
       {/* Toolbar con botones de búsqueda, vista y filtros */}
       <View style={styles.toolbarContainer}>
-        {/* Contador de discos a la izquierda */}
-        <Text style={styles.collectionCount}>
-          {filteredCollection.length} discos
+        {/* Contador de discos y porcentaje ubicados a la izquierda */}
+        <Text style={styles.collectionStats}>
+          <Text style={styles.collectionCount}>
+            {filteredCollection.length} discos
+          </Text>
+          <Text style={styles.locatedPercentage}>
+            {' • '}{getLocatedPercentage()}% Ubicados 
+          </Text>
         </Text>
         
         {/* Botones de búsqueda, vista y filtros a la derecha */}
@@ -1765,8 +1778,17 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   collectionCount: {
-    fontSize: 14,
+    fontSize: 18,
     color: '#666',
+    fontWeight: '700',
+  },
+  collectionStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  locatedPercentage: {
+    fontSize: 16,
+    color: '#999',
     fontWeight: '500',
   },
   searchContainer: {
