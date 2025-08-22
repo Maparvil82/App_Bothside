@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
+import { useNavigation } from '@react-navigation/native';
 import { CameraComponent } from '../components/CameraComponent';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
@@ -34,6 +35,7 @@ interface Album {
 
 export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
+  const navigation = useNavigation<any>();
   const [activeTab, setActiveTab] = useState<'search' | 'manual' | 'camera'>('search');
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -261,10 +263,31 @@ export const AddDiscScreen: React.FC = () => {
           if (findErr) throw findErr;
           if (albumRow?.id) {
             await UserCollectionService.addToCollection(user.id, albumRow.id);
-            Alert.alert('Éxito', 'Disco añadido a tu colección');
             setArtistQuery('');
             setAlbumQuery('');
             setManualSearchResults([]);
+            
+            // Mostrar opciones después de añadir el disco
+            Alert.alert(
+              'Disco añadido correctamente',
+              '¿Qué quieres hacer ahora?',
+              [
+                {
+                  text: 'Añadir más discos',
+                  style: 'default',
+                  onPress: () => {
+                    // Mantener en la página actual
+                  }
+                },
+                {
+                  text: 'Ir a colección',
+                  style: 'default',
+                  onPress: () => {
+                    navigation.navigate('SearchTab');
+                  }
+                }
+              ]
+            );
             return;
           } else {
             // Crear álbum mínimo en catálogo y luego añadir a colección
@@ -318,10 +341,31 @@ export const AddDiscScreen: React.FC = () => {
                 }
               } catch {}
               await UserCollectionService.addToCollection(user.id, newAlbum.id);
-              Alert.alert('Éxito', 'Disco añadido a tu colección');
               setArtistQuery('');
               setAlbumQuery('');
               setManualSearchResults([]);
+              
+              // Mostrar opciones después de añadir el disco
+              Alert.alert(
+                'Disco añadido correctamente',
+                '¿Qué quieres hacer ahora?',
+                [
+                  {
+                    text: 'Añadir más discos',
+                    style: 'default',
+                    onPress: () => {
+                      // Mantener en la página actual
+                    }
+                  },
+                  {
+                    text: 'Ir a colección',
+                    style: 'default',
+                    onPress: () => {
+                      navigation.navigate('SearchTab');
+                    }
+                  }
+                ]
+              );
               return;
             }
           }
@@ -349,12 +393,32 @@ export const AddDiscScreen: React.FC = () => {
             });
         }
         
-        Alert.alert('Éxito', 'Disco añadido a tu colección');
-        
         // Limpiar búsqueda manual
         setArtistQuery('');
         setAlbumQuery('');
         setManualSearchResults([]);
+        
+        // Mostrar opciones después de añadir el disco
+        Alert.alert(
+          'Disco añadido correctamente',
+          '¿Qué quieres hacer ahora?',
+          [
+            {
+              text: 'Añadir más discos',
+              style: 'default',
+              onPress: () => {
+                // Mantener en la página actual
+              }
+            },
+            {
+              text: 'Ir a colección',
+              style: 'default',
+              onPress: () => {
+                navigation.navigate('SearchTab');
+              }
+            }
+          ]
+        );
       } else {
         // Si la función respondió 2xx pero con success false, intentar fallback
         try {
@@ -366,10 +430,31 @@ export const AddDiscScreen: React.FC = () => {
             .maybeSingle();
           if (albumRow?.id) {
             await UserCollectionService.addToCollection(user.id, albumRow.id);
-            Alert.alert('Éxito', 'Disco añadido a tu colección');
             setArtistQuery('');
             setAlbumQuery('');
             setManualSearchResults([]);
+            
+            // Mostrar opciones después de añadir el disco
+            Alert.alert(
+              'Disco añadido correctamente',
+              '¿Qué quieres hacer ahora?',
+              [
+                {
+                  text: 'Añadir más discos',
+                  style: 'default',
+                  onPress: () => {
+                    // Mantener en la página actual
+                  }
+                },
+                {
+                  text: 'Ir a colección',
+                  style: 'default',
+                  onPress: () => {
+                    navigation.navigate('SearchTab');
+                  }
+                }
+              ]
+            );
             return;
           }
         } catch {}
@@ -405,9 +490,30 @@ export const AddDiscScreen: React.FC = () => {
           // El álbum ya existe, solo añadirlo a la colección
           console.log('✅ Álbum encontrado en catálogo, añadiendo a colección...');
           await UserCollectionService.addToCollection(user.id, albumRow.id);
-          Alert.alert('Éxito', 'Disco añadido a tu colección');
           setQuery('');
           setAlbums([]);
+          
+          // Mostrar opciones después de añadir el disco
+          Alert.alert(
+            'Disco añadido correctamente',
+            '¿Qué quieres hacer ahora?',
+            [
+              {
+                text: 'Añadir más discos',
+                style: 'default',
+                onPress: () => {
+                  // Mantener en la página actual
+                }
+              },
+              {
+                text: 'Ir a colección',
+                style: 'default',
+                onPress: () => {
+                  navigation.navigate('SearchTab');
+                }
+              }
+            ]
+          );
           return;
         } else {
           // El álbum no existe, crearlo con datos completos
@@ -494,18 +600,60 @@ export const AddDiscScreen: React.FC = () => {
             
             // Añadir a la colección del usuario
             await UserCollectionService.addToCollection(user.id, newAlbum.id);
-            Alert.alert('Éxito', 'Disco añadido a tu colección');
             setQuery('');
             setAlbums([]);
+            
+            // Mostrar opciones después de añadir el disco
+            Alert.alert(
+              'Disco añadido correctamente',
+              '¿Qué quieres hacer ahora?',
+              [
+                {
+                  text: 'Añadir más discos',
+                  style: 'default',
+                  onPress: () => {
+                    // Mantener en la página actual
+                  }
+                },
+                {
+                  text: 'Ir a colección',
+                  style: 'default',
+                  onPress: () => {
+                    navigation.navigate('SearchTab');
+                  }
+                }
+              ]
+            );
             return;
           }
         }
       } else {
         // Para álbumes sin discogs_id (casos raros)
         await UserCollectionService.addToCollection(user.id, album.id);
-        Alert.alert('Éxito', 'Disco añadido a tu colección');
         setQuery('');
         setAlbums([]);
+        
+        // Mostrar opciones después de añadir el disco
+        Alert.alert(
+          'Disco añadido correctamente',
+          '¿Qué quieres hacer ahora?',
+          [
+            {
+              text: 'Añadir más discos',
+              style: 'default',
+              onPress: () => {
+                // Mantener en la página actual
+              }
+            },
+            {
+              text: 'Ir a colección',
+              style: 'default',
+              onPress: () => {
+                navigation.navigate('SearchTab');
+              }
+            }
+          ]
+        );
       }
     } catch (error) {
       console.error('❌ Error adding to collection:', error);
@@ -706,8 +854,8 @@ Progressive Rock`;
         </Text>
         <Text style={styles.albumDetails}>
           {item.year && `${item.year} • `}
-          {item.format && `${Array.isArray(item.format) ? item.format.join(', ') : item.format} • `}
-          {item.label && `${Array.isArray(item.label) ? item.label.join(', ') : item.label}`}
+          {item.label && `${Array.isArray(item.label) ? item.label[0] : item.label} • `}
+          {item.catno && `${item.catno}`}
         </Text>
       </View>
       <TouchableOpacity

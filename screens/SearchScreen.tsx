@@ -603,8 +603,29 @@ export const SearchScreen: React.FC = () => {
       const album = await AlbumService.createAlbum(albumData);
       await UserCollectionService.addToCollection(user.id, album.id);
       
-      Alert.alert('Éxito', 'Disco añadido a tu colección');
       await loadCollection();
+      
+      // Mostrar opciones después de añadir el disco
+      Alert.alert(
+        'Disco añadido correctamente',
+        '¿Qué quieres hacer ahora?',
+        [
+          {
+            text: 'Añadir más discos',
+            style: 'default',
+            onPress: () => {
+              // Mantener en la página actual
+            }
+          },
+          {
+            text: 'Ir a colección',
+            style: 'default',
+            onPress: () => {
+              navigation.navigate('SearchTab');
+            }
+          }
+        ]
+      );
     } catch (error) {
       console.error('Error adding to collection:', error);
       Alert.alert('Error', 'No se pudo añadir el disco a la colección');
@@ -1054,9 +1075,9 @@ export const SearchScreen: React.FC = () => {
         </Text>
         <Text style={styles.releaseArtist}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
         <Text style={styles.releaseDetail}>
-          {item.year && `Año: ${item.year}`}
-          {item.genres && item.genres.length > 0 && ` | Género: ${item.genres.join(', ')}`}
-          {item.styles && item.styles.length > 0 && ` | Estilo: ${item.styles.join(', ')}`}
+          {item.year && `${item.year} • `}
+          {item.labels && item.labels.length > 0 && `${item.labels[0].name} • `}
+          {(item as any).catno && `${(item as any).catno}`}
         </Text>
       </View>
       <TouchableOpacity
