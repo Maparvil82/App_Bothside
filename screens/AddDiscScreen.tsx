@@ -47,6 +47,7 @@ export const AddDiscScreen: React.FC = () => {
   const [albumQuery, setAlbumQuery] = useState('');
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
   const [manualLoading, setManualLoading] = useState(false);
+  const [addingDisc, setAddingDisc] = useState(false);
 
   // Estados para la pestaña cámara
   const [permission, requestPermission] = useCameraPermissions();
@@ -238,6 +239,8 @@ export const AddDiscScreen: React.FC = () => {
   // Función para añadir un release de Discogs a la colección
   const addDiscogsReleaseToCollection = async (release: any) => {
     if (!user) return;
+    
+    setAddingDisc(true);
     
     try {
       console.log('🎵 Llamando a Edge Function para guardar release:', release.id);
@@ -463,6 +466,8 @@ export const AddDiscScreen: React.FC = () => {
     } catch (error: any) {
       console.error('❌ Error adding Discogs release to collection:', error?.message || error);
       Alert.alert('Error', error?.message || 'No se pudo añadir el disco a la colección');
+    } finally {
+      setAddingDisc(false);
     }
   };
 
@@ -470,6 +475,8 @@ export const AddDiscScreen: React.FC = () => {
 
   const addToCollection = async (album: Album) => {
     if (!user) return;
+
+    setAddingDisc(true);
 
     try {
       // Usar siempre el flujo local robusto para todos los usuarios
@@ -658,6 +665,8 @@ export const AddDiscScreen: React.FC = () => {
     } catch (error) {
       console.error('❌ Error adding to collection:', error);
       Alert.alert('Error', 'No se pudo añadir el disco a la colección');
+    } finally {
+      setAddingDisc(false);
     }
   };
 
@@ -831,10 +840,15 @@ Progressive Rock`;
         </Text>
       </View>
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, addingDisc && styles.addButtonDisabled]}
         onPress={() => addToCollection(item)}
+        disabled={addingDisc}
       >
-        <Ionicons name="add" size={24} color="white" />
+        {addingDisc ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Ionicons name="add" size={24} color="white" />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -859,10 +873,15 @@ Progressive Rock`;
         </Text>
       </View>
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, addingDisc && styles.addButtonDisabled]}
         onPress={() => addDiscogsReleaseToCollection(item)}
+        disabled={addingDisc}
       >
-        <Ionicons name="add" size={24} color="white" />
+        {addingDisc ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Ionicons name="add" size={24} color="white" />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -940,6 +959,15 @@ Progressive Rock`;
 
   const renderManualTab = () => (
     <View style={styles.tabContent}>
+      {/* Overlay de carga cuando se está añadiendo un disco */}
+      {addingDisc && (
+        <View style={styles.addingOverlay}>
+          <View style={styles.addingOverlayContent}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.addingOverlayText}>Añadiendo disco a tu colección...</Text>
+          </View>
+        </View>
+      )}
       {/* Formulario de búsqueda manual */}
       <View style={styles.manualSearchContainer}>
         <View style={styles.manualInputContainer}>
@@ -1388,6 +1416,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     alignSelf: 'center',
   },
+  addButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1572,5 +1603,33 @@ const styles = StyleSheet.create({
   cameraOverlay: {
     flex: 1,
     backgroundColor: 'transparent',
+  },
+  addingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  addingOverlayContent: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  addingOverlayText: {
+    fontSize: 16,
+    color: '#333',
+    marginTop: 16,
+    textAlign: 'center',
   },
 }); 
