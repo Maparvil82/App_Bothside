@@ -118,25 +118,44 @@ export default function AlbumDetailScreen() {
   // Función para guardar una pregunta individual
   const handleSaveQuestion = async () => {
     try {
-      const { error } = await supabase
-        .from('album_typeform_responses')
-        .upsert({
-          user_id: user?.id,
-          user_collection_id: album?.id,
-          [`question_${currentQuestion + 1}`]: typeFormAnswers[currentQuestion],
-        });
+      // Primero intentar actualizar si ya existe una respuesta
+      if (existingTypeFormResponse) {
+        const { error: updateError } = await supabase
+          .from('album_typeform_responses')
+          .update({
+            [`question_${currentQuestion + 1}`]: typeFormAnswers[currentQuestion],
+          })
+          .eq('user_id', user?.id)
+          .eq('user_collection_id', album?.id);
 
-      if (error) {
-        console.error('Error al guardar respuesta:', error);
-        Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
+        if (updateError) {
+          console.error('Error al actualizar respuesta:', updateError);
+          Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
+          return;
+        }
       } else {
-        setShowTypeForm(false);
-        setCurrentQuestion(0);
-        setTypeFormAnswers(['', '', '', '', '']);
-        // Recargar las respuestas existentes para actualizar la vista
-        await loadExistingTypeFormResponse();
-        Alert.alert('¡Guardado!', 'Tu respuesta ha sido guardada correctamente.');
+        // Si no existe, crear un nuevo registro
+        const { error: insertError } = await supabase
+          .from('album_typeform_responses')
+          .insert({
+            user_id: user?.id,
+            user_collection_id: album?.id,
+            [`question_${currentQuestion + 1}`]: typeFormAnswers[currentQuestion],
+          });
+
+        if (insertError) {
+          console.error('Error al insertar respuesta:', insertError);
+          Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
+          return;
+        }
       }
+
+      setShowTypeForm(false);
+      setCurrentQuestion(0);
+      setTypeFormAnswers(['', '', '', '', '']);
+      // Recargar las respuestas existentes para actualizar la vista
+      await loadExistingTypeFormResponse();
+      Alert.alert('¡Guardado!', 'Tu respuesta ha sido guardada correctamente.');
     } catch (error) {
       console.error('Error al guardar respuesta:', error);
       Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
@@ -1168,9 +1187,9 @@ export default function AlbumDetailScreen() {
               keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
                           {/* Header del TypeForm */}
-            <View style={styles.typeFormHeader}>
+            <View style={styles.header}>
               <TouchableOpacity
-                style={styles.typeFormCloseButton}
+                style={styles.backButton}
                 onPress={() => {
                   setShowTypeForm(false);
                   setCurrentQuestion(0);
@@ -1179,11 +1198,10 @@ export default function AlbumDetailScreen() {
               >
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
-              <View style={styles.typeFormTitleContainer}>
-                <Text style={styles.typeFormHeaderTitle}>
-                  {album?.albums?.title || 'Álbum'}
-                </Text>
-              </View>
+              <Text style={styles.headerTitle}>
+                {album?.albums?.title || 'Álbum'}
+              </Text>
+              <View style={styles.headerRight} />
             </View>
 
                           {/* Contenido de la pregunta */}
