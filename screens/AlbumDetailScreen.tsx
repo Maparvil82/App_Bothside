@@ -12,6 +12,9 @@ import {
   ActivityIndicator,
   Linking,
   Dimensions,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -85,7 +88,97 @@ export default function AlbumDetailScreen() {
   const [fallbackStyles, setFallbackStyles] = useState<string[]>([]);
   const lastBackfilledAlbumIdRef = useRef<string | null>(null);
   
+  // Estados para TypeForm
+  const [showTypeForm, setShowTypeForm] = useState(false);
+  const [currentQuestion, setCurrentQuestion] = useState(0);
+  const [typeFormAnswers, setTypeFormAnswers] = useState<string[]>(['', '', '', '', '']);
+  const [existingTypeFormResponse, setExistingTypeFormResponse] = useState<any>(null);
+  const [loadingTypeForm, setLoadingTypeForm] = useState(false);
+  
   const { albumId } = route.params as { albumId: string };
+
+  // Preguntas del TypeForm
+  const typeFormQuestions = [
+    "¿Cuál es tu canción favorita de este álbum?",
+    "¿En qué momento de tu vida descubriste este disco?",
+    "¿Qué recuerdos te trae este álbum?",
+    "¿Recomendarías este disco a un amigo? ¿Por qué?",
+    "¿Cómo te hace sentir este álbum?"
+  ];
+
+  // Funciones para manejar el TypeForm
+  const handleTypeFormAnswer = (answer: string) => {
+    const newAnswers = [...typeFormAnswers];
+    newAnswers[currentQuestion] = answer;
+    setTypeFormAnswers(newAnswers);
+  };
+
+  const handleNextQuestion = async () => {
+    if (currentQuestion < typeFormQuestions.length - 1) {
+      setCurrentQuestion(currentQuestion + 1);
+    } else {
+      // Finalizar TypeForm y guardar respuestas
+      try {
+        const { error } = await supabase
+          .from('album_typeform_responses')
+          .upsert({
+            user_id: user?.id,
+            user_collection_id: album?.id, // Usar album.id en lugar de albumId
+            question_1: typeFormAnswers[0],
+            question_2: typeFormAnswers[1],
+            question_3: typeFormAnswers[2],
+            question_4: typeFormAnswers[3],
+            question_5: typeFormAnswers[4],
+          });
+
+        if (error) {
+          console.error('Error al guardar respuestas:', error);
+          Alert.alert('Error', 'No se pudieron guardar las respuestas. Inténtalo de nuevo.');
+        } else {
+          setShowTypeForm(false);
+          setCurrentQuestion(0);
+          setTypeFormAnswers(['', '', '', '', '']);
+          // Recargar las respuestas existentes
+          await loadExistingTypeFormResponse();
+        }
+      } catch (error) {
+        console.error('Error al guardar respuestas:', error);
+        Alert.alert('Error', 'No se pudieron guardar las respuestas. Inténtalo de nuevo.');
+      }
+    }
+  };
+
+  const handlePreviousQuestion = () => {
+    if (currentQuestion > 0) {
+      setCurrentQuestion(currentQuestion - 1);
+    }
+  };
+
+  const handleSkipQuestion = () => {
+    handleNextQuestion();
+  };
+
+  // Cargar respuestas existentes del TypeForm
+  const loadExistingTypeFormResponse = useCallback(async () => {
+    if (!user?.id || !album?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('album_typeform_responses')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('user_collection_id', album.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+        console.error('Error al cargar respuestas del TypeForm:', error);
+      } else if (data) {
+        setExistingTypeFormResponse(data);
+      }
+    } catch (error) {
+      console.error('Error al cargar respuestas del TypeForm:', error);
+    }
+  }, [user?.id, album?.id]);
 
   const loadAlbumDetail = useCallback(() => {
     const fetchFullAlbumData = async () => {
@@ -166,7 +259,12 @@ export default function AlbumDetailScreen() {
     fetchFullAlbumData();
   }, [albumId, user?.id]);
 
-  useFocusEffect(loadAlbumDetail);
+  useFocusEffect(
+    useCallback(() => {
+      loadAlbumDetail();
+      loadExistingTypeFormResponse();
+    }, [loadAlbumDetail, loadExistingTypeFormResponse])
+  );
 
   // Monitor YouTube URLs for debugging
   useEffect(() => {
@@ -748,96 +846,7 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Sección de Ediciones */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ediciones en Vinilo</Text>
-          {editionsLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-              <Text style={styles.loadingText}>Cargando ediciones...</Text>
-            </View>
-          ) : editions.length > 0 ? (
-            <View style={styles.editionsContainer}>
-              {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
-                <View
-                  key={edition.id}
-                  style={styles.editionItem}
-                >
-                  {edition.thumb && (
-                    <Image 
-                      source={{ uri: edition.thumb }} 
-                      style={styles.editionCover}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <View style={styles.editionInfo}>
-                    <Text style={styles.editionTitle} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
-                    <Text style={styles.editionArtist} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
-                    
-                    {/* Formato */}
-                    {edition.format && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
-                      </View>
-                    )}
-                    
-                    {/* Sello */}
-                    {edition.label && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
-                      </View>
-                    )}
-                    
-                    {/* Año */}
-                    {edition.year && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
-                      </View>
-                    )}
-                    
-                    {/* País */}
-                    {edition.country && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">País:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
-                      </View>
-                    )}
-                    
-                    {/* Catálogo */}
-                    {edition.catno && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              ))}
-              
-              {/* Botón "Ver más" o "Ver menos" */}
-              {editions.length > 3 && (
-                <TouchableOpacity
-                  style={styles.seeMoreButton}
-                  onPress={() => setShowAllEditions(!showAllEditions)}
-                >
-                  <Text style={styles.seeMoreButtonText}>
-                    {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
-                  </Text>
-                  <Ionicons 
-                    name={showAllEditions ? "chevron-up" : "chevron-down"} 
-                    size={16} 
-                    color="#007AFF" 
-                  />
-                </TouchableOpacity>
-              )}
-            </View>
-          ) : (
-            <Text style={styles.noEditionsText}>No se encontraron ediciones en vinilo</Text>
-          )}
-        </View>
+
 
         {/* Nota de Audio */}
         <View style={styles.section}>
@@ -939,6 +948,156 @@ export default function AlbumDetailScreen() {
               <Text style={styles.noShelvesText}>No tienes estanterías para asignar.</Text>
             )}
           </View>
+
+          {/* Sección de Ediciones */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Ediciones en Vinilo</Text>
+            {editionsLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#007AFF" />
+                <Text style={styles.loadingText}>Cargando ediciones...</Text>
+              </View>
+            ) : editions.length > 0 ? (
+              <View style={styles.editionsContainer}>
+                {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
+                  <View
+                    key={edition.id}
+                    style={styles.editionItem}
+                  >
+                    {edition.thumb && (
+                      <Image 
+                        source={{ uri: edition.thumb }} 
+                        style={styles.editionCover}
+                        resizeMode="cover"
+                      />
+                    )}
+                    <View style={styles.editionInfo}>
+                      <Text style={styles.editionTitle} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
+                      <Text style={styles.editionArtist} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
+                      
+                      {/* Formato */}
+                      {edition.format && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
+                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
+                        </View>
+                      )}
+                      
+                      {/* Sello */}
+                      {edition.label && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
+                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
+                        </View>
+                      )}
+                      
+                      {/* Año */}
+                      {edition.year && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
+                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
+                        </View>
+                      )}
+                      
+                      {/* País */}
+                      {edition.country && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">País:</Text>
+                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
+                        </View>
+                      )}
+                      
+                      {/* Catálogo */}
+                      {edition.catno && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
+                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                ))}
+                
+                {/* Botón "Ver más" o "Ver menos" */}
+                {editions.length > 3 && (
+                  <TouchableOpacity
+                    style={styles.seeMoreButton}
+                    onPress={() => setShowAllEditions(!showAllEditions)}
+                  >
+                    <Text style={styles.seeMoreButtonText}>
+                      {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
+                    </Text>
+                    <Ionicons 
+                      name={showAllEditions ? "chevron-up" : "chevron-down"} 
+                      size={16} 
+                      color="#007AFF" 
+                    />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <Text style={styles.noEditionsText}>No se encontraron ediciones en vinilo</Text>
+            )}
+          </View>
+
+          {/* Sección TypeForm */}
+          <View style={styles.typeFormSection}>
+            <Text style={styles.typeFormSectionTitle}>Cuéntanos sobre este álbum</Text>
+            <Text style={styles.typeFormSectionSubtitle}>
+              Responde algunas preguntas para personalizar tu experiencia
+            </Text>
+            
+            {existingTypeFormResponse ? (
+              <View style={styles.typeFormCompletedContainer}>
+                <View style={styles.typeFormCompletedHeader}>
+                  <Ionicons name="checkmark-circle" size={24} color="#28a745" />
+                  <Text style={styles.typeFormCompletedText}>Encuesta completada</Text>
+                </View>
+                
+                {/* Mostrar respuestas directamente */}
+                <View style={styles.typeFormResponsesInline}>
+                  {typeFormQuestions.map((question, index) => (
+                    <View key={index} style={styles.typeFormResponseInlineItem}>
+                      <Text style={styles.typeFormResponseInlineQuestion}>
+                        {question}
+                      </Text>
+                      <Text style={styles.typeFormResponseInlineAnswer}>
+                        {existingTypeFormResponse?.[`question_${index + 1}`] || 'Sin respuesta'}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+                
+                <TouchableOpacity
+                  style={styles.typeFormButton}
+                  onPress={() => {
+                    // Cargar respuestas existentes en el formulario
+                    setTypeFormAnswers([
+                      existingTypeFormResponse?.question_1 || '',
+                      existingTypeFormResponse?.question_2 || '',
+                      existingTypeFormResponse?.question_3 || '',
+                      existingTypeFormResponse?.question_4 || '',
+                      existingTypeFormResponse?.question_5 || '',
+                    ]);
+                    setShowTypeForm(true);
+                  }}
+                >
+                  <Ionicons name="create-outline" size={24} color="#007AFF" />
+                  <Text style={styles.typeFormButtonText}>Editar respuestas</Text>
+                  <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <TouchableOpacity
+                style={styles.typeFormButton}
+                onPress={() => setShowTypeForm(true)}
+              >
+                <Ionicons name="chatbubble-outline" size={24} color="#007AFF" />
+                <Text style={styles.typeFormButtonText}>Comenzar encuesta</Text>
+                <Ionicons name="chevron-forward" size={20} color="#007AFF" />
+              </TouchableOpacity>
+            )}
+          </View>
       </ScrollView>
 
       {/* Botón flotante de YouTube */}
@@ -1018,6 +1177,136 @@ export default function AlbumDetailScreen() {
           </View>
           </View>
         </Modal>
+
+        {/* TypeForm Modal */}
+        <Modal
+          visible={showTypeForm}
+          animationType="slide"
+          presentationStyle="fullScreen"
+        >
+          <SafeAreaView style={styles.typeFormContainer}>
+            <KeyboardAvoidingView 
+              style={styles.typeFormKeyboardContainer}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            >
+              {/* Header del TypeForm */}
+              <View style={styles.typeFormHeader}>
+                <TouchableOpacity
+                  style={styles.typeFormCloseButton}
+                  onPress={() => {
+                    setShowTypeForm(false);
+                    setCurrentQuestion(0);
+                    setTypeFormAnswers(['', '', '', '', '']);
+                  }}
+                >
+                  <Ionicons name="close" size={24} color="#666" />
+                </TouchableOpacity>
+                <Text style={styles.typeFormProgress}>
+                  {currentQuestion + 1} de {typeFormQuestions.length}
+                </Text>
+                <View style={styles.typeFormProgressBar}>
+                  <View 
+                    style={[
+                      styles.typeFormProgressFill, 
+                      { width: `${((currentQuestion + 1) / typeFormQuestions.length) * 100}%` }
+                    ]} 
+                  />
+                </View>
+              </View>
+
+                          {/* Contenido de la pregunta */}
+            <View style={styles.typeFormContent}>
+              <Text style={styles.typeFormQuestion}>
+                {typeFormQuestions[currentQuestion]}
+              </Text>
+              
+              {currentQuestion === 0 && album?.albums?.tracks && album.albums.tracks.length > 0 ? (
+                // Primera pregunta: Selección de canción favorita
+                <ScrollView style={styles.tracklistContainer}>
+                  {album.albums.tracks.map((track, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.trackItem,
+                        typeFormAnswers[0] === track.title && styles.trackItemSelected
+                      ]}
+                      onPress={() => handleTypeFormAnswer(track.title)}
+                    >
+                      <View style={styles.trackInfo}>
+                        <Text style={styles.trackPosition}>{track.position}</Text>
+                        <Text style={[
+                          styles.trackTitle,
+                          typeFormAnswers[0] === track.title && styles.trackTitleSelected
+                        ]}>
+                          {track.title}
+                        </Text>
+                      </View>
+                      <Text style={styles.trackDuration}>{track.duration}</Text>
+                      {typeFormAnswers[0] === track.title && (
+                        <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              ) : (
+                // Resto de preguntas: Input de texto normal
+                <TextInput
+                  style={styles.typeFormInput}
+                  placeholder="Escribe tu respuesta..."
+                  value={typeFormAnswers[currentQuestion]}
+                  onChangeText={handleTypeFormAnswer}
+                  multiline
+                  textAlignVertical="top"
+                  placeholderTextColor="#999"
+                  returnKeyType="done"
+                />
+              )}
+            </View>
+
+              {/* Botones de navegación - Siempre visibles */}
+              <View style={styles.typeFormFooter}>
+                <TouchableOpacity
+                  style={styles.typeFormSkipButton}
+                  onPress={handleSkipQuestion}
+                >
+                  <Text style={styles.typeFormSkipText}>Saltar</Text>
+                </TouchableOpacity>
+                
+                <View style={styles.typeFormNavigation}>
+                  {currentQuestion > 0 && (
+                    <TouchableOpacity
+                      style={styles.typeFormNavButton}
+                      onPress={handlePreviousQuestion}
+                    >
+                      <Ionicons name="chevron-back" size={24} color="#007AFF" />
+                    </TouchableOpacity>
+                  )}
+                  
+                  <TouchableOpacity
+                    style={[
+                      styles.typeFormNextButton,
+                      !typeFormAnswers[currentQuestion].trim() && styles.typeFormNextButtonDisabled
+                    ]}
+                    onPress={handleNextQuestion}
+                    disabled={!typeFormAnswers[currentQuestion].trim()}
+                  >
+                    <Text style={styles.typeFormNextText}>
+                      {currentQuestion === typeFormQuestions.length - 1 ? 'Finalizar' : 'Siguiente'}
+                    </Text>
+                    <Ionicons 
+                      name={currentQuestion === typeFormQuestions.length - 1 ? "checkmark" : "chevron-forward"} 
+                      size={20} 
+                      color="white" 
+                    />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </KeyboardAvoidingView>
+          </SafeAreaView>
+        </Modal>
+
+
       </SafeAreaView>
     );
   }
@@ -2287,10 +2576,223 @@ const styles = StyleSheet.create({
   },
   noShelvesText: {
     fontSize: 14,
-    color: '#6c757d',
+  },
+  // Estilos para TypeForm
+  typeFormContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  typeFormKeyboardContainer: {
+    flex: 1,
+  },
+  typeFormHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  typeFormCloseButton: {
+    padding: 8,
+  },
+  typeFormProgress: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+  },
+  typeFormProgressBar: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: '#f0f0f0',
+  },
+  typeFormProgressFill: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+  },
+  typeFormContent: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'flex-start',
+    paddingTop: 40,
+  },
+  typeFormQuestion: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 30,
     textAlign: 'center',
-    fontStyle: 'italic',
+    lineHeight: 32,
+  },
+  typeFormInput: {
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    minHeight: 120,
+    maxHeight: 200,
+    textAlignVertical: 'top',
+    backgroundColor: '#f9f9f9',
+    flex: 1,
+  },
+  typeFormFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    backgroundColor: '#fff',
+    minHeight: 80,
+  },
+  typeFormSkipButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+  },
+  typeFormSkipText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  typeFormNavigation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  typeFormNavButton: {
+    padding: 12,
+  },
+  typeFormNextButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  typeFormNextButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  typeFormNextText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
+  },
+  typeFormSection: {
+    backgroundColor: '#fff',
+    padding: 20,
+    marginTop: 10,
+  },
+  typeFormSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  typeFormSectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 20,
+  },
+  typeFormButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f8f9fa',
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  typeFormButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: 12,
+  },
+  typeFormCompletedContainer: {
     marginTop: 8,
+  },
+  typeFormCompletedHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: '#d4edda',
+    borderRadius: 8,
+  },
+  typeFormCompletedText: {
+    fontSize: 14,
+    color: '#155724',
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  typeFormResponsesContent: {
+    flex: 1,
+    padding: 20,
+  },
+  typeFormResponseItem: {
+    marginBottom: 24,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  typeFormResponseQuestion: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  typeFormResponseAnswer: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  tracklistContainer: {
+    flex: 1,
+    marginTop: 20,
+  },
+  trackItemSelected: {
+    backgroundColor: '#e3f2fd',
+    borderColor: '#007AFF',
+   
+  },
+  trackTitleSelected: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  typeFormResponsesInline: {
+    marginTop: 16,
+  },
+  typeFormResponseInlineItem: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  typeFormResponseInlineQuestion: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 6,
+  },
+  typeFormResponseInlineAnswer: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 18,
   },
   currentShelfTitle: {
     fontSize: 16,

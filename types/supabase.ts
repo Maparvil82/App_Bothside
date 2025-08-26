@@ -448,6 +448,60 @@ export type Database = {
           },
         ]
       }
+      album_typeform_responses: {
+        Row: {
+          id: string
+          user_id: string
+          user_collection_id: string
+          question_1: string | null
+          question_2: string | null
+          question_3: string | null
+          question_4: string | null
+          question_5: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          user_collection_id: string
+          question_1?: string | null
+          question_2?: string | null
+          question_3?: string | null
+          question_4?: string | null
+          question_5?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          user_collection_id?: string
+          question_1?: string | null
+          question_2?: string | null
+          question_3?: string | null
+          question_4?: string | null
+          question_5?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "album_typeform_responses_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "album_typeform_responses_user_collection_id_fkey"
+            columns: ["user_collection_id"]
+            isOneToOne: false
+            referencedRelation: "user_collection"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       album_youtube_videos: {
         Row: {
           added_by: string | null
