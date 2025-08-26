@@ -113,49 +113,34 @@ export default function AlbumDetailScreen() {
     setTypeFormAnswers(newAnswers);
   };
 
-  const handleNextQuestion = async () => {
-    if (currentQuestion < typeFormQuestions.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-    } else {
-      // Finalizar TypeForm y guardar respuestas
-      try {
-        const { error } = await supabase
-          .from('album_typeform_responses')
-          .upsert({
-            user_id: user?.id,
-            user_collection_id: album?.id, // Usar album.id en lugar de albumId
-            question_1: typeFormAnswers[0],
-            question_2: typeFormAnswers[1],
-            question_3: typeFormAnswers[2],
-            question_4: typeFormAnswers[3],
-            question_5: typeFormAnswers[4],
-          });
 
-        if (error) {
-          console.error('Error al guardar respuestas:', error);
-          Alert.alert('Error', 'No se pudieron guardar las respuestas. Inténtalo de nuevo.');
-        } else {
-          setShowTypeForm(false);
-          setCurrentQuestion(0);
-          setTypeFormAnswers(['', '', '', '', '']);
-          // Recargar las respuestas existentes
-          await loadExistingTypeFormResponse();
-        }
-      } catch (error) {
-        console.error('Error al guardar respuestas:', error);
-        Alert.alert('Error', 'No se pudieron guardar las respuestas. Inténtalo de nuevo.');
+
+  // Función para guardar una pregunta individual
+  const handleSaveQuestion = async () => {
+    try {
+      const { error } = await supabase
+        .from('album_typeform_responses')
+        .upsert({
+          user_id: user?.id,
+          user_collection_id: album?.id,
+          [`question_${currentQuestion + 1}`]: typeFormAnswers[currentQuestion],
+        });
+
+      if (error) {
+        console.error('Error al guardar respuesta:', error);
+        Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
+      } else {
+        setShowTypeForm(false);
+        setCurrentQuestion(0);
+        setTypeFormAnswers(['', '', '', '', '']);
+        // Recargar las respuestas existentes para actualizar la vista
+        await loadExistingTypeFormResponse();
+        Alert.alert('¡Guardado!', 'Tu respuesta ha sido guardada correctamente.');
       }
+    } catch (error) {
+      console.error('Error al guardar respuesta:', error);
+      Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
     }
-  };
-
-  const handlePreviousQuestion = () => {
-    if (currentQuestion > 0) {
-      setCurrentQuestion(currentQuestion - 1);
-    }
-  };
-
-  const handleSkipQuestion = () => {
-    handleNextQuestion();
   };
 
   // Cargar respuestas existentes del TypeForm
@@ -1044,59 +1029,51 @@ export default function AlbumDetailScreen() {
           <View style={styles.typeFormSection}>
             <Text style={styles.typeFormSectionTitle}>Cuéntanos sobre este álbum</Text>
             <Text style={styles.typeFormSectionSubtitle}>
-              Responde algunas preguntas para personalizar tu experiencia
+              Responde las preguntas que quieras para personalizar tu experiencia
             </Text>
             
-            {existingTypeFormResponse ? (
-              <View style={styles.typeFormCompletedContainer}>
-                <View style={styles.typeFormCompletedHeader}>
-                  <Ionicons name="checkmark-circle" size={24} color="#28a745" />
-                  <Text style={styles.typeFormCompletedText}>Encuesta completada</Text>
-                </View>
-                
-                {/* Mostrar respuestas directamente */}
-                <View style={styles.typeFormResponsesInline}>
-                  {typeFormQuestions.map((question, index) => (
-                    <View key={index} style={styles.typeFormResponseInlineItem}>
-                      <Text style={styles.typeFormResponseInlineQuestion}>
+            {/* Mostrar todas las preguntas directamente */}
+            <View style={styles.typeFormQuestionsContainer}>
+              {typeFormQuestions.map((question, index) => {
+                const hasAnswer = existingTypeFormResponse?.[`question_${index + 1}`];
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.typeFormQuestionItem,
+                      hasAnswer && styles.typeFormQuestionItemAnswered
+                    ]}
+                    onPress={() => {
+                      // Cargar respuesta existente si la hay
+                      const currentAnswers = [...typeFormAnswers];
+                      currentAnswers[index] = existingTypeFormResponse?.[`question_${index + 1}`] || '';
+                      setTypeFormAnswers(currentAnswers);
+                      setCurrentQuestion(index);
+                      setShowTypeForm(true);
+                    }}
+                  >
+                    <View style={styles.typeFormQuestionHeader}>
+                      <Text style={styles.typeFormQuestionNumber}>
+                        {index + 1}
+                      </Text>
+                      <Text style={styles.typeFormQuestionText}>
                         {question}
                       </Text>
-                      <Text style={styles.typeFormResponseInlineAnswer}>
-                        {existingTypeFormResponse?.[`question_${index + 1}`] || 'Sin respuesta'}
-                      </Text>
+                      {hasAnswer ? (
+                        <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+                      ) : (
+                        <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
+                      )}
                     </View>
-                  ))}
-                </View>
-                
-                <TouchableOpacity
-                  style={styles.typeFormButton}
-                  onPress={() => {
-                    // Cargar respuestas existentes en el formulario
-                    setTypeFormAnswers([
-                      existingTypeFormResponse?.question_1 || '',
-                      existingTypeFormResponse?.question_2 || '',
-                      existingTypeFormResponse?.question_3 || '',
-                      existingTypeFormResponse?.question_4 || '',
-                      existingTypeFormResponse?.question_5 || '',
-                    ]);
-                    setShowTypeForm(true);
-                  }}
-                >
-                  <Ionicons name="create-outline" size={24} color="#007AFF" />
-                  <Text style={styles.typeFormButtonText}>Editar respuestas</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#007AFF" />
-                </TouchableOpacity>
-              </View>
-            ) : (
-              <TouchableOpacity
-                style={styles.typeFormButton}
-                onPress={() => setShowTypeForm(true)}
-              >
-                <Ionicons name="chatbubble-outline" size={24} color="#007AFF" />
-                <Text style={styles.typeFormButtonText}>Comenzar encuesta</Text>
-                <Ionicons name="chevron-forward" size={20} color="#007AFF" />
-              </TouchableOpacity>
-            )}
+                    {hasAnswer && (
+                      <Text style={styles.typeFormQuestionPreview}>
+                        {existingTypeFormResponse[`question_${index + 1}`]}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
       </ScrollView>
 
@@ -1190,40 +1167,34 @@ export default function AlbumDetailScreen() {
               behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
               keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
             >
-              {/* Header del TypeForm */}
-              <View style={styles.typeFormHeader}>
-                <TouchableOpacity
-                  style={styles.typeFormCloseButton}
-                  onPress={() => {
-                    setShowTypeForm(false);
-                    setCurrentQuestion(0);
-                    setTypeFormAnswers(['', '', '', '', '']);
-                  }}
-                >
-                  <Ionicons name="close" size={24} color="#666" />
-                </TouchableOpacity>
-                <Text style={styles.typeFormProgress}>
-                  {currentQuestion + 1} de {typeFormQuestions.length}
+                          {/* Header del TypeForm */}
+            <View style={styles.typeFormHeader}>
+              <TouchableOpacity
+                style={styles.typeFormCloseButton}
+                onPress={() => {
+                  setShowTypeForm(false);
+                  setCurrentQuestion(0);
+                  setTypeFormAnswers(['', '', '', '', '']);
+                }}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+              <View style={styles.typeFormTitleContainer}>
+                <Text style={styles.typeFormHeaderTitle}>
+                  {album?.albums?.title || 'Álbum'}
                 </Text>
-                <View style={styles.typeFormProgressBar}>
-                  <View 
-                    style={[
-                      styles.typeFormProgressFill, 
-                      { width: `${((currentQuestion + 1) / typeFormQuestions.length) * 100}%` }
-                    ]} 
-                  />
-                </View>
               </View>
+            </View>
 
                           {/* Contenido de la pregunta */}
-            <View style={styles.typeFormContent}>
+            <ScrollView style={styles.typeFormContent} showsVerticalScrollIndicator={false}>
               <Text style={styles.typeFormQuestion}>
                 {typeFormQuestions[currentQuestion]}
               </Text>
               
               {currentQuestion === 0 && album?.albums?.tracks && album.albums.tracks.length > 0 ? (
                 // Primera pregunta: Selección de canción favorita
-                <ScrollView style={styles.tracklistContainer}>
+                <View style={styles.tracklistContainer}>
                   {album.albums.tracks.map((track, index) => (
                     <TouchableOpacity
                       key={index}
@@ -1248,7 +1219,7 @@ export default function AlbumDetailScreen() {
                       )}
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
               ) : (
                 // Resto de preguntas: Input de texto normal
                 <TextInput
@@ -1262,46 +1233,22 @@ export default function AlbumDetailScreen() {
                   returnKeyType="done"
                 />
               )}
-            </View>
+            </ScrollView>
 
-              {/* Botones de navegación - Siempre visibles */}
-              <View style={styles.typeFormFooter}>
-                <TouchableOpacity
-                  style={styles.typeFormSkipButton}
-                  onPress={handleSkipQuestion}
-                >
-                  <Text style={styles.typeFormSkipText}>Saltar</Text>
-                </TouchableOpacity>
-                
-                <View style={styles.typeFormNavigation}>
-                  {currentQuestion > 0 && (
-                    <TouchableOpacity
-                      style={styles.typeFormNavButton}
-                      onPress={handlePreviousQuestion}
-                    >
-                      <Ionicons name="chevron-back" size={24} color="#007AFF" />
-                    </TouchableOpacity>
-                  )}
-                  
-                  <TouchableOpacity
-                    style={[
-                      styles.typeFormNextButton,
-                      !typeFormAnswers[currentQuestion].trim() && styles.typeFormNextButtonDisabled
-                    ]}
-                    onPress={handleNextQuestion}
-                    disabled={!typeFormAnswers[currentQuestion].trim()}
-                  >
-                    <Text style={styles.typeFormNextText}>
-                      {currentQuestion === typeFormQuestions.length - 1 ? 'Finalizar' : 'Siguiente'}
-                    </Text>
-                    <Ionicons 
-                      name={currentQuestion === typeFormQuestions.length - 1 ? "checkmark" : "chevron-forward"} 
-                      size={20} 
-                      color="white" 
-                    />
-                  </TouchableOpacity>
-                </View>
-              </View>
+                          {/* Botón Guardar */}
+            <View style={[styles.typeFormFooter, { justifyContent: 'center' }]}>
+              <TouchableOpacity
+                style={[
+                  styles.typeFormSaveButton,
+                  !typeFormAnswers[currentQuestion].trim() && styles.typeFormSaveButtonDisabled
+                ]}
+                onPress={handleSaveQuestion}
+                disabled={!typeFormAnswers[currentQuestion].trim()}
+              >
+                <Text style={styles.typeFormSaveText}>Guardar</Text>
+                <Ionicons name="checkmark" size={20} color="white" />
+              </TouchableOpacity>
+            </View>
             </KeyboardAvoidingView>
           </SafeAreaView>
         </Modal>
@@ -2596,11 +2543,45 @@ const styles = StyleSheet.create({
   },
   typeFormCloseButton: {
     padding: 8,
+    zIndex: 1,
   },
   typeFormProgress: {
     fontSize: 16,
     fontWeight: '600',
     color: '#333',
+  },
+  typeFormHeaderTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#212529',
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 16,
+  },
+  typeFormTitleContainer: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    zIndex: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  typeFormModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  typeFormModalContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    width: '100%',
+    maxWidth: 500,
+    maxHeight: '80%',
+    overflow: 'hidden',
   },
   typeFormProgressBar: {
     position: 'absolute',
@@ -2617,8 +2598,7 @@ const styles = StyleSheet.create({
   typeFormContent: {
     flex: 1,
     padding: 20,
-    justifyContent: 'flex-start',
-    paddingTop: 40,
+    paddingTop: 20,
   },
   typeFormQuestion: {
     fontSize: 24,
@@ -2681,6 +2661,24 @@ const styles = StyleSheet.create({
     backgroundColor: '#ccc',
   },
   typeFormNextText: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
+  },
+  typeFormSaveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+    alignSelf: 'center',
+  },
+  typeFormSaveButtonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  typeFormSaveText: {
     fontSize: 16,
     color: 'white',
     fontWeight: '600',
@@ -2760,7 +2758,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   tracklistContainer: {
-    flex: 1,
     marginTop: 20,
   },
   trackItemSelected: {
@@ -2793,6 +2790,46 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 18,
+  },
+  typeFormQuestionsContainer: {
+    marginTop: 16,
+  },
+  typeFormQuestionItem: {
+    marginBottom: 12,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  typeFormQuestionItemAnswered: {
+    backgroundColor: '#e8f5e8',
+    borderColor: '#28a745',
+  },
+  typeFormQuestionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  typeFormQuestionNumber: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#007AFF',
+    marginRight: 12,
+    minWidth: 20,
+  },
+  typeFormQuestionText: {
+    fontSize: 16,
+    color: '#333',
+    flex: 1,
+    fontWeight: '500',
+  },
+  typeFormQuestionPreview: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 8,
+    paddingLeft: 32,
   },
   currentShelfTitle: {
     fontSize: 16,
