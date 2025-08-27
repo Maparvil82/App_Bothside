@@ -23,6 +23,7 @@ import { supabase } from '../lib/supabase';
 import { getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
+import { AudioPlayer } from '../components/AudioPlayer';
 import { UserCollectionService } from '../services/database';
 import ShelfGrid from '../components/ShelfGrid';
 
@@ -94,6 +95,11 @@ export default function AlbumDetailScreen() {
   const [typeFormAnswers, setTypeFormAnswers] = useState<string[]>(['', '', '', '', '']);
   const [existingTypeFormResponse, setExistingTypeFormResponse] = useState<any>(null);
   const [loadingTypeForm, setLoadingTypeForm] = useState(false);
+  
+  // Estados para reproductor de audio
+  const [audioUrl, setAudioUrl] = useState<string>('');
+  const [isLoadingAudio, setIsLoadingAudio] = useState(false);
+  const [audioError, setAudioError] = useState<string | null>(null);
   
   const { albumId } = route.params as { albumId: string };
 
@@ -614,7 +620,7 @@ export default function AlbumDetailScreen() {
 
   // ========== FUNCIONES DE YOUTUBE (ABRIR DIRECTAMENTE) ==========
 
-  // Extraer audio vía Supabase y reproducir en el FloatingAudioPlayer
+  // Extraer y reproducir audio de YouTube en la app
   const handleExtractYouTubeAudio = async () => {
     if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
       Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
@@ -628,33 +634,45 @@ export default function AlbumDetailScreen() {
         return;
       }
 
-      setShowFloatingPlayer(true);
-      setFloatingAlbumTitle(album.albums.title || 'YouTube');
+      setIsLoadingAudio(true);
+      setAudioError(null);
 
-      // Llamar a la función de Supabase que devuelve la URL de audio extraída
+      console.log('🎵 Iniciando extracción de audio para:', youtubeUrl);
+
+      // Intentar extraer audio
       const { data, error } = await supabase.functions.invoke('extract-youtube-audio', {
         body: { url: youtubeUrl },
       });
 
       if (error) {
-        console.error('❌ Error desde extract-youtube-audio:', error);
-        Alert.alert('Error', 'No se pudo extraer el audio de YouTube.');
-        setShowFloatingPlayer(false);
+        console.error('❌ Error en función:', error);
+        setAudioError('Error al conectar con el servidor');
+        setIsLoadingAudio(false);
         return;
       }
 
-      const audioUrl = (data && (data.audioUrl || data.audio_url)) as string | undefined;
-      if (!audioUrl) {
-        Alert.alert('Error', 'La función no devolvió una URL de audio.');
-        setShowFloatingPlayer(false);
+      if (!data || !data.success) {
+        console.log('❌ Extracción falló:', data?.error || data?.message);
+        setAudioError(data?.message || 'No se pudo extraer el audio');
+        setIsLoadingAudio(false);
         return;
       }
 
-      setFloatingAudioUri(audioUrl);
+      const extractedAudioUrl = data.audioUrl;
+      if (!extractedAudioUrl) {
+        setAudioError('No se pudo obtener la URL de audio');
+        setIsLoadingAudio(false);
+        return;
+      }
+
+      console.log('🎵 URL de audio obtenida:', extractedAudioUrl);
+      setAudioUrl(extractedAudioUrl);
+      setIsLoadingAudio(false);
+
     } catch (err) {
-      console.error('❌ Error general extrayendo audio de YouTube:', err);
-      Alert.alert('Error', 'Ocurrió un error al intentar extraer el audio.');
-      setShowFloatingPlayer(false);
+      console.error('❌ Error general:', err);
+      setAudioError('Ocurrió un error al procesar la solicitud');
+      setIsLoadingAudio(false);
     }
   };
 
@@ -1044,6 +1062,72 @@ export default function AlbumDetailScreen() {
             )}
           </View>
 
+          {/* Sección de Reproductor de Audio */}
+          {youtubeUrls.length > 0 && (
+            <View style={styles.audioSection}>
+              <Text style={styles.audioSectionTitle}>Audio de YouTube</Text>
+              <Text style={styles.audioSectionSubtitle}>
+                Escucha el audio de este álbum desde YouTube
+              </Text>
+              
+              {!audioUrl && !isLoadingAudio && !audioError && (
+                <View style={styles.audioOptionsContainer}>
+                  <TouchableOpacity
+                    style={styles.audioOptionButton}
+                    onPress={handleExtractYouTubeAudio}
+                  >
+                    <Ionicons name="headset" size={20} color="#fff" />
+                    <Text style={styles.audioOptionButtonText}>Reproducir en App</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity
+                    style={[styles.audioOptionButton, styles.youtubeButton]}
+                    onPress={() => {
+                      const youtubeUrl = album?.albums?.album_youtube_urls?.[0]?.url;
+                      if (youtubeUrl) {
+                        Linking.openURL(youtubeUrl);
+                      }
+                    }}
+                  >
+                    <Ionicons name="logo-youtube" size={20} color="#fff" />
+                    <Text style={styles.audioOptionButtonText}>Abrir en YouTube</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              {isLoadingAudio && (
+                <View style={styles.loadingAudioContainer}>
+                  <ActivityIndicator size="small" color="#007AFF" />
+                  <Text style={styles.loadingAudioText}>Procesando...</Text>
+                </View>
+              )}
+              
+              {audioError && (
+                <View style={styles.audioErrorContainer}>
+                  <Ionicons name="alert-circle" size={20} color="#dc3545" />
+                  <Text style={styles.audioErrorText}>{audioError}</Text>
+                  <TouchableOpacity
+                    style={styles.retryAudioButton}
+                    onPress={() => {
+                      setAudioError(null);
+                      setAudioUrl('');
+                    }}
+                  >
+                    <Text style={styles.retryAudioButtonText}>Intentar de nuevo</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+              
+              {audioUrl && (
+                <AudioPlayer
+                  audioUrl={audioUrl}
+                  title={album.albums.title || 'Audio de YouTube'}
+                  onError={(error) => setAudioError(error)}
+                />
+              )}
+            </View>
+          )}
+
           {/* Sección TypeForm */}
           <View style={styles.typeFormSection}>
             <Text style={styles.typeFormSectionTitle}>Cuéntanos sobre este álbum</Text>
@@ -1096,16 +1180,7 @@ export default function AlbumDetailScreen() {
           </View>
       </ScrollView>
 
-      {/* Botón flotante de YouTube */}
-      {youtubeUrls.length > 0 && (
-        <TouchableOpacity
-          style={[styles.floatingYouTubeButton, { bottom: showFloatingPlayer ? 100 : 30 }]}
-          onPress={handleExtractYouTubeAudio}
-          activeOpacity={0.85}
-        >
-          <Ionicons name="logo-youtube" size={28} color="#fff" />
-        </TouchableOpacity>
-      )}
+
 
       {/* Reproductor flotante */}
       <FloatingAudioPlayer
@@ -1469,9 +1544,7 @@ const styles = StyleSheet.create({
     color: '#1976d2',
     fontWeight: '500',
   },
-  audioSection: {
-    marginBottom: 12,
-  },
+
   audioInfo: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2403,15 +2476,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
-  youtubeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF0000',
-    padding: 16,
-    borderRadius: 8,
-    marginTop: 8,
-  },
+
   youtubeButtonText: {
     marginLeft: 8,
     fontSize: 14,
@@ -2885,5 +2950,105 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: '#fff',
     zIndex: 1000,
+  },
+  // Estilos para la sección de audio
+  audioSection: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+  },
+  audioSectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 8,
+  },
+  audioSectionSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 16,
+  },
+  loadAudioButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF0000',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginBottom: 16,
+  },
+  loadAudioButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  loadingAudioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+  },
+  loadingAudioText: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 12,
+  },
+  audioErrorContainer: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8d7da',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f5c6cb',
+  },
+  audioErrorText: {
+    fontSize: 14,
+    color: '#721c24',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  retryAudioButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  retryAudioButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+
+  youtubeButton: {
+    backgroundColor: '#FF0000',
+  },
+  audioOptionsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  audioOptionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FF0000',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  audioOptionButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#fff',
+    fontWeight: '500',
   },
 }); 

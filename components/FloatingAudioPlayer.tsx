@@ -104,10 +104,12 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
 
       // Para URLs HTTP/HTTPS, verificar que sean accesibles
       if (audioUri.startsWith('http')) {
-        // Skip validation for known good fallback URLs
+        // Skip validation for known good fallback URLs and YouTube audio URLs
         const knownGoodUrls = [
           'cs.uic.edu',
-          'sample-videos.com'
+          'sample-videos.com',
+          'youtubeinmp3.com',
+          'vevioz.com'
         ];
         
         const isKnownGoodUrl = knownGoodUrls.some(domain => audioUri.includes(domain));

@@ -4,70 +4,97 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AudioPlayerProps {
-  audioUri: string;
-  onDelete?: () => void;
+  audioUrl: string;
+  title: string;
+  onError?: (error: string) => void;
 }
 
 export const AudioPlayer: React.FC<AudioPlayerProps> = ({
-  audioUri,
-  onDelete,
+  audioUrl,
+  title,
+  onError,
 }) => {
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    loadAudio();
     return () => {
       if (sound) {
         sound.unloadAsync();
       }
     };
-  }, []);
+  }, [audioUrl]);
 
   const loadAudio = async () => {
+    if (!audioUrl) return;
+
     try {
-      const { sound } = await Audio.Sound.createAsync(
-        { uri: audioUri },
-        { shouldPlay: false },
+      setIsLoading(true);
+      setError(null);
+
+      if (sound) {
+        await sound.unloadAsync();
+      }
+
+      // Configurar el modo de audio
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: false,
+        staysActiveInBackground: true,
+        playsInSilentModeIOS: true,
+        shouldDuckAndroid: true,
+        playThroughEarpieceAndroid: false,
+      });
+
+      console.log('🎵 Intentando cargar audio desde:', audioUrl);
+
+      // Crear el sonido con configuración más robusta
+      const { sound: newSound } = await Audio.Sound.createAsync(
+        { uri: audioUrl },
+        { 
+          shouldPlay: false,
+          progressUpdateIntervalMillis: 100,
+          positionMillis: 0,
+          isLooping: false,
+          volume: 1.0,
+        },
         onPlaybackStatusUpdate
       );
-      setSound(sound);
-      
-      // Obtener duración
-      const status = await sound.getStatusAsync();
-      if (status.isLoaded) {
-        setDuration(status.durationMillis || 0);
-      }
+
+      setSound(newSound);
+      setIsLoading(false);
+      console.log('✅ Audio cargado exitosamente');
+
     } catch (error) {
       console.error('❌ Error loading audio:', error);
-      Alert.alert('Error', 'No se pudo cargar el audio');
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      setError(errorMessage);
+      setIsLoading(false);
+      onError?.(errorMessage);
     }
   };
 
   const onPlaybackStatusUpdate = (status: any) => {
     if (status.isLoaded) {
       setIsPlaying(status.isPlaying);
+      setDuration(status.durationMillis || 0);
       setPosition(status.positionMillis || 0);
-      
-      if (status.didJustFinish) {
-        setIsPlaying(false);
-        setPosition(0);
-      }
     }
   };
 
-  const playAudio = async () => {
-    if (!sound) {
-      await loadAudio();
-      return;
-    }
+  const togglePlayPause = async () => {
+    if (!sound) return;
 
     try {
       if (isPlaying) {
@@ -76,145 +103,167 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
         await sound.playAsync();
       }
     } catch (error) {
-      console.error('❌ Error playing audio:', error);
-      Alert.alert('Error', 'No se pudo reproducir el audio');
+      console.error('Error toggling play/pause:', error);
+      setError('Error al reproducir el audio');
     }
   };
 
-  const stopAudio = async () => {
-    if (sound) {
-      try {
-        await sound.stopAsync();
-        await sound.setPositionAsync(0);
-      } catch (error) {
-        console.error('❌ Error stopping audio:', error);
-      }
-    }
+  const formatTime = (millis: number) => {
+    const minutes = Math.floor(millis / 60000);
+    const seconds = Math.floor((millis % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  const formatTime = (milliseconds: number) => {
-    const seconds = Math.floor(milliseconds / 1000);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const getProgressPercentage = () => {
+    if (duration === 0) return 0;
+    return (position / duration) * 100;
   };
 
-  const handleDelete = () => {
-    Alert.alert(
-      'Eliminar nota de audio',
-      '¿Estás seguro de que quieres eliminar esta nota de audio?',
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Eliminar', 
-          style: 'destructive',
-          onPress: () => {
-            if (sound) {
-              sound.unloadAsync();
-            }
-            onDelete?.();
-          }
-        }
-      ]
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle" size={24} color="#dc3545" />
+          <Text style={styles.errorText}>Error al cargar el audio</Text>
+          <Text style={styles.errorDetails}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadAudio}>
+            <Text style={styles.retryButtonText}>Reintentar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
-  };
+  }
 
   return (
     <View style={styles.container}>
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={styles.playButton}
-          onPress={playAudio}
-        >
-          <Ionicons 
-            name={isPlaying ? "pause" : "play"} 
-            size={20} 
-            color="white" 
-          />
-        </TouchableOpacity>
-        
-        <View style={styles.info}>
-          <Text style={styles.title}>Nota de audio</Text>
-          <Text style={styles.time}>
-            {formatTime(position)} / {formatTime(duration)}
+      <View style={styles.playerContainer}>
+        <View style={styles.header}>
+          <Ionicons name="musical-notes" size={20} color="#007AFF" />
+          <Text style={styles.title} numberOfLines={1}>
+            {title}
           </Text>
         </View>
-        
-        {onDelete && (
+
+        <View style={styles.controlsContainer}>
           <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDelete}
+            style={styles.playButton}
+            onPress={togglePlayPause}
+            disabled={isLoading}
           >
-            <Ionicons name="trash" size={16} color="#FF3B30" />
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Ionicons
+                name={isPlaying ? "pause" : "play"}
+                size={24}
+                color="#fff"
+              />
+            )}
           </TouchableOpacity>
-        )}
-      </View>
-      
-      {duration > 0 && (
-        <View style={styles.progressContainer}>
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressFill, 
-                { width: `${(position / duration) * 100}%` }
-              ]} 
-            />
+
+          <View style={styles.progressContainer}>
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressFill, 
+                  { width: `${getProgressPercentage()}%` }
+                ]} 
+              />
+            </View>
+            <View style={styles.timeContainer}>
+              <Text style={styles.timeText}>{formatTime(position)}</Text>
+              <Text style={styles.timeText}>{formatTime(duration)}</Text>
+            </View>
           </View>
         </View>
-      )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    marginVertical: 10,
+  },
+  playerContainer: {
     backgroundColor: '#f8f9fa',
-    borderRadius: 8,
-    padding: 12,
-    marginVertical: 4,
+    borderRadius: 12,
+    padding: 16,
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
-  controls: {
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginLeft: 8,
+    flex: 1,
+  },
+  controlsContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   playButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#007AFF',
-    width: 36,
-    height: 36,
-    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
-  },
-  info: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 2,
-  },
-  time: {
-    fontSize: 12,
-    color: '#666',
-  },
-  deleteButton: {
-    padding: 8,
+    marginRight: 16,
   },
   progressContainer: {
-    marginTop: 8,
+    flex: 1,
   },
   progressBar: {
-    height: 3,
-    backgroundColor: '#e1e5e9',
+    height: 4,
+    backgroundColor: '#e9ecef',
     borderRadius: 2,
-    overflow: 'hidden',
+    marginBottom: 8,
   },
   progressFill: {
     height: '100%',
     backgroundColor: '#007AFF',
+    borderRadius: 2,
+  },
+  timeContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  timeText: {
+    fontSize: 12,
+    color: '#6c757d',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorText: {
+    color: '#dc3545',
+    fontSize: 14,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  errorDetails: {
+    color: '#6c757d',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  retryButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
 }); 
