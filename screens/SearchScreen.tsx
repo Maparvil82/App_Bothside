@@ -15,7 +15,7 @@ import {
   RefreshControl,
   SafeAreaView,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -37,6 +37,7 @@ export const SearchScreen: React.FC = () => {
   const { addGem, removeGem, isGem, updateGemStatus } = useGems();
   const { refreshStats } = useStats();
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
   const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
@@ -494,7 +495,7 @@ export const SearchScreen: React.FC = () => {
     if (loading) {
       return (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Cargando...</Text>
+          <Text style={[styles.emptyText, { color: colors.text }]}>Cargando...</Text>
         </View>
       );
     }
@@ -502,9 +503,9 @@ export const SearchScreen: React.FC = () => {
     if (collection.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <Ionicons name="disc-outline" size={64} color="#CCC" />
-          <Text style={styles.emptyStateTitle}>No tienes discos</Text>
-          <Text style={styles.emptyStateSubtitle}>
+          <Ionicons name="disc-outline" size={64} color={colors.text} />
+          <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No tienes discos</Text>
+          <Text style={[styles.emptyStateSubtitle, { color: colors.text }]}>
             Añade tu primer disco para empezar tu colección
           </Text>
           <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
@@ -517,7 +518,7 @@ export const SearchScreen: React.FC = () => {
     
     return (
       <View style={styles.emptyContainer}>
-        <Text style={styles.emptyText}>No se encontraron resultados</Text>
+        <Text style={[styles.emptyText, { color: colors.text }]}>No se encontraron resultados</Text>
       </View>
     );
   };
@@ -1120,15 +1121,15 @@ export const SearchScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Toolbar con botones de búsqueda, vista y filtros */}
-      <View style={styles.toolbarContainer}>
+      <View style={[styles.toolbarContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         {/* Contador de discos y porcentaje ubicados a la izquierda */}
-        <Text style={styles.collectionStats}>
-          <Text style={styles.collectionCount}>
+        <Text style={[styles.collectionStats, { color: colors.text }]}>
+          <Text style={[styles.collectionCount, { color: colors.text }]}>
             {filteredCollection.length} discos
           </Text>
-          <Text style={styles.locatedPercentage}>
+          <Text style={[styles.locatedPercentage, { color: colors.text }]}>
             {' • '}{getLocatedPercentage()}% Ubicados 
           </Text>
         </Text>
@@ -1138,14 +1139,14 @@ export const SearchScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.toolbarButton,
-              { backgroundColor: showSearch ? '#f0f0f0' : 'transparent' }
+              { backgroundColor: showSearch ? colors.border : 'transparent' }
             ]}
             onPress={() => setShowSearch(!showSearch)}
           >
             <Ionicons 
               name="search-outline" 
               size={24} 
-              color="#666" 
+              color={colors.text} 
             />
           </TouchableOpacity>
           
@@ -1156,21 +1157,21 @@ export const SearchScreen: React.FC = () => {
             <Ionicons 
               name={viewMode === 'grid' ? 'list-outline' : 'grid-outline'} 
               size={24} 
-              color="#666" 
+              color={colors.text} 
             />
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[
               styles.toolbarButton,
-              { backgroundColor: showFilters ? '#f0f0f0' : 'transparent' }
+              { backgroundColor: showFilters ? colors.border : 'transparent' }
             ]}
             onPress={() => setShowFilters(!showFilters)}
           >
             <Ionicons 
               name="filter-outline" 
               size={24} 
-              color="#666" 
+              color={colors.text} 
             />
           </TouchableOpacity>
         </View>
@@ -1178,15 +1179,15 @@ export const SearchScreen: React.FC = () => {
       
       {/* Campo de búsqueda */}
       {showSearch && (
-        <View style={styles.searchContainer}>
-          <View style={styles.searchInputContainer}>
+        <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
+          <View style={[styles.searchInputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <TextInput
               ref={searchInputRef}
-              style={styles.searchInput}
+              style={[styles.searchInput, { color: colors.text, backgroundColor: colors.background }]}
               placeholder="Buscar por artista, sello o álbum..."
               value={query}
               onChangeText={setQuery}
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.text}
             />
             <TouchableOpacity
               style={styles.closeSearchButton}
@@ -1195,7 +1196,7 @@ export const SearchScreen: React.FC = () => {
                 setQuery('');
               }}
             >
-              <Ionicons name="close" size={20} color="#999" />
+              <Ionicons name="close" size={20} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -1203,10 +1204,10 @@ export const SearchScreen: React.FC = () => {
 
       {/* Filtros */}
       {showFilters && (
-        <View style={styles.filterDropdownContent}>
+        <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
           {/* Filtro por Estilo */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Estilo</Text>
+            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Estilo</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -1363,7 +1364,7 @@ export const SearchScreen: React.FC = () => {
             ListFooterComponent={
               releases.length > 0 ? (
                 <View style={styles.footerContainer}>
-                  <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
+                  <Text style={[styles.footerText, { color: colors.text }]}>Resultados de búsqueda en Discogs</Text>
                   <FlatList
                     data={releases}
                     renderItem={renderRelease}
@@ -1389,7 +1390,7 @@ export const SearchScreen: React.FC = () => {
             ListFooterComponent={
               releases.length > 0 ? (
                 <View style={styles.footerContainer}>
-                  <Text style={styles.footerText}>Resultados de búsqueda en Discogs</Text>
+                  <Text style={[styles.footerText, { color: colors.text }]}>Resultados de búsqueda en Discogs</Text>
                   <FlatList
                     data={releases}
                     renderItem={renderRelease}
@@ -1412,11 +1413,11 @@ export const SearchScreen: React.FC = () => {
           ListEmptyComponent={
             loading ? (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>Cargando...</Text>
+                <Text style={[styles.emptyText, { color: colors.text }]}>Cargando...</Text>
               </View>
             ) : (
               <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No se encontraron resultados</Text>
+                <Text style={[styles.emptyText, { color: colors.text }]}>No se encontraron resultados</Text>
               </View>
             )
           }

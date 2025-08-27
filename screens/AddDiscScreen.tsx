@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { CameraComponent } from '../components/CameraComponent';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
@@ -36,6 +36,7 @@ interface Album {
 export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState<'search' | 'manual' | 'camera'>('search');
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -1203,47 +1204,47 @@ Progressive Rock`;
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Tabs */}
-      <View style={styles.tabContainer}>
+      <View style={[styles.tabContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'search' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'search' && { borderBottomColor: colors.primary }]}
           onPress={() => setActiveTab('search')}
         >
           <Ionicons
             name={activeTab === 'search' ? 'search' : 'search-outline'}
             size={20}
-            color={activeTab === 'search' ? '#007AFF' : '#666'}
+            color={activeTab === 'search' ? colors.primary : colors.text}
           />
-          <Text style={[styles.tabText, activeTab === 'search' && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: activeTab === 'search' ? colors.primary : colors.text }]}>
             Buscar
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'manual' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'manual' && { borderBottomColor: colors.primary }]}
           onPress={() => setActiveTab('manual')}
         >
           <Ionicons
             name={activeTab === 'manual' ? 'create' : 'create-outline'}
             size={20}
-            color={activeTab === 'manual' ? '#007AFF' : '#666'}
+            color={activeTab === 'manual' ? colors.primary : colors.text}
           />
-          <Text style={[styles.tabText, activeTab === 'manual' && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: activeTab === 'manual' ? colors.primary : colors.text }]}>
             Manual
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'camera' && styles.activeTab]}
+          style={[styles.tab, activeTab === 'camera' && { borderBottomColor: colors.primary }]}
           onPress={() => setActiveTab('camera')}
         >
           <Ionicons
             name={activeTab === 'camera' ? 'camera' : 'camera-outline'}
             size={20}
-            color={activeTab === 'camera' ? '#007AFF' : '#666'}
+            color={activeTab === 'camera' ? colors.primary : colors.text}
           />
-          <Text style={[styles.tabText, activeTab === 'camera' && styles.activeTabText]}>
+          <Text style={[styles.tabText, { color: activeTab === 'camera' ? colors.primary : colors.text }]}>
             Cámara
           </Text>
         </TouchableOpacity>

@@ -16,7 +16,7 @@ import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useStats } from '../contexts/StatsContext';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { AudioNotesSection } from '../components/AudioNotesSection';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { TopItemsLineChart } from '../components/TopItemsLineChart';
@@ -69,15 +69,16 @@ export default function DashboardScreen() {
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
   const [userPosition, setUserPosition] = useState<number | null>(null);
   const navigation = useNavigation();
+  const { colors } = useTheme();
 
   const [shelves, setShelves] = useState<Shelf[]>([]);
 
   // Si la autenticación aún está cargando, mostrar loading
   if (authLoading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Cargando...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>Cargando...</Text>
       </View>
     );
   }
@@ -552,17 +553,17 @@ export default function DashboardScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Cargando estadísticas...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>Cargando estadísticas...</Text>
       </View>
     );
   }
 
   if (!stats) {
     return (
-      <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>Error al cargar las estadísticas</Text>
+      <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.text }]}>Error al cargar las estadísticas</Text>
       </View>
     );
   }
@@ -588,9 +589,9 @@ export default function DashboardScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView
-        style={styles.container}
+        style={[styles.container, { backgroundColor: colors.background }]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }

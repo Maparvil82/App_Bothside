@@ -15,6 +15,7 @@ import { UserListService } from '../services/database';
 import { UserList } from '../services/database';
 import { useHybridLists } from '../hooks/useHybridLists';
 import { ListCoverCollage } from '../components/ListCoverCollage';
+import { useTheme } from '@react-navigation/native';
 
 interface ListsScreenProps {
   navigation: any;
@@ -24,6 +25,7 @@ interface ListsScreenProps {
 const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
   const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridLists();
+  const { colors } = useTheme();
   const [filteredLists, setFilteredLists] = useState<UserList[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -246,28 +248,28 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
   if (!user) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.errorText}>Debes iniciar sesión para ver tus estanterías</Text>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.errorText, { color: colors.text }]}>Debes iniciar sesión para ver tus estanterías</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Estanterías</Text>
-          <Text style={styles.listCount}>{filteredLists.length} estantería{filteredLists.length !== 1 ? 's' : ''}</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Estanterías</Text>
+          <Text style={[styles.listCount, { color: colors.text }]}>{filteredLists.length} estantería{filteredLists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.createListButton} onPress={handleCreateList}>
-            <Ionicons name="add" size={24} color="#007AFF" />
+            <Ionicons name="add" size={24} color={colors.primary} />
           </TouchableOpacity>
           
           <TouchableOpacity
             style={[
               styles.filterButton,
-              { backgroundColor: showFilters ? '#f0f0f0' : 'transparent' }
+              { backgroundColor: showFilters ? colors.border : 'transparent' }
             ]}
             onPress={() => {
               console.log('🔍 ListsScreen: Filter button pressed, current showFilters:', showFilters);
@@ -278,7 +280,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
             <Ionicons 
               name="filter-outline" 
               size={24} 
-              color="#666" 
+              color={colors.text} 
             />
           </TouchableOpacity>
         </View>
@@ -286,9 +288,9 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {/* Filtros */}
       {showFilters && (
-        <View style={styles.filterDropdownContent}>
+        <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Privacidad</Text>
+            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Privacidad</Text>
             <View style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -335,11 +337,11 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando estanterías...</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando estanterías...</Text>
         </View>
       ) : filteredLists.length === 0 ? (
         <View style={styles.emptyState}>
-          <Ionicons name="list-outline" size={64} color="#CCC" />
+          <Ionicons name="list-outline" size={64} color={colors.text} />
                 <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
       <Text style={styles.emptyStateSubtitle}>
         Crea tu primera estantería para organizar tu colección

@@ -16,10 +16,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { UserCollectionService } from '../services/database';
 import { useGems } from '../contexts/GemsContext';
+import { useTheme } from '@react-navigation/native';
 
 export default function GemsScreen() {
   const { user } = useAuth();
   const { gems, loading, refreshGems, removeGem, updateGemStatus } = useGems();
+  const { colors } = useTheme();
 
   const handleRemoveGem = async (item: any) => {
     if (!user) return;
@@ -72,15 +74,15 @@ export default function GemsScreen() {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Cargando tus Gems...</Text>
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.text }]}>Cargando tus Gems...</Text>
       </View>
     );
   }
 
     const renderGemItem = ({ item }: { item: any }) => (
-    <View style={styles.gemItemContainer}>
+    <View style={[styles.gemItemContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <TouchableOpacity 
         style={styles.gemItem}
         activeOpacity={0.7}
@@ -90,12 +92,12 @@ export default function GemsScreen() {
           style={styles.gemThumbnail}
         />
         <View style={styles.gemInfo}>
-          <Text style={styles.gemTitle} numberOfLines={1} ellipsizeMode="tail">
+          <Text style={[styles.gemTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
             {item.albums?.title}
           </Text>
-          <Text style={styles.gemArtist}>{item.albums?.artist}</Text>
+          <Text style={[styles.gemArtist, { color: colors.text }]}>{item.albums?.artist}</Text>
           <View style={styles.gemDetails}>
-            <Text style={styles.gemDetail}>
+            <Text style={[styles.gemDetail, { color: colors.text }]}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
                 ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
                 : item.albums?.label && item.albums.label !== ''
@@ -105,7 +107,7 @@ export default function GemsScreen() {
                     : ''
               }
             </Text>
-            <Text style={styles.gemDetail}>
+            <Text style={[styles.gemDetail, { color: colors.text }]}>
               {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
                 `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
               }
@@ -130,19 +132,19 @@ export default function GemsScreen() {
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Gems</Text>
-        <Text style={styles.subtitle}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.text }]}>Gems</Text>
+        <Text style={[styles.subtitle, { color: colors.text }]}>
           {gems.length} {gems.length === 1 ? 'álbum favorito' : 'álbumes favoritos'}
         </Text>
       </View>
 
       {gems.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Ionicons name="diamond-outline" size={64} color="#ccc" />
-          <Text style={styles.emptyTitle}>No tienes Gems aún</Text>
-          <Text style={styles.emptyText}>
+          <Ionicons name="diamond-outline" size={64} color={colors.text} />
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>No tienes Gems aún</Text>
+          <Text style={[styles.emptyText, { color: colors.text }]}>
             Marca tus álbumes favoritos como Gems desde la colección
           </Text>
         </View>
