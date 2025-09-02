@@ -32,22 +32,28 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     try {
       console.log('🤖 Iniciando reconocimiento de álbum con IA...');
       
-      // Convertir la imagen a base64 para enviar a Gemini Vision
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
-      const base64 = await new Promise<string>((resolve) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64String = reader.result as string;
-          resolve(base64String);
-        };
-        reader.readAsDataURL(blob);
-      });
+      // OPTIMIZACIÓN: Si ya tenemos base64, usarlo directamente
+      let base64Data = imageUri;
+      
+      // Si es un URI, convertirlo a base64 (solo si es necesario)
+      if (imageUri.startsWith('file://') || imageUri.startsWith('http')) {
+        console.log('📤 Convirtiendo URI a base64...');
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+        base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            resolve(base64String);
+          };
+          reader.readAsDataURL(blob);
+        });
+      }
 
       console.log('📤 Enviando imagen a Gemini Vision...');
       
       // Usar Gemini Vision para reconocer el álbum
-      const { artist, album } = await GeminiService.analyzeAlbumImage(base64);
+      const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
       
       console.log('🎵 Álbum reconocido por IA:', { artist, album });
       setAiResult(`🎵 ${album} - ${artist}`);
@@ -86,14 +92,16 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
     setIsLoading(true);
     try {
+      // OPTIMIZACIÓN: Capturar directamente en base64 con calidad reducida
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        base64: false,
+        quality: 0.5,        // ← Calidad reducida para velocidad
+        base64: true,        // ← Base64 directo (sin conversiones)
+        skipProcessing: true, // ← Saltar procesamiento adicional
       });
-      console.log('📸 Foto capturada:', photo.uri);
+      console.log('📸 Foto capturada en base64, tamaño:', photo.base64?.length || 0);
       
       // PRIMERO: Realizar reconocimiento de álbum con IA
-      await performAIAlbumRecognition(photo.uri);
+      await performAIAlbumRecognition(photo.base64 || '');
       
       // DESPUÉS: Llamar al callback original solo si el análisis fue exitoso
       if (aiResult && !aiResult.includes('❌')) {
