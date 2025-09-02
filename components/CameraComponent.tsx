@@ -24,7 +24,11 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   }, [permission, requestPermission]);
 
   const performAIAlbumRecognition = async (imageUri: string) => {
+    console.log('🚀 Iniciando análisis de álbum, isAIProcessing:', isAIProcessing);
     setIsAIProcessing(true);
+    setAiResult(''); // Limpiar resultado anterior
+    console.log('🔄 Estado actualizado, isAIProcessing:', true);
+    
     try {
       console.log('🤖 Iniciando reconocimiento de álbum con IA...');
       
@@ -69,6 +73,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         [{ text: 'OK' }]
       );
     } finally {
+      console.log('🏁 Finalizando análisis, estableciendo isAIProcessing a false');
       setIsAIProcessing(false);
     }
   };
@@ -87,11 +92,13 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       });
       console.log('📸 Foto capturada:', photo.uri);
       
-      // Llamar al callback original
-      onCapture(photo.uri);
-      
-      // Realizar reconocimiento de álbum con IA automáticamente
+      // PRIMERO: Realizar reconocimiento de álbum con IA
       await performAIAlbumRecognition(photo.uri);
+      
+      // DESPUÉS: Llamar al callback original solo si el análisis fue exitoso
+      if (aiResult && !aiResult.includes('❌')) {
+        onCapture(photo.uri);
+      }
       
     } catch (error) {
       console.error('Error taking picture:', error);
@@ -155,14 +162,20 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       {/* Indicador de procesamiento de IA */}
       {isAIProcessing && (
         <View style={styles.aiOverlay}>
-          <Text style={styles.aiText}>🤖 Analizando álbum con IA...</Text>
+          <View style={styles.aiProcessingContainer}>
+            <Text style={styles.aiText}>🤖 Analizando portada...</Text>
+            <Text style={styles.aiSubtext}>Esto puede tomar unos segundos</Text>
+            <View style={styles.loadingSpinner}>
+              <Text style={styles.spinnerText}>⏳</Text>
+            </View>
+          </View>
         </View>
       )}
       
       {/* Mostrar resultado de IA si está disponible */}
       {aiResult && !isAIProcessing && (
         <View style={styles.aiResult}>
-          <Text style={styles.aiResultTitle}>Resultado del reconocimiento:</Text>
+          <Text style={styles.aiResultTitle}>✅ Álbum Reconocido:</Text>
           <Text style={styles.aiResultText}>{aiResult}</Text>
         </View>
       )}
@@ -239,6 +252,33 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     textAlign: 'center',
+  },
+  aiProcessingContainer: {
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    padding: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    maxWidth: 300,
+  },
+  aiSubtext: {
+    color: 'white',
+    fontSize: 14,
+    textAlign: 'center',
+    marginTop: 5,
+  },
+  loadingSpinner: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    borderWidth: 3,
+    borderColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  spinnerText: {
+    fontSize: 24,
+    color: 'white',
   },
   aiResult: {
     position: 'absolute',
