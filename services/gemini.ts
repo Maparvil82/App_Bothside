@@ -41,6 +41,7 @@ interface CollectionAlbum {
 
 export class GeminiService {
   private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
   private static readonly API_KEY = ENV.GEMINI_API_KEY;
 
   static async generateResponse(
@@ -112,6 +113,86 @@ export class GeminiService {
     } catch (error) {
       console.error('Error al generar respuesta con Gemini:', error);
       throw new Error('No se pudo generar una respuesta. Inténtalo de nuevo.');
+    }
+  }
+
+  static async analyzeAlbumImage(imageBase64: string): Promise<{ artist: string; album: string }> {
+    try {
+      console.log('🔍 Analizando imagen de álbum con Gemini Vision...');
+      
+      // Remover el prefijo data:image/jpeg;base64, si está presente
+      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+      
+      const prompt = `Analiza esta imagen de un álbum de música y responde ÚNICAMENTE con el formato exacto:
+
+ARTISTA: [nombre del artista]
+ALBUM: [nombre del álbum]
+
+Instrucciones:
+- Identifica el artista y el título del álbum
+- Si no puedes identificar alguno, responde "DESCONOCIDO"
+- Responde solo con el formato especificado, sin texto adicional
+- Usa el nombre exacto como aparece en la portada
+- Si hay múltiples artistas, usa el principal o el primero`;
+
+      const response = await fetch(`${this.VISION_API_URL}?key=${this.API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              {
+                text: prompt
+              },
+              {
+                inline_data: {
+                  mime_type: 'image/jpeg',
+                  data: base64Data
+                }
+              }
+            ]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Error en Gemini Vision:', errorText);
+        throw new Error(`Error de API Vision: ${response.status}`);
+      }
+
+      const data: GeminiResponse = await response.json();
+      
+      if (!data.candidates || data.candidates.length === 0) {
+        throw new Error('No se recibió respuesta de la API Vision');
+      }
+
+      const responseText = data.candidates[0].content.parts[0].text;
+      console.log('📝 Respuesta de Gemini Vision:', responseText);
+
+      // Extraer artista y álbum de la respuesta
+      const artistMatch = responseText.match(/ARTISTA:\s*(.+)/i);
+      const albumMatch = responseText.match(/ALBUM:\s*(.+)/i);
+
+      if (!artistMatch || !albumMatch) {
+        throw new Error('Formato de respuesta inesperado de Gemini Vision');
+      }
+
+      const artist = artistMatch[1].trim();
+      const album = albumMatch[1].trim();
+
+      if (artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
+        throw new Error('No se pudo identificar completamente el álbum');
+      }
+
+      console.log('✅ Álbum identificado:', { artist, album });
+      return { artist, album };
+
+    } catch (error) {
+      console.error('Error al analizar imagen con Gemini Vision:', error);
+      throw new Error('No se pudo analizar la imagen del álbum. Intenta con otra foto.');
     }
   }
 
