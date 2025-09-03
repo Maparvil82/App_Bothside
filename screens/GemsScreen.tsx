@@ -244,7 +244,7 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   gemItemContainer: {
-    marginBottom: 8,
+    marginBottom: 0,
     backgroundColor: 'white',
   },
   gemItem: {
