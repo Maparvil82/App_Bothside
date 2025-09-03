@@ -485,12 +485,12 @@ export default function AlbumDetailScreen() {
   };
 
   const handleSaveAudioNote = async (audioUri: string) => {
-    if (!user || !album?.id) {
+    if (!user || !album?.albums?.id) {
       Alert.alert('Error', 'Usuario no autenticado o álbum no válido');
       return;
     }
     try {
-      await UserCollectionService.saveAudioNote(user.id, album.id, audioUri);
+      await UserCollectionService.saveAudioNote(user.id, album.albums.id, audioUri);
       loadAlbumDetail();
       Alert.alert('Éxito', 'Nota de audio guardada correctamente');
       setShowAudioRecorder(false);
