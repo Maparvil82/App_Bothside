@@ -3,6 +3,10 @@ import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { GeminiService } from '../services/gemini';
+import { supabase } from '../lib/supabase';
+import { DiscogsService } from '../services/discogs';
+import { DiscogsStatsService } from '../services/discogs-stats';
+import { useAuth } from '../contexts/AuthContext';
 
 interface CameraComponentProps {
   onCapture: (imageUri: string) => void;
@@ -16,6 +20,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [aiResult, setAiResult] = useState<string>('');
   const cameraRef = useRef<any>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!permission?.granted) {
@@ -63,10 +68,27 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         onOCRResult(artist, album);
       }
 
+      // Preguntar si quiere guardar el álbum en la colección
       Alert.alert(
         '✅ Álbum Reconocido',
-        `${album} - ${artist}`,
-        [{ text: 'Perfecto' }]
+        `${album} - ${artist}\n\n¿Quieres guardar este álbum en tu colección?`,
+        [
+          {
+            text: 'Cancelar',
+            style: 'cancel',
+            onPress: () => {
+              console.log('❌ Usuario canceló el guardado del álbum');
+            }
+          },
+          {
+            text: 'Guardar',
+            style: 'default',
+            onPress: () => {
+              console.log('💾 Usuario quiere guardar el álbum, iniciando proceso...');
+              saveRecognizedAlbum(artist, album);
+            }
+          }
+        ]
       );
 
     } catch (error) {
@@ -81,6 +103,119 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     } finally {
       console.log('🏁 Finalizando análisis, estableciendo isAIProcessing a false');
       setIsAIProcessing(false);
+    }
+  };
+
+  // Función para guardar el álbum reconocido en la colección
+  const saveRecognizedAlbum = async (artist: string, album: string) => {
+    if (!user?.id) {
+      Alert.alert('Error', 'No se pudo identificar al usuario');
+      return;
+    }
+
+    try {
+      console.log('🔍 Buscando en Discogs:', artist, '-', album);
+      
+      // Buscar en Discogs API
+      const results = await DiscogsService.searchReleases(`${artist} ${album}`);
+      
+      if (results && results.results && results.results.length > 0) {
+        // Filtrar solo versiones en vinilo
+        const vinylResults = results.results.filter((release: any) => {
+          const formats = release.format;
+          
+          let formatString = '';
+          if (Array.isArray(formats)) {
+            formatString = formats.join(',').toLowerCase();
+          } else if (typeof formats === 'string') {
+            formatString = formats.toLowerCase();
+          } else {
+            formatString = '';
+          }
+          
+          return formatString.includes('vinyl') || 
+                 formatString.includes('lp') ||
+                 formatString.includes('12"') ||
+                 formatString.includes('7"');
+        });
+        
+        console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
+        
+        if (vinylResults.length > 0) {
+          // Mostrar opciones para seleccionar la versión correcta
+          const releaseOptions = vinylResults.slice(0, 5).map((release: any, index: number) => ({
+            text: `${release.title} (${release.year || 'Año desconocido'}) - ${release.label || 'Sello desconocido'}`,
+            onPress: () => saveDiscogsRelease(release)
+          }));
+          
+          Alert.alert(
+            'Selecciona la versión correcta',
+            'Se encontraron varias versiones del álbum:',
+            [
+              ...releaseOptions,
+              {
+                text: 'Cancelar',
+                style: 'cancel'
+              }
+            ]
+          );
+        } else {
+          Alert.alert('No se encontraron versiones en vinilo', 'Intenta con otra foto o busca manualmente.');
+        }
+      } else {
+        Alert.alert('Búsqueda', 'No se encontraron resultados en Discogs');
+      }
+    } catch (error) {
+      console.error('❌ Error buscando en Discogs:', error);
+      Alert.alert('Error', 'No se pudo buscar en Discogs');
+    }
+  };
+
+  // Función para guardar un release específico de Discogs
+  const saveDiscogsRelease = async (release: any) => {
+    if (!user?.id) return;
+    
+    try {
+      console.log('🎵 Guardando release de Discogs:', release.id);
+      
+      // Llamar a la Edge Function de Supabase
+      const { data, error } = await supabase.functions.invoke('save-discogs-release', {
+        body: {
+          discogsReleaseId: release.id,
+          userId: user.id
+        }
+      });
+      
+      if (error) {
+        console.error('❌ Error llamando a Edge Function:', error);
+        throw error;
+      }
+      
+      if (data?.success) {
+        console.log('✅ Disco guardado exitosamente con ID:', data.albumId);
+        
+        // Obtener estadísticas de Discogs en segundo plano
+        if (data.albumId && release.id) {
+          DiscogsStatsService.fetchAndSaveDiscogsStats(data.albumId, release.id)
+            .catch((error) => {
+              console.error('❌ Error obteniendo estadísticas de Discogs:', error);
+            });
+        }
+        
+        Alert.alert(
+          '✅ Disco Guardado',
+          `${release.title} se ha añadido correctamente a tu colección.`,
+          [
+            {
+              text: 'Perfecto',
+              style: 'default'
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('❌ Error guardando release:', error);
+      Alert.alert('Error', 'No se pudo guardar el álbum en la colección');
     }
   };
 
