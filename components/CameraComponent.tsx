@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, FlatList, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { GeminiService } from '../services/gemini';
@@ -19,6 +19,9 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   const [isLoading, setIsLoading] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
   const [aiResult, setAiResult] = useState<string>('');
+  const [showEditionsModal, setShowEditionsModal] = useState(false);
+  const [discogsResults, setDiscogsResults] = useState<any[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
   const cameraRef = useRef<any>(null);
   const { user } = useAuth();
 
@@ -142,23 +145,9 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
         
         if (vinylResults.length > 0) {
-          // Mostrar opciones para seleccionar la versión correcta
-          const releaseOptions = vinylResults.slice(0, 5).map((release: any, index: number) => ({
-            text: `${release.title} (${release.year || 'Año desconocido'}) - ${release.label || 'Sello desconocido'}`,
-            onPress: () => saveDiscogsRelease(release)
-          }));
-          
-          Alert.alert(
-            'Selecciona la versión correcta',
-            'Se encontraron varias versiones del álbum:',
-            [
-              ...releaseOptions,
-              {
-                text: 'Cancelar',
-                style: 'cancel'
-              }
-            ]
-          );
+          // Guardar resultados y mostrar modal
+          setDiscogsResults(vinylResults);
+          setShowEditionsModal(true);
         } else {
           Alert.alert('No se encontraron versiones en vinilo', 'Intenta con otra foto o busca manualmente.');
         }
@@ -208,7 +197,12 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           [
             {
               text: 'Perfecto',
-              style: 'default'
+              style: 'default',
+              onPress: () => {
+                // Cerrar el modal después de guardar
+                setShowEditionsModal(false);
+                setDiscogsResults([]);
+              }
             }
           ]
         );
@@ -218,6 +212,40 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       Alert.alert('Error', 'No se pudo guardar el álbum en la colección');
     }
   };
+
+  // Función para renderizar cada release de Discogs en el modal
+  const renderDiscogsRelease = ({ item }: { item: any }) => (
+    <View style={styles.albumItem}>
+      <Image
+        source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/80' }}
+        style={styles.albumThumbnail}
+      />
+      <View style={styles.albumInfo}>
+        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
+          {item.title}
+        </Text>
+        <Text style={styles.albumArtist}>
+          {item.artists?.[0]?.name || item.artist || 'Unknown Artist'}
+        </Text>
+        <Text style={styles.albumDetails}>
+          {item.year && `${item.year} • `}
+          {item.label && `${Array.isArray(item.label) ? item.label[0] : item.label} • `}
+          {item.catno && `${item.catno}`}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.addButton, isSaving && styles.addButtonDisabled]}
+        onPress={() => saveDiscogsRelease(item)}
+        disabled={isSaving}
+      >
+        {isSaving ? (
+          <ActivityIndicator size="small" color="white" />
+        ) : (
+          <Ionicons name="add" size={24} color="white" />
+        )}
+      </TouchableOpacity>
+    </View>
+  );
 
   const handleCapture = async () => {
     if (!cameraRef.current) {
@@ -322,6 +350,36 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           <Text style={styles.aiResultText}>{aiResult}</Text>
         </View>
       )}
+
+      {/* Modal de Ediciones de Discogs */}
+      <Modal
+        visible={showEditionsModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setShowEditionsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Selecciona la Edición Correcta</Text>
+              <TouchableOpacity
+                style={styles.modalCloseButton}
+                onPress={() => setShowEditionsModal(false)}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+            
+            <FlatList
+              data={discogsResults}
+              renderItem={renderDiscogsRelease}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={styles.modalContent}
+            />
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -422,6 +480,86 @@ const styles = StyleSheet.create({
   spinnerText: {
     fontSize: 24,
     color: 'white',
+  },
+  // Estilos para el modal de ediciones
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    borderRadius: 15,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  modalCloseButton: {
+    padding: 5,
+  },
+  modalContent: {
+    paddingBottom: 20,
+  },
+  // Estilos para los items del álbum (igual que en AddDiscScreen)
+  albumItem: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    marginHorizontal: 0,
+    marginVertical: 0,
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  albumThumbnail: {
+    width: 80,
+    height: 80,
+    borderRadius: 4,
+    marginRight: 10,
+  },
+  albumInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  albumTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  albumArtist: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  albumDetails: {
+    fontSize: 12,
+    color: '#999',
+  },
+  addButton: {
+    width: 44,
+    height: 44,
+    backgroundColor: '#007AFF',
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+  },
+  addButtonDisabled: {
+    backgroundColor: '#ccc',
   },
   aiResult: {
     position: 'absolute',
