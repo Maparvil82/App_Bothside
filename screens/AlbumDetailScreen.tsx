@@ -765,37 +765,24 @@ export default function AlbumDetailScreen() {
     if (!user?.id || !album?.albums.id) return;
     
     try {
-      // Verificar si el álbum ya está en la lista
-      const { data: existingItem, error: checkError } = await supabase
-        .from('list_albums')
-        .select('id')
-        .eq('list_id', listId)
-        .eq('album_id', album.albums.id)
-        .single();
-
-      if (checkError && checkError.code !== 'PGRST116') {
-        throw checkError;
-      }
-
-      if (existingItem) {
+      // Verificar si el álbum ya está en la lista usando el servicio correcto
+      const { UserListService } = await import('../services/database');
+      const isAlreadyInList = await UserListService.isAlbumInList(listId, album.albums.id);
+      
+      if (isAlreadyInList) {
         Alert.alert('Ya en la lista', 'Este álbum ya está en esta lista');
         return;
       }
 
-      // Añadir el álbum a la lista
-      const { error: insertError } = await supabase
-        .from('list_albums')
-        .insert({
-          list_id: listId,
-          album_id: album.albums.id
-        });
-
-      if (insertError) throw insertError;
+      // Añadir el álbum a la lista usando el servicio correcto
+      await UserListService.addAlbumToList(listId, album.albums.id);
 
       Alert.alert('¡Añadido!', 'El álbum se ha añadido a la lista');
       setShowListsModal(false);
       setSelectedListId(null);
       
+      // Recargar las listas para actualizar la información
+      loadUserLists();
       // Recargar el álbum para actualizar la información
       loadAlbumDetail();
     } catch (error) {
