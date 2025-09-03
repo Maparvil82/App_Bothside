@@ -164,6 +164,8 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   const saveDiscogsRelease = async (release: any) => {
     if (!user?.id) return;
     
+    setIsSaving(true); // Activar estado de guardado
+    
     try {
       console.log('🎵 Guardando release de Discogs:', release.id);
       
@@ -191,17 +193,30 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
             });
         }
         
+        // Cerrar el modal y mostrar opciones mejoradas
+        setShowEditionsModal(false);
+        setDiscogsResults([]);
+        
         Alert.alert(
           '✅ Disco Guardado',
           `${release.title} se ha añadido correctamente a tu colección.`,
           [
             {
-              text: 'Perfecto',
+              text: 'Ir a Colección',
               style: 'default',
               onPress: () => {
-                // Cerrar el modal después de guardar
-                setShowEditionsModal(false);
-                setDiscogsResults([]);
+                // Aquí podrías navegar a la colección si tienes acceso a navigation
+                console.log('🚀 Navegando a la colección...');
+                // TODO: Implementar navegación a la colección
+              }
+            },
+            {
+              text: 'Añadir Más',
+              style: 'default',
+              onPress: () => {
+                console.log('📸 Volviendo a la vista de cámara...');
+                // Limpiar el resultado anterior para permitir nueva foto
+                setAiResult('');
               }
             }
           ]
@@ -210,6 +225,8 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     } catch (error) {
       console.error('❌ Error guardando release:', error);
       Alert.alert('Error', 'No se pudo guardar el álbum en la colección');
+    } finally {
+      setIsSaving(false); // Desactivar estado de guardado
     }
   };
 
@@ -377,6 +394,16 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalContent}
             />
+            
+            {/* Overlay de carga cuando se está guardando */}
+            {isSaving && (
+              <View style={styles.savingOverlay}>
+                <View style={styles.savingContainer}>
+                  <ActivityIndicator size="large" color="#007AFF" />
+                  <Text style={styles.savingText}>Guardando disco...</Text>
+                </View>
+              </View>
+            )}
           </View>
         </View>
       </Modal>
@@ -560,6 +587,37 @@ const styles = StyleSheet.create({
   },
   addButtonDisabled: {
     backgroundColor: '#ccc',
+  },
+  // Estilos para el overlay de guardado
+  savingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  savingContainer: {
+    backgroundColor: 'white',
+    padding: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  savingText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginTop: 15,
   },
   aiResult: {
     position: 'absolute',
