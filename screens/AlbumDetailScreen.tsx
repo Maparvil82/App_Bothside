@@ -27,6 +27,7 @@ import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { UserCollectionService } from '../services/database';
 import ShelfGrid from '../components/ShelfGrid';
+import { ListCoverCollage } from '../components/ListCoverCollage';
 
 const { width } = Dimensions.get('window');
 
@@ -687,25 +688,27 @@ export default function AlbumDetailScreen() {
 
   // ========== FUNCIONES GEMS Y LISTAS ==========
   
-  // Función para cargar las listas del usuario
+  // Función para cargar las listas del usuario con portadas
   const loadUserLists = useCallback(async () => {
     if (!user?.id) return;
     
     try {
-      const { data: lists, error } = await supabase
-        .from('user_lists')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Error cargando listas:', error);
-        return;
+      // Usar exactamente el mismo servicio que usa ListsScreen
+      const { UserListService } = await import('../services/database');
+      const listsWithAlbums = await UserListService.getUserListsWithAlbums(user.id);
+      
+      console.log('✅ Listas cargadas con portadas:', listsWithAlbums?.length || 0);
+      if (listsWithAlbums && listsWithAlbums.length > 0) {
+        console.log('📋 Primera lista:', {
+          id: listsWithAlbums[0].id,
+          title: listsWithAlbums[0].title,
+          albumsCount: listsWithAlbums[0].albums?.length || 0
+        });
       }
-
-      setUserLists(lists || []);
+      setUserLists(listsWithAlbums || []);
     } catch (error) {
       console.error('Error cargando listas:', error);
+      setUserLists([]);
     }
   }, [user?.id]);
 
@@ -764,7 +767,7 @@ export default function AlbumDetailScreen() {
     try {
       // Verificar si el álbum ya está en la lista
       const { data: existingItem, error: checkError } = await supabase
-        .from('user_list_items')
+        .from('list_albums')
         .select('id')
         .eq('list_id', listId)
         .eq('album_id', album.albums.id)
@@ -781,11 +784,10 @@ export default function AlbumDetailScreen() {
 
       // Añadir el álbum a la lista
       const { error: insertError } = await supabase
-        .from('user_list_items')
+        .from('list_albums')
         .insert({
           list_id: listId,
-          album_id: album.albums.id,
-          user_id: user.id
+          album_id: album.albums.id
         });
 
       if (insertError) throw insertError;
@@ -1414,6 +1416,10 @@ export default function AlbumDetailScreen() {
                     style={styles.listOption}
                     onPress={() => handleAddToList(list.id)}
                   >
+                    <ListCoverCollage 
+                      albums={list.albums || []} 
+                      size={60} 
+                    />
                     <View style={styles.listOptionInfo}>
                       <Text style={styles.listOptionTitle}>{list.title}</Text>
                       {list.description && (
@@ -3376,6 +3382,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderBottomWidth: 1,
     borderBottomColor: '#f1f3f4',
+    minHeight: 80,
   },
   listOptionInfo: {
     flex: 1,
