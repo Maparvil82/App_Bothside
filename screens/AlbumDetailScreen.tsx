@@ -2210,7 +2210,7 @@ const styles = StyleSheet.create({
   },
   coverSection: {
     width: '100%',
-    height: width * 0.6, // Altura proporcional al ancho de la pantalla
+    height: width * 1, // Altura proporcional al ancho de la pantalla
     backgroundColor: '#f8f9fa',
     marginBottom: 10,
     overflow: 'hidden',
