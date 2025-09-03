@@ -30,6 +30,7 @@ export const GemsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Función para cargar gems
   const loadGems = useCallback(async () => {
     if (!user) {
+      console.log('❌ GemsContext: No user, setting empty gems');
       setGems([]);
       setLoading(false);
       return;
@@ -40,7 +41,19 @@ export const GemsProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('🔍 GemsContext: Loading gems for user:', user.id);
       const gemsData = await UserCollectionService.getUserGems(user.id);
       console.log('✅ GemsContext: Gems loaded:', gemsData?.length || 0, 'gems');
+      
+      if (gemsData && gemsData.length > 0) {
+        console.log('📋 GemsContext: First gem data:', {
+          id: gemsData[0].id,
+          albumId: gemsData[0].album_id,
+          albumTitle: (gemsData[0].albums as any)?.title,
+          albumArtist: (gemsData[0].albums as any)?.artist,
+          isGem: gemsData[0].is_gem
+        });
+      }
+      
       setGems(gemsData || []);
+      console.log('💾 GemsContext: State updated with', gemsData?.length || 0, 'gems');
     } catch (error) {
       console.error('❌ GemsContext: Error loading gems:', error);
       setGems([]);
@@ -75,28 +88,22 @@ export const GemsProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Función para actualizar el estado de gem (para sincronizar con la colección)
-  const updateGemStatus = useCallback((albumId: string, isGem: boolean) => {
+  const updateGemStatus = useCallback(async (albumId: string, isGem: boolean) => {
     console.log('🔄 GemsContext: Updating gem status for album:', albumId, 'isGem:', isGem);
     
     if (isGem) {
-      // Si se añadió como gem, añadirlo a la lista si no existe
-      setGems(prev => {
-        const exists = prev.some(g => g.album_id === albumId);
-        if (!exists) {
-          // Buscar el item en la colección (esto se manejará desde SearchScreen)
-          console.log('✅ GemsContext: Gem status updated to true for album:', albumId);
-        }
-        return prev;
-      });
+      // Si se añadió como gem, refrescar la lista completa desde la base de datos
+      console.log('✅ GemsContext: Gem status updated to true for album:', albumId);
+      await loadGems(); // Recargar gems desde la base de datos
     } else {
-      // Si se removió como gem, removerlo de la lista
+      // Si se removió como gem, removerlo de la lista local
       setGems(prev => {
         const filtered = prev.filter(gem => gem.album_id !== albumId);
         console.log('✅ GemsContext: Gem status updated to false for album:', albumId);
         return filtered;
       });
     }
-  }, []);
+  }, [loadGems]);
 
   // Función para verificar si un álbum es gem
   const isGem = useCallback((albumId: string) => {

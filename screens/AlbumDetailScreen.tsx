@@ -19,6 +19,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
+import { useGems } from '../contexts/GemsContext';
 import { supabase } from '../lib/supabase';
 import { getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
@@ -72,6 +73,7 @@ export default function AlbumDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { isGem, addGem, removeGem, refreshGems, updateGemStatus } = useGems();
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,6 +89,9 @@ export default function AlbumDetailScreen() {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [fallbackGenres, setFallbackGenres] = useState<string[]>([]);
   const [fallbackStyles, setFallbackStyles] = useState<string[]>([]);
+  const [userLists, setUserLists] = useState<any[]>([]);
+  const [showListsModal, setShowListsModal] = useState(false);
+  const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const lastBackfilledAlbumIdRef = useRef<string | null>(null);
   
   // Estados para TypeForm
@@ -288,6 +293,8 @@ export default function AlbumDetailScreen() {
       }
     }
   }, [album?.albums?.album_youtube_urls]);
+
+
 
   // Descarga desde Discogs y guarda tracks/YouTube si faltan
   const backfillDiscogsDetails = async (internalAlbumId: string, discogsId: number | string) => {
@@ -678,6 +685,142 @@ export default function AlbumDetailScreen() {
 
   // ========== FIN FUNCIONES YOUTUBE ==========
 
+  // ========== FUNCIONES GEMS Y LISTAS ==========
+  
+  // Función para cargar las listas del usuario
+  const loadUserLists = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data: lists, error } = await supabase
+        .from('user_lists')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error cargando listas:', error);
+        return;
+      }
+
+      setUserLists(lists || []);
+    } catch (error) {
+      console.error('Error cargando listas:', error);
+    }
+  }, [user?.id]);
+
+  // Función para añadir/quitar gem
+  const handleToggleGem = async () => {
+    console.log('🔍 handleToggleGem llamado con:', {
+      userId: user?.id,
+      albumId: album?.id,
+      albumAlbumsId: album?.albums?.id,
+      isCurrentlyGem: album?.albums?.id ? isGem(album.albums.id) : 'undefined'
+    });
+    
+    if (!user?.id || !album?.albums?.id) {
+      console.log('❌ Validación falló:', { userId: user?.id, albumAlbumsId: album?.albums?.id });
+      return;
+    }
+    
+    try {
+      // Usar el ID del álbum para verificar si es gem
+      const isCurrentlyGem = isGem(album.albums.id);
+      console.log('💎 Estado actual del gem:', isCurrentlyGem);
+      
+      if (isCurrentlyGem) {
+        console.log('🗑️ Removiendo gem para album.albums.id:', album.albums.id);
+        // Usar el servicio de base de datos para toggle
+        await UserCollectionService.toggleGemStatus(user.id, album.albums.id);
+        // Actualizar el contexto local
+        updateGemStatus(album.albums.id, false);
+        Alert.alert('Gem Removido', 'El álbum se ha removido de tus Gems');
+      } else {
+        console.log('➕ Añadiendo gem para album.albums.id:', album.albums.id);
+        // Usar el servicio de base de datos para toggle
+        await UserCollectionService.toggleGemStatus(user.id, album.albums.id);
+        // Actualizar el contexto local
+        updateGemStatus(album.albums.id, true);
+        Alert.alert('Gem Añadido', 'El álbum se ha añadido a tus Gems');
+      }
+      
+      // Recargar el álbum para actualizar el estado
+      console.log('🔄 Recargando álbum...');
+      loadAlbumDetail();
+      
+      // Refrescar el contexto de gems para sincronizar
+      console.log('🔄 Refrescando contexto de gems...');
+      refreshGems();
+    } catch (error) {
+      console.error('❌ Error al gestionar gem:', error);
+      Alert.alert('Error', 'No se pudo gestionar el Gem');
+    }
+  };
+
+  // Función para añadir álbum a una lista
+  const handleAddToList = async (listId: string) => {
+    if (!user?.id || !album?.albums.id) return;
+    
+    try {
+      // Verificar si el álbum ya está en la lista
+      const { data: existingItem, error: checkError } = await supabase
+        .from('user_list_items')
+        .select('id')
+        .eq('list_id', listId)
+        .eq('album_id', album.albums.id)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        throw checkError;
+      }
+
+      if (existingItem) {
+        Alert.alert('Ya en la lista', 'Este álbum ya está en esta lista');
+        return;
+      }
+
+      // Añadir el álbum a la lista
+      const { error: insertError } = await supabase
+        .from('user_list_items')
+        .insert({
+          list_id: listId,
+          album_id: album.albums.id,
+          user_id: user.id
+        });
+
+      if (insertError) throw insertError;
+
+      Alert.alert('¡Añadido!', 'El álbum se ha añadido a la lista');
+      setShowListsModal(false);
+      setSelectedListId(null);
+      
+      // Recargar el álbum para actualizar la información
+      loadAlbumDetail();
+    } catch (error) {
+      console.error('Error al añadir a lista:', error);
+      Alert.alert('Error', 'No se pudo añadir el álbum a la lista');
+    }
+  };
+
+  // Función para crear nueva lista
+  const handleCreateNewList = () => {
+    navigation.navigate('CreateList' as never);
+  };
+
+  // ========== FIN FUNCIONES GEMS Y LISTAS ==========
+
+  // Cargar listas del usuario cuando se monta el componente
+  useEffect(() => {
+    loadUserLists();
+  }, [loadUserLists]);
+
+  // Refrescar gems cuando se monta el componente
+  useEffect(() => {
+    if (user?.id) {
+      refreshGems();
+    }
+  }, [user?.id, refreshGems]);
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -839,6 +982,52 @@ export default function AlbumDetailScreen() {
             )}
             {/* Sticker QR eliminado */}
           </View>
+
+          {/* Botones de Acción */}
+          <View style={styles.actionButtonsContainer}>
+            {/* Botón Gem */}
+            <TouchableOpacity
+              style={[
+                styles.actionButton,
+                isGem(album.albums.id) && styles.actionButtonActive
+              ]}
+              onPress={handleToggleGem}
+            >
+              <Ionicons 
+                name={isGem(album.albums.id) ? "diamond" : "diamond-outline"} 
+                size={20} 
+                color={isGem(album.albums.id) ? "#d97706" : "#666"} 
+              />
+              <Text style={[
+                styles.actionButtonText,
+                isGem(album.albums.id) && styles.actionButtonTextActive
+              ]}>
+                {isGem(album.albums.id) ? 'Quitar Gem' : 'Añadir Gem'}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Botón Lista */}
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => setShowListsModal(true)}
+            >
+              <Ionicons name="list-outline" size={20} color="#666" />
+              <Text style={styles.actionButtonText}>Añadir a Lista</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Información de Listas */}
+          {album.user_list_items && album.user_list_items.length > 0 && (
+            <View style={styles.listsInfoContainer}>
+              <Text style={styles.listsInfoTitle}>En estas listas:</Text>
+              {album.user_list_items.map((listItem, index) => (
+                <View key={index} style={styles.listItemTag}>
+                  <Ionicons name="list" size={14} color="#007AFF" />
+                  <Text style={styles.listItemText}>{listItem.title}</Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Sección de Tracks */}
@@ -1197,6 +1386,60 @@ export default function AlbumDetailScreen() {
         onSave={handleSaveAudioNote}
         albumTitle={album?.albums.title || 'Álbum'}
       />
+
+      {/* Modal de Listas */}
+      <Modal
+        visible={showListsModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowListsModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Selecciona una Lista</Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={() => setShowListsModal(false)}
+              >
+                <Ionicons name="close" size={24} color="#6c757d" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalBody}>
+              {userLists.length > 0 ? (
+                userLists.map((list) => (
+                  <TouchableOpacity
+                    key={list.id}
+                    style={styles.listOption}
+                    onPress={() => handleAddToList(list.id)}
+                  >
+                    <View style={styles.listOptionInfo}>
+                      <Text style={styles.listOptionTitle}>{list.title}</Text>
+                      {list.description && (
+                        <Text style={styles.listOptionDescription}>{list.description}</Text>
+                      )}
+                    </View>
+                    <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyListsContainer}>
+                  <Text style={styles.emptyListsText}>No tienes listas creadas</Text>
+                </View>
+              )}
+              
+              <TouchableOpacity
+                style={styles.createListButton}
+                onPress={handleCreateNewList}
+              >
+                <Ionicons name="add-circle" size={20} color="#fff" />
+                <Text style={styles.createListButtonText}>Crear Nueva Lista</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Ratio Modal */}
       <Modal
@@ -3050,5 +3293,128 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#fff',
     fontWeight: '500',
+  },
+
+  // Estilos para botones de acción
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginTop: 16,
+    marginBottom: 16,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#f8f9fa',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  actionButtonActive: {
+    backgroundColor: '#fff3cd',
+    borderColor: '#d97706',
+  },
+  actionButtonText: {
+    marginLeft: 8,
+    fontSize: 14,
+    color: '#666',
+    fontWeight: '500',
+  },
+  actionButtonTextActive: {
+    color: '#d97706',
+    fontWeight: '600',
+  },
+
+  // Estilos para información de listas
+  listsInfoContainer: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  listsInfoTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#495057',
+    marginBottom: 8,
+  },
+  listItemTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#e3f2fd',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    marginBottom: 6,
+    alignSelf: 'flex-start',
+  },
+  listItemText: {
+    marginLeft: 6,
+    fontSize: 12,
+    color: '#1976d2',
+    fontWeight: '500',
+  },
+
+  // Estilos para el modal de listas
+  listOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  listOptionInfo: {
+    flex: 1,
+  },
+  listOptionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 4,
+  },
+  listOptionDescription: {
+    fontSize: 14,
+    color: '#6c757d',
+  },
+  emptyListsContainer: {
+    alignItems: 'center',
+    paddingVertical: 40,
+  },
+  emptyListsText: {
+    fontSize: 16,
+    color: '#6c757d',
+    textAlign: 'center',
+  },
+  createListButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF',
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginTop: 20,
+    marginHorizontal: 20,
+    marginBottom: 20,
+  },
+  createListButtonText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '600',
   },
 }); 

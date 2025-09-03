@@ -454,16 +454,19 @@ export const UserCollectionService = {
     console.log('📋 UserCollectionService: Records with is_gem = false:', nonGemsCount);
     console.log('❓ UserCollectionService: Records with is_gem = null:', nullGemsCount);
     
-    // Ahora obtener solo los gems con información del álbum
+    // Ahora obtener solo los gems con información básica del álbum
     const { data, error } = await supabase
       .from('user_collection')
       .select(`
         id,
         album_id,
         is_gem,
+        added_at,
         albums (
           id,
-          title
+          title,
+          artist,
+          cover_url
         )
       `)
       .eq('user_id', userId)
@@ -481,6 +484,8 @@ export const UserCollectionService = {
         id: data[0].id,
         albumId: data[0].album_id,
         albumTitle: (data[0].albums as any)?.title || '',
+        albumArtist: (data[0].albums as any)?.artist || '',
+        albumCover: (data[0].albums as any)?.cover_url || 'No cover',
         isGem: data[0].is_gem
       });
     }

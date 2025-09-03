@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,19 @@ export default function GemsScreen() {
   const { user } = useAuth();
   const { gems, loading, refreshGems, removeGem, updateGemStatus } = useGems();
   const { colors } = useTheme();
+
+  // Debug: Log cuando cambian los gems
+  useEffect(() => {
+    console.log('🔍 GemsScreen: Gems state changed:', {
+      gemsCount: gems?.length || 0,
+      gems: gems?.map(g => ({
+        id: g.id,
+        albumId: g.album_id,
+        albumTitle: g.albums?.title,
+        albumArtist: g.albums?.artist
+      }))
+    });
+  }, [gems]);
 
   const handleRemoveGem = async (item: any) => {
     if (!user) return;
@@ -138,6 +151,15 @@ export default function GemsScreen() {
         <Text style={[styles.subtitle, { color: colors.text }]}>
           {gems.length} {gems.length === 1 ? 'álbum favorito' : 'álbumes favoritos'}
         </Text>
+        <TouchableOpacity 
+          style={styles.debugButton} 
+          onPress={() => {
+            console.log('🔍 GemsScreen: Manual refresh triggered');
+            refreshGems();
+          }}
+        >
+          <Text style={styles.debugButtonText}>🔄</Text>
+        </TouchableOpacity>
       </View>
 
       {gems.length === 0 ? (
@@ -291,5 +313,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginTop: 2,
     textAlign: 'center',
+  },
+  debugButton: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    padding: 8,
+    backgroundColor: '#007AFF',
+    borderRadius: 20,
+  },
+  debugButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 }); 
