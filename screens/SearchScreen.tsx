@@ -1771,7 +1771,7 @@ const styles = StyleSheet.create({
   toolbarButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 0,
   },
   toolbarButton: {
     padding: 8,
@@ -1790,7 +1790,7 @@ const styles = StyleSheet.create({
   locatedPercentage: {
     fontSize: 16,
     color: '#999',
-    fontWeight: '500',
+    fontWeight: '400',
   },
   searchContainer: {
     padding: 15,
@@ -1854,7 +1854,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   collectionItemContainer: {
-    marginBottom: 8,
+    marginBottom: 0,
     backgroundColor: 'white',
   },
   collectionItem: {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, FlatList, Image, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useNavigation } from '@react-navigation/native';
 import { GeminiService } from '../services/gemini';
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
@@ -24,6 +25,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   const [isSaving, setIsSaving] = useState(false);
   const cameraRef = useRef<any>(null);
   const { user } = useAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     if (!permission?.granted) {
@@ -205,9 +207,11 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
               text: 'Ir a Colección',
               style: 'default',
               onPress: () => {
-                // Aquí podrías navegar a la colección si tienes acceso a navigation
                 console.log('🚀 Navegando a la colección...');
-                // TODO: Implementar navegación a la colección
+                // Navegar a la pestaña Search (que contiene la colección real)
+                (navigation as any).navigate('Main', { screen: 'SearchTab' });
+                // Cerrar la cámara después de navegar
+                onClose();
               }
             },
             {
@@ -231,38 +235,82 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   };
 
   // Función para renderizar cada release de Discogs en el modal
-  const renderDiscogsRelease = ({ item }: { item: any }) => (
-    <View style={styles.albumItem}>
-      <Image
-        source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/80' }}
-        style={styles.albumThumbnail}
-      />
-      <View style={styles.albumInfo}>
-        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
-          {item.title}
-        </Text>
-        <Text style={styles.albumArtist}>
-          {item.artists?.[0]?.name || item.artist || 'Unknown Artist'}
-        </Text>
-        <Text style={styles.albumDetails}>
-          {item.year && `${item.year} • `}
-          {item.label && `${Array.isArray(item.label) ? item.label[0] : item.label} • `}
-          {item.catno && `${item.catno}`}
-        </Text>
+  const renderDiscogsRelease = ({ item }: { item: any }) => {
+    // Extraer artista y título del álbum de manera más robusta
+    let artistName = '';
+    let albumTitle = item.title || '';
+    
+    // Intentar diferentes formas de obtener el artista
+    if (item.artists && Array.isArray(item.artists) && item.artists.length > 0) {
+      artistName = item.artists[0].name;
+    } else if (item.artist) {
+      artistName = item.artist;
+    } else if (item.title && item.title.includes(' - ')) {
+      // Si el título tiene formato "Artista - Álbum", separarlo
+      const parts = item.title.split(' - ');
+      if (parts.length >= 2) {
+        artistName = parts[0].trim();
+        albumTitle = parts.slice(1).join(' - ').trim();
+      }
+    }
+    
+    // Si aún no tenemos artista, intentar extraer del título
+    if (!artistName && item.title) {
+      // Buscar patrones comunes como "Artista - Álbum" o "Artista: Álbum"
+      const patterns = [
+        /^(.+?)\s*[-–—]\s*(.+)$/,  // Artista - Álbum
+        /^(.+?)\s*:\s*(.+)$/,      // Artista: Álbum
+        /^(.+?)\s*by\s*(.+)$/i,    // Artista by Álbum
+      ];
+      
+      for (const pattern of patterns) {
+        const match = item.title.match(pattern);
+        if (match) {
+          artistName = match[1].trim();
+          albumTitle = match[2].trim();
+          break;
+        }
+      }
+    }
+    
+    // Fallback: si no se pudo extraer, usar el título completo
+    if (!artistName) {
+      artistName = 'Artista Desconocido';
+    }
+    
+    return (
+      <View style={styles.albumItem}>
+        <Image
+          source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/80' }}
+          style={styles.albumThumbnail}
+        />
+        <View style={styles.albumInfo}>
+          <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
+            {albumTitle}
+          </Text>
+          <Text style={styles.albumArtist}>
+            {artistName}
+          </Text>
+          <Text style={styles.albumDetails}>
+            {item.year && `${item.year} • `}
+            {item.label && `${Array.isArray(item.label) ? item.label[0] : item.label} • `}
+            {item.catno && `${item.catno}`}
+          </Text>
+        </View>
+        <TouchableOpacity
+          style={[styles.addButton, isSaving && styles.addButtonDisabled]}
+          onPress={() => saveDiscogsRelease(item)}
+          disabled={isSaving}
+        >
+          {isSaving ? (
+            <ActivityIndicator size="small" color="white" />
+          ) : (
+            <Ionicons name="add" size={24} color="white" />
+          )}
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity
-        style={[styles.addButton, isSaving && styles.addButtonDisabled]}
-        onPress={() => saveDiscogsRelease(item)}
-        disabled={isSaving}
-      >
-        {isSaving ? (
-          <ActivityIndicator size="small" color="white" />
-        ) : (
-          <Ionicons name="add" size={24} color="white" />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   const handleCapture = async () => {
     if (!cameraRef.current) {
@@ -327,23 +375,38 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         ref={cameraRef}
       >
         <View style={styles.overlay}>
+          {/* Botón de cerrar */}
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Ionicons name="close" size={24} color="white" />
           </TouchableOpacity>
           
-          <View style={styles.buttonContainer}>
+          {/* Barra inferior con botón de captura */}
+          <View style={styles.bottomControls}>
+            {/* Botón de captura principal */}
             <TouchableOpacity 
               style={[styles.captureButton, (isLoading || isAIProcessing) && styles.captureButtonDisabled]} 
               onPress={handleCapture}
               disabled={isLoading || isAIProcessing}
             >
-              <Ionicons 
-                name={isAIProcessing ? "hourglass" : "camera"} 
-                size={32} 
-                color={(isLoading || isAIProcessing) ? "#ccc" : "white"} 
-              />
+              <View style={styles.captureButtonInner}>
+                {isAIProcessing ? (
+                  <ActivityIndicator size="small" color="white" />
+                ) : (
+                  <View style={styles.captureButtonIcon} />
+                )}
+              </View>
             </TouchableOpacity>
           </View>
+          
+          {/* Indicador de estado de la cámara */}
+          {(isLoading || isAIProcessing) && (
+            <View style={styles.cameraStatusIndicator}>
+              <ActivityIndicator size="small" color="white" />
+              <Text style={styles.cameraStatusText}>
+                {isLoading ? 'Preparando cámara...' : 'Analizando...'}
+              </Text>
+            </View>
+          )}
         </View>
       </CameraView>
       
@@ -444,12 +507,66 @@ const styles = StyleSheet.create({
     paddingBottom: 50,
   },
   captureButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#007AFF',
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'white',
     justifyContent: 'center',
     alignItems: 'center',
+    borderWidth: 4,
+    borderColor: 'rgba(255,255,255,0.8)',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
+  captureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'transparent',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(0,0,0,0.1)',
+  },
+  captureButtonIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#007AFF',
+  },
+  bottomControls: {
+    position: 'absolute',
+    bottom: 50,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cameraStatusIndicator: {
+    position: 'absolute',
+    bottom: 150,
+    left: '50%',
+    transform: [{ translateX: -50 }],
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    minWidth: 200,
+  },
+  cameraStatusText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 12,
   },
   captureButtonDisabled: {
     backgroundColor: '#666',
