@@ -72,21 +72,17 @@ export class YouTubeAudioService {
             videoInfo
           };
         } else {
-          console.warn('🎵 ⚠️ URL extraída no es válida, usando fallback');
-          const fallbackUrl = this.getFallbackAudio(videoId);
+          console.warn('🎵 ⚠️ URL extraída no es válida');
           return {
-            success: true,
-            audioUrl: fallbackUrl,
-            videoInfo
+            success: false,
+            error: 'No se pudo obtener una URL de audio válida'
           };
         }
       } else {
-        console.log('🎵 ⚠️ Extracción falló, usando audio de fallback');
-        const fallbackUrl = this.getFallbackAudio(videoId);
+        console.log('🎵 ❌ Extracción falló completamente');
         return {
-          success: true,
-          audioUrl: fallbackUrl,
-          videoInfo
+          success: false,
+          error: 'No se pudo extraer audio del video de YouTube'
         };
       }
 
@@ -105,21 +101,25 @@ export class YouTubeAudioService {
       () => this.extractWithCobalt(videoId),
       () => this.extractWithY2mate(videoId),
       () => this.extractWithSaveTube(videoId),
-      () => this.getFallbackAudio(videoId)
     ];
 
-    for (const method of methods) {
+    console.log('🎵 Probando', methods.length, 'métodos de extracción...');
+
+    for (let i = 0; i < methods.length; i++) {
       try {
-        const result = await method();
+        console.log(`🎵 Probando método ${i + 1}/${methods.length}...`);
+        const result = await methods[i]();
         if (result) {
+          console.log(`🎵 ✅ Método ${i + 1} exitoso`);
           return result;
         }
       } catch (error) {
-        console.warn('🎵 Método falló, probando siguiente:', error);
+        console.warn(`🎵 ❌ Método ${i + 1} falló:`, error);
         continue;
       }
     }
 
+    console.log('🎵 ❌ Todos los métodos de extracción fallaron');
     return null;
   }
 
@@ -148,7 +148,7 @@ export class YouTubeAudioService {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('🎵 Respuesta de Cobalt:', data.status);
+        console.log('🎵 Respuesta de Cobalt:', data);
         
         if (data.status === 'success' && data.url) {
           console.log('🎵 ✅ Cobalt exitoso - URL obtenida');
@@ -157,7 +157,7 @@ export class YouTubeAudioService {
           console.warn('🎵 Error de Cobalt:', data.text);
         }
       } else {
-        console.warn('🎵 Cobalt HTTP error:', response.status);
+        console.warn('🎵 Cobalt HTTP error:', response.status, response.statusText);
       }
 
       throw new Error('Cobalt API failed');
@@ -183,7 +183,7 @@ export class YouTubeAudioService {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('🎵 Respuesta de Loader.to:', data.status);
+        console.log('🎵 Respuesta de Loader.to:', data);
         
         if (data.status === 'success' && data.links && data.links.mp3) {
           const mp3Links = Object.values(data.links.mp3);
@@ -218,7 +218,7 @@ export class YouTubeAudioService {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('🎵 Respuesta de SaveTube:', data.status);
+        console.log('🎵 Respuesta de SaveTube:', data);
         
         if (data.status === 'success' && data.data && data.data.audio) {
           const audioUrl = data.data.audio[0]?.url;
@@ -236,25 +236,7 @@ export class YouTubeAudioService {
     }
   }
 
-  // Método 4: Audio de fallback para testing (URLs más simples)
-  private static getFallbackAudio(videoId: string): string {
-    console.log('🎵 Usando audio de fallback para:', videoId);
-    
-    // URLs de audio de prueba más simples y confiables
-    const fallbackAudios = [
-      // Archivo WAV simple y confiable
-      'https://www2.cs.uic.edu/~i101/SoundFiles/BabyElephantWalk60.wav',
-      // Otro archivo WAV simple
-      'https://www2.cs.uic.edu/~i101/SoundFiles/PinkPanther30.wav',
-    ];
-    
-    // Seleccionar uno basado en el videoId para consistencia
-    const index = videoId.charCodeAt(0) % fallbackAudios.length;
-    const selectedAudio = fallbackAudios[index];
-    
-    console.log('🎵 Audio de fallback seleccionado:', selectedAudio);
-    return selectedAudio;
-  }
+
 
   // Método para validar URLs de audio
   private static async validateAudioUrl(url: string): Promise<boolean> {
@@ -264,25 +246,20 @@ export class YouTubeAudioService {
       // Verificar formato de URL
       new URL(url);
       
-      // Para URLs de fallback conocidas, asumir que son válidas
-      const knownGoodUrls = [
-        'cs.uic.edu',
-        'sample-videos.com'
-      ];
-      
-      if (knownGoodUrls.some(domain => url.includes(domain))) {
-        console.log('🎵 URL de fallback conocida, asumiendo válida');
-        return true;
-      }
-      
-      // Para otras URLs, hacer validación HTTP
+      // Para URLs de YouTube o servicios de extracción, hacer validación HTTP
       const response = await fetch(url, { 
         method: 'HEAD'
       });
       
       const contentType = response.headers.get('content-type');
-      const isValid = response.ok && !!(contentType?.includes('audio') || contentType?.includes('video'));
-      console.log('🎵 URL válida:', isValid);
+      const contentLength = response.headers.get('content-length');
+      
+      // Verificar que sea un archivo de audio válido
+      const hasValidContentType = contentType ? (contentType.includes('audio') || contentType.includes('video')) : false;
+      const hasValidSize = contentLength ? parseInt(contentLength) > 1000 : false;
+      const isValid = response.ok && hasValidContentType && hasValidSize; // Al menos 1KB
+      
+      console.log('🎵 URL válida:', isValid, 'Content-Type:', contentType, 'Size:', contentLength);
       
       return isValid;
     } catch (error) {
@@ -291,24 +268,5 @@ export class YouTubeAudioService {
     }
   }
 
-  // Método auxiliar para mostrar alertas informativas (mejorado)
-  static showExtractionStatus(result: YouTubeAudioResult) {
-    if (result.success && result.audioUrl) {
-      const isRealAudio = !result.audioUrl.includes('cs.uic.edu') && 
-                         !result.audioUrl.includes('sample-videos.com') &&
-                         !result.audioUrl.includes('file-examples.com');
-      
-      if (isRealAudio) {
-        console.log('🎵 ✅ Reproduciendo audio real de YouTube');
-        // No mostrar alerta para audio real, solo log
-      } else {
-        console.log('🎵 ⚠️ Reproduciendo audio de demostración');
-        Alert.alert(
-          'Audio de demostración',
-          'Se está reproduciendo un audio de prueba porque no se pudo extraer el audio real del video de YouTube. Esto puede deberse a restricciones del contenido o problemas de conectividad.',
-          [{ text: 'Entendido', style: 'default' }]
-        );
-      }
-    }
-  }
+
 } 

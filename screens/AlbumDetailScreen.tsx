@@ -647,13 +647,13 @@ export default function AlbumDetailScreen() {
 
       console.log('🎵 Iniciando extracción de audio para:', youtubeUrl);
 
-      // Intentar extraer audio
+      // Usar la función de Supabase Edge Function
       const { data, error } = await supabase.functions.invoke('extract-youtube-audio', {
         body: { url: youtubeUrl },
       });
 
       if (error) {
-        console.error('❌ Error en función:', error);
+        console.error('❌ Error en función de Supabase:', error);
         setAudioError('Error al conectar con el servidor');
         setIsLoadingAudio(false);
         return;
@@ -1243,9 +1243,9 @@ export default function AlbumDetailScreen() {
           {/* Sección de Reproductor de Audio */}
           {youtubeUrls.length > 0 && (
             <View style={styles.audioSection}>
-              <Text style={styles.audioSectionTitle}>Audio de YouTube</Text>
+              <Text style={styles.audioSectionTitle}>🎵 Reproducir Música</Text>
               <Text style={styles.audioSectionSubtitle}>
-                Escucha el audio de este álbum desde YouTube
+                Escucha las canciones de este álbum directamente en la app
               </Text>
               
               {!audioUrl && !isLoadingAudio && !audioError && (
@@ -1255,7 +1255,7 @@ export default function AlbumDetailScreen() {
                     onPress={handleExtractYouTubeAudio}
                   >
                     <Ionicons name="headset" size={20} color="#fff" />
-                    <Text style={styles.audioOptionButtonText}>Reproducir en App</Text>
+                    <Text style={styles.audioOptionButtonText}>🎵 Reproducir Audio del Disco</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
@@ -1276,7 +1276,7 @@ export default function AlbumDetailScreen() {
               {isLoadingAudio && (
                 <View style={styles.loadingAudioContainer}>
                   <ActivityIndicator size="small" color="#007AFF" />
-                  <Text style={styles.loadingAudioText}>Procesando...</Text>
+                  <Text style={styles.loadingAudioText}>🎵 Extrayendo audio del video...</Text>
                 </View>
               )}
               
@@ -1291,7 +1291,7 @@ export default function AlbumDetailScreen() {
                       setAudioUrl('');
                     }}
                   >
-                    <Text style={styles.retryAudioButtonText}>Intentar de nuevo</Text>
+                    <Text style={styles.retryAudioButtonText}>🔄 Intentar de nuevo</Text>
                   </TouchableOpacity>
                 </View>
               )}

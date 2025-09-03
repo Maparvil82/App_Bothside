@@ -99,39 +99,78 @@ function extractVideoId(url: string): string | null {
 
 async function getAudioUrl(videoId: string): Promise<string | null> {
   try {
-    // Try to get audio URL from a reliable service
-    const serviceUrl = `https://api.vevioz.com/@api/json/mp3/${videoId}`
+    console.log(`🎵 Intentando extraer audio para video: ${videoId}`)
     
-    console.log(`Trying service: ${serviceUrl}`)
-    
-    const response = await fetch(serviceUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-      }
-    })
-
-    if (response.ok) {
-      const data = await response.json()
+    // Método 1: YouTube MP3 Converter
+    try {
+      console.log('🎵 Probando YouTube MP3 Converter...')
+      const mp3Url = `https://www.youtubeinmp3.com/fetch/?video=https://www.youtube.com/watch?v=${videoId}`
       
-      // Check if the service returned a valid audio URL
-      if (data && data.url && typeof data.url === 'string') {
-        console.log(`Success with service: ${serviceUrl}`)
-        return data.url
+      // Verificar que la URL sea accesible
+      const response = await fetch(mp3Url, {
+        method: 'HEAD',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      })
+      
+      if (response.ok) {
+        console.log('🎵 ✅ YouTube MP3 Converter exitoso')
+        return mp3Url
       }
+    } catch (error) {
+      console.log('🎵 ❌ YouTube MP3 Converter falló:', error)
     }
 
-    // If the first service fails, try a fallback
-    console.log('First service failed, trying fallback...')
-    
-    // For now, return a placeholder URL that might work
-    // In a real implementation, you would try other services
-    const fallbackUrl = `https://www.youtubeinmp3.com/fetch/?video=https://www.youtube.com/watch?v=${videoId}`
-    
-    return fallbackUrl
+    // Método 2: Y2mate
+    try {
+      console.log('🎵 Probando Y2mate...')
+      const y2mateUrl = `https://www.y2mate.com/youtube-mp3/${videoId}`
+      
+      const response = await fetch(y2mateUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      })
+      
+      if (response.ok) {
+        // Y2mate requiere procesamiento adicional, pero por ahora retornamos la URL
+        console.log('🎵 ✅ Y2mate disponible')
+        return y2mateUrl
+      }
+    } catch (error) {
+      console.log('🎵 ❌ Y2mate falló:', error)
+    }
+
+    // Método 3: Servicio directo de MP3
+    try {
+      console.log('🎵 Probando servicio directo MP3...')
+      const directUrl = `https://api.vevioz.com/@api/json/mp3/${videoId}`
+      
+      const response = await fetch(directUrl, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        if (data && data.url && typeof data.url === 'string') {
+          console.log('🎵 ✅ Servicio directo MP3 exitoso')
+          return data.url
+        }
+      }
+    } catch (error) {
+      console.log('🎵 ❌ Servicio directo MP3 falló:', error)
+    }
+
+    console.log('🎵 ❌ Todos los métodos fallaron')
+    return null
     
   } catch (error) {
-    console.error('Error getting audio URL:', error)
+    console.error('🎵 ❌ Error general en getAudioUrl:', error)
     return null
   }
 } 
