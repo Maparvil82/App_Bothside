@@ -970,9 +970,9 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderCollectionItem = ({ item }: { item: any }) => (
-    <View style={styles.collectionItemContainer}>
+    <View style={[styles.collectionItemContainer, { backgroundColor: colors.card }]}>
       <TouchableOpacity
-        style={styles.collectionItem}
+        style={[styles.collectionItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
         onLongPress={() => handleLongPress(item)}
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
         activeOpacity={0.7}
@@ -982,12 +982,12 @@ export const SearchScreen: React.FC = () => {
             style={styles.collectionThumbnail}
           />
           <View style={styles.collectionInfo}>
-            <Text style={styles.collectionTitle} numberOfLines={1} ellipsizeMode="tail">
+            <Text style={[styles.collectionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
               {item.albums?.title}
             </Text>
-            <Text style={styles.collectionArtist}>{item.albums?.artist}</Text>
+            <Text style={[styles.collectionArtist, { color: colors.text }]}>{item.albums?.artist}</Text>
             <View style={styles.collectionDetails}>
-              <Text style={styles.collectionDetail}>
+              <Text style={[styles.collectionDetail, { color: colors.text }]}>
                 {item.albums?.label} • {item.albums?.release_year}
               </Text>
               
@@ -1023,7 +1023,7 @@ export const SearchScreen: React.FC = () => {
 
   const renderGridItem = ({ item }: { item: any }) => (
     <TouchableOpacity 
-      style={styles.collectionItemGrid}
+      style={[styles.collectionItemGrid, { backgroundColor: colors.card }]}
       onLongPress={() => handleLongPress(item)}
       onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
       activeOpacity={0.7}
@@ -1033,12 +1033,12 @@ export const SearchScreen: React.FC = () => {
         style={styles.collectionThumbnailGrid}
       />
       <View style={styles.collectionInfoGrid}>
-        <Text style={styles.collectionTitleGrid} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={[styles.collectionTitleGrid, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
           {item.albums?.title}
         </Text>
-        <Text style={styles.collectionArtistGrid}>{item.albums?.artist}</Text>
+        <Text style={[styles.collectionArtistGrid, { color: colors.text }]}>{item.albums?.artist}</Text>
         <View style={styles.collectionDetailsGrid}>
-          <Text style={styles.collectionDetailGrid}>
+          <Text style={[styles.collectionDetailGrid, { color: colors.text }]}>
             {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
               ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
               : item.albums?.label && item.albums.label !== ''
@@ -1079,17 +1079,17 @@ export const SearchScreen: React.FC = () => {
   );
 
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
-    <View style={styles.releaseItem}>
+    <View style={[styles.releaseItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <Image
         source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/60' }}
         style={styles.releaseThumbnail}
       />
       <View style={styles.releaseInfo}>
-        <Text style={styles.releaseTitle} numberOfLines={1} ellipsizeMode="tail">
+        <Text style={[styles.releaseTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
           {item.title}
         </Text>
-        <Text style={styles.releaseArtist}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
-        <Text style={styles.releaseDetail}>
+        <Text style={[styles.releaseArtist, { color: colors.text }]}>{item.artists?.[0]?.name || 'Unknown Artist'}</Text>
+        <Text style={[styles.releaseDetail, { color: colors.text }]}>
           {item.year && `${item.year} • `}
           {item.labels && item.labels.length > 0 && `${item.labels[0].name} • `}
           {(item as any).catno && `${(item as any).catno}`}
@@ -1438,9 +1438,9 @@ export const SearchScreen: React.FC = () => {
         onRequestClose={() => setShowAddToShelfModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Añadir "{selectedAlbum?.albums?.title}" a una estantería
               </Text>
               <TouchableOpacity
@@ -1585,9 +1585,9 @@ export const SearchScreen: React.FC = () => {
         onRequestClose={() => setShowLocationModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Asignar Ubicación para "{selectedAlbumForLocation?.albums?.title}"
               </Text>
               <TouchableOpacity
@@ -1658,9 +1658,9 @@ export const SearchScreen: React.FC = () => {
         onRequestClose={() => setShowEditionsModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
                 Cambiar versión de "{selectedAlbumForEdit?.albums?.title}"
               </Text>
               <TouchableOpacity
@@ -1762,7 +1762,6 @@ export const SearchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   toolbarContainer: {
     flexDirection: 'row',
@@ -1770,9 +1769,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 15,
     paddingVertical: 10,
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   toolbarButtons: {
     flexDirection: 'row',
@@ -1786,7 +1783,6 @@ const styles = StyleSheet.create({
   },
   collectionCount: {
     fontSize: 18,
-    color: '#666',
     fontWeight: '700',
   },
   collectionStats: {
@@ -1795,7 +1791,6 @@ const styles = StyleSheet.create({
   },
   locatedPercentage: {
     fontSize: 16,
-    color: '#999',
     fontWeight: '400',
   },
   searchContainer: {
@@ -1807,10 +1802,8 @@ const styles = StyleSheet.create({
   searchInputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'white',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#ddd',
   },
   searchInput: {
     flex: 1,
@@ -1823,9 +1816,7 @@ const styles = StyleSheet.create({
     marginRight: 5,
   },
   filterDropdownContent: {
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
   },
   filterSection: {
     paddingVertical: 10,
@@ -1837,7 +1828,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 10,
-    color: '#333',
   },
   filterChips: {
     flexDirection: 'row',
@@ -1861,11 +1851,9 @@ const styles = StyleSheet.create({
   },
   collectionItemContainer: {
     marginBottom: 0,
-    backgroundColor: 'white',
   },
   collectionItem: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     marginHorizontal: 0,
     marginVertical: 0,
     padding: 15,
@@ -1886,12 +1874,10 @@ const styles = StyleSheet.create({
   collectionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 4,
   },
   collectionArtist: {
     fontSize: 14,
-    color: '#666',
     marginBottom: 4,
   },
   collectionDetails: {
@@ -1899,12 +1885,10 @@ const styles = StyleSheet.create({
   },
   collectionDetail: {
     fontSize: 12,
-    color: '#999',
     marginBottom: 2,
   },
   collectionItemGrid: {
     flex: 1,
-    backgroundColor: 'white',
     margin: 5,
     padding: 10,
     borderRadius: 8,
@@ -1926,13 +1910,11 @@ const styles = StyleSheet.create({
   collectionTitleGrid: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 4,
     textAlign: 'left',
   },
   collectionArtistGrid: {
     fontSize: 12,
-    color: '#666',
     marginBottom: 4,
     textAlign: 'left',
   },
@@ -1941,7 +1923,6 @@ const styles = StyleSheet.create({
   },
   collectionDetailGrid: {
     fontSize: 10,
-    color: '#999',
     marginBottom: 2,
   },
 
@@ -1950,7 +1931,6 @@ const styles = StyleSheet.create({
   },
   releaseItem: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     marginHorizontal: 0,
     marginVertical: 0,
     padding: 15,
@@ -2093,7 +2073,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContent: {
-    backgroundColor: 'white',
     borderRadius: 12,
     width: '90%',
     maxHeight: '80%',
@@ -2201,11 +2180,9 @@ const styles = StyleSheet.create({
   },
   formInput: {
     borderWidth: 1,
-    borderColor: '#ddd',
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    backgroundColor: 'white',
   },
   formTextArea: {
     height: 80,

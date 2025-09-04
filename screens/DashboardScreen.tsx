@@ -569,20 +569,20 @@ export default function DashboardScreen() {
   }
 
   const StatCard = ({ title, value, subtitle }: { title: string; value: string | number; subtitle?: string }) => (
-    <View style={styles.statCard}>
-      <Text style={styles.statValue}>{value}</Text>
-      <Text style={styles.statTitle}>{title}</Text>
-      {subtitle && <Text style={styles.statSubtitle}>{subtitle}</Text>}
+    <View style={[styles.statCard, { backgroundColor: colors.card }]}>
+      <Text style={[styles.statValue, { color: colors.primary }]}>{value}</Text>
+      <Text style={[styles.statTitle, { color: colors.text }]}>{title}</Text>
+      {subtitle && <Text style={[styles.statSubtitle, { color: colors.text }]}>{subtitle}</Text>}
     </View>
   );
 
   const TopList = ({ title, data, keyName }: { title: string; data: any[]; keyName: string }) => (
-    <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+    <View style={[styles.section, { backgroundColor: colors.card }]}>
+      <Text style={[styles.sectionTitle, { color: colors.text }]}>{title}</Text>
       {data.map((item, index) => (
-        <View key={index} style={styles.listItem}>
-          <Text style={styles.listItemText}>{item[keyName]}</Text>
-          <Text style={styles.listItemCount}>{item.count}</Text>
+        <View key={index} style={[styles.listItem, { borderBottomColor: colors.border }]}>
+          <Text style={[styles.listItemText, { color: colors.text }]}>{item[keyName]}</Text>
+          <Text style={[styles.listItemCount, { color: colors.primary }]}>{item.count}</Text>
         </View>
       ))}
     </View>
@@ -627,32 +627,13 @@ export default function DashboardScreen() {
           <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
         </View>
 
-        {/* Sección de IA */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Asistente IA</Text>
-          <TouchableOpacity 
-            style={styles.aiCard}
-            onPress={() => (navigation as any).navigate('AIChat')}
-          >
-            <View style={styles.aiCardContent}>
-              <View style={styles.aiIconContainer}>
-                <Ionicons name="chatbubble-ellipses" size={24} color="#007AFF" />
-              </View>
-              <View style={styles.aiTextContainer}>
-                <Text style={styles.aiTitle}>Analiza tu Colección</Text>
-                <Text style={styles.aiSubtitle}>Haz preguntas sobre tus discos y obtén insights inteligentes</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color="#007AFF" />
-            </View>
-          </TouchableOpacity>
-        </View>
 
         {/* Sección de Ubicaciones */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ubicaciones</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ubicaciones</Text>
           <View style={styles.shelfStatContainer}>
-            <Text style={styles.shelfStatNumber}>{shelves.length}</Text>
-            <Text style={styles.shelfStatText}>Ubicaciones Creadas</Text>
+            <Text style={[styles.shelfStatNumber, { color: colors.primary }]}>{shelves.length}</Text>
+            <Text style={[styles.shelfStatText, { color: colors.text }]}>Ubicaciones Creadas</Text>
           </View>
           <TouchableOpacity 
             style={styles.configButton}
@@ -667,8 +648,8 @@ export default function DashboardScreen() {
 
         {/* Álbumes más caros */}
         {stats.mostExpensiveAlbums.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Álbumes Más Caros</Text>
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Álbumes Más Caros</Text>
             {stats.mostExpensiveAlbums.map((album, index) => (
               <TouchableOpacity 
                 key={index} 
@@ -705,9 +686,9 @@ export default function DashboardScreen() {
 
         {/* Álbumes con mayor ratio de venta */}
         {stats.highestRatioAlbums.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Discos con Mayor Ratio de Venta</Text>
-            <Text style={styles.sectionSubtitle}>
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Discos con Mayor Ratio de Venta</Text>
+            <Text style={[styles.sectionSubtitle, { color: colors.text }]}>
               Discos más cotizados: mayor demanda que disponibilidad en Discogs. Ratio alto = más valioso.
             </Text>
             {stats.highestRatioAlbums.map((album, index) => (
@@ -754,8 +735,8 @@ export default function DashboardScreen() {
 
         {/* Sección de Notas de Audio */}
         {albumsWithAudio.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Notas de Audio ({albumsWithAudio.length})</Text>
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Notas de Audio ({albumsWithAudio.length})</Text>
             {albumsWithAudio.map((album, index) => (
               <TouchableOpacity 
                 key={album.id} 
@@ -832,8 +813,8 @@ export default function DashboardScreen() {
 
         {/* Últimos Álbumes Añadidos */}
         {stats.latestAlbums.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Últimos 5 Álbumes Añadidos</Text>
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Últimos 5 Álbumes Añadidos</Text>
             {stats.latestAlbums.map((album, index) => (
               <TouchableOpacity 
                 key={index} 
@@ -880,6 +861,15 @@ export default function DashboardScreen() {
           onClose={() => setShowFloatingPlayer(false)}
         />
       </ScrollView>
+
+      {/* Botón flotante de IA */}
+      <TouchableOpacity
+        style={styles.floatingAIButton}
+        onPress={() => (navigation as any).navigate('AIChat')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="sparkles" size={24} color="#fff" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 }
@@ -887,40 +877,32 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#212529',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
-    color: '#6c757d',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6c757d',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
   },
   errorText: {
     fontSize: 16,
@@ -935,7 +917,6 @@ const styles = StyleSheet.create({
   statCard: {
     flex: 1,
     minWidth: (width - 40) / 2,
-    backgroundColor: '#fff',
     borderRadius: 4,
     padding: 16,
     alignItems: 'center',
@@ -944,23 +925,19 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
     marginBottom: 4,
   },
   statTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#495057',
     textAlign: 'center',
   },
   statSubtitle: {
     fontSize: 12,
-    color: '#6c757d',
     textAlign: 'center',
     marginTop: 2,
   },
   section: {
-    backgroundColor: '#fff',
     margin: 10,
     borderRadius: 8,
     padding: 16,
@@ -971,12 +948,10 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212529',
     marginBottom: 12,
   },
   sectionSubtitle: {
     fontSize: 14,
-    color: '#6c757d',
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -990,13 +965,11 @@ const styles = StyleSheet.create({
   },
   listItemText: {
     fontSize: 16,
-    color: '#495057',
     flex: 1,
   },
   listItemCount: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
   },
   emptyContainer: {
     flex: 1,
@@ -1007,7 +980,6 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#6c757d',
     textAlign: 'center',
     marginBottom: 8,
   },
@@ -1121,46 +1093,6 @@ const styles = StyleSheet.create({
                 color: 'rgba(255, 255, 255, 0.8)',
                 textAlign: 'center',
               },
-              aiCard: {
-                flexDirection: 'row',
-                alignItems: 'center',
-                backgroundColor: '#f0f7ff',
-                borderRadius: 12,
-                padding: 16,
-                margin: 16,
-                shadowColor: '#000',
-                shadowOffset: {
-                  width: 0,
-                  height: 2,
-                },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              },
-              aiCardContent: {
-                flexDirection: 'row',
-                alignItems: 'center',
-                flex: 1,
-              },
-              aiIconContainer: {
-                marginRight: 12,
-                padding: 8,
-                backgroundColor: '#e0f2fe',
-                borderRadius: 10,
-              },
-              aiTextContainer: {
-                flex: 1,
-              },
-              aiTitle: {
-                fontSize: 16,
-                fontWeight: '600',
-                color: '#212529',
-                marginBottom: 4,
-              },
-              aiSubtitle: {
-                fontSize: 12,
-                color: '#6c757d',
-              },
               emptyShelfText: {
                 fontSize: 14,
                 color: '#6c757d',
@@ -1191,7 +1123,6 @@ const styles = StyleSheet.create({
   shelfStatNumber: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#007AFF',
   },
   shelfStatText: {
     fontSize: 14,
@@ -1223,5 +1154,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6c757d',
     marginTop: 4,
+  },
+  floatingAIButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 50,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
 }); 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,7 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   onBackPress
 }) => {
   const navigation = useNavigation();
+  const { colors } = useTheme();
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,18 +79,18 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <View style={styles.header}>
         {showBackButton && (
           <TouchableOpacity 
             style={styles.backButton}
             onPress={handleBackPress}
           >
-            <Ionicons name="arrow-back" size={24} color="#333" />
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         )}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>{title}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         </View>
         {showAvatar && (
           <TouchableOpacity
@@ -100,11 +101,11 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
             {profile?.avatar_url ? (
               <Image
                 source={{ uri: `${profile.avatar_url}` }}
-                style={styles.avatarImage}
+                style={[styles.avatarImage, { borderColor: colors.border }]}
                 resizeMode="cover"
               />
             ) : (
-              <View style={styles.avatarPlaceholder}>
+              <View style={[styles.avatarPlaceholder, { borderColor: colors.border }]}>
                 <Text style={styles.avatarText}>{getInitials()}</Text>
               </View>
             )}
@@ -117,9 +118,7 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
 
 const styles = StyleSheet.create({
   safeArea: {
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
     height: 100,
   },
   header: {
@@ -149,7 +148,6 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
     textAlign: 'center',
   },
   avatarContainer: {
@@ -163,7 +161,6 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   avatarPlaceholder: {
     width: 32,
@@ -173,7 +170,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#e0e0e0',
   },
   avatarText: {
     color: 'white',

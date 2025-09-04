@@ -62,6 +62,12 @@ interface AlbumDetail {
     id: string;
     title: string;
     description?: string;
+    albums?: Array<{
+      id: string;
+      title: string;
+      artist: string;
+      cover_url?: string;
+    }>;
     list_items: Array<{ album_id: string }>;
   }>;
   shelf_id?: string;
@@ -248,7 +254,70 @@ export default function AlbumDetailScreen() {
         
         if (shelvesError) throw new Error(`Error al cargar las estanterías: ${shelvesError.message}`);
 
-        setAlbum(fullAlbumData);
+        // Obtener las listas donde está guardado este álbum con sus álbumes para portadas
+        const { data: listItems, error: listItemsError } = await supabase
+          .from('list_albums')
+          .select(`
+            *,
+            user_lists (
+              id,
+              title,
+              description
+            )
+          `)
+          .eq('album_id', fullAlbumData.albums.id);
+
+        // Para cada lista, obtener sus álbumes para las portadas
+        const listsWithAlbums = await Promise.all(
+          (listItems || []).map(async (item) => {
+            try {
+              const { data: albums, error: albumsError } = await supabase
+                .from('list_albums')
+                .select(`
+                  *,
+                  albums (
+                    id,
+                    title,
+                    artist,
+                    cover_url
+                  )
+                `)
+                .eq('list_id', item.user_lists.id)
+                .limit(4); // Solo los primeros 4 para el collage
+              
+              if (albumsError) {
+                console.error('Error getting albums for list:', item.user_lists.id, albumsError);
+                return { ...item.user_lists, albums: [] };
+              }
+              
+              return { 
+                ...item.user_lists, 
+                albums: albums?.map(la => la.albums).filter(Boolean) || [] 
+              };
+            } catch (error) {
+              console.error('Error processing list:', item.user_lists.id, error);
+              return { ...item.user_lists, albums: [] };
+            }
+          })
+        );
+
+        if (listItemsError) {
+          console.error('Error al cargar listas del álbum:', listItemsError);
+        }
+
+        // Agregar la información de listas al álbum
+        const albumWithLists = {
+          ...fullAlbumData,
+          user_list_items: listsWithAlbums.map(list => ({
+            id: list.id,
+            title: list.title,
+            description: list.description,
+            albums: list.albums,
+            list_items: [{ album_id: fullAlbumData.albums.id }]
+          }))
+        };
+
+        setAlbum(albumWithLists);
         setShelves(shelvesData || []);
         
         if (fullAlbumData.albums) {
@@ -793,7 +862,19 @@ export default function AlbumDetailScreen() {
 
   // Función para crear nueva lista
   const handleCreateNewList = () => {
-    navigation.navigate('CreateList' as never);
+    console.log('🔍 AlbumDetailScreen: Navigating to CreateList');
+    // Cerrar el modal primero
+    setShowListsModal(false);
+    // Pequeño delay para asegurar que el modal se cierre
+    setTimeout(() => {
+      // Navegar al tab de Lists y luego a CreateList
+      (navigation as any).navigate('Main', {
+        screen: 'ListsTab',
+        params: {
+          screen: 'CreateList'
+        }
+      });
+    }, 100);
   };
 
   // ========== FIN FUNCIONES GEMS Y LISTAS ==========
@@ -1005,19 +1086,54 @@ export default function AlbumDetailScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Información de Listas */}
-          {album.user_list_items && album.user_list_items.length > 0 && (
-            <View style={styles.listsInfoContainer}>
-              <Text style={styles.listsInfoTitle}>En estas listas:</Text>
-              {album.user_list_items.map((listItem, index) => (
-                <View key={index} style={styles.listItemTag}>
-                  <Ionicons name="list" size={14} color="#007AFF" />
-                  <Text style={styles.listItemText}>{listItem.title}</Text>
-                </View>
-              ))}
-            </View>
-          )}
         </View>
+
+        {/* Listas donde está guardado */}
+        {album.user_list_items && album.user_list_items.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Guardado en estas listas</Text>
+            {album.user_list_items.map((item, index) => (
+              <TouchableOpacity 
+                key={index} 
+                style={styles.listItemContainer}
+                onPress={() => {
+                  console.log('🔍 AlbumDetailScreen: Navigating to ViewList with:', { 
+                    listId: item.id, 
+                    listTitle: item.title 
+                  });
+                  // Navegar al tab de Lists y luego a ViewList
+                  (navigation as any).navigate('Main', {
+                    screen: 'ListsTab',
+                    params: {
+                      screen: 'ViewList',
+                      params: {
+                        listId: item.id,
+                        listTitle: item.title
+                      }
+                    }
+                  });
+                }}
+                activeOpacity={0.7}
+              >
+                <ListCoverCollage 
+                  albums={(item.albums || []).map(album => ({ albums: album }))} 
+                  size={60} 
+                />
+                <View style={styles.listInfo}>
+                  <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
+                    {item.title}
+                  </Text>
+                  {item.description && (
+                    <Text style={styles.listDescription} numberOfLines={2}>
+                      {item.description}
+                    </Text>
+                  )}
+                </View>
+                <Ionicons name="chevron-forward" size={16} color="#6c757d" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Sección de Tracks */}
         {album.albums.tracks && album.albums.tracks.length > 0 && (
@@ -1045,7 +1161,6 @@ export default function AlbumDetailScreen() {
             })()}
           </View>
         )}
-
 
 
         {/* Nota de Audio */}
@@ -1088,24 +1203,6 @@ export default function AlbumDetailScreen() {
           )}
         </View>
 
-        {/* Estanterías */}
-        {album.user_list_items && album.user_list_items.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>📚 En mis listas</Text>
-            {album.user_list_items.map((item, index) => (
-              <View key={index} style={styles.shelfItem}>
-                <Ionicons name="library" size={20} color="#007AFF" />
-                <View style={styles.shelfInfo}>
-                  <Text style={styles.shelfTitle}>{item.title}</Text>
-                  {item.description && (
-                    <Text style={styles.shelfDescription}>{item.description}</Text>
-                  )}
-                </View>
-                <Ionicons name="chevron-forward" size={16} color="#6c757d" />
-              </View>
-            ))}
-          </View>
-        )}
 
         {/* Nueva Sección de Ubicación RECONSTRUIDA */}
         <View style={styles.section}>
@@ -1582,6 +1679,14 @@ export default function AlbumDetailScreen() {
           </SafeAreaView>
         </Modal>
 
+        {/* Botón flotante de IA */}
+        <TouchableOpacity
+          style={styles.floatingAIButton}
+          onPress={() => (navigation as any).navigate('AIChat')}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="sparkles" size={24} color="#fff" />
+        </TouchableOpacity>
 
       </SafeAreaView>
     );
@@ -3410,5 +3515,45 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#fff',
     fontWeight: '600',
+  },
+  floatingAIButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 50,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  // Estilos para las listas funcionales
+  listItemContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  listInfo: {
+    flex: 1,
+    marginLeft: 16,
+  },
+  listTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  listDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 18,
   },
 }); 

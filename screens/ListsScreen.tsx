@@ -368,6 +368,15 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           contentContainerStyle={styles.listContainer}
         />
       )}
+
+      {/* Botón flotante de IA */}
+      <TouchableOpacity
+        style={styles.floatingAIButton}
+        onPress={() => (navigation as any).navigate('AIChat')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="sparkles" size={24} color="#fff" />
+      </TouchableOpacity>
     </View>
   );
 };
@@ -600,6 +609,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     marginTop: 2,
+  },
+  floatingAIButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 50,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
 });
 

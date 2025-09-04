@@ -1254,6 +1254,15 @@ Progressive Rock`;
       {activeTab === 'search' && renderSearchTab()}
       {activeTab === 'manual' && renderManualTab()}
       {activeTab === 'camera' && renderCameraTab()}
+
+      {/* Botón flotante de IA */}
+      <TouchableOpacity
+        style={styles.floatingAIButton}
+        onPress={() => (navigation as any).navigate('AIChat')}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="sparkles" size={24} color="#fff" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
@@ -1632,5 +1641,18 @@ const styles = StyleSheet.create({
     color: '#333',
     marginTop: 16,
     textAlign: 'center',
+  },
+  floatingAIButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 50,
+    padding: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 5,
   },
 }); 
