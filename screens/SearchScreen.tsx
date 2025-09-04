@@ -14,6 +14,7 @@ import {
   Modal,
   RefreshControl,
   SafeAreaView,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -42,6 +43,7 @@ export const SearchScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
+  const [collectionLoading, setCollectionLoading] = useState(true);
   const [collection, setCollection] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'date' | 'year' | 'artist' | 'label'>('date');
   const [filterByStyle, setFilterByStyle] = useState<string>('');
@@ -117,6 +119,7 @@ export const SearchScreen: React.FC = () => {
   const loadCollection = async () => {
     if (!user) return;
     try {
+      setCollectionLoading(true);
       // Obtener colección
       const { data: userCollection, error } = await supabase
         .from('user_collection')
@@ -156,6 +159,8 @@ export const SearchScreen: React.FC = () => {
       await refreshStats();
     } catch (error) {
       console.error('Error loading collection:', error);
+    } finally {
+      setCollectionLoading(false);
     }
   };
 
@@ -492,10 +497,11 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderEmptyState = () => {
-    if (loading) {
+    if (collectionLoading) {
       return (
-        <View style={styles.emptyContainer}>
-          <Text style={[styles.emptyText, { color: colors.text }]}>Cargando...</Text>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando tu colección...</Text>
         </View>
       );
     }
@@ -2553,5 +2559,16 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 5,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 50,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#999',
+    marginTop: 16,
   },
 }); 
