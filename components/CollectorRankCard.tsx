@@ -15,7 +15,7 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
   Novato: '🌱',
   Aficionado: '🎧',
   Coleccionista: '💿',
-  Curador: '📚',
+  Experto: '📚',
   Virtuoso: '🏆',
   Legendario: '👑',
 };
@@ -61,6 +61,19 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
     ? Math.max(0, (rank.nextTargets!.nextValue as number) - collectionValue)
     : 0;
 
+  // Calcular el progreso de las barras individuales
+  // Si ya se alcanzó el máximo nivel, mostrar 100%
+  // Si ya se alcanzó el valor del nivel actual (no hay siguiente objetivo), mostrar 100%
+  const albumProgress = rank.albumLevelIndex >= 5 ? 1 : rank.albumProgressToNext;
+  const valueProgress = rank.valueLevelIndex >= 5 ? 1 : rank.valueProgressToNext;
+  
+  // Verificar si ya se alcanzó el valor del nivel actual
+  const hasReachedCurrentValueLevel = !hasNextValue && rank.valueLevelIndex < 5;
+  const hasReachedCurrentAlbumLevel = !hasNextAlbums && rank.albumLevelIndex < 5;
+  
+  const finalAlbumProgress = hasReachedCurrentAlbumLevel ? 1 : albumProgress;
+  const finalValueProgress = hasReachedCurrentValueLevel ? 1 : valueProgress;
+
   const formatCurrency = (value: number) => {
     try {
       return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(Math.ceil(value));
@@ -97,17 +110,21 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>Álbumes</Text>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${rank.albumProgressToNext * 100}%` }]} />
+            <View style={[styles.progressFill, { width: `${finalAlbumProgress * 100}%` }]} />
           </View>
-          <Text style={styles.progressValue}>-{nextAlbumsMissing}</Text>
+          <Text style={[styles.progressValue, (rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) && styles.completedText]}>
+            {(rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) ? '¡Completado!' : `-${nextAlbumsMissing}`}
+          </Text>
         </View>
 
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>Valor</Text>
           <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${rank.valueProgressToNext * 100}%` }]} />
+            <View style={[styles.progressFill, { width: `${finalValueProgress * 100}%` }]} />
           </View>
-          <Text style={styles.progressValue}>-{formatCurrency(nextValueMissing)} €</Text>
+          <Text style={[styles.progressValue, (rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) && styles.completedText]}>
+            {(rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) ? '¡Completado!' : `-${formatCurrency(nextValueMissing)} €`}
+          </Text>
         </View>
       </View>
 
@@ -259,5 +276,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#0d6efd',
     fontWeight: '500',
+  },
+  completedText: {
+    color: '#28a745',
+    fontWeight: '700',
   },
 }); 
