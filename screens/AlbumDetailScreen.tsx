@@ -2487,7 +2487,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     borderRadius: 12,
     margin: 20,
-    maxHeight: '80%',
+    maxHeight: '90%',
     width: '90%',
     shadowColor: '#000',
     shadowOffset: {
@@ -2511,12 +2511,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
+    
   },
   closeButton: {
     padding: 4,
   },
   modalBody: {
-    padding: 20,
+    padding: 4,
   },
   ratioInfoSection: {
     marginBottom: 20,
@@ -3478,6 +3479,7 @@ const styles = StyleSheet.create({
   },
   listOptionInfo: {
     flex: 1,
+    marginLeft: 10,
   },
   listOptionTitle: {
     fontSize: 16,
