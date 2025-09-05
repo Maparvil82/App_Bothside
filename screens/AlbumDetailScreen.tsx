@@ -97,6 +97,8 @@ export default function AlbumDetailScreen() {
   const [fallbackGenres, setFallbackGenres] = useState<string[]>([]);
   const [fallbackStyles, setFallbackStyles] = useState<string[]>([]);
   const [userLists, setUserLists] = useState<any[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [showListsModal, setShowListsModal] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const lastBackfilledAlbumIdRef = useRef<string | null>(null);
@@ -692,6 +694,60 @@ export default function AlbumDetailScreen() {
           probabilidad: 'No determinable.',
           estrategia: 'Se necesitan más datos de ventas para evaluar el potencial.'
         };
+    }
+  };
+
+  // ========== FUNCIONES DE REPRODUCCIÓN INTERNA ==========
+
+  // Reproducir música internamente
+  const handlePlayMusic = async () => {
+    if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
+      Alert.alert('Sin música', 'Este álbum no tiene música disponible para reproducir.');
+      return;
+    }
+
+    try {
+      const youtubeUrl = album.albums.album_youtube_urls[0].url;
+      if (!youtubeUrl) {
+        Alert.alert('Error', 'URL de YouTube inválida.');
+        return;
+      }
+
+      if (isPlaying && currentAudioUrl === youtubeUrl) {
+        // Si ya está reproduciendo la misma canción, pausar
+        setIsPlaying(false);
+        return;
+      }
+
+      // Si hay una canción diferente reproduciéndose, extraer la nueva
+      if (currentAudioUrl !== youtubeUrl) {
+        setIsPlaying(false);
+        setCurrentAudioUrl(null);
+        
+        // Extraer audio de YouTube
+        const { data, error } = await supabase.functions.invoke('extract-youtube-audio', {
+          body: { url: youtubeUrl },
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.audioUrl) {
+          setCurrentAudioUrl(data.audioUrl);
+          setIsPlaying(true);
+        } else {
+          throw new Error('No se pudo extraer el audio');
+        }
+      } else {
+        // Misma canción, solo cambiar estado de reproducción
+        setIsPlaying(!isPlaying);
+      }
+    } catch (error: any) {
+      console.error('Error playing music:', error);
+      Alert.alert('Error', 'No se pudo reproducir la música. Inténtalo de nuevo.');
+      setIsPlaying(false);
+      setCurrentAudioUrl(null);
     }
   };
 
@@ -1337,71 +1393,6 @@ export default function AlbumDetailScreen() {
             )}
           </View>
 
-          {/* Sección de Reproductor de Audio */}
-          {youtubeUrls.length > 0 && (
-            <View style={styles.audioSection}>
-              <Text style={styles.audioSectionTitle}>🎵 Reproducir Música</Text>
-              <Text style={styles.audioSectionSubtitle}>
-                Escucha las canciones de este álbum directamente en la app
-              </Text>
-              
-              {!audioUrl && !isLoadingAudio && !audioError && (
-                <View style={styles.audioOptionsContainer}>
-                  <TouchableOpacity
-                    style={styles.audioOptionButton}
-                    onPress={handleExtractYouTubeAudio}
-                  >
-                    <Ionicons name="headset" size={20} color="#fff" />
-                    <Text style={styles.audioOptionButtonText}>🎵 Reproducir Audio del Disco</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={[styles.audioOptionButton, styles.youtubeButton]}
-                    onPress={() => {
-                      const youtubeUrl = album?.albums?.album_youtube_urls?.[0]?.url;
-                      if (youtubeUrl) {
-                        Linking.openURL(youtubeUrl);
-                      }
-                    }}
-                  >
-                    <Ionicons name="logo-youtube" size={20} color="#fff" />
-                    <Text style={styles.audioOptionButtonText}>Abrir en YouTube</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              
-              {isLoadingAudio && (
-                <View style={styles.loadingAudioContainer}>
-                  <ActivityIndicator size="small" color="#007AFF" />
-                  <Text style={styles.loadingAudioText}>🎵 Extrayendo audio del video...</Text>
-                </View>
-              )}
-              
-              {audioError && (
-                <View style={styles.audioErrorContainer}>
-                  <Ionicons name="alert-circle" size={20} color="#dc3545" />
-                  <Text style={styles.audioErrorText}>{audioError}</Text>
-                  <TouchableOpacity
-                    style={styles.retryAudioButton}
-                    onPress={() => {
-                      setAudioError(null);
-                      setAudioUrl('');
-                    }}
-                  >
-                    <Text style={styles.retryAudioButtonText}>🔄 Intentar de nuevo</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-              
-              {audioUrl && (
-                <AudioPlayer
-                  audioUrl={audioUrl}
-                  title={album.albums.title || 'Audio de YouTube'}
-                  onError={(error) => setAudioError(error)}
-                />
-              )}
-            </View>
-          )}
 
           {/* Sección TypeForm */}
           <View style={styles.typeFormSection}>
@@ -1679,14 +1670,35 @@ export default function AlbumDetailScreen() {
           </SafeAreaView>
         </Modal>
 
-        {/* Botón flotante de IA */}
-        <TouchableOpacity
-          style={styles.floatingAIButton}
-          onPress={() => (navigation as any).navigate('AIChat')}
-          activeOpacity={0.8}
-        >
-          <Ionicons name="sparkles" size={24} color="#fff" />
-        </TouchableOpacity>
+        {/* Botón flotante de reproducción */}
+        {youtubeUrls.length > 0 && (
+          <TouchableOpacity
+            style={styles.floatingPlayButton}
+            onPress={handlePlayMusic}
+            activeOpacity={0.8}
+          >
+            <Ionicons 
+              name={isPlaying ? "pause" : "play"} 
+              size={24} 
+              color="#fff" 
+            />
+          </TouchableOpacity>
+        )}
+
+        {/* Reproductor de audio flotante */}
+        {currentAudioUrl && (
+          <View style={styles.floatingAudioPlayer}>
+            <AudioPlayer
+              audioUrl={currentAudioUrl}
+              title={album?.albums?.title || 'Música del álbum'}
+              onError={(error) => {
+                console.error('Audio player error:', error);
+                setIsPlaying(false);
+                setCurrentAudioUrl(null);
+              }}
+            />
+          </View>
+        )}
 
       </SafeAreaView>
     );
@@ -3557,5 +3569,41 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
     lineHeight: 18,
+  },
+  floatingPlayButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    backgroundColor: '#007AFF',
+    borderRadius: 50,
+    width: 56,
+    height: 56,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  floatingAudioPlayer: {
+    position: 'absolute',
+    bottom: 80,
+    left: 16,
+    right: 16,
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    borderRadius: 12,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
 }); 

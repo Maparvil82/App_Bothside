@@ -72,6 +72,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   }, []);
 
   const loadAudio = async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
+    
     try {
       console.log('🔍 FloatingAudioPlayer: Loading audio from URI:', audioUri);
       
@@ -85,6 +87,13 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       setIsLoading(true);
       setError(null);
       setIsPlaying(false);
+      
+      // Timeout para evitar carga infinita
+      timeoutId = setTimeout(() => {
+        console.warn('⚠️ FloatingAudioPlayer: Loading timeout');
+        setError('Tiempo de carga agotado. Inténtalo de nuevo.');
+        setIsLoading(false);
+      }, 30000); // 30 segundos timeout
       
       if (sound) {
         console.log('🔍 FloatingAudioPlayer: Unloading previous sound');
@@ -108,7 +117,9 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         const knownGoodUrls = [
           'cs.uic.edu',
           'sample-videos.com',
-          'youtubeinmp3.com',
+          'cobalt.tools',
+          'loader.to',
+          'savetube.me',
           'vevioz.com'
         ];
         
@@ -117,7 +128,12 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         if (!isKnownGoodUrl) {
           try {
             console.log('🔍 FloatingAudioPlayer: Validating HTTP URL...');
-            const response = await fetch(audioUri, { method: 'HEAD' });
+            const response = await fetch(audioUri, { 
+              method: 'HEAD',
+              headers: {
+                'User-Agent': 'BothsideApp/1.0'
+              }
+            });
             if (!response.ok) {
               throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
@@ -173,6 +189,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         setSound(null);
       } else {
         console.log('🔍 FloatingAudioPlayer: Audio loaded successfully');
+        // Limpiar timeout
+        if (timeoutId) clearTimeout(timeoutId);
         // Iniciar reproducción automáticamente
         try {
           await newSound.playAsync();
@@ -193,6 +211,9 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       setError(`Error loading audio: ${errorMessage}`);
       setIsLoading(false);
       setIsPlaying(false);
+      
+      // Limpiar timeout
+      if (timeoutId) clearTimeout(timeoutId);
       
       // Limpiar el sonido en caso de error
       if (sound) {
@@ -228,7 +249,10 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       }
     } else if (status.error) {
       console.error('❌ FloatingAudioPlayer: Playback error:', status.error);
-      setError(`Playback error: ${status.error}`);
+      const errorMessage = status.error.message || status.error;
+      setError(`Error de reproducción: ${errorMessage}`);
+      setIsPlaying(false);
+      setIsLoading(false);
     }
   };
 
@@ -321,7 +345,10 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
             <View style={styles.errorContainer}>
               <Ionicons name="warning" size={16} color="#dc3545" />
               <Text style={styles.errorText} numberOfLines={2}>
-                Error de audio
+                {error.includes('timeout') ? 'Tiempo agotado' : 
+                 error.includes('HTTP') ? 'Error de conexión' :
+                 error.includes('NSURLErrorDomain') ? 'URL no válida' :
+                 'Error de audio'}
               </Text>
               <TouchableOpacity
                 style={styles.retryButton}
