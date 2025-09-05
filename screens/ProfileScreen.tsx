@@ -165,6 +165,17 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
 
+        {/* Producto */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Producto</Text>
+          <TouchableOpacity 
+            style={[styles.menuItem, { borderBottomColor: colors.border }]} 
+            onPress={() => navigation.navigate('Feedback' as never)}
+          >
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Feedback</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Cuenta */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Cuenta</Text>

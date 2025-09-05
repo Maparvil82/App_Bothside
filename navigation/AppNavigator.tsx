@@ -34,6 +34,7 @@ import LeaderboardScreen from '../screens/LeaderboardScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PricingScreen } from '../screens/PricingScreen';
+import { FeedbackScreen } from '../screens/FeedbackScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -288,6 +289,14 @@ const AppNavigator = () => {
                 <Stack.Screen name="AlbumDetail" component={AlbumDetailScreen} />
                 <Stack.Screen name="AIChat" component={AIChatScreen} />
                 <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+                <Stack.Screen
+                  name="Feedback"
+                  component={FeedbackScreen}
+                  options={{
+                    headerShown: true,
+                    header: () => <CustomHeader title="Feedback" showBackButton={true} />
+                  }}
+                />
                 <Stack.Screen
                   name="SelectCell"
                   component={SelectCellScreen}
