@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
+import { HybridAudioService } from '../services/hybrid-audio-service';
 
 interface FloatingAudioPlayerProps {
   visible: boolean;
@@ -93,7 +94,28 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         console.warn('⚠️ FloatingAudioPlayer: Loading timeout');
         setError('Tiempo de carga agotado. Inténtalo de nuevo.');
         setIsLoading(false);
-      }, 30000); // 30 segundos timeout
+      }, 30000) as NodeJS.Timeout; // 30 segundos timeout
+
+      // Si es una URL de YouTube, intentar extraer audio
+      let finalAudioUri = audioUri;
+      if (HybridAudioService.isValidYouTubeUrl(audioUri)) {
+        console.log('🔍 FloatingAudioPlayer: Detected YouTube URL, extracting audio...');
+        try {
+          const extractionResult = await HybridAudioService.extractAudioFromYouTube(audioUri);
+          if (extractionResult.success && extractionResult.audioUrl) {
+            console.log('🔍 FloatingAudioPlayer: Audio extraction successful');
+            finalAudioUri = extractionResult.audioUrl;
+          } else {
+            throw new Error(extractionResult.error || 'Failed to extract audio');
+          }
+        } catch (extractionError) {
+          console.error('❌ FloatingAudioPlayer: Audio extraction failed:', extractionError);
+          setError(`Error extrayendo audio: ${extractionError}`);
+          setIsLoading(false);
+          if (timeoutId) clearTimeout(timeoutId);
+          return;
+        }
+      }
       
       if (sound) {
         console.log('🔍 FloatingAudioPlayer: Unloading previous sound');
@@ -103,16 +125,17 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       console.log('🔍 FloatingAudioPlayer: Creating new sound...');
       
       // Validación mejorada de URI
-      if (!audioUri.startsWith('file://') && !audioUri.startsWith('http://') && !audioUri.startsWith('https://')) {
-        const errorMsg = `Invalid URI format: ${audioUri}`;
+      if (!finalAudioUri.startsWith('file://') && !finalAudioUri.startsWith('http://') && !finalAudioUri.startsWith('https://')) {
+        const errorMsg = `Invalid URI format: ${finalAudioUri}`;
         console.error('❌ FloatingAudioPlayer:', errorMsg);
         setError(errorMsg);
         setIsLoading(false);
+        if (timeoutId) clearTimeout(timeoutId);
         return;
       }
 
       // Para URLs HTTP/HTTPS, verificar que sean accesibles
-      if (audioUri.startsWith('http')) {
+      if (finalAudioUri.startsWith('http')) {
         // Skip validation for known good fallback URLs and YouTube audio URLs
         const knownGoodUrls = [
           'cs.uic.edu',
@@ -123,12 +146,12 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
           'vevioz.com'
         ];
         
-        const isKnownGoodUrl = knownGoodUrls.some(domain => audioUri.includes(domain));
+        const isKnownGoodUrl = knownGoodUrls.some(domain => finalAudioUri.includes(domain));
         
         if (!isKnownGoodUrl) {
           try {
             console.log('🔍 FloatingAudioPlayer: Validating HTTP URL...');
-            const response = await fetch(audioUri, { 
+            const response = await fetch(finalAudioUri, { 
               method: 'HEAD',
               headers: {
                 'User-Agent': 'BothsideApp/1.0'
@@ -142,6 +165,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
             console.error('❌ FloatingAudioPlayer: URL validation failed:', fetchError);
             setError(`URL no accesible: ${fetchError}`);
             setIsLoading(false);
+            if (timeoutId) clearTimeout(timeoutId);
             return;
           }
         } else {
@@ -162,7 +186,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       
       // Crear el sonido con configuración más robusta
       const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUri },
+        { uri: finalAudioUri },
         { 
           shouldPlay: false, // No reproducir automáticamente para mejor control
           progressUpdateIntervalMillis: 100,

@@ -115,14 +115,19 @@ export default function AlbumDetailScreen() {
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
   
+  // Estados para álbumes similares
+  const [similarAlbums, setSimilarAlbums] = useState<any[]>([]);
+  const [loadingSimilar, setLoadingSimilar] = useState(false);
+  
+  
   const { albumId } = route.params as { albumId: string };
 
   // Preguntas del TypeForm
   const typeFormQuestions = [
     "¿Cuál es tu canción favorita de este álbum?",
-    "¿En qué momento de tu vida descubriste este disco?",
+    "¿Cuándo escuchaste este álbum por última vez?",
     "¿Qué recuerdos te trae este álbum?",
-    "¿Recomendarías este disco a un amigo? ¿Por qué?",
+    "¿Recuerdas donde lo descubriste?",
     "¿Cómo te hace sentir este álbum?"
   ];
 
@@ -699,117 +704,90 @@ export default function AlbumDetailScreen() {
 
   // ========== FUNCIONES DE REPRODUCCIÓN INTERNA ==========
 
-  // Reproducir música internamente
-  const handlePlayMusic = async () => {
-    if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
-      Alert.alert('Sin música', 'Este álbum no tiene música disponible para reproducir.');
-      return;
-    }
-
-    try {
-      const youtubeUrl = album.albums.album_youtube_urls[0].url;
-      if (!youtubeUrl) {
-        Alert.alert('Error', 'URL de YouTube inválida.');
-        return;
-      }
-
-      if (isPlaying && currentAudioUrl === youtubeUrl) {
-        // Si ya está reproduciendo la misma canción, pausar
-        setIsPlaying(false);
-        return;
-      }
-
-      // Si hay una canción diferente reproduciéndose, extraer la nueva
-      if (currentAudioUrl !== youtubeUrl) {
-        setIsPlaying(false);
-        setCurrentAudioUrl(null);
-        
-        // Extraer audio de YouTube
-        const { data, error } = await supabase.functions.invoke('extract-youtube-audio', {
-          body: { url: youtubeUrl },
-        });
-
-        if (error) {
-          throw error;
-        }
-
-        if (data?.audioUrl) {
-          setCurrentAudioUrl(data.audioUrl);
-          setIsPlaying(true);
-        } else {
-          throw new Error('No se pudo extraer el audio');
-        }
-      } else {
-        // Misma canción, solo cambiar estado de reproducción
-        setIsPlaying(!isPlaying);
-      }
-    } catch (error: any) {
-      console.error('Error playing music:', error);
-      Alert.alert('Error', 'No se pudo reproducir la música. Inténtalo de nuevo.');
-      setIsPlaying(false);
-      setCurrentAudioUrl(null);
-    }
-  };
 
   // ========== FUNCIONES DE YOUTUBE (ABRIR DIRECTAMENTE) ==========
 
-  // Extraer y reproducir audio de YouTube en la app
-  const handleExtractYouTubeAudio = async () => {
+  // Abrir YouTube directamente en el navegador
+  const handlePlayYouTubeDirect = () => {
     if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
       Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
       return;
     }
 
-    try {
-      const youtubeUrl = album.albums.album_youtube_urls[0].url;
-      if (!youtubeUrl) {
-        Alert.alert('Error', 'URL de YouTube inválida.');
-        return;
-      }
-
-      setIsLoadingAudio(true);
-      setAudioError(null);
-
-      console.log('🎵 Iniciando extracción de audio para:', youtubeUrl);
-
-      // Usar la función de Supabase Edge Function
-      const { data, error } = await supabase.functions.invoke('extract-youtube-audio', {
-        body: { url: youtubeUrl },
-      });
-
-      if (error) {
-        console.error('❌ Error en función de Supabase:', error);
-        setAudioError('Error al conectar con el servidor');
-        setIsLoadingAudio(false);
-        return;
-      }
-
-      if (!data || !data.success) {
-        console.log('❌ Extracción falló:', data?.error || data?.message);
-        setAudioError(data?.message || 'No se pudo extraer el audio');
-        setIsLoadingAudio(false);
-        return;
-      }
-
-      const extractedAudioUrl = data.audioUrl;
-      if (!extractedAudioUrl) {
-        setAudioError('No se pudo obtener la URL de audio');
-        setIsLoadingAudio(false);
-        return;
-      }
-
-      console.log('🎵 URL de audio obtenida:', extractedAudioUrl);
-      setAudioUrl(extractedAudioUrl);
-      setIsLoadingAudio(false);
-
-    } catch (err) {
-      console.error('❌ Error general:', err);
-      setAudioError('Ocurrió un error al procesar la solicitud');
-      setIsLoadingAudio(false);
+    const youtubeUrl = album.albums.album_youtube_urls[0].url;
+    if (!youtubeUrl) {
+      Alert.alert('Error', 'URL de YouTube inválida.');
+      return;
     }
+
+    // Abrir directamente en el navegador
+    Linking.openURL(youtubeUrl).catch(err => {
+      console.error('Error opening URL:', err);
+      Alert.alert('Error', 'No se pudo abrir el enlace');
+    });
   };
 
+
   // ========== FIN FUNCIONES YOUTUBE ==========
+
+  // ========== FUNCIONES ÁLBUMES SIMILARES ==========
+  
+  // Cargar álbumes similares de la colección del usuario
+  const loadSimilarAlbums = useCallback(async () => {
+    if (!user || !album?.albums) return;
+    
+    setLoadingSimilar(true);
+    try {
+      // Obtener álbumes del mismo artista o con estilos similares
+      const { data: similarData, error } = await supabase
+        .from('user_collection')
+        .select(`
+          *,
+          albums (
+            id,
+            title,
+            artist,
+            cover_url,
+            year,
+            album_styles (
+              styles ( name )
+            )
+          )
+        `)
+        .eq('user_id', user.id)
+        .neq('album_id', album.albums.id) // Excluir el álbum actual
+        .limit(10);
+
+      if (error) {
+        console.error('Error loading similar albums:', error);
+        return;
+      }
+
+      // Filtrar y priorizar álbumes similares
+      const filteredAlbums = similarData?.filter(item => {
+        const albumData = item.albums;
+        if (!albumData) return false;
+        
+        // Priorizar mismo artista
+        const sameArtist = albumData.artist === album.albums.artist;
+        
+        // Priorizar estilos similares
+        const currentStyles = album.albums.album_styles?.map((s: any) => s.styles?.name).filter(Boolean) || [];
+        const itemStyles = albumData.album_styles?.map((s: any) => s.styles?.name).filter(Boolean) || [];
+        const hasSimilarStyle = currentStyles.some((style: string) => itemStyles.includes(style));
+        
+        return sameArtist || hasSimilarStyle;
+      }).slice(0, 8) || []; // Limitar a 8 álbumes
+
+      setSimilarAlbums(filteredAlbums);
+    } catch (error) {
+      console.error('Error loading similar albums:', error);
+    } finally {
+      setLoadingSimilar(false);
+    }
+  }, [user, album]);
+
+  // ========== FIN FUNCIONES ÁLBUMES SIMILARES ==========
 
   // ========== FUNCIONES GEMS Y LISTAS ==========
   
@@ -939,6 +917,11 @@ export default function AlbumDetailScreen() {
   useEffect(() => {
     loadUserLists();
   }, [loadUserLists]);
+
+  // Cargar álbumes similares cuando se monta el componente
+  useEffect(() => {
+    loadSimilarAlbums();
+  }, [loadSimilarAlbums]);
 
   // Refrescar gems cuando se monta el componente
   useEffect(() => {
@@ -1219,6 +1202,98 @@ export default function AlbumDetailScreen() {
         )}
 
 
+
+        {/* Sección de Ediciones */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Ediciones en Vinilo</Text>
+          {editionsLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#007AFF" />
+              <Text style={styles.loadingText}>Cargando ediciones...</Text>
+            </View>
+          ) : editions.length > 0 ? (
+            <View style={styles.editionsContainer}>
+              {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
+                <View
+                  key={edition.id}
+                  style={styles.editionItem}
+                >
+                  {edition.thumb && (
+                    <Image 
+                      source={{ uri: edition.thumb }} 
+                      style={styles.editionCover}
+                      resizeMode="cover"
+                    />
+                  )}
+                  <View style={styles.editionInfo}>
+                    <Text style={styles.editionTitle} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
+                    <Text style={styles.editionArtist} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
+                    
+                    {/* Formato */}
+                    {edition.format && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
+                      </View>
+                    )}
+                    
+                    {/* Sello */}
+                    {edition.label && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
+                      </View>
+                    )}
+                    
+                    {/* Año */}
+                    {edition.year && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
+                      </View>
+                    )}
+                    
+                    {/* País */}
+                    {edition.country && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">País:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
+                      </View>
+                    )}
+                    
+                    {/* Catálogo */}
+                    {edition.catno && (
+                      <View style={styles.editionDetailRow}>
+                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
+                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+              
+              {/* Botón "Ver más" o "Ver menos" */}
+              {editions.length > 3 && (
+                <TouchableOpacity
+                  style={styles.seeMoreButton}
+                  onPress={() => setShowAllEditions(!showAllEditions)}
+                >
+                  <Text style={styles.seeMoreButtonText}>
+                    {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
+                  </Text>
+                  <Ionicons 
+                    name={showAllEditions ? "chevron-up" : "chevron-down"} 
+                    size={16} 
+                    color="#007AFF" 
+                  />
+                </TouchableOpacity>
+              )}
+            </View>
+          ) : (
+            <Text style={styles.noEditionsText}>No se encontraron ediciones en vinilo</Text>
+          )}
+        </View>
+
         {/* Nota de Audio */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Nota de Audio</Text>
@@ -1302,96 +1377,6 @@ export default function AlbumDetailScreen() {
             )}
           </View>
 
-          {/* Sección de Ediciones */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ediciones en Vinilo</Text>
-            {editionsLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#007AFF" />
-                <Text style={styles.loadingText}>Cargando ediciones...</Text>
-              </View>
-            ) : editions.length > 0 ? (
-              <View style={styles.editionsContainer}>
-                {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
-                  <View
-                    key={edition.id}
-                    style={styles.editionItem}
-                  >
-                    {edition.thumb && (
-                      <Image 
-                        source={{ uri: edition.thumb }} 
-                        style={styles.editionCover}
-                        resizeMode="cover"
-                      />
-                    )}
-                    <View style={styles.editionInfo}>
-                      <Text style={styles.editionTitle} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
-                      <Text style={styles.editionArtist} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
-                      
-                      {/* Formato */}
-                      {edition.format && (
-                        <View style={styles.editionDetailRow}>
-                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
-                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
-                        </View>
-                      )}
-                      
-                      {/* Sello */}
-                      {edition.label && (
-                        <View style={styles.editionDetailRow}>
-                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
-                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
-                        </View>
-                      )}
-                      
-                      {/* Año */}
-                      {edition.year && (
-                        <View style={styles.editionDetailRow}>
-                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
-                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
-                        </View>
-                      )}
-                      
-                      {/* País */}
-                      {edition.country && (
-                        <View style={styles.editionDetailRow}>
-                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">País:</Text>
-                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
-                        </View>
-                      )}
-                      
-                      {/* Catálogo */}
-                      {edition.catno && (
-                        <View style={styles.editionDetailRow}>
-                          <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
-                          <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                ))}
-                
-                {/* Botón "Ver más" o "Ver menos" */}
-                {editions.length > 3 && (
-                  <TouchableOpacity
-                    style={styles.seeMoreButton}
-                    onPress={() => setShowAllEditions(!showAllEditions)}
-                  >
-                    <Text style={styles.seeMoreButtonText}>
-                      {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
-                    </Text>
-                    <Ionicons 
-                      name={showAllEditions ? "chevron-up" : "chevron-down"} 
-                      size={16} 
-                      color="#007AFF" 
-                    />
-                  </TouchableOpacity>
-                )}
-              </View>
-            ) : (
-              <Text style={styles.noEditionsText}>No se encontraron ediciones en vinilo</Text>
-            )}
-          </View>
 
 
           {/* Sección TypeForm */}
@@ -1444,6 +1429,63 @@ export default function AlbumDetailScreen() {
               })}
             </View>
           </View>
+
+          {/* Sección de Álbumes Similares */}
+          {similarAlbums.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>De tu colección</Text>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.similarAlbumsContainer}
+                contentContainerStyle={styles.similarAlbumsContent}
+              >
+                {similarAlbums.map((item, index) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.similarAlbumCard}
+                    onPress={() => {
+                      // Navegar al álbum similar
+                      (navigation as any).navigate('AlbumDetail', { albumId: item.id });
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.similarAlbumImageContainer}>
+                      {item.albums?.cover_url ? (
+                        <Image 
+                          source={{ uri: item.albums.cover_url }} 
+                          style={styles.similarAlbumImage}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <View style={[styles.similarAlbumImage, styles.similarAlbumPlaceholder]}>
+                          <Ionicons name="musical-notes" size={24} color="#ccc" />
+                        </View>
+                      )}
+                      {item.is_gem && (
+                        <View style={styles.similarAlbumGemBadge}>
+                          <Ionicons name="diamond" size={12} color="#FFD700" />
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.similarAlbumInfo}>
+                      <Text style={styles.similarAlbumTitle} numberOfLines={2} ellipsizeMode="tail">
+                        {item.albums?.title || 'Sin título'}
+                      </Text>
+                      <Text style={styles.similarAlbumArtist} numberOfLines={1} ellipsizeMode="tail">
+                        {item.albums?.artist || 'Artista desconocido'}
+                      </Text>
+                      {item.albums?.year && (
+                        <Text style={styles.similarAlbumYear}>
+                          {item.albums.year}
+                        </Text>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
       </ScrollView>
 
 
@@ -1670,15 +1712,15 @@ export default function AlbumDetailScreen() {
           </SafeAreaView>
         </Modal>
 
-        {/* Botón flotante de reproducción */}
+        {/* Botón flotante de YouTube */}
         {youtubeUrls.length > 0 && (
           <TouchableOpacity
-            style={styles.floatingPlayButton}
-            onPress={handlePlayMusic}
+            style={[styles.floatingPlayButton, styles.youtubeButton]}
+            onPress={handlePlayYouTubeDirect}
             activeOpacity={0.8}
           >
             <Ionicons 
-              name={isPlaying ? "pause" : "play"} 
+              name="logo-youtube" 
               size={24} 
               color="#fff" 
             />
@@ -1699,6 +1741,7 @@ export default function AlbumDetailScreen() {
             />
           </View>
         )}
+
 
       </SafeAreaView>
     );
@@ -2754,24 +2797,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ccc',
   },
-  floatingAudioPlayer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#1a1a1a',
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#333',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 8,
-  },
   audioPlayerCover: {
     width: 48,
     height: 48,
@@ -3375,10 +3400,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-
-  youtubeButton: {
-    backgroundColor: '#FF0000',
-  },
   audioOptionsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -3588,6 +3609,73 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  youtubeButton: {
+    backgroundColor: '#FF0000',
+  },
+  similarAlbumsContainer: {
+    marginTop: 12,
+  },
+  similarAlbumsContent: {
+    paddingHorizontal: 4,
+  },
+  similarAlbumCard: {
+    width: 120,
+    marginRight: 12,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  similarAlbumImageContainer: {
+    position: 'relative',
+  },
+  similarAlbumImage: {
+    width: '100%',
+    height: 120,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
+  },
+  similarAlbumPlaceholder: {
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  similarAlbumGemBadge: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  similarAlbumInfo: {
+    padding: 8,
+  },
+  similarAlbumTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+    lineHeight: 14,
+  },
+  similarAlbumArtist: {
+    fontSize: 11,
+    color: '#666',
+    marginBottom: 2,
+  },
+  similarAlbumYear: {
+    fontSize: 10,
+    color: '#999',
   },
   floatingAudioPlayer: {
     position: 'absolute',

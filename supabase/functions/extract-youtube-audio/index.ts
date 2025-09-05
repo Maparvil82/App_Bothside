@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import ytdl from "npm:ytdl-core@4.11.5"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -101,9 +102,54 @@ async function getAudioUrl(videoId: string): Promise<string | null> {
   try {
     console.log(`🎵 Intentando extraer audio para video: ${videoId}`)
     
-    // Método 1: Cobalt API (más confiable)
+    const videoUrl = `https://www.youtube.com/watch?v=${videoId}`
+    
+    // Método 1: ytdl-core (más confiable)
     try {
-      console.log('🎵 Probando Cobalt API...')
+      console.log('🎵 Probando ytdl-core...')
+      
+      // Verificar que la URL es válida
+      if (!ytdl.validateURL(videoUrl)) {
+        throw new Error('URL de YouTube no válida')
+      }
+      
+      // Obtener información del video
+      const info = await ytdl.getInfo(videoUrl)
+      console.log('🎵 Información del video obtenida:', {
+        title: info.videoDetails.title,
+        duration: info.videoDetails.lengthSeconds
+      })
+      
+      // Buscar formato de audio
+      const audioFormats = ytdl.filterFormats(info.formats, 'audioonly')
+      console.log('🎵 Formatos de audio disponibles:', audioFormats.length)
+      
+      if (audioFormats.length > 0) {
+        // Seleccionar el mejor formato de audio
+        const bestAudio = audioFormats.reduce((prev, current) => {
+          const prevBitrate = parseInt(prev.bitrate) || 0
+          const currentBitrate = parseInt(current.bitrate) || 0
+          return currentBitrate > prevBitrate ? current : prev
+        })
+        
+        console.log('🎵 ✅ ytdl-core exitoso - URL obtenida')
+        console.log('🎵 Formato seleccionado:', {
+          quality: bestAudio.quality,
+          bitrate: bestAudio.bitrate,
+          container: bestAudio.container
+        })
+        
+        return bestAudio.url
+      } else {
+        console.warn('🎵 No se encontraron formatos de audio')
+      }
+    } catch (error) {
+      console.log('🎵 ❌ ytdl-core falló:', error)
+    }
+
+    // Método 2: Cobalt API (fallback)
+    try {
+      console.log('🎵 Probando Cobalt API como fallback...')
       const response = await fetch('https://api.cobalt.tools/api/json', {
         method: 'POST',
         headers: {
@@ -112,7 +158,7 @@ async function getAudioUrl(videoId: string): Promise<string | null> {
           'User-Agent': 'BothsideApp/1.0'
         },
         body: JSON.stringify({
-          url: `https://www.youtube.com/watch?v=${videoId}`,
+          url: videoUrl,
           vCodec: 'h264',
           vQuality: '720',
           aFormat: 'mp3',
@@ -139,15 +185,15 @@ async function getAudioUrl(videoId: string): Promise<string | null> {
       console.log('🎵 ❌ Cobalt falló:', error)
     }
 
-    // Método 2: Loader.to API
+    // Método 3: Loader.to API (fallback)
     try {
-      console.log('🎵 Probando Loader.to API...')
+      console.log('🎵 Probando Loader.to API como fallback...')
       const response = await fetch('https://loader.to/ajax/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
-        body: `query=https://www.youtube.com/watch?v=${videoId}`
+        body: `query=${videoUrl}`
       })
 
       if (response.ok) {
@@ -167,55 +213,6 @@ async function getAudioUrl(videoId: string): Promise<string | null> {
       }
     } catch (error) {
       console.log('🎵 ❌ Loader.to falló:', error)
-    }
-
-    // Método 3: SaveTube API
-    try {
-      console.log('🎵 Probando SaveTube API...')
-      const response = await fetch(`https://savetube.me/api/v1/tetr?url=https://www.youtube.com/watch?v=${videoId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        }
-      })
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('🎵 Respuesta de SaveTube:', data)
-        
-        if (data.status === 'success' && data.data && data.data.audio) {
-          const audioUrl = data.data.audio[0]?.url
-          if (audioUrl) {
-            console.log('🎵 ✅ SaveTube exitoso')
-            return audioUrl
-          }
-        }
-      }
-    } catch (error) {
-      console.log('🎵 ❌ SaveTube falló:', error)
-    }
-
-    // Método 4: Servicio directo de MP3 (fallback)
-    try {
-      console.log('🎵 Probando servicio directo MP3...')
-      const directUrl = `https://api.vevioz.com/@api/json/mp3/${videoId}`
-      
-      const response = await fetch(directUrl, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        if (data && data.url && typeof data.url === 'string') {
-          console.log('🎵 ✅ Servicio directo MP3 exitoso')
-          return data.url
-        }
-      }
-    } catch (error) {
-      console.log('🎵 ❌ Servicio directo MP3 falló:', error)
     }
 
     console.log('🎵 ❌ Todos los métodos fallaron')
