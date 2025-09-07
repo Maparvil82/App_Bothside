@@ -32,6 +32,9 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { ENV } from '../config/env';
 import { Audio } from 'expo-av';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import * as ImagePicker from 'expo-image-picker';
+import { GeminiService } from '../services/gemini';
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -40,6 +43,7 @@ export const SearchScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
   const searchInputRef = useRef<TextInput>(null);
+  const cameraRef = useRef<CameraView>(null);
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,6 +60,13 @@ export const SearchScreen: React.FC = () => {
 
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
+  
+  // Estados para la funcionalidad de cámara
+  const [showCamera, setShowCamera] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiResults, setAiResults] = useState<any[]>([]);
+  const [recognizedAlbum, setRecognizedAlbum] = useState<string>('');
   
   // Estados para el modal de añadir a maleta
   const [showAddToShelfModal, setShowAddToShelfModal] = useState(false);
@@ -969,6 +980,370 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  // ========== FUNCIONES DE CÁMARA Y RECONOCIMIENTO ==========
+  
+  const handleCameraPress = () => {
+    // Abrir directamente la cámara sin mostrar opciones
+    openCamera();
+  };
+
+  const [permission, requestPermission] = useCameraPermissions();
+
+  const openCamera = async () => {
+    try {
+      if (!permission?.granted) {
+        const result = await requestPermission();
+        if (!result.granted) {
+          Alert.alert('Permisos', 'Se necesitan permisos de cámara para esta función');
+          return;
+        }
+      }
+      setShowCamera(true);
+    } catch (error) {
+      console.error('Error opening camera:', error);
+      Alert.alert('Error', 'No se pudo abrir la cámara');
+    }
+  };
+
+  const pickImageFromGallery = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permisos', 'Se necesitan permisos de galería para esta función');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        setCapturedImage(result.assets[0].uri);
+        await processImageWithAI(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error('Error picking image:', error);
+      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+    }
+  };
+
+  const takePicture = async (cameraRef: any) => {
+    try {
+      if (cameraRef) {
+        const photo = await cameraRef.takePictureAsync({
+          quality: 0.8,
+          base64: false,
+        });
+        setCapturedImage(photo.uri);
+        setShowCamera(false);
+        await processImageWithAI(photo.uri);
+      }
+    } catch (error) {
+      console.error('Error taking picture:', error);
+      Alert.alert('Error', 'No se pudo tomar la foto');
+    }
+  };
+
+  const processImageWithAI = async (imageUri: string) => {
+    setAiLoading(true);
+    setAiResults([]);
+    setRecognizedAlbum('');
+
+    try {
+      console.log('🤖 Iniciando reconocimiento de álbum con Gemini Vision...');
+      
+      // Convertir imagen a base64
+      let base64Data = imageUri;
+      
+      if (imageUri.startsWith('file://') || imageUri.startsWith('http')) {
+        console.log('📤 Convirtiendo URI a base64...');
+        const response = await fetch(imageUri);
+        const blob = await response.blob();
+        base64Data = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const base64String = reader.result as string;
+            resolve(base64String);
+          };
+          reader.readAsDataURL(blob);
+        });
+      }
+
+      // Usar Gemini Vision para reconocer el álbum
+      const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
+      
+      console.log('🎵 Álbum reconocido por IA:', { artist, album });
+      setRecognizedAlbum(`${album} - ${artist}`);
+      
+      // Buscar en la colección del usuario
+      if (artist && album) {
+        await searchInUserCollection(`${artist} ${album}`);
+      } else {
+        Alert.alert('Sin resultados', 'No se pudo reconocer el álbum en la imagen');
+      }
+    } catch (error) {
+      console.error('Error processing image with AI:', error);
+      Alert.alert('Error', 'Error al procesar la imagen con IA');
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const searchInUserCollection = async (searchText: string) => {
+    try {
+      // Limpiar y preparar el texto de búsqueda
+      const cleanSearchText = searchText.trim();
+      
+      // Extraer palabras clave del texto reconocido
+      const words = cleanSearchText.split(' ').filter(word => word.length > 2);
+      console.log('🔍 Palabras clave extraídas:', words);
+      
+      // Si el texto contiene " - ", separar artista y álbum
+      let artistSearch = '';
+      let albumSearch = '';
+      if (cleanSearchText.includes(' - ')) {
+        const parts = cleanSearchText.split(' - ');
+        artistSearch = parts[0]?.trim() || '';
+        albumSearch = parts[1]?.trim() || '';
+        console.log('🎵 Artista:', artistSearch, '| Álbum:', albumSearch);
+      }
+      
+      // Crear array de consultas más inteligentes
+      const searchQueries = [];
+      
+      // 1. Búsqueda exacta del texto completo SOLO si no tenemos artista y álbum separados
+      if (!artistSearch || !albumSearch) {
+        searchQueries.push(
+          supabase
+            .from('user_collection')
+            .select(`
+              *,
+              albums (
+                id,
+                title,
+                artist,
+                label,
+                cover_url,
+                release_year
+              )
+            `)
+            .eq('user_id', user!.id)
+            .ilike('albums.title', `%${cleanSearchText}%`)
+        );
+        
+        searchQueries.push(
+          supabase
+            .from('user_collection')
+            .select(`
+              *,
+              albums (
+                id,
+                title,
+                artist,
+                label,
+                cover_url,
+                release_year
+              )
+            `)
+            .eq('user_id', user!.id)
+            .ilike('albums.artist', `%${cleanSearchText}%`)
+        );
+      }
+      
+      // 2. Si tenemos artista y álbum separados, buscar SOLO combinaciones exactas
+      if (artistSearch && albumSearch) {
+        // Buscar por artista Y título (coincidencia estricta)
+        searchQueries.push(
+          supabase
+            .from('user_collection')
+            .select(`
+              *,
+              albums (
+                id,
+                title,
+                artist,
+                label,
+                cover_url,
+                release_year
+              )
+            `)
+            .eq('user_id', user!.id)
+            .ilike('albums.artist', `%${artistSearch}%`)
+            .ilike('albums.title', `%${albumSearch}%`)
+        );
+        
+        // NO buscar variaciones del artista - solo coincidencia exacta
+        // Esto evita mostrar discos de otros artistas que tengan palabras en común
+      }
+      
+      // 3. Búsqueda por palabras individuales SOLO si no tenemos artista y álbum separados
+      if (!artistSearch || !albumSearch) {
+        for (const word of words) {
+          // Solo buscar por palabras si no tenemos una búsqueda más específica
+          searchQueries.push(
+            supabase
+              .from('user_collection')
+              .select(`
+                *,
+                albums (
+                  id,
+                  title,
+                  artist,
+                  label,
+                  cover_url,
+                  release_year
+                )
+              `)
+              .eq('user_id', user!.id)
+              .ilike('albums.title', `%${word}%`)
+          );
+          
+          searchQueries.push(
+            supabase
+              .from('user_collection')
+              .select(`
+                *,
+                albums (
+                  id,
+                  title,
+                  artist,
+                  label,
+                  cover_url,
+                  release_year
+                )
+              `)
+              .eq('user_id', user!.id)
+              .ilike('albums.artist', `%${word}%`)
+          );
+        }
+      }
+      
+      // Ejecutar todas las consultas en paralelo
+      const results = await Promise.all(searchQueries);
+
+      // Verificar errores y combinar resultados
+      const allResults = [];
+      for (let i = 0; i < results.length; i++) {
+        const result = results[i];
+        if (result.error) {
+          console.error(`Error en consulta ${i}:`, result.error);
+          continue;
+        }
+        if (result.data) {
+          allResults.push(...result.data);
+        }
+      }
+      
+      console.log(`🔍 Total de resultados encontrados: ${allResults.length}`);
+      
+      // Eliminar duplicados basándose en el ID del álbum
+      const uniqueResults = allResults.filter((item, index, self) => 
+        item.albums && item.albums.id && 
+        index === self.findIndex(t => t.albums && t.albums.id === item.albums.id)
+      );
+      
+      console.log(`🎯 Resultados únicos después de eliminar duplicados: ${uniqueResults.length}`);
+      
+      // Log de los resultados encontrados para debug
+      uniqueResults.forEach((item, index) => {
+        console.log(`📀 ${index + 1}. ${item.albums?.artist} - ${item.albums?.title}`);
+      });
+      
+      // Filtrar resultados para mostrar solo coincidencias EXACTAS
+      let filteredResults = uniqueResults;
+      
+      if (artistSearch && albumSearch) {
+        // Solo mostrar discos que coincidan EXACTAMENTE con el artista Y el álbum reconocidos
+        filteredResults = uniqueResults.filter(item => {
+          if (!item.albums) return false;
+          
+          const albumArtist = item.albums.artist?.toLowerCase().trim() || '';
+          const albumTitle = item.albums.title?.toLowerCase().trim() || '';
+          const searchArtist = artistSearch.toLowerCase().trim();
+          const searchAlbum = albumSearch.toLowerCase().trim();
+          
+          // Verificar coincidencia EXACTA del artista
+          // El artista de la BD debe contener TODAS las palabras del artista reconocido
+          const searchArtistWords = searchArtist.split(' ').filter(word => word.length > 1);
+          const artistMatches = searchArtistWords.every(word => albumArtist.includes(word));
+          
+          // Verificar coincidencia EXACTA del álbum
+          // El título de la BD debe contener TODAS las palabras del título reconocido
+          const searchAlbumWords = searchAlbum.split(' ').filter(word => word.length > 1);
+          const albumMatches = searchAlbumWords.every(word => albumTitle.includes(word));
+          
+          // ADICIONAL: Verificar que el artista de la BD también contenga el artista completo
+          // Esto evita casos como "Nick" que coincida con "Nick Cave" cuando buscamos "Nick Drake"
+          const artistContainsFullSearch = albumArtist.includes(searchArtist);
+          
+          // ADICIONAL: Verificar que el título de la BD también contenga el título completo
+          const albumContainsFullSearch = albumTitle.includes(searchAlbum);
+          
+          // Coincidencia final: debe cumplir TODAS las condiciones
+          const isMatch = artistMatches && albumMatches && artistContainsFullSearch && albumContainsFullSearch;
+          console.log(`🎯 ${item.albums.artist} - ${item.albums.title}:`);
+          console.log(`   Artista palabras: "${searchArtist}" vs "${albumArtist}" = ${artistMatches}`);
+          console.log(`   Álbum palabras: "${searchAlbum}" vs "${albumTitle}" = ${albumMatches}`);
+          console.log(`   Artista completo: "${searchArtist}" en "${albumArtist}" = ${artistContainsFullSearch}`);
+          console.log(`   Álbum completo: "${searchAlbum}" en "${albumTitle}" = ${albumContainsFullSearch}`);
+          console.log(`   Match final: ${isMatch}`);
+          
+          return isMatch;
+        });
+        
+        console.log(`🎯 Resultados filtrados (coincidencias EXACTAS): ${filteredResults.length}`);
+      }
+      
+      const collectionData = filteredResults;
+
+      if (collectionData && collectionData.length > 0) {
+        // Siempre abrir el primer resultado (mejor coincidencia) directamente
+        const bestMatch = collectionData[0];
+        if (bestMatch.albums && bestMatch.albums.id) {
+          console.log(`🎯 Abriendo directamente el mejor match: ${bestMatch.albums.artist} - ${bestMatch.albums.title}`);
+          navigation.navigate('AlbumDetail', { albumId: bestMatch.albums.id });
+          setCapturedImage(null);
+          setAiResults([]);
+          return;
+        }
+      } else {
+        Alert.alert(
+          'No encontrado',
+          'No se encontró este disco en tu colección. ¿Quieres buscarlo en Discogs para añadirlo?',
+          [
+            {
+              text: 'No',
+              style: 'cancel'
+            },
+            {
+              text: 'Buscar en Discogs',
+              onPress: () => {
+                setQuery(searchText);
+                setShowSearch(true);
+                setCapturedImage(null);
+                setAiResults([]);
+              }
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Error searching in collection:', error);
+    }
+  };
+
+  const closeCamera = () => {
+    setShowCamera(false);
+    setCapturedImage(null);
+    setAiResults([]);
+    setRecognizedAlbum('');
+  };
+
+  // ========== FIN FUNCIONES DE CÁMARA ==========
+
   const renderCollectionItem = ({ item }: { item: any }) => (
     <View style={[styles.collectionItemContainer, { backgroundColor: colors.card }]}>
       <TouchableOpacity
@@ -1151,6 +1526,17 @@ export const SearchScreen: React.FC = () => {
           >
             <Ionicons 
               name="search-outline" 
+              size={24} 
+              color={colors.text} 
+            />
+          </TouchableOpacity>
+          
+          <TouchableOpacity
+            style={styles.toolbarButton}
+            onPress={handleCameraPress}
+          >
+            <Ionicons 
+              name="camera-outline" 
               size={24} 
               color={colors.text} 
             />
@@ -1755,6 +2141,126 @@ export const SearchScreen: React.FC = () => {
       >
         <Ionicons name="sparkles" size={24} color="#fff" />
       </TouchableOpacity>
+
+      {/* Modal de Cámara */}
+      <Modal
+        visible={showCamera}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <View style={styles.cameraContainer}>
+          <CameraView
+            style={styles.camera}
+            facing="back"
+            ref={cameraRef}
+          >
+            <View style={styles.cameraControls}>
+              <TouchableOpacity
+                style={styles.cameraCloseButton}
+                onPress={closeCamera}
+              >
+                <Ionicons name="close" size={24} color="white" />
+              </TouchableOpacity>
+              
+              <View style={styles.cameraBottomControls}>
+                <TouchableOpacity
+                  style={styles.cameraCaptureButton}
+                  onPress={() => takePicture(cameraRef.current)}
+                >
+                  <View style={styles.cameraCaptureButtonInner} />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </CameraView>
+        </View>
+      </Modal>
+
+      {/* Modal de Resultados de IA */}
+      <Modal
+        visible={aiResults.length > 0}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={closeCamera}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Discos Encontrados
+              </Text>
+              <TouchableOpacity
+                style={styles.closeButton}
+                onPress={closeCamera}
+              >
+                <Ionicons name="close" size={24} color="#6c757d" />
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalBody}>
+              {recognizedAlbum && (
+                <View style={styles.extractedTextContainer}>
+                  <Text style={[styles.extractedTextLabel, { color: colors.text }]}>
+                    Álbum reconocido:
+                  </Text>
+                  <Text style={[styles.extractedText, { color: colors.text }]}>
+                    {recognizedAlbum}
+                  </Text>
+                </View>
+              )}
+              
+              <Text style={[styles.resultsTitle, { color: colors.text }]}>
+                Resultados en tu colección:
+              </Text>
+              
+              {aiResults.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={styles.ocrResultItem}
+                  onPress={() => {
+                    if (item.albums && item.albums.id) {
+                      navigation.navigate('AlbumDetail', { albumId: item.albums.id });
+                      closeCamera();
+                    }
+                  }}
+                >
+                  <Image
+                    source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+                    style={styles.ocrResultThumbnail}
+                  />
+                  <View style={styles.ocrResultInfo}>
+                    <Text style={[styles.ocrResultTitle, { color: colors.text }]} numberOfLines={1}>
+                      {item.albums?.title}
+                    </Text>
+                    <Text style={[styles.ocrResultArtist, { color: colors.text }]} numberOfLines={1}>
+                      {item.albums?.artist}
+                    </Text>
+                    <Text style={[styles.ocrResultDetail, { color: colors.text }]} numberOfLines={1}>
+                      {item.albums?.label && `${item.albums.label} • `}
+                      {item.albums?.release_year}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#666" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de Carga de IA */}
+      <Modal
+        visible={aiLoading}
+        transparent={true}
+        animationType="fade"
+      >
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Reconociendo álbum con IA...</Text>
+            <Text style={styles.loadingSubtext}>Esto puede tomar unos segundos</Text>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -2547,5 +3053,123 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#999',
     marginTop: 16,
+  },
+  
+  // Estilos para la cámara
+  cameraContainer: {
+    flex: 1,
+    backgroundColor: 'black',
+  },
+  camera: {
+    flex: 1,
+  },
+  cameraControls: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: 'space-between',
+    paddingTop: 50,
+    paddingBottom: 50,
+    paddingHorizontal: 20,
+  },
+  cameraCloseButton: {
+    alignSelf: 'flex-start',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    borderRadius: 25,
+    width: 50,
+    height: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cameraBottomControls: {
+    alignItems: 'center',
+  },
+  cameraCaptureButton: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: 'white',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 4,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
+  },
+  cameraCaptureButtonInner: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: 'white',
+  },
+  
+  // Estilos para IA
+  extractedTextContainer: {
+    backgroundColor: '#f0f8ff',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#007AFF',
+  },
+  extractedTextLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#007AFF',
+  },
+  extractedText: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontStyle: 'italic',
+  },
+  resultsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 15,
+  },
+  ocrResultItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 15,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  ocrResultThumbnail: {
+    width: 50,
+    height: 50,
+    borderRadius: 4,
+    marginRight: 12,
+  },
+  ocrResultInfo: {
+    flex: 1,
+  },
+  ocrResultTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  ocrResultArtist: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  ocrResultDetail: {
+    fontSize: 12,
+    color: '#999',
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingSubtext: {
+    marginTop: 5,
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
   },
 }); 
