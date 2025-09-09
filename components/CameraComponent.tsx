@@ -34,6 +34,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   }, [permission, requestPermission]);
 
   const performAIAlbumRecognition = async (imageUri: string) => {
+    const startTime = Date.now();
     console.log('🚀 Iniciando análisis de álbum, isAIProcessing:', isAIProcessing);
     setIsAIProcessing(true);
     setAiResult(''); // Limpiar resultado anterior
@@ -42,11 +43,12 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     try {
       console.log('🤖 Iniciando reconocimiento de álbum con IA...');
       
-      // OPTIMIZACIÓN: Si ya tenemos base64, usarlo directamente
+      // OPTIMIZACIÓN: Usar base64 directamente si está disponible
       let base64Data = imageUri;
       
       // Si es un URI, convertirlo a base64 (solo si es necesario)
       if (imageUri.startsWith('file://') || imageUri.startsWith('http')) {
+        const conversionStart = Date.now();
         console.log('📤 Convirtiendo URI a base64...');
         const response = await fetch(imageUri);
         const blob = await response.blob();
@@ -58,12 +60,32 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           };
           reader.readAsDataURL(blob);
         });
+        const conversionEnd = Date.now();
+        console.log(`⏱️ Conversión URI a base64: ${conversionEnd - conversionStart}ms`);
+      }
+      
+      // Validar que tenemos datos base64 válidos
+      if (!base64Data || base64Data.length < 100) {
+        throw new Error('Imagen capturada no válida o muy pequeña');
+      }
+      
+      console.log('📏 Tamaño de imagen base64:', base64Data.length, 'caracteres');
+      
+      // OPTIMIZACIÓN: Reducir tamaño si es muy grande (más de 500KB)
+      if (base64Data.length > 500000) {
+        console.log('⚠️ Imagen muy grande, considerando reducción...');
+        // Para imágenes muy grandes, podríamos implementar compresión adicional
+        // Por ahora, solo logueamos el tamaño
       }
 
+      const geminiStart = Date.now();
       console.log('📤 Enviando imagen a Gemini Vision...');
       
       // Usar Gemini Vision para reconocer el álbum
       const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
+      
+      const geminiEnd = Date.now();
+      console.log(`⏱️ Gemini Vision completado: ${geminiEnd - geminiStart}ms`);
       
       console.log('🎵 Álbum reconocido por IA:', { artist, album });
       setAiResult(`🎵 ${album} - ${artist}`);
@@ -106,7 +128,9 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         [{ text: 'OK' }]
       );
     } finally {
-      console.log('🏁 Finalizando análisis, estableciendo isAIProcessing a false');
+      const endTime = Date.now();
+      const totalTime = endTime - startTime;
+      console.log(`🏁 Análisis completado en ${totalTime}ms, estableciendo isAIProcessing a false`);
       setIsAIProcessing(false);
     }
   };
@@ -320,11 +344,12 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
     setIsLoading(true);
     try {
-      // OPTIMIZACIÓN: Capturar directamente en base64 con calidad reducida
+      // OPTIMIZACIÓN: Capturar con balance entre calidad y velocidad
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.5,        // ← Calidad reducida para velocidad
+        quality: 0.6,        // ← Calidad balanceada para velocidad
         base64: true,        // ← Base64 directo (sin conversiones)
-        skipProcessing: true, // ← Saltar procesamiento adicional
+        skipProcessing: true, // ← Saltar procesamiento para velocidad
+        exif: false,         // ← Sin metadatos EXIF para reducir tamaño
       });
       console.log('📸 Foto capturada en base64, tamaño:', photo.base64?.length || 0);
       

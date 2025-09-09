@@ -117,102 +117,124 @@ export class GeminiService {
   }
 
   static async analyzeAlbumImage(imageBase64: string): Promise<{ artist: string; album: string }> {
-    try {
-      console.log('🔍 Analizando imagen de álbum con Gemini Vision...');
-      
-      // Remover el prefijo data:image/jpeg;base64, si está presente
-      const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-      
-      // PROMPT OPTIMIZADO para respuestas más rápidas
-      const prompt = `Identifica el álbum de música en esta imagen. Responde SOLO con:
+    const maxRetries = 2;
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`🔍 Analizando imagen de álbum con Gemini Vision... (Intento ${attempt}/${maxRetries})`);
+        
+        // Remover el prefijo data:image/jpeg;base64, si está presente
+        const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+        
+        // PROMPT OPTIMIZADO para respuestas más rápidas
+        const prompt = `Identifica el álbum de música en esta imagen. Responde SOLO con:
 
 ARTISTA: [nombre]
 ALBUM: [título]
 
 Sin texto adicional.`;
 
-      // Crear AbortController para timeout
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+        // Crear AbortController para timeout más generoso
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
 
-      try {
-        const response = await fetch(`${this.VISION_API_URL}?key=${this.API_KEY}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            contents: [{
-              parts: [
-                {
-                  text: prompt
-                },
-                {
-                  inline_data: {
-                    mime_type: 'image/jpeg',
-                    data: base64Data
+        try {
+          const response = await fetch(`${this.VISION_API_URL}?key=${this.API_KEY}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  {
+                    text: prompt
+                  },
+                  {
+                    inline_data: {
+                      mime_type: 'image/jpeg',
+                      data: base64Data
+                    }
                   }
-                }
-              ]
-            }],
-            // CONFIGURACIÓN OPTIMIZADA para velocidad
-            generationConfig: {
-              temperature: 0.1,        // Respuestas más deterministas
-              topK: 1,                // Solo la mejor respuesta
-              topP: 0.1,              // Respuestas más concisas
-              maxOutputTokens: 50,    // Respuestas cortas
-            }
-          }),
-          signal: controller.signal
-        });
+                ]
+              }],
+              // CONFIGURACIÓN OPTIMIZADA para velocidad
+              generationConfig: {
+                temperature: 0.1,        // Respuestas más deterministas
+                topK: 1,                // Solo la mejor respuesta
+                topP: 0.1,              // Respuestas más concisas
+                maxOutputTokens: 50,    // Respuestas cortas
+              }
+            }),
+            signal: controller.signal
+          });
 
-        clearTimeout(timeoutId);
+          clearTimeout(timeoutId);
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error en Gemini Vision:', errorText);
-          throw new Error(`Error de API Vision: ${response.status}`);
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Error en Gemini Vision (intento ${attempt}):`, errorText);
+            throw new Error(`Error de API Vision: ${response.status}`);
+          }
+
+          const data: GeminiResponse = await response.json();
+          
+          if (!data.candidates || data.candidates.length === 0) {
+            throw new Error('No se recibió respuesta de la API Vision');
+          }
+
+          const responseText = data.candidates[0].content.parts[0].text;
+          console.log('📝 Respuesta de Gemini Vision:', responseText);
+
+          // Extraer artista y álbum de la respuesta
+          const artistMatch = responseText.match(/ARTISTA:\s*(.+)/i);
+          const albumMatch = responseText.match(/ALBUM:\s*(.+)/i);
+
+          if (!artistMatch || !albumMatch) {
+            throw new Error('Formato de respuesta inesperado de Gemini Vision');
+          }
+
+          const artist = artistMatch[1].trim();
+          const album = albumMatch[1].trim();
+
+          if (artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
+            throw new Error('No se pudo identificar completamente el álbum');
+          }
+
+          console.log('✅ Álbum identificado:', { artist, album });
+          return { artist, album };
+
+        } catch (fetchError: any) {
+          clearTimeout(timeoutId);
+          if (fetchError.name === 'AbortError') {
+            lastError = new Error('Timeout: La API tardó demasiado en responder');
+            console.log(`⏰ Timeout en intento ${attempt}, ${attempt < maxRetries ? 'reintentando...' : 'agotados todos los intentos'}`);
+          } else {
+            lastError = fetchError;
+            console.log(`❌ Error en intento ${attempt}:`, fetchError.message);
+          }
+          
+          // Si no es el último intento, esperar un poco antes de reintentar
+          if (attempt < maxRetries) {
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Espera progresiva
+          }
         }
 
-        const data: GeminiResponse = await response.json();
+      } catch (error) {
+        lastError = error as Error;
+        console.error(`Error al analizar imagen con Gemini Vision (intento ${attempt}):`, error);
         
-        if (!data.candidates || data.candidates.length === 0) {
-          throw new Error('No se recibió respuesta de la API Vision');
+        // Si no es el último intento, esperar un poco antes de reintentar
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Espera progresiva
         }
-
-        const responseText = data.candidates[0].content.parts[0].text;
-        console.log('📝 Respuesta de Gemini Vision:', responseText);
-
-        // Extraer artista y álbum de la respuesta
-        const artistMatch = responseText.match(/ARTISTA:\s*(.+)/i);
-        const albumMatch = responseText.match(/ALBUM:\s*(.+)/i);
-
-        if (!artistMatch || !albumMatch) {
-          throw new Error('Formato de respuesta inesperado de Gemini Vision');
-        }
-
-        const artist = artistMatch[1].trim();
-        const album = albumMatch[1].trim();
-
-        if (artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
-          throw new Error('No se pudo identificar completamente el álbum');
-        }
-
-        console.log('✅ Álbum identificado:', { artist, album });
-        return { artist, album };
-
-      } catch (fetchError: any) {
-        clearTimeout(timeoutId);
-        if (fetchError.name === 'AbortError') {
-          throw new Error('Timeout: La API tardó demasiado en responder');
-        }
-        throw fetchError;
       }
-
-    } catch (error) {
-      console.error('Error al analizar imagen con Gemini Vision:', error);
-      throw new Error('No se pudo analizar la imagen del álbum. Intenta con otra foto.');
     }
+
+    // Si llegamos aquí, todos los intentos fallaron
+    console.error('❌ Todos los intentos de análisis fallaron');
+    throw new Error('No se pudo analizar la imagen del álbum después de varios intentos. Intenta con otra foto o verifica tu conexión.');
   }
 
   static formatCollectionContext(collectionData: any[]): string {

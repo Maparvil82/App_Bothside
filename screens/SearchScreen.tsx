@@ -4,6 +4,7 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
+  Animated,
   FlatList,
   Image,
   Alert,
@@ -67,6 +68,50 @@ export const SearchScreen: React.FC = () => {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResults, setAiResults] = useState<any[]>([]);
   const [recognizedAlbum, setRecognizedAlbum] = useState<string>('');
+  
+  // Animaciones para el modal de carga
+  const progressAnimation = useRef(new Animated.Value(0)).current;
+  const pulseAnimation = useRef(new Animated.Value(1)).current;
+  
+  // Efecto para animaciones cuando se activa el loading
+  useEffect(() => {
+    if (aiLoading) {
+      // Animación de pulso para el spinner
+      const pulseLoop = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnimation, {
+            toValue: 1.2,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnimation, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      
+      // Animación de progreso
+      const progressLoop = Animated.loop(
+        Animated.timing(progressAnimation, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: false,
+        })
+      );
+      
+      pulseLoop.start();
+      progressLoop.start();
+      
+      return () => {
+        pulseLoop.stop();
+        progressLoop.stop();
+        progressAnimation.setValue(0);
+        pulseAnimation.setValue(1);
+      };
+    }
+  }, [aiLoading, progressAnimation, pulseAnimation]);
   
   // Estados para el modal de añadir a maleta
   const [showAddToShelfModal, setShowAddToShelfModal] = useState(false);
@@ -2247,17 +2292,50 @@ export const SearchScreen: React.FC = () => {
         </View>
       </Modal>
 
-      {/* Modal de Carga de IA */}
+      {/* Modal de Carga de IA Mejorado */}
       <Modal
         visible={aiLoading}
         transparent={true}
         animationType="fade"
+        statusBarTranslucent={true}
       >
         <View style={styles.loadingOverlay}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.loadingText}>Reconociendo álbum con IA...</Text>
-            <Text style={styles.loadingSubtext}>Esto puede tomar unos segundos</Text>
+          <View style={[styles.loadingContainer, { backgroundColor: colors.card }]}>
+            <Animated.View 
+              style={[
+                styles.loadingIconContainer,
+                { transform: [{ scale: pulseAnimation }] }
+              ]}
+            >
+              <ActivityIndicator size="large" color="#007AFF" />
+              <View style={styles.loadingIconBackground} />
+            </Animated.View>
+            <Text style={[styles.loadingText, { color: colors.text }]}>
+              🤖 Analizando portada con IA
+            </Text>
+            <Text style={[styles.loadingSubtext, { color: colors.text }]}>
+              Reconociendo artista y álbum...
+            </Text>
+            <View style={styles.loadingProgressContainer}>
+              <View style={styles.loadingProgressBar}>
+                <Animated.View 
+                  style={[
+                    styles.loadingProgressFill,
+                    {
+                      transform: [{
+                        translateX: progressAnimation.interpolate({
+                          inputRange: [0, 1],
+                          outputRange: [-100, 100],
+                        })
+                      }]
+                    }
+                  ]} 
+                />
+              </View>
+            </View>
+            <Text style={[styles.loadingTimeText, { color: colors.text }]}>
+              Esto puede tomar unos segundos
+            </Text>
           </View>
         </View>
       </Modal>
@@ -3043,17 +3121,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 5,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 50,
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#999',
-    marginTop: 16,
-  },
   
   // Estilos para la cámara
   cameraContainer: {
@@ -3162,14 +3229,70 @@ const styles = StyleSheet.create({
   },
   loadingOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  loadingSubtext: {
-    marginTop: 5,
-    fontSize: 14,
-    color: '#999',
+  loadingContainer: {
+    padding: 30,
+    borderRadius: 20,
+    alignItems: 'center',
+    minWidth: 280,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loadingIconContainer: {
+    position: 'relative',
+    marginBottom: 20,
+  },
+  loadingIconBackground: {
+    position: 'absolute',
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
+    backgroundColor: 'rgba(0, 122, 255, 0.1)',
+    borderRadius: 50,
+  },
+  loadingText: {
+    fontSize: 18,
+    fontWeight: '600',
     textAlign: 'center',
+    marginBottom: 8,
+  },
+  loadingSubtext: {
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+    opacity: 0.8,
+  },
+  loadingProgressContainer: {
+    width: '100%',
+    marginBottom: 15,
+  },
+  loadingProgressBar: {
+    height: 4,
+    backgroundColor: 'rgba(0, 122, 255, 0.2)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  loadingProgressFill: {
+    height: '100%',
+    backgroundColor: '#007AFF',
+    borderRadius: 2,
+    width: '70%',
+    // Animación de progreso
+    transform: [{ translateX: -100 }],
+  },
+  loadingTimeText: {
+    fontSize: 12,
+    textAlign: 'center',
+    opacity: 0.6,
   },
 }); 
