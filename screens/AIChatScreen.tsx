@@ -24,6 +24,11 @@ interface Message {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  imageUri?: string;
+  analyzedAlbum?: {
+    artist: string;
+    album: string;
+  };
 }
 
 const CHAT_STORAGE_KEY = 'ai_chat_messages';
@@ -58,7 +63,7 @@ const PREDEFINED_QUESTIONS = [
     title: "Estadísticas generales",
     question: "Dame un resumen completo de las estadísticas de mi colección",
     icon: "stats-chart-outline"
-  }
+  },
 ];
 
 export default function AIChatScreen() {
@@ -238,6 +243,7 @@ export default function AIChatScreen() {
     }, 50);
   };
 
+
   const scrollToBottomIfUserMessage = (newMessages: Message[]) => {
     // Solo hacer scroll si el último mensaje es del usuario
     const lastMessage = newMessages[newMessages.length - 1];
@@ -313,27 +319,27 @@ export default function AIChatScreen() {
                 message.isUser ? styles.userMessage : styles.aiMessage,
               ]}
             >
-            <View
-              style={[
-                styles.messageBubble,
-                message.isUser ? styles.userBubble : [styles.aiBubble, { backgroundColor: colors.card }],
-              ]}
-            >
-              <Text
+              <View
                 style={[
-                  message.isUser ? styles.userText : [styles.aiText, { color: colors.text }],
-                  styles.messageText,
+                  styles.messageBubble,
+                  message.isUser ? styles.userBubble : [styles.aiBubble, { backgroundColor: colors.card }],
                 ]}
               >
-                {message.text}
+                <Text
+                  style={[
+                    message.isUser ? styles.userText : [styles.aiText, { color: colors.text }],
+                    styles.messageText,
+                  ]}
+                >
+                  {message.text}
+                </Text>
+              </View>
+              <Text style={[styles.timestamp, { color: colors.text + '80' }]}>
+                {message.timestamp.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
               </Text>
-            </View>
-            <Text style={[styles.timestamp, { color: colors.text + '80' }]}>
-              {message.timestamp.toLocaleTimeString([], {
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </Text>
             </View>
           ))}
           
@@ -395,7 +401,14 @@ export default function AIChatScreen() {
 
         <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <TextInput
-            style={[styles.textInput, { backgroundColor: colors.background, color: colors.text }]}
+            style={[
+              styles.textInput, 
+              { 
+                backgroundColor: colors.background, 
+                color: colors.text,
+                marginRight: inputText.trim() ? 10 : 0
+              }
+            ]}
             value={inputText}
             onChangeText={setInputText}
             placeholder="Pregunta sobre tu colección..."
@@ -403,23 +416,25 @@ export default function AIChatScreen() {
             multiline
             maxLength={500}
           />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!inputText.trim() || isLoading) && [
-                styles.sendButtonDisabled,
-                { backgroundColor: isLightMode ? '#E5E5EA' : colors.text + '20' },
-              ],
-            ]}
-            onPress={handleSendMessage}
-            disabled={!inputText.trim() || isLoading}
-          >
-            <Ionicons
-              name="send"
-              size={20}
-              color={!inputText.trim() || isLoading ? (isLightMode ? '#8E8E93' : colors.text + '60') : '#fff'}
-            />
-          </TouchableOpacity>
+          {inputText.trim() && (
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                isLoading && [
+                  styles.sendButtonDisabled,
+                  { backgroundColor: isLightMode ? '#E5E5EA' : colors.text + '20' },
+                ],
+              ]}
+              onPress={handleSendMessage}
+              disabled={isLoading}
+            >
+              <Ionicons
+                name="send"
+                size={20}
+                color={isLoading ? (isLightMode ? '#8E8E93' : colors.text + '60') : '#fff'}
+              />
+            </TouchableOpacity>
+          )}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -518,10 +533,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 20,
     paddingVertical: 15,
+    marginHorizontal: 16,
     marginTop: 24,
     marginBottom: 10,
-    marginLeft: 16,
-    marginRight: 16,
     borderRadius: 12,
     borderWidth: 1,
   },
@@ -530,7 +544,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 15,
     paddingVertical: 16,
-    marginRight: 10,
     fontSize: 16,
     maxHeight: 100,
   },
