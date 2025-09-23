@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { GeminiService } from '../services/gemini';
 
@@ -64,6 +64,8 @@ const PREDEFINED_QUESTIONS = [
 export default function AIChatScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
+  const { colors, dark } = useTheme();
+  const isLightMode = !dark;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -74,6 +76,7 @@ export default function AIChatScreen() {
     loadCollectionData();
     loadChatHistory();
   }, []);
+
 
   const loadChatHistory = async () => {
     try {
@@ -263,16 +266,16 @@ export default function AIChatScreen() {
   }, [messages]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity 
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.card }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color="#333" />
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
-          <Text style={styles.headerTitle}>Bothside IA</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Bothside IA</Text>
        
         </View>
         <View style={styles.rightButtonContainer}>
@@ -281,7 +284,7 @@ export default function AIChatScreen() {
               style={styles.clearButton}
               onPress={clearChat}
             >
-              <Ionicons name="refresh-outline" size={24} color="#FF6B6B" />
+              <Ionicons name="refresh-outline" size={24} color={colors.text} />
             </TouchableOpacity>
           ) : (
             <View style={styles.clearButton} />
@@ -310,36 +313,36 @@ export default function AIChatScreen() {
                 message.isUser ? styles.userMessage : styles.aiMessage,
               ]}
             >
-              <View
+            <View
+              style={[
+                styles.messageBubble,
+                message.isUser ? styles.userBubble : [styles.aiBubble, { backgroundColor: colors.card }],
+              ]}
+            >
+              <Text
                 style={[
-                  styles.messageBubble,
-                  message.isUser ? styles.userBubble : styles.aiBubble,
+                  message.isUser ? styles.userText : [styles.aiText, { color: colors.text }],
+                  styles.messageText,
                 ]}
               >
-                <Text
-                  style={[
-                    message.isUser ? styles.userText : styles.aiText,
-                    styles.messageText,
-                  ]}
-                >
-                  {message.text}
-                </Text>
-              </View>
-              <Text style={styles.timestamp}>
-                {message.timestamp.toLocaleTimeString([], {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
+                {message.text}
               </Text>
+            </View>
+            <Text style={[styles.timestamp, { color: colors.text + '80' }]}>
+              {message.timestamp.toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
             </View>
           ))}
           
           {isLoading && (
             <View style={[styles.messageContainer, styles.aiMessage]}>
-              <View style={[styles.messageBubble, styles.aiBubble]}>
+              <View style={[styles.messageBubble, styles.aiBubble, { backgroundColor: colors.card }]}>
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color="#666" />
-                  <Text style={styles.loadingText}>Pensando...</Text>
+                  <ActivityIndicator size="small" color={colors.text} />
+                  <Text style={[styles.loadingText, { color: colors.text }]}>Pensando...</Text>
                 </View>
               </View>
             </View>
@@ -350,10 +353,10 @@ export default function AIChatScreen() {
         {messages.length === 0 && (
           <View style={styles.emptyStateContainer}>
             <View style={styles.emptyStateTextContainer}>
-              <Text style={styles.emptyStateTitle}>
+              <Text style={[styles.emptyStateTitle, { color: colors.text }]}>
                 Tu colección te conoce bien
               </Text>
-              <Text style={styles.emptyStateSubtitle}>
+              <Text style={[styles.emptyStateSubtitle, { color: colors.text + 'CC' }]}>
                 He memorizado cada disco de tu estantería, es maravillosa, llena de datos sorprendentes.
               </Text>
             </View>
@@ -371,11 +374,17 @@ export default function AIChatScreen() {
               {PREDEFINED_QUESTIONS.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  style={styles.predefinedQuestionCard}
+                  style={[
+                    styles.predefinedQuestionCard,
+                    {
+                      backgroundColor: isLightMode ? '#F5F5F7' : 'rgba(255,255,255,0.08)',
+                      borderColor: isLightMode ? '#E5E5EA' : 'rgba(255,255,255,0.15)',
+                    },
+                  ]}
                   onPress={() => handlePredefinedQuestion(item.question)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.predefinedQuestionText} numberOfLines={2}>
+                  <Text style={[styles.predefinedQuestionText, { color: colors.text }]} numberOfLines={2}>
                     {item.question}
                   </Text>
                 </TouchableOpacity>
@@ -384,20 +393,23 @@ export default function AIChatScreen() {
           </View>
         )}
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <TextInput
-            style={styles.textInput}
+            style={[styles.textInput, { backgroundColor: colors.background, color: colors.text }]}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Pregunga sobre tu colección..."
-            placeholderTextColor="#999"
+            placeholder="Pregunta sobre tu colección..."
+            placeholderTextColor={colors.text + '80'}
             multiline
             maxLength={500}
           />
           <TouchableOpacity
             style={[
               styles.sendButton,
-              (!inputText.trim() || isLoading) && styles.sendButtonDisabled,
+              (!inputText.trim() || isLoading) && [
+                styles.sendButtonDisabled,
+                { backgroundColor: isLightMode ? '#E5E5EA' : colors.text + '20' },
+              ],
             ]}
             onPress={handleSendMessage}
             disabled={!inputText.trim() || isLoading}
@@ -405,7 +417,7 @@ export default function AIChatScreen() {
             <Ionicons
               name="send"
               size={20}
-              color={!inputText.trim() || isLoading ? '#ccc' : '#fff'}
+              color={!inputText.trim() || isLoading ? (isLightMode ? '#8E8E93' : colors.text + '60') : '#fff'}
             />
           </TouchableOpacity>
         </View>
@@ -417,16 +429,13 @@ export default function AIChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
   },
   backButton: {
     padding: 5,
@@ -439,11 +448,9 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
   },
   headerSubtitle: {
     fontSize: 14,
-    color: '#666',
     marginTop: 2,
   },
   clearButton: {
@@ -481,14 +488,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#007AFF',
   },
   aiBubble: {
-    backgroundColor: '#e0e0e0',
+    // backgroundColor se aplica dinámicamente
   },
   userText: {
     color: '#fff',
     fontSize: 16,
   },
   aiText: {
-    color: '#333',
     fontSize: 16,
   },
   messageText: {
@@ -496,7 +502,6 @@ const styles = StyleSheet.create({
   },
   timestamp: {
     fontSize: 12,
-    color: '#999',
     marginTop: 4,
     alignSelf: 'flex-end',
   },
@@ -506,7 +511,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    color: '#666',
     fontSize: 14,
   },
   inputContainer: {
@@ -514,26 +518,21 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
+    marginTop: 24,
     marginBottom: 10,
     marginLeft: 16,
     marginRight: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e9ecef',
   },
   textInput: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
     borderRadius: 10,
     paddingHorizontal: 15,
     paddingVertical: 16,
     marginRight: 10,
     fontSize: 16,
     maxHeight: 100,
-    color: '#333',
   },
   sendButton: {
     width: 40,
@@ -544,7 +543,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sendButtonDisabled: {
-    backgroundColor: '#f0f0f0',
+    // backgroundColor se aplica dinámicamente
   },
   predefinedQuestionsContainer: {
     paddingHorizontal: 20,
@@ -556,18 +555,15 @@ const styles = StyleSheet.create({
   },
   predefinedQuestionCard: {
     width: 220, // Fixed width
-    backgroundColor: 'white',
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginRight: 10,
     borderWidth: 1,
-    borderColor: '#e9ecef',
     minHeight: 50, // Minimum height to accommodate 2 lines
   },
   predefinedQuestionText: {
     fontSize: 16,
-    color: '#333',
     textAlign: 'left',
     fontWeight: '400',
     lineHeight: 22, // Better line spacing for readability
@@ -585,13 +581,11 @@ const styles = StyleSheet.create({
   emptyStateTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
     textAlign: 'center',
     marginBottom: 5,
   },
   emptyStateSubtitle: {
     fontSize: 16,
-    color: '#666',
     textAlign: 'center',
     lineHeight: 22,
   },

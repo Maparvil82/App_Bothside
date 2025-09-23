@@ -83,10 +83,14 @@ export class GeminiService {
 
       const fullPrompt = `${systemPrompt}\n\nUsuario: ${userMessage}`;
 
-      const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000);
+      const response = await fetch(`${this.API_URL}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'x-goog-api-key': this.API_KEY,
         },
         body: JSON.stringify({
           contents: [{
@@ -94,8 +98,10 @@ export class GeminiService {
               text: fullPrompt
             }]
           }]
-        })
+        }),
+        signal: controller.signal,
       });
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         const errorText = await response.text();
@@ -140,10 +146,12 @@ Sin texto adicional.`;
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
 
         try {
-          const response = await fetch(`${this.VISION_API_URL}?key=${this.API_KEY}`, {
+          const response = await fetch(`${this.VISION_API_URL}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'x-goog-api-key': this.API_KEY,
             },
             body: JSON.stringify({
               contents: [{
