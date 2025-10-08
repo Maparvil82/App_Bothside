@@ -17,9 +17,10 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useRoute, useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useRoute, useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
@@ -81,6 +82,8 @@ export default function AlbumDetailScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { isGem, addGem, removeGem, refreshGems, updateGemStatus } = useGems();
+  const { colors } = useTheme();
+  const { mode } = useThemeMode();
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -959,18 +962,18 @@ export default function AlbumDetailScreen() {
   const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          <Ionicons name="arrow-back" size={24} color={colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{album.albums.title}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>{album.albums.title}</Text>
         <View style={styles.headerRight} />
       </View>
       
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Portada */}
-        <View style={styles.coverSection}>
+        <View style={[styles.coverSection, { backgroundColor: colors.card }]}>
           {album.albums.cover_url ? (
             <Image
               source={{ uri: album.albums.cover_url }}
@@ -978,20 +981,20 @@ export default function AlbumDetailScreen() {
               resizeMode="cover"
             />
           ) : (
-            <View style={styles.fullCoverPlaceholder}>
-              <Text style={styles.fullCoverPlaceholderText}>Sin portada</Text>
+            <View style={[styles.fullCoverPlaceholder, { backgroundColor: colors.border }]}>
+              <Text style={[styles.fullCoverPlaceholderText, { color: colors.text }]}>Sin portada</Text>
             </View>
           )}
         </View>
 
         {/* Sección de Valor */}
         {album.albums.album_stats?.avg_price && (
-          <View style={styles.valueCard}>
-            <Text style={styles.valueCardTitle}>Valor de mercado</Text>
-            <Text style={styles.valueCardAmount}>
+          <View style={[styles.valueCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.valueCardTitle, { color: colors.text }]}>Valor de mercado</Text>
+            <Text style={[styles.valueCardAmount, { color: colors.primary }]}>
               ${album.albums.album_stats.avg_price.toFixed(2)}
             </Text>
-            <Text style={styles.valueCardSubtitle}>Precio promedio en el mercado basado en Discogs</Text>
+            <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>Precio promedio en el mercado basado en Discogs</Text>
           </View>
         )}
 
@@ -1033,15 +1036,15 @@ export default function AlbumDetailScreen() {
         )}
 
         {/* Información principal del álbum */}
-        <View style={styles.albumInfoSection}>
-          <Text style={styles.albumTitle}>{album.albums.title}</Text>
-          <Text style={styles.artist}>{album.albums.artist}</Text>
+        <View style={[styles.albumInfoSection, { backgroundColor: colors.card }]}>
+          <Text style={[styles.albumTitle, { color: colors.text }]}>{album.albums.title}</Text>
+          <Text style={[styles.artist, { color: colors.text }]}>{album.albums.artist}</Text>
           <View style={styles.labelYearContainer}>
-            <Text style={styles.label}>{album.albums.label}</Text>
+            <Text style={[styles.label, { color: colors.text }]}>{album.albums.label}</Text>
             {album.albums.release_year && (
               <>
-                <Text style={styles.separator}> • </Text>
-                <Text style={styles.year}>{album.albums.release_year}</Text>
+                <Text style={[styles.separator, { color: colors.text }]}> • </Text>
+                <Text style={[styles.year, { color: colors.text }]}>{album.albums.release_year}</Text>
               </>
             )}
           </View>
@@ -1049,12 +1052,12 @@ export default function AlbumDetailScreen() {
             <View style={styles.catalogCountryContainer}>
               {album.albums.catalog_no && (
                 <>
-                  <Text style={styles.catalog}>{album.albums.catalog_no}</Text>
-                  {album.albums.country && <Text style={styles.separator}> • </Text>}
+                  <Text style={[styles.catalog, { color: colors.text }]}>{album.albums.catalog_no}</Text>
+                  {album.albums.country && <Text style={[styles.separator, { color: colors.text }]}> • </Text>}
                 </>
               )}
               {album.albums.country && (
-                <Text style={styles.countryText}>{album.albums.country}</Text>
+                <Text style={[styles.countryText, { color: colors.text }]}>{album.albums.country}</Text>
               )}
             </View>
           )}
@@ -1063,13 +1066,13 @@ export default function AlbumDetailScreen() {
           {(mergedGenres.length > 0 || mergedStyles.length > 0) && (
             <View style={styles.stylesContainer}>
               {mergedGenres.map((genre: string, index: number) => (
-                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: '#eef6ff' }]}> 
-                  <Text style={[styles.styleText, { color: '#1d4ed8' }]}>{genre}</Text>
+                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: colors.border }]}> 
+                  <Text style={[styles.styleText, { color: colors.text }]}>{genre}</Text>
                 </View>
               ))}
               {mergedStyles.map((style: string, index: number) => (
-                <View key={`s-${index}`} style={styles.styleTag}>
-                  <Text style={styles.styleText}>{style}</Text>
+                <View key={`s-${index}`} style={[styles.styleTag, { backgroundColor: colors.border }]}>
+                  <Text style={[styles.styleText, { color: colors.text }]}>{style}</Text>
                 </View>
               ))}
             </View>
@@ -1078,15 +1081,15 @@ export default function AlbumDetailScreen() {
           {/* Tags de Gem y Audio Note */}
           <View style={styles.tagsContainer}>
             {album.is_gem && (
-              <View style={styles.gemTag}>
+              <View style={[styles.gemTag, { backgroundColor: colors.border }]}>
                 <Ionicons name="diamond" size={16} color="#d97706" />
-                <Text style={styles.gemTagText}>Gema</Text>
+                <Text style={[styles.gemTagText, { color: colors.text }]}>Gema</Text>
               </View>
             )}
             {album.audio_note && (
-              <View style={styles.audioTag}>
-                <Ionicons name="mic" size={16} color="#007AFF" />
-                <Text style={styles.audioTagText}>Audio</Text>
+              <View style={[styles.audioTag, { backgroundColor: colors.border }]}>
+                <Ionicons name="mic" size={16} color={colors.primary} />
+                <Text style={[styles.audioTagText, { color: colors.text }]}>Audio</Text>
               </View>
             )}
             {/* Sticker QR eliminado */}
@@ -1098,6 +1101,7 @@ export default function AlbumDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
+                { backgroundColor: colors.border },
                 isGem(album.albums.id) && styles.actionButtonActive
               ]}
               onPress={handleToggleGem}
@@ -1105,10 +1109,11 @@ export default function AlbumDetailScreen() {
               <Ionicons 
                 name={isGem(album.albums.id) ? "diamond" : "diamond-outline"} 
                 size={20} 
-                color={isGem(album.albums.id) ? "#d97706" : "#666"} 
+                color={isGem(album.albums.id) ? "#d97706" : colors.text} 
               />
               <Text style={[
                 styles.actionButtonText,
+                { color: colors.text },
                 isGem(album.albums.id) && styles.actionButtonTextActive
               ]}>
                 {isGem(album.albums.id) ? 'Quitar Gem' : 'Añadir Gem'}
@@ -1117,11 +1122,11 @@ export default function AlbumDetailScreen() {
 
             {/* Botón Lista */}
             <TouchableOpacity
-              style={styles.actionButton}
+              style={[styles.actionButton, { backgroundColor: colors.border }]}
               onPress={() => setShowListsModal(true)}
             >
-              <Ionicons name="list-outline" size={20} color="#666" />
-              <Text style={styles.actionButtonText}>Añadir a Lista</Text>
+              <Ionicons name="list-outline" size={20} color={colors.text} />
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Añadir a Lista</Text>
             </TouchableOpacity>
           </View>
 
@@ -1129,12 +1134,12 @@ export default function AlbumDetailScreen() {
 
         {/* Listas donde está guardado */}
         {album.user_list_items && album.user_list_items.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Guardado en estas listas</Text>
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Guardado en estas listas</Text>
             {album.user_list_items.map((item, index) => (
               <TouchableOpacity 
                 key={index} 
-                style={styles.listItemContainer}
+                style={[styles.listItemContainer, { backgroundColor: colors.border, borderColor: colors.border }]}
                 onPress={() => {
                   console.log('🔍 AlbumDetailScreen: Navigating to ViewList with:', { 
                     listId: item.id, 
@@ -1159,16 +1164,16 @@ export default function AlbumDetailScreen() {
                   size={60} 
                 />
                 <View style={styles.listInfo}>
-                  <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
+                  <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
                     {item.title}
                   </Text>
                   {item.description && (
-                    <Text style={styles.listDescription} numberOfLines={2}>
+                    <Text style={[styles.listDescription, { color: colors.text }]} numberOfLines={2}>
                       {item.description}
                     </Text>
                   )}
                 </View>
-                <Ionicons name="chevron-forward" size={16} color="#6c757d" />
+                <Ionicons name="chevron-forward" size={16} color={colors.text} />
               </TouchableOpacity>
             ))}
           </View>
@@ -1176,8 +1181,8 @@ export default function AlbumDetailScreen() {
 
         {/* Sección de Tracks */}
         {album.albums.tracks && album.albums.tracks.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Tracks</Text>
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Tracks</Text>
             {(() => {
               const seen = new Set<string>();
               const uniqueTracks = (album.albums.tracks || []).filter((t) => {
@@ -1187,13 +1192,13 @@ export default function AlbumDetailScreen() {
                 return true;
               });
               return uniqueTracks.map((track, index) => (
-                <View key={index} style={styles.trackItem}>
+                <View key={index} style={[styles.trackItem, { borderBottomColor: colors.border }]}>
                   <View style={styles.trackInfo}>
-                    <Text style={styles.trackPosition}>{track.position}</Text>
-                    <Text style={styles.trackTitle}>{track.title}</Text>
+                    <Text style={[styles.trackPosition, { color: colors.text }]}>{track.position}</Text>
+                    <Text style={[styles.trackTitle, { color: colors.text }]}>{track.title}</Text>
                   </View>
                   {track.duration && (
-                    <Text style={styles.trackDuration}>{track.duration}</Text>
+                    <Text style={[styles.trackDuration, { color: colors.text }]}>{track.duration}</Text>
                   )}
                 </View>
               ));
@@ -1204,19 +1209,19 @@ export default function AlbumDetailScreen() {
 
 
         {/* Sección de Ediciones */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Ediciones en Vinilo</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ediciones en Vinilo</Text>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color="#007AFF" />
-              <Text style={styles.loadingText}>Cargando ediciones...</Text>
+              <ActivityIndicator size="small" color={colors.primary} />
+              <Text style={[styles.loadingText, { color: colors.text }]}>Cargando ediciones...</Text>
             </View>
           ) : editions.length > 0 ? (
             <View style={styles.editionsContainer}>
               {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
                 <View
                   key={edition.id}
-                  style={styles.editionItem}
+                  style={[styles.editionItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
                 >
                   {edition.thumb && (
                     <Image 
@@ -1226,46 +1231,46 @@ export default function AlbumDetailScreen() {
                     />
                   )}
                   <View style={styles.editionInfo}>
-                    <Text style={styles.editionTitle} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
-                    <Text style={styles.editionArtist} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
+                    <Text style={[styles.editionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
+                    <Text style={[styles.editionArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
                     
                     {/* Formato */}
                     {edition.format && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
+                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
                       </View>
                     )}
                     
                     {/* Sello */}
                     {edition.label && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
+                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
                       </View>
                     )}
                     
                     {/* Año */}
                     {edition.year && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
+                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
                       </View>
                     )}
                     
                     {/* País */}
                     {edition.country && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">País:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">País:</Text>
+                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
                       </View>
                     )}
                     
                     {/* Catálogo */}
                     {edition.catno && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={styles.editionDetailLabel} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
-                        <Text style={styles.editionDetailValue} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
+                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
                       </View>
                     )}
                   </View>
@@ -1275,43 +1280,43 @@ export default function AlbumDetailScreen() {
               {/* Botón "Ver más" o "Ver menos" */}
               {editions.length > 3 && (
                 <TouchableOpacity
-                  style={styles.seeMoreButton}
+                  style={[styles.seeMoreButton, { backgroundColor: colors.border, borderColor: colors.border }]}
                   onPress={() => setShowAllEditions(!showAllEditions)}
                 >
-                  <Text style={styles.seeMoreButtonText}>
+                  <Text style={[styles.seeMoreButtonText, { color: colors.primary }]}>
                     {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
                   </Text>
                   <Ionicons 
                     name={showAllEditions ? "chevron-up" : "chevron-down"} 
                     size={16} 
-                    color="#007AFF" 
+                    color={colors.primary} 
                   />
                 </TouchableOpacity>
               )}
             </View>
           ) : (
-            <Text style={styles.noEditionsText}>No se encontraron ediciones en vinilo</Text>
+            <Text style={[styles.noEditionsText, { color: colors.text }]}>No se encontraron ediciones en vinilo</Text>
           )}
         </View>
 
         {/* Nota de Audio */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Nota de Audio</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Nota de Audio</Text>
           {album.audio_note ? (
             // Si existe nota de audio
             <>
               <View style={styles.audioSection}>
                 <View style={styles.audioInfo}>
-                  <Ionicons name="mic" size={20} color="#007AFF" />
-                  <Text style={styles.audioInfoText}>Tienes una nota de audio para este álbum</Text>
+                  <Ionicons name="mic" size={20} color={colors.primary} />
+                  <Text style={[styles.audioInfoText, { color: colors.text }]}>Tienes una nota de audio para este álbum</Text>
                 </View>
               </View>
               <TouchableOpacity 
-                style={styles.playAudioButton}
+                style={[styles.playAudioButton, { backgroundColor: colors.border, borderColor: colors.border }]}
                 onPress={() => handlePlayAudio(album.audio_note!)}
               >
-                <Ionicons name="play-circle" size={24} color="#007AFF" />
-                <Text style={styles.playAudioButtonText}>Reproducir nota de audio</Text>
+                <Ionicons name="play-circle" size={24} color={colors.primary} />
+                <Text style={[styles.playAudioButtonText, { color: colors.primary }]}>Reproducir nota de audio</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -1319,16 +1324,16 @@ export default function AlbumDetailScreen() {
             <>
               <View style={styles.audioSection}>
                 <View style={styles.audioInfo}>
-                  <Ionicons name="mic-outline" size={20} color="#6c757d" />
-                  <Text style={styles.audioInfoText}>No tienes una nota de audio para este álbum</Text>
+                  <Ionicons name="mic-outline" size={20} color={colors.text} />
+                  <Text style={[styles.audioInfoText, { color: colors.text }]}>No tienes una nota de audio para este álbum</Text>
                 </View>
               </View>
               <TouchableOpacity 
-                style={styles.recordAudioButton}
+                style={[styles.recordAudioButton, { backgroundColor: colors.border, borderColor: colors.border }]}
                 onPress={() => handleRecordAudio()}
               >
-                <Ionicons name="mic" size={24} color="#007AFF" />
-                <Text style={styles.recordAudioButtonText}>Grabar nota de audio</Text>
+                <Ionicons name="mic" size={24} color={colors.primary} />
+                <Text style={[styles.recordAudioButtonText, { color: colors.primary }]}>Grabar nota de audio</Text>
               </TouchableOpacity>
             </>
           )}
@@ -1336,22 +1341,22 @@ export default function AlbumDetailScreen() {
 
 
         {/* Nueva Sección de Ubicación RECONSTRUIDA */}
-        <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Ubicación</Text>
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Ubicación</Text>
             
             {album.shelf_id && album.location_row && album.location_column ? (
               <>
-                <Text style={styles.currentShelfTitle}>Actualmente en: {album.shelf_name || 'Estantería sin nombre'}</Text>
+                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>Actualmente en: {album.shelf_name || 'Estantería sin nombre'}</Text>
                 <ShelfGrid 
                   rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0} 
                   columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
                   highlightRow={album.location_row}
                   highlightColumn={album.location_column}
                 />
-                <Text style={styles.selectShelfTitle}>Cambiar ubicación:</Text>
+                <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Cambiar ubicación:</Text>
               </>
             ) : (
-              <Text style={styles.selectShelfTitle}>Asignar a una estantería:</Text>
+              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Asignar a una estantería:</Text>
             )}
 
             {shelves.map((shelf) => {
@@ -1359,7 +1364,10 @@ export default function AlbumDetailScreen() {
               return (
                 <TouchableOpacity
                   key={shelf.id}
-                  style={styles.shelfSelectItem}
+                  style={[
+                    styles.shelfSelectItem,
+                    { backgroundColor: colors.border, borderColor: colors.border }
+                  ]}
                   onPress={() => (navigation as any).navigate('SelectCell', { 
                     user_collection_id: album.id, 
                     shelf: shelf,
@@ -1367,22 +1375,22 @@ export default function AlbumDetailScreen() {
                     current_column: isCurrentShelf ? album.location_column : undefined,
                   })}
                 >
-                  <Text style={styles.shelfSelectItemText}>{shelf.name}</Text>
-                  <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                  <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
                 </TouchableOpacity>
               );
             })}
             {shelves.length === 0 && (
-              <Text style={styles.noShelvesText}>No tienes estanterías para asignar.</Text>
+              <Text style={[styles.noShelvesText, { color: colors.text }]}>No tienes estanterías para asignar.</Text>
             )}
           </View>
 
 
 
           {/* Sección TypeForm */}
-          <View style={styles.typeFormSection}>
-            <Text style={styles.typeFormSectionTitle}>Cuéntanos sobre este álbum</Text>
-            <Text style={styles.typeFormSectionSubtitle}>
+          <View style={[styles.typeFormSection, { backgroundColor: colors.card }]}>
+            <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>Cuéntanos sobre este álbum</Text>
+            <Text style={[styles.typeFormSectionSubtitle, { color: colors.text }]}>
               Responde las preguntas que quieras para personalizar tu experiencia
             </Text>
             
@@ -1395,7 +1403,8 @@ export default function AlbumDetailScreen() {
                     key={index}
                     style={[
                       styles.typeFormQuestionItem,
-                      hasAnswer && styles.typeFormQuestionItemAnswered
+                      hasAnswer && styles.typeFormQuestionItemAnswered,
+                      { backgroundColor: colors.border, borderColor: colors.border }
                     ]}
                     onPress={() => {
                       // Cargar respuesta existente si la hay
@@ -1407,10 +1416,10 @@ export default function AlbumDetailScreen() {
                     }}
                   >
                     <View style={styles.typeFormQuestionHeader}>
-                      <Text style={styles.typeFormQuestionNumber}>
+                      <Text style={[styles.typeFormQuestionNumber, { color: colors.primary }]}>
                         {index + 1}
                       </Text>
-                      <Text style={styles.typeFormQuestionText}>
+                      <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
                         {question}
                       </Text>
                       {hasAnswer ? (
@@ -1420,7 +1429,7 @@ export default function AlbumDetailScreen() {
                       )}
                     </View>
                     {hasAnswer && (
-                      <Text style={styles.typeFormQuestionPreview}>
+                      <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
                         {existingTypeFormResponse[`question_${index + 1}`]}
                       </Text>
                     )}
@@ -1432,8 +1441,8 @@ export default function AlbumDetailScreen() {
 
           {/* Sección de Álbumes Similares */}
           {similarAlbums.length > 0 && (
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>De tu colección</Text>
+            <View style={[styles.section, { backgroundColor: colors.card }]}>
+              <Text style={[styles.sectionTitle, { color: colors.text }]}>De tu colección</Text>
               <ScrollView 
                 horizontal 
                 showsHorizontalScrollIndicator={false}
@@ -1443,7 +1452,7 @@ export default function AlbumDetailScreen() {
                 {similarAlbums.map((item, index) => (
                   <TouchableOpacity
                     key={item.id}
-                    style={styles.similarAlbumCard}
+                    style={[styles.similarAlbumCard, { backgroundColor: colors.card, borderColor: colors.border }]}
                     onPress={() => {
                       // Navegar al álbum similar
                       (navigation as any).navigate('AlbumDetail', { albumId: item.id });
@@ -1458,8 +1467,8 @@ export default function AlbumDetailScreen() {
                           resizeMode="cover"
                         />
                       ) : (
-                        <View style={[styles.similarAlbumImage, styles.similarAlbumPlaceholder]}>
-                          <Ionicons name="musical-notes" size={24} color="#ccc" />
+                        <View style={[styles.similarAlbumImage, styles.similarAlbumPlaceholder, { backgroundColor: colors.border }]}>
+                          <Ionicons name="musical-notes" size={24} color={colors.text} />
                         </View>
                       )}
                       {item.is_gem && (
@@ -1469,14 +1478,14 @@ export default function AlbumDetailScreen() {
                       )}
                     </View>
                     <View style={styles.similarAlbumInfo}>
-                      <Text style={styles.similarAlbumTitle} numberOfLines={2} ellipsizeMode="tail">
+                      <Text style={[styles.similarAlbumTitle, { color: colors.text }]} numberOfLines={2} ellipsizeMode="tail">
                         {item.albums?.title || 'Sin título'}
                       </Text>
-                      <Text style={styles.similarAlbumArtist} numberOfLines={1} ellipsizeMode="tail">
+                      <Text style={[styles.similarAlbumArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
                         {item.albums?.artist || 'Artista desconocido'}
                       </Text>
                       {item.albums?.year && (
-                        <Text style={styles.similarAlbumYear}>
+                        <Text style={[styles.similarAlbumYear, { color: colors.text }]}>
                           {item.albums.year}
                         </Text>
                       )}
@@ -1659,20 +1668,22 @@ export default function AlbumDetailScreen() {
                       key={index}
                       style={[
                         styles.trackItem,
+                        { borderBottomColor: colors.border },
                         typeFormAnswers[0] === track.title && styles.trackItemSelected
                       ]}
                       onPress={() => handleTypeFormAnswer(track.title)}
                     >
                       <View style={styles.trackInfo}>
-                        <Text style={styles.trackPosition}>{track.position}</Text>
+                        <Text style={[styles.trackPosition, { color: colors.text }]}>{track.position}</Text>
                         <Text style={[
                           styles.trackTitle,
+                          { color: colors.text },
                           typeFormAnswers[0] === track.title && styles.trackTitleSelected
                         ]}>
                           {track.title}
                         </Text>
                       </View>
-                      <Text style={styles.trackDuration}>{track.duration}</Text>
+                      <Text style={[styles.trackDuration, { color: colors.text }]}>{track.duration}</Text>
                       {typeFormAnswers[0] === track.title && (
                         <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
                       )}
@@ -1682,7 +1693,7 @@ export default function AlbumDetailScreen() {
               ) : (
                 // Resto de preguntas: Input de texto normal
                 <TextInput
-                  style={styles.typeFormInput}
+                  style={[styles.typeFormInput, { color: colors.text, backgroundColor: colors.card, borderColor: colors.border }]}
                   placeholder="Escribe tu respuesta..."
                   value={typeFormAnswers[currentQuestion]}
                   onChangeText={handleTypeFormAnswer}

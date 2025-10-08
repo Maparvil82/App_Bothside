@@ -40,8 +40,8 @@ interface CollectionAlbum {
 }
 
 export class GeminiService {
-  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
-  private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent';
+  private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent';
   private static readonly API_KEY = ENV.GEMINI_API_KEY;
 
   static async generateResponse(
@@ -133,13 +133,21 @@ export class GeminiService {
         // Remover el prefijo data:image/jpeg;base64, si está presente
         const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
         
-        // PROMPT OPTIMIZADO para respuestas más rápidas
-        const prompt = `Identifica el álbum de música en esta imagen. Responde SOLO con:
+        // PROMPT OPTIMIZADO para mayor precisión en nombres
+        const prompt = `Analiza esta imagen de un álbum de música y extrae la información con máxima precisión.
 
-ARTISTA: [nombre]
-ALBUM: [título]
+INSTRUCCIONES:
+- Lee cuidadosamente el nombre del artista tal como aparece en la portada
+- Lee cuidadosamente el título del álbum tal como aparece en la portada
+- Si hay texto borroso o poco claro, escribe "DESCONOCIDO" en lugar de adivinar
+- Presta especial atención a la ortografía exacta de los nombres
 
-Sin texto adicional.`;
+Responde ÚNICAMENTE en este formato:
+
+ARTISTA: [nombre exacto del artista]
+ALBUM: [título exacto del álbum]
+
+No incluyas ningún otro texto.`;
 
         // Crear AbortController para timeout más generoso
         const controller = new AbortController();
@@ -167,12 +175,12 @@ Sin texto adicional.`;
                   }
                 ]
               }],
-              // CONFIGURACIÓN OPTIMIZADA para velocidad
+              // CONFIGURACIÓN OPTIMIZADA para precisión
               generationConfig: {
-                temperature: 0.1,        // Respuestas más deterministas
+                temperature: 0.0,        // Máxima precisión, sin creatividad
                 topK: 1,                // Solo la mejor respuesta
                 topP: 0.1,              // Respuestas más concisas
-                maxOutputTokens: 50,    // Respuestas cortas
+                maxOutputTokens: 100,   // Suficiente para nombres completos
               }
             }),
             signal: controller.signal
@@ -206,8 +214,14 @@ Sin texto adicional.`;
           const artist = artistMatch[1].trim();
           const album = albumMatch[1].trim();
 
-          if (artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
+          // Validar que no sean respuestas vacías o genéricas
+          if (!artist || !album || artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
             throw new Error('No se pudo identificar completamente el álbum');
+          }
+
+          // Validar que no sean respuestas demasiado genéricas
+          if (artist.length < 2 || album.length < 2) {
+            throw new Error('Nombres de artista o álbum demasiado cortos');
           }
 
           console.log('✅ Álbum identificado:', { artist, album });
