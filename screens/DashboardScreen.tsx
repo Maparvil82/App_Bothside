@@ -596,14 +596,6 @@ export default function DashboardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        {/* Rango de Coleccionista */}
-        <CollectorRankCard 
-          totalAlbums={stats.totalAlbums} 
-          collectionValue={stats.collectionValue} 
-          onPress={() => (navigation as any).navigate('Leaderboard')}
-          userPosition={userPosition || undefined}
-        />
-        
         {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
           <View style={styles.valueCard}>
@@ -627,6 +619,13 @@ export default function DashboardScreen() {
           <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
         </View>
 
+        {/* Rango de Coleccionista */}
+        <CollectorRankCard 
+          totalAlbums={stats.totalAlbums} 
+          collectionValue={stats.collectionValue} 
+          onPress={() => (navigation as any).navigate('Leaderboard')}
+          userPosition={userPosition || undefined}
+        />
 
         {/* Sección de Ubicaciones */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>

@@ -133,21 +133,39 @@ export class GeminiService {
         // Remover el prefijo data:image/jpeg;base64, si está presente
         const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
         
-        // PROMPT OPTIMIZADO para mayor precisión en nombres
-        const prompt = `Analiza esta imagen de un álbum de música y extrae la información con máxima precisión.
+        // PROMPT DE EXPERTO EN MÚSICA para análisis completo del disco
+        const prompt = `Eres un EXPERTO EN MÚSICA y DISCOGRAFÍA con 30 años de experiencia. Analiza esta imagen de un álbum con la precisión de un profesional.
 
-INSTRUCCIONES:
-- Lee cuidadosamente el nombre del artista tal como aparece en la portada
-- Lee cuidadosamente el título del álbum tal como aparece en la portada
-- Si hay texto borroso o poco claro, escribe "DESCONOCIDO" en lugar de adivinar
-- Presta especial atención a la ortografía exacta de los nombres
+ANÁLISIS REQUERIDO:
+1. **TEXTO VISIBLE**: Lee exactamente el nombre del artista y título del álbum
+2. **DISEÑO VISUAL**: Observa colores, tipografías, estilo gráfico
+3. **ELEMENTOS DISTINTIVOS**: Logos, sellos discográficos, años, códigos
+4. **COMPOSICIÓN**: Layout, posicionamiento de elementos
+5. **ESTILO ARTÍSTICO**: Género musical sugerido por la estética
+
+REGLAS DE EXPERTO:
+- Identifica al artista REAL, no variaciones o nombres similares
+- Distingue entre "Bill Spoon" y "Bill Brandon" como artistas completamente diferentes
+- Si ves "The Beatles" NO lo confundas con "The Beats" o similar
+- Si ves "Pink Floyd" NO lo confundas con "Pink" o "Floyd"
+- Analiza el contexto visual completo, no solo texto
+- Si hay elementos únicos (logos, sellos, años), úsalos para confirmar identidad
+
+CRITERIOS DE VALIDACIÓN:
+- El artista debe coincidir EXACTAMENTE con lo visible
+- El título debe ser el que aparece en la portada
+- Si hay dudas sobre la identidad, escribe "DESCONOCIDO"
+- NO uses conocimiento previo para "corregir" lo que ves
+- NO confundas artistas con nombres parecidos
+
+IMPORTANTE: Como experto, tu reputación depende de la precisión. Si no puedes identificar con 100% de certeza, escribe "DESCONOCIDO".
 
 Responde ÚNICAMENTE en este formato:
 
-ARTISTA: [nombre exacto del artista]
-ALBUM: [título exacto del álbum]
+ARTISTA: [nombre exacto del artista o DESCONOCIDO]
+ALBUM: [título exacto del álbum o DESCONOCIDO]
 
-No incluyas ningún otro texto.`;
+Sin explicaciones adicionales.`;
 
         // Crear AbortController para timeout más generoso
         const controller = new AbortController();

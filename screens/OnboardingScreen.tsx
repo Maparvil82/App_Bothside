@@ -17,39 +17,35 @@ const { width, height } = Dimensions.get('window');
 const onboardingSteps = [
   {
     id: 1,
-    title: 'Tu colección te conoce mejor que nadie',
-    subtitle: 'Descubre insights únicos sobre tu música y encuentra joyas olvidadas en tu colección',
-    image: require('../assets/icon.png'),
-    color: '#007AFF',
+    title: 'IA que entiende tu música',
+    subtitle: 'Pregunta a nuestra IA sobre tu colección y descubre recomendaciones personalizadas',
+    image: require('../assets/Gemini_Generated_Image_x5lylox5lylox5ly.png'),
+    color: '#9b59b6',
   },
   {
     id: 2,
     title: 'Organiza tu música físicamente',
-    subtitle: 'Crea ubicaciones físicas para tus discos y nunca más pierdas un álbum',
-    image: require('../assets/adaptive-icon.png'),
+    subtitle: 'Crea ubicaciones físicas para encontrar tus discos rápidamente en tus estanterías',
+    image: require('../assets/image.png'),
     color: '#28a745',
   },
   {
     id: 3,
-    title: 'Comparte tu pasión',
-    subtitle: 'Crea maletas temáticas y comparte tu música con otros coleccionistas',
-    image: require('../assets/splash-icon.png'),
-    color: '#ff6b6b',
+    title: 'Tu colección te conoce mejor que nadie',
+    subtitle: 'Descubre insights únicos sobre tu música y encuentra joyas olvidadas en tu colección',
+    image: require('../assets/videoframe_8000.png'),
+    color: '#007AFF',
   },
   {
     id: 4,
-    title: 'Analiza tus estadísticas',
-    subtitle: 'Conoce tus géneros favoritos, artistas más escuchados y el valor de tu colección',
-    image: require('../assets/favicon.png'),
+    title: 'Analiza tu colección',
+    subtitle: 'Conoce en detalle tus discos, artistas, géneros y el valor de tu colección en el mercado',
+    image: require('../assets/Gemini_Generated_Image_8jxpae8jxpae8jxp.png'),
     color: '#f39c12',
   },
-  {
-    id: 5,
-    title: 'IA que entiende tu música',
-    subtitle: 'Pregunta a nuestra IA sobre tu colección y descubre recomendaciones personalizadas',
-    image: require('../assets/icon.png'),
-    color: '#9b59b6',
-  },
+  
+  
+  
 ];
 
 export const OnboardingScreen: React.FC = () => {
@@ -76,6 +72,11 @@ export const OnboardingScreen: React.FC = () => {
     navigation.navigate('Pricing');
   };
 
+  const handleLogin = () => {
+    // Ir directamente a la pantalla de login
+    navigation.navigate('Login');
+  };
+
   const handleDotPress = (index: number) => {
     setCurrentStep(index);
     scrollViewRef.current?.scrollTo({
@@ -86,10 +87,7 @@ export const OnboardingScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Skip button */}
-      <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-        <Text style={styles.skipText}>Saltar</Text>
-      </TouchableOpacity>
+     
 
       {/* Main content */}
       <ScrollView
@@ -150,7 +148,7 @@ export const OnboardingScreen: React.FC = () => {
       {/* Account section */}
       <View style={styles.accountSection}>
         <Text style={styles.accountText}>¿Tiene una cuenta en Bothside?</Text>
-        <TouchableOpacity onPress={handleSkip}>
+        <TouchableOpacity onPress={handleLogin}>
           <Text style={styles.loginLink}>Iniciar sesión</Text>
         </TouchableOpacity>
       </View>
@@ -186,21 +184,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
   },
   illustrationContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 40,
+    paddingHorizontal: 20,
   },
 
   image: {
-    width: 100,
-    height: 100,
-    resizeMode: 'contain',
+    marginTop: 40,
+    width: width - 40,
+    height: height - 500,
+    resizeMode: 'cover',
+    borderRadius: 12,
   },
   textContainer: {
     flex: 1,
     justifyContent: 'flex-start',
-    alignItems: 'center',
+    alignItems: 'flex-start',
 
   },
   title: {

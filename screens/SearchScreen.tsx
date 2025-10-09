@@ -1310,36 +1310,72 @@ export const SearchScreen: React.FC = () => {
           const searchArtist = artistSearch.toLowerCase().trim();
           const searchAlbum = albumSearch.toLowerCase().trim();
           
-          // Verificar coincidencia EXACTA del artista
-          // El artista de la BD debe contener TODAS las palabras del artista reconocido
-          const searchArtistWords = searchArtist.split(' ').filter(word => word.length > 1);
-          const artistMatches = searchArtistWords.every(word => albumArtist.includes(word));
+          // VALIDACIÓN DE EXPERTO: Análisis completo del disco
           
-          // Verificar coincidencia EXACTA del álbum
-          // El título de la BD debe contener TODAS las palabras del título reconocido
-          const searchAlbumWords = searchAlbum.split(' ').filter(word => word.length > 1);
-          const albumMatches = searchAlbumWords.every(word => albumTitle.includes(word));
+          // 1. Coincidencia exacta (máxima precisión)
+          const artistExactMatch = albumArtist === searchArtist;
+          const albumExactMatch = albumTitle === searchAlbum;
           
-          // ADICIONAL: Verificar que el artista de la BD también contenga el artista completo
-          // Esto evita casos como "Nick" que coincida con "Nick Cave" cuando buscamos "Nick Drake"
-          const artistContainsFullSearch = albumArtist.includes(searchArtist);
+          // 2. Análisis de palabras clave
+          const searchArtistWords = searchArtist.split(' ').filter(word => word.length > 2);
+          const searchAlbumWords = searchAlbum.split(' ').filter(word => word.length > 2);
           
-          // ADICIONAL: Verificar que el título de la BD también contenga el título completo
-          const albumContainsFullSearch = albumTitle.includes(searchAlbum);
+          const artistWordsMatch = searchArtistWords.every(word => albumArtist.includes(word));
+          const albumWordsMatch = searchAlbumWords.every(word => albumTitle.includes(word));
           
-          // Coincidencia final: debe cumplir TODAS las condiciones
-          const isMatch = artistMatches && albumMatches && artistContainsFullSearch && albumContainsFullSearch;
+          // 3. Verificar que no sea un artista diferente con nombre similar
+          const isSimilarArtist = searchArtistWords.some(word => {
+            // Lista de palabras que podrían confundirse
+            const similarWords = {
+              'bill': ['billy', 'william', 'will'],
+              'john': ['johnny', 'jon', 'jonathan'],
+              'mike': ['michael', 'mickey', 'mick'],
+              'dave': ['david', 'davey'],
+              'chris': ['christopher', 'christian'],
+              'steve': ['steven', 'stephen'],
+              'tom': ['thomas', 'tommy'],
+              'jim': ['james', 'jimmy'],
+              'bob': ['robert', 'bobby'],
+              'dan': ['daniel', 'danny']
+            };
+            
+            const similar = similarWords[word.toLowerCase()];
+            if (similar) {
+              return similar.some(sim => albumArtist.includes(sim));
+            }
+            return false;
+          });
+          
+          // 4. Verificar que no haya confusión con artistas famosos
+          const famousArtists = ['beatles', 'stones', 'pink floyd', 'led zeppelin', 'queen', 'ac/dc', 'nirvana', 'radiohead'];
+          const isConfusedWithFamous = famousArtists.some(famous => 
+            (searchArtist.includes(famous) && !albumArtist.includes(famous)) ||
+            (albumArtist.includes(famous) && !searchArtist.includes(famous))
+          );
+          
+          // 5. Verificar que no sea un nombre parcial
+          const isPartialName = searchArtistWords.some(word => {
+            return albumArtist.includes(word) && albumArtist.length > word.length + 5;
+          });
+          
+          // 6. Cálculo final de coincidencia
+          const exactMatch = artistExactMatch && albumExactMatch;
+          const wordsMatch = artistWordsMatch && albumWordsMatch && 
+                           !isSimilarArtist && !isConfusedWithFamous && !isPartialName;
+          
+          const isMatch = exactMatch || wordsMatch;
           console.log(`🎯 ${item.albums.artist} - ${item.albums.title}:`);
-          console.log(`   Artista palabras: "${searchArtist}" vs "${albumArtist}" = ${artistMatches}`);
-          console.log(`   Álbum palabras: "${searchAlbum}" vs "${albumTitle}" = ${albumMatches}`);
-          console.log(`   Artista completo: "${searchArtist}" en "${albumArtist}" = ${artistContainsFullSearch}`);
-          console.log(`   Álbum completo: "${searchAlbum}" en "${albumTitle}" = ${albumContainsFullSearch}`);
-          console.log(`   Match final: ${isMatch}`);
+          console.log(`   Coincidencia exacta: ${exactMatch}`);
+          console.log(`   Coincidencia palabras: ${wordsMatch}`);
+          console.log(`   Es artista similar: ${isSimilarArtist}`);
+          console.log(`   Confusión con famosos: ${isConfusedWithFamous}`);
+          console.log(`   Es nombre parcial: ${isPartialName}`);
+          console.log(`   ✅ MATCH FINAL: ${isMatch}`);
           
           return isMatch;
         });
         
-        console.log(`🎯 Resultados filtrados (coincidencias EXACTAS): ${filteredResults.length}`);
+        console.log(`🎯 Resultados filtrados (análisis de experto): ${filteredResults.length}`);
       }
       
       const collectionData = filteredResults;
