@@ -648,7 +648,7 @@ export default function AlbumDetailScreen() {
   // Función para calcular el ratio de venta
   const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
     if (!want || !have || have === 0) {
-      return { ratio: 0, level: 'Sin datos', color: '#6c757d' };
+      return { ratio: 0, level: 'Sin datos', color: '#9ca3af' };
     }
     
     const ratio = want / have;
@@ -1530,7 +1530,7 @@ export default function AlbumDetailScreen() {
                 style={styles.closeButton}
                 onPress={() => setShowListsModal(false)}
               >
-                <Ionicons name="close" size={24} color="#6c757d" />
+                <Ionicons name="close" size={24} color="#9ca3af" />
               </TouchableOpacity>
             </View>
             
@@ -1592,7 +1592,7 @@ export default function AlbumDetailScreen() {
                     style={styles.closeButton}
                     onPress={() => setShowRatioModal(false)}
                   >
-                    <Ionicons name="close" size={24} color="#6c757d" />
+                    <Ionicons name="close" size={24} color="#9ca3af" />
                   </TouchableOpacity>
                 </View>
                 
@@ -1646,7 +1646,7 @@ export default function AlbumDetailScreen() {
                   setTypeFormAnswers(['', '', '', '', '']);
                 }}
               >
-                <Ionicons name="close" size={24} color="#666" />
+                <Ionicons name="close" size={24} color="#6b7280" />
               </TouchableOpacity>
               <Text style={styles.headerTitle}>
                 {album?.albums?.title || 'Álbum'}
@@ -1761,7 +1761,7 @@ export default function AlbumDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
   },
   header: {
     backgroundColor: '#fff',
@@ -1779,7 +1779,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     flex: 1,
     textAlign: 'center',
     marginHorizontal: 16,
@@ -1791,18 +1791,18 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    color: '#6c757d',
+    color: '#9ca3af',
   },
   errorContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     padding: 20,
   },
   errorText: {
@@ -1832,13 +1832,13 @@ const styles = StyleSheet.create({
   coverPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#f1f5f9',
     justifyContent: 'center',
     alignItems: 'center',
   },
   coverPlaceholderText: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#9ca3af',
     textAlign: 'left',
     marginTop: 4,
   },
@@ -1848,24 +1848,24 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 4,
   },
   artist: {
     fontSize: 18,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginBottom: 4,
     textAlign: 'left',
   },
   year: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginBottom: 4,
     textAlign: 'left',
   },
   label: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#9ca3af',
     textAlign: 'left',
   },
   catalogNumber: {
@@ -1889,14 +1889,14 @@ const styles = StyleSheet.create({
   },
   addedDate: {
     fontSize: 11,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginTop: 2,
   },
   audioNoteContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 8,
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f0f9ff',
     padding: 8,
     borderRadius: 6,
   },
@@ -1915,7 +1915,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 12,
   },
   infoSection: {
@@ -1931,7 +1931,7 @@ const styles = StyleSheet.create({
   },
   infoText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginLeft: 8,
   },
   tagsContainer: {
@@ -1941,7 +1941,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tag: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f0f9ff',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -1960,14 +1960,14 @@ const styles = StyleSheet.create({
   audioInfoText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#495057',
+    color: '#6b7280',
     flex: 1,
   },
   playAudioButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f1f1f1',
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
@@ -1983,7 +1983,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
@@ -2044,7 +2044,7 @@ const styles = StyleSheet.create({
   youtubeText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#495057',
+    color: '#6b7280',
     fontWeight: '500',
   },
   youtubePlayButton: {
@@ -2053,7 +2053,7 @@ const styles = StyleSheet.create({
   gemContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#fefce8',
     padding: 12,
     borderRadius: 8,
   },
@@ -2079,18 +2079,18 @@ const styles = StyleSheet.create({
   trackPosition: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6c757d',
+    color: '#9ca3af',
     marginRight: 12,
     minWidth: 30,
   },
   trackTitle: {
     fontSize: 14,
-    color: '#212529',
+    color: '#374151',
     flex: 1,
   },
   trackDuration: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginLeft: 8,
   },
   shelfItem: {
@@ -2098,7 +2098,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
@@ -2111,12 +2111,12 @@ const styles = StyleSheet.create({
   shelfTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 2,
   },
   shelfDescription: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     fontStyle: 'italic',
   },
   debugText: {
@@ -2129,13 +2129,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 20,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
   },
   emptyYouTubeText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     fontStyle: 'italic',
   },
   videoModalContainer: {
@@ -2246,7 +2246,7 @@ const styles = StyleSheet.create({
   },
   valueLabel: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginTop: 4,
   },
   valueCard: {
@@ -2331,7 +2331,7 @@ const styles = StyleSheet.create({
   albumTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 8,
     textAlign: 'left',
   },
@@ -2344,7 +2344,7 @@ const styles = StyleSheet.create({
   },
   separator: {
     marginHorizontal: 4,
-    color: '#6c757d',
+    color: '#9ca3af',
     fontSize: 16,
   },
   catalogCountryContainer: {
@@ -2369,7 +2369,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   styleTag: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f0f9ff',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -2382,7 +2382,7 @@ const styles = StyleSheet.create({
   coverSection: {
     width: '100%',
     height: width * 1, // Altura proporcional al ancho de la pantalla
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     marginBottom: 10,
     overflow: 'hidden',
   },
@@ -2395,18 +2395,18 @@ const styles = StyleSheet.create({
     height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#f1f5f9',
   },
   fullCoverPlaceholderText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     marginTop: 8,
   },
   tracksSection: {
     marginTop: 10,
   },
   videoButton: {
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -2461,7 +2461,7 @@ const styles = StyleSheet.create({
   gemTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#fefce8',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
@@ -2476,7 +2476,7 @@ const styles = StyleSheet.create({
   audioTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f0f9ff',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
@@ -2514,12 +2514,12 @@ const styles = StyleSheet.create({
   editionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 4,
   },
   editionArtist: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     marginBottom: 4,
   },
   editionDetailRow: {
@@ -2528,17 +2528,17 @@ const styles = StyleSheet.create({
   },
   editionDetailLabel: {
     fontSize: 12,
-    color: '#999',
+    color: '#9ca3af',
     marginRight: 4,
   },
   editionDetailValue: {
     fontSize: 12,
-    color: '#999',
+    color: '#9ca3af',
     flex: 1,
   },
   noEditionsText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     textAlign: 'center',
     fontStyle: 'italic',
     marginTop: 8,
@@ -2591,12 +2591,12 @@ const styles = StyleSheet.create({
   ratioInfoTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 8,
   },
   ratioInfoText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     lineHeight: 20,
   },
   seeMoreButton: {
@@ -2606,7 +2606,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -2856,13 +2856,13 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
     textAlign: 'center',
     marginTop: 8,
   },
   placeholderSubtext: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#9ca3af',
     textAlign: 'center',
     marginTop: 4,
   },
@@ -2955,7 +2955,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -2963,17 +2963,17 @@ const styles = StyleSheet.create({
   locationShelfName: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 2,
   },
   locationPosition: {
     fontSize: 12,
-    color: '#6c757d',
+    color: '#9ca3af',
   },
   selectShelfTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 8,
     marginTop: 16,
   },
@@ -2983,7 +2983,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
     marginBottom: 8,
     borderWidth: 1,
@@ -2991,7 +2991,7 @@ const styles = StyleSheet.create({
   },
   shelfSelectItemText: {
     fontSize: 14,
-    color: '#212529',
+    color: '#374151',
     fontWeight: '500',
   },
   noShelvesText: {
@@ -3021,12 +3021,12 @@ const styles = StyleSheet.create({
   typeFormProgress: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#4b5563',
   },
   typeFormHeaderTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     flex: 1,
     textAlign: 'center',
     marginHorizontal: 16,
@@ -3062,7 +3062,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: 3,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#f1f5f9',
   },
   typeFormProgressFill: {
     height: '100%',
@@ -3076,7 +3076,7 @@ const styles = StyleSheet.create({
   typeFormQuestion: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 30,
     textAlign: 'center',
     lineHeight: 32,
@@ -3090,7 +3090,7 @@ const styles = StyleSheet.create({
     minHeight: 120,
     maxHeight: 200,
     textAlignVertical: 'top',
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '#f8fafc',
     flex: 1,
   },
   typeFormFooter: {
@@ -3110,7 +3110,7 @@ const styles = StyleSheet.create({
   },
   typeFormSkipText: {
     fontSize: 16,
-    color: '#666',
+    color: '#6b7280',
     fontWeight: '500',
   },
   typeFormNavigation: {
@@ -3164,19 +3164,19 @@ const styles = StyleSheet.create({
   typeFormSectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 8,
   },
   typeFormSectionSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     marginBottom: 20,
   },
   typeFormButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
@@ -3198,7 +3198,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingVertical: 8,
     paddingHorizontal: 12,
-    backgroundColor: '#d4edda',
+    backgroundColor: '#f0fdf4',
     borderRadius: 8,
   },
   typeFormCompletedText: {
@@ -3214,7 +3214,7 @@ const styles = StyleSheet.create({
   typeFormResponseItem: {
     marginBottom: 24,
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -3222,19 +3222,19 @@ const styles = StyleSheet.create({
   typeFormResponseQuestion: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 8,
   },
   typeFormResponseAnswer: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     lineHeight: 20,
   },
   tracklistContainer: {
     marginTop: 20,
   },
   trackItemSelected: {
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f0f9ff',
     borderColor: '#007AFF',
    
   },
@@ -3248,7 +3248,7 @@ const styles = StyleSheet.create({
   typeFormResponseInlineItem: {
     marginBottom: 16,
     padding: 12,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -3256,12 +3256,12 @@ const styles = StyleSheet.create({
   typeFormResponseInlineQuestion: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 6,
   },
   typeFormResponseInlineAnswer: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     lineHeight: 18,
   },
   typeFormQuestionsContainer: {
@@ -3270,13 +3270,13 @@ const styles = StyleSheet.create({
   typeFormQuestionItem: {
     marginBottom: 12,
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#e9ecef',
   },
   typeFormQuestionItemAnswered: {
-    backgroundColor: '#e8f5e8',
+    backgroundColor: '#f0fdf4',
     borderColor: '#28a745',
   },
   typeFormQuestionHeader: {
@@ -3293,13 +3293,13 @@ const styles = StyleSheet.create({
   },
   typeFormQuestionText: {
     fontSize: 16,
-    color: '#333',
+    color: '#4b5563',
     flex: 1,
     fontWeight: '500',
   },
   typeFormQuestionPreview: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     fontStyle: 'italic',
     marginTop: 8,
     paddingLeft: 32,
@@ -3307,7 +3307,7 @@ const styles = StyleSheet.create({
   currentShelfTitle: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 8,
   },
   errorButton: {
@@ -3349,12 +3349,12 @@ const styles = StyleSheet.create({
   audioSectionTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 8,
   },
   audioSectionSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     marginBottom: 16,
   },
   loadAudioButton: {
@@ -3381,14 +3381,14 @@ const styles = StyleSheet.create({
   },
   loadingAudioText: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     marginLeft: 12,
   },
   audioErrorContainer: {
     alignItems: 'center',
     paddingVertical: 20,
     paddingHorizontal: 16,
-    backgroundColor: '#f8d7da',
+    backgroundColor: '#fef2f2',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#f5c6cb',
@@ -3451,7 +3451,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -3464,13 +3464,13 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   actionButtonActive: {
-    backgroundColor: '#fff3cd',
+    backgroundColor: '#fefce8',
     borderColor: '#d97706',
   },
   actionButtonText: {
     marginLeft: 8,
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     fontWeight: '500',
   },
   actionButtonTextActive: {
@@ -3482,7 +3482,7 @@ const styles = StyleSheet.create({
   listsInfoContainer: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
@@ -3490,13 +3490,13 @@ const styles = StyleSheet.create({
   listsInfoTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#495057',
+    color: '#6b7280',
     marginBottom: 8,
   },
   listItemTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#e3f2fd',
+    backgroundColor: '#f0f9ff',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
@@ -3528,12 +3528,12 @@ const styles = StyleSheet.create({
   listOptionTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#212529',
+    color: '#374151',
     marginBottom: 4,
   },
   listOptionDescription: {
     fontSize: 14,
-    color: '#6c757d',
+    color: '#9ca3af',
   },
   emptyListsContainer: {
     alignItems: 'center',
@@ -3541,7 +3541,7 @@ const styles = StyleSheet.create({
   },
   emptyListsText: {
     fontSize: 16,
-    color: '#6c757d',
+    color: '#9ca3af',
     textAlign: 'center',
   },
   createListButton: {
@@ -3581,7 +3581,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     paddingHorizontal: 16,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#f8fafc',
     borderRadius: 12,
     marginBottom: 8,
     borderWidth: 1,
@@ -3594,12 +3594,12 @@ const styles = StyleSheet.create({
   listTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 4,
   },
   listDescription: {
     fontSize: 14,
-    color: '#666',
+    color: '#6b7280',
     lineHeight: 18,
   },
   floatingPlayButton: {
@@ -3654,7 +3654,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 8,
   },
   similarAlbumPlaceholder: {
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8fafc',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -3675,18 +3675,18 @@ const styles = StyleSheet.create({
   similarAlbumTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#333',
+    color: '#4b5563',
     marginBottom: 2,
     lineHeight: 14,
   },
   similarAlbumArtist: {
     fontSize: 11,
-    color: '#666',
+    color: '#6b7280',
     marginBottom: 2,
   },
   similarAlbumYear: {
     fontSize: 10,
-    color: '#999',
+    color: '#9ca3af',
   },
   floatingAudioPlayer: {
     position: 'absolute',
