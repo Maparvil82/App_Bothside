@@ -40,7 +40,7 @@ export async function scheduleNotificationsForSession(session: {
   name: string;
   notification_48h_id?: string;
   notification_post_id?: string;
-}): Promise<{ notification_48h_id: string | null; notification_post_id: string | null }> {
+}, userName?: string): Promise<{ notification_48h_id: string | null; notification_post_id: string | null }> {
   try {
     // Verificar permisos
     const hasPermission = await requestNotificationPermissions();
@@ -48,6 +48,10 @@ export async function scheduleNotificationsForSession(session: {
       console.warn('No se tienen permisos para notificaciones');
       return { notification_48h_id: null, notification_post_id: null };
     }
+
+    // Calcular nombre seguro del usuario y sesión
+    const displayName = userName || 'Tu';
+    const sessionName = session.name || 'tu sesión';
 
     // Cancelar notificaciones previas si existen
     if (session.notification_48h_id) {
@@ -75,8 +79,8 @@ export async function scheduleNotificationsForSession(session: {
 
         notification48hId = await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'Sesión (TEST) en breve',
-            body: `"${session.name}" - recordatorio de prueba (30s)`,
+            title: `🎧 ${displayName}, tu próxima sesión está cerca`,
+            body: `En dos días pinchas en "${sessionName}" ¿te ayudo a preparar la maleta?.`,
             data: {
               sessionId: session.id,
               type: '48h_before_test',
@@ -90,8 +94,8 @@ export async function scheduleNotificationsForSession(session: {
         if (session.end_time) {
           notificationPostId = await Notifications.scheduleNotificationAsync({
             content: {
-              title: '¿Cómo fue tu sesión? (TEST)',
-              body: 'Añade una nota - prueba (60s).',
+              title: `¿Cómo te fué en "${sessionName}"?`,
+              body: `${displayName}, cuéntame ¿tu sesión en "${sessionName}" fué lo que esperabas?.`,
               data: {
                 type: 'post_session_note_test',
                 session_id: session.id,
@@ -113,8 +117,8 @@ export async function scheduleNotificationsForSession(session: {
         if (notification48hDate > new Date()) {
           notification48hId = await Notifications.scheduleNotificationAsync({
             content: {
-              title: 'Sesión en 48 horas',
-              body: `"${session.name}" está programada para dentro de 48 horas`,
+              title: `🎧 ${displayName}, tu próxima sesión está cerca`,
+              body: `En dos días pinchas en "${sessionName}" ¿te ayudo a preparar la maleta?.`,
               data: {
                 sessionId: session.id,
                 type: '48h_before',
@@ -140,8 +144,8 @@ export async function scheduleNotificationsForSession(session: {
           if (notificationPostDate > new Date()) {
             notificationPostId = await Notifications.scheduleNotificationAsync({
               content: {
-                title: '¿Cómo fue tu sesión?',
-                body: 'Puedes añadir una nota para recordarlo.',
+                title: `¿Cómo te fué en "${sessionName}"?`,
+                body: `${displayName}, cuéntame ¿tu sesión en "${sessionName}" fué lo que esperabas?.`,
                 data: {
                   type: 'post_session_note',
                   session_id: session.id,

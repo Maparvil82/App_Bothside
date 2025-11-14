@@ -352,7 +352,13 @@ export default function CalendarScreen() {
       } else {
         // Programar notificaciones para la sesión creada
         if (insertedData) {
-          const notificationIds = await scheduleNotificationsForSession(insertedData);
+          // Extraer nombre del usuario para personalizar notificaciones
+          const userName =
+            user?.user_metadata?.full_name ||
+            user?.user_metadata?.name ||
+            user?.email?.split("@")[0] ||
+            "Tu";
+          const notificationIds = await scheduleNotificationsForSession(insertedData, userName);
           console.log('Notificaciones programadas:', notificationIds);
         }
 
@@ -430,7 +436,13 @@ export default function CalendarScreen() {
       } else {
         // Programar nuevas notificaciones con los datos actualizados
         if (updatedData) {
-          const notificationIds = await scheduleNotificationsForSession(updatedData);
+          // Extraer nombre del usuario para personalizar notificaciones
+          const userName =
+            user?.user_metadata?.full_name ||
+            user?.user_metadata?.name ||
+            user?.email?.split("@")[0] ||
+            "Tu";
+          const notificationIds = await scheduleNotificationsForSession(updatedData, userName);
           console.log('Notificaciones reprogramadas:', notificationIds);
         }
 
