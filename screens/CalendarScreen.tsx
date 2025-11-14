@@ -238,8 +238,9 @@ export default function CalendarScreen() {
       setSelectedSession(null);
       // Limpiar el formulario
       setFormName('');
-      setFormStartTime('');
-      setFormEndTime('');
+      // Inicializar start/end con los valores actuales del picker
+      setFormStartTime(`${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`);
+      setFormEndTime(`${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`);
       setFormQuickNote('');
       setFormTag('');
       setFormPaymentType('gratis');
@@ -898,14 +899,11 @@ export default function CalendarScreen() {
                       label="Hora inicio"
                       hour={startHour}
                       minute={startMinute}
-                      onChange={(h, m) => {
+                      onChange={(h, m, f) => {
                         setStartHour(h);
                         setStartMinute(m);
-                        const formatted = `${h.toString().padStart(2, "0")}:${m
-                          .toString()
-                          .padStart(2, "0")}`;
-                        // Asegurar el string usado por Supabase
-                        setFormStartTime(formatted);
+                        // Asegurar el string usado por Supabase (recibimos el formatted directamente)
+                        setFormStartTime(f);
                         if (validationErrors.time) setValidationErrors({ ...validationErrors, time: undefined });
                       }}
                     />
@@ -916,14 +914,11 @@ export default function CalendarScreen() {
                       label="Hora fin"
                       hour={endHour}
                       minute={endMinute}
-                      onChange={(h, m) => {
+                      onChange={(h, m, f) => {
                         setEndHour(h);
                         setEndMinute(m);
-                        const formatted = `${h.toString().padStart(2, "0")}:${m
-                          .toString()
-                          .padStart(2, "0")}`;
-                        // Asegurar el string usado por Supabase
-                        setFormEndTime(formatted);
+                        // Asegurar el string usado por Supabase (recibimos el formatted directamente)
+                        setFormEndTime(f);
                         if (validationErrors.time) setValidationErrors({ ...validationErrors, time: undefined });
                       }}
                     />

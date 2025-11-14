@@ -15,7 +15,8 @@ interface TimePickerProps {
   label: string;
   hour: number;
   minute: number;
-  onChange: (hour: number, minute: number) => void;
+  // ahora onChange recibe (hour, minute, formattedString)
+  onChange: (hour: number, minute: number, formatted: string) => void;
 }
 
 const { width, height } = Dimensions.get('window');
@@ -35,12 +36,18 @@ const TimePicker: React.FC<TimePickerProps> = ({
   const minutes = Array.from({ length: 60 }, (_, i) => i);
 
   const handleHourSelect = (selectedHour: number) => {
-    onChange(selectedHour, minute);
+    const formatted = `${selectedHour.toString().padStart(2, '0')}:${minute
+      .toString()
+      .padStart(2, '0')}`;
+    onChange(selectedHour, minute, formatted);
     setHourPickerVisible(false);
   };
 
   const handleMinuteSelect = (selectedMinute: number) => {
-    onChange(hour, selectedMinute);
+    const formatted = `${hour.toString().padStart(2, '0')}:${selectedMinute
+      .toString()
+      .padStart(2, '0')}`;
+    onChange(hour, selectedMinute, formatted);
     setMinutePickerVisible(false);
   };
 
