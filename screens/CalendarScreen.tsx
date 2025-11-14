@@ -846,6 +846,8 @@ export default function CalendarScreen() {
                     width: CELL_WIDTH,
                   },
                   calendarDay.isCurrentMonth ? styles.dayCellCurrent : styles.dayCellOtherMonth,
+                  // Si el día tiene sesiones, aplicar estilo especial
+                  daySessions.length > 0 && styles.dayCellWithSession,
                 ]}
                 onPress={() => {
                   if (calendarDay.isCurrentMonth) {
@@ -856,32 +858,28 @@ export default function CalendarScreen() {
               >
                 {calendarDay.isCurrentMonth && (
                   <>
-                    {/* Día y selección */}
-                    {selectedDay === calendarDay.day ? (
-                      <View style={styles.selectedDayCircle}>
-                        <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
+                    {/* Si hay sesión, mostrar información completa de la sesión */}
+                    {daySessions.length > 0 ? (
+                      <View style={styles.sessionCellContent}>
+                        <Text style={styles.sessionName} numberOfLines={1}>
+                          {daySessions[0].name}
+                        </Text>
+                        <Text style={styles.sessionHour}>
+                          {daySessions[0].start_time && daySessions[0].start_time.substring(0, 5)}
+                          {daySessions[0].end_time && ` – ${daySessions[0].end_time.substring(0, 5)}`}
+                        </Text>
                       </View>
                     ) : (
-                      <Text style={styles.dayNumber}>{calendarDay.day}</Text>
-                    )}
-
-                    {/* Mostrar píldoras para sesiones (estilo Google Calendar) */}
-                    {daySessions.length > 0 && (
-                      <View style={styles.sessionsContainer}>
-                        {daySessions.map((session) => {
-                          const hasNotes = notesBySessionId[session.id] !== undefined;
-                          return (
-                            <View key={session.id}>
-                              <View style={styles.sessionPill}>
-                                <Text style={styles.sessionPillText} numberOfLines={1}>{session.name || 'Sesión'}</Text>
-                              </View>
-                              {hasNotes && (
-                                <View style={styles.noteDot} />
-                              )}
-                            </View>
-                          );
-                        })}
-                      </View>
+                      <>
+                        {/* Si no hay sesión, mostrar el día normal */}
+                        {selectedDay === calendarDay.day ? (
+                          <View style={styles.selectedDayCircle}>
+                            <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.dayNumber}>{calendarDay.day}</Text>
+                        )}
+                      </>
                     )}
                   </>
                 )}
@@ -1246,6 +1244,36 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  dayCellWithSession: {
+    backgroundColor: '#E3F6EA',
+    borderColor: '#34A853',
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 4,
+  },
+  sessionTimeText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#1B5E20',
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  sessionCellContent: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    paddingTop: 2,
+  },
+  sessionName: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#1B5E20',
+  },
+  sessionHour: {
+    fontSize: 10,
+    color: '#1B5E20',
+    marginTop: 2,
   },
   noteDot: {
     width: 6,
