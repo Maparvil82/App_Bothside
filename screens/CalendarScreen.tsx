@@ -1,10 +1,19 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@react-navigation/native';
+import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import {
+  requestNotificationPermissions,
+  scheduleNotificationsForSession,
+  cancelSessionNotifications,
+  getSessionNotificationIds,
+  setupNotificationCategories,
+  scheduleSnoozeNotification,
+} from '../services/notifications';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = width / 7;
@@ -33,6 +42,9 @@ interface Session {
 export default function CalendarScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const navigation = useNavigation();
+  const notificationListener = useRef<Notifications.Subscription>();
+  const responseListener = useRef<Notifications.Subscription>();
   
   // Estado para la fecha actual (primer día del mes)
   const [currentDate, setCurrentDate] = useState(() => {
@@ -236,14 +248,22 @@ export default function CalendarScreen() {
         }
       }
 
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('sessions')
-        .insert([sessionData]);
+        .insert([sessionData])
+        .select()
+        .single();
 
       if (error) {
         console.error('Error al crear sesión:', error);
         Alert.alert('Error', 'No se pudo crear la sesión');
       } else {
+        // Programar notificaciones para la sesión creada
+        if (insertedData) {
+          const notificationIds = await scheduleNotificationsForSession(insertedData);
+          console.log('Notificaciones programadas:', notificationIds);
+        }
+
         handleCloseModal();
         await loadSessions();
         Alert.alert('Éxito', 'Sesión creada correctamente');
@@ -266,6 +286,16 @@ export default function CalendarScreen() {
 
     setIsSaving(true);
     try {
+      // Obtener IDs de notificaciones previas desde AsyncStorage
+      const prevNotificationIds = await getSessionNotificationIds(selectedSession.id);
+      
+      // Cancelar notificaciones previas
+      await cancelSessionNotifications({
+        ...selectedSession,
+        notification_48h_id: prevNotificationIds.notification_48h_id || undefined,
+        notification_post_id: prevNotificationIds.notification_post_id || undefined,
+      });
+
       const updateData: any = {
         name: formName.trim(),
         start_time: formStartTime || null,
@@ -286,15 +316,23 @@ export default function CalendarScreen() {
         updateData.payment_amount = null;
       }
 
-      const { error } = await supabase
+      const { data: updatedData, error } = await supabase
         .from('sessions')
         .update(updateData)
-        .eq('id', selectedSession.id);
+        .eq('id', selectedSession.id)
+        .select()
+        .single();
 
       if (error) {
         console.error('Error al actualizar sesión:', error);
         Alert.alert('Error', 'No se pudo actualizar la sesión');
       } else {
+        // Programar nuevas notificaciones con los datos actualizados
+        if (updatedData) {
+          const notificationIds = await scheduleNotificationsForSession(updatedData);
+          console.log('Notificaciones reprogramadas:', notificationIds);
+        }
+
         handleCloseModal();
         await loadSessions();
         Alert.alert('Éxito', 'Sesión actualizada correctamente');
@@ -322,6 +360,16 @@ export default function CalendarScreen() {
           onPress: async () => {
             setIsSaving(true);
             try {
+              // Obtener IDs de notificaciones desde AsyncStorage
+              const notificationIds = await getSessionNotificationIds(selectedSession.id);
+              
+              // Cancelar notificaciones
+              await cancelSessionNotifications({
+                ...selectedSession,
+                notification_48h_id: notificationIds.notification_48h_id || undefined,
+                notification_post_id: notificationIds.notification_post_id || undefined,
+              });
+
               const { error } = await supabase
                 .from('sessions')
                 .delete()
@@ -381,6 +429,67 @@ export default function CalendarScreen() {
       setLoadingSessions(false);
     }
   };
+
+  // Configurar notificaciones al montar el componente
+  useEffect(() => {
+    // Configurar categorías de notificaciones
+    setupNotificationCategories();
+
+    // Solicitar permisos
+    requestNotificationPermissions();
+
+    // Listener para cuando se recibe una notificación mientras la app está en foreground
+    notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
+      console.log('Notificación recibida:', notification);
+    });
+
+    // Listener para cuando el usuario interactúa con una notificación (incluyendo acciones)
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(async (response) => {
+      const { notification } = response;
+      const { data } = notification.request.content;
+      const actionIdentifier = response.actionIdentifier;
+
+      console.log('Respuesta a notificación:', { actionIdentifier, data });
+
+      // Manejar acciones de la notificación de 48h
+      if (data?.type === '48h_before' || data?.type === 'snooze') {
+        if (actionIdentifier === 'prepare_now') {
+          // Navegar a la pantalla de calendario o mostrar detalles
+          console.log('Preparar ahora - Sesión:', data.sessionId);
+          // TODO: Navegar a la pantalla de detalles de la sesión
+          // navigation.navigate('Calendar' as never);
+        } else if (actionIdentifier === 'snooze_2h') {
+          // Programar snooze de 2 horas
+          // Obtener nombre de la sesión desde la notificación o cargar desde Supabase
+          const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
+          await scheduleSnoozeNotification(data.sessionId, sessionName, 2);
+        } else if (actionIdentifier === 'snooze_4h') {
+          // Programar snooze de 4 horas
+          const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
+          await scheduleSnoozeNotification(data.sessionId, sessionName, 4);
+        } else if (actionIdentifier === 'snooze_8h') {
+          // Programar snooze de 8 horas
+          const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
+          await scheduleSnoozeNotification(data.sessionId, sessionName, 8);
+        }
+      }
+
+      // Manejar notificación post-sesión
+      if (data?.type === 'post_session') {
+        console.log('Notificación post-sesión - Sesión:', data.sessionId);
+        // TODO: Navegar a la pantalla para dejar feedback
+      }
+    });
+
+    return () => {
+      if (notificationListener.current) {
+        Notifications.removeNotificationSubscription(notificationListener.current);
+      }
+      if (responseListener.current) {
+        Notifications.removeNotificationSubscription(responseListener.current);
+      }
+    };
+  }, []);
 
   // Cargar sesiones del mes desde Supabase
   useEffect(() => {
