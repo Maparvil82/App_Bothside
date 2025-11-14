@@ -35,6 +35,7 @@ import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PricingScreen } from '../screens/PricingScreen';
 import { FeedbackScreen } from '../screens/FeedbackScreen';
+import CalendarScreen from '../screens/CalendarScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -303,6 +304,14 @@ const AppNavigator = () => {
                   options={{
                     headerShown: true,
                     header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} />
+                  }}
+                />
+                <Stack.Screen
+                  name="Calendar"
+                  component={CalendarScreen}
+                  options={{
+                    headerShown: true,
+                    header: () => <CustomHeader title="Calendario de sesiones" showBackButton={true} showCalendarIcon={false} />
                   }}
                 />
               </>

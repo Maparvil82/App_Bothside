@@ -10,16 +10,20 @@ interface CustomHeaderProps {
   title: string;
   showAvatar?: boolean;
   showBackButton?: boolean;
+  showCalendarIcon?: boolean;
   onAvatarPress?: () => void;
   onBackPress?: () => void;
+  onCalendarPress?: () => void;
 }
 
 export const CustomHeader: React.FC<CustomHeaderProps> = ({
   title,
   showAvatar = true,
   showBackButton = false,
+  showCalendarIcon = true,
   onAvatarPress,
-  onBackPress
+  onBackPress,
+  onCalendarPress
 }) => {
   const navigation = useNavigation();
   const { colors } = useTheme();
@@ -78,6 +82,14 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
     }
   };
 
+  const handleCalendarPress = () => {
+    if (onCalendarPress) {
+      onCalendarPress();
+    } else {
+      navigation.navigate('Calendar' as never);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <View style={styles.header}>
@@ -92,25 +104,35 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
         <View style={styles.titleContainer}>
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         </View>
-        {showAvatar && (
-          <TouchableOpacity
-            style={styles.avatarContainer}
-            onPress={handleAvatarPress}
-            disabled={loading}
-          >
-            {profile?.avatar_url ? (
-              <Image
-                source={{ uri: `${profile.avatar_url}` }}
-                style={[styles.avatarImage, { borderColor: colors.border }]}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={[styles.avatarPlaceholder, { borderColor: colors.border }]}>
-                <Text style={styles.avatarText}>{getInitials()}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-        )}
+        <View style={styles.rightContainer}>
+          {showCalendarIcon && (
+            <TouchableOpacity
+              style={styles.calendarButton}
+              onPress={handleCalendarPress}
+            >
+              <Ionicons name="calendar-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+          )}
+          {showAvatar && (
+            <TouchableOpacity
+              style={styles.avatarContainer}
+              onPress={handleAvatarPress}
+              disabled={loading}
+            >
+              {profile?.avatar_url ? (
+                <Image
+                  source={{ uri: `${profile.avatar_url}` }}
+                  style={[styles.avatarImage, { borderColor: colors.border }]}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={[styles.avatarPlaceholder, { borderColor: colors.border }]}>
+                  <Text style={styles.avatarText}>{getInitials()}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -150,10 +172,19 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
   },
-  avatarContainer: {
+  rightContainer: {
     position: 'absolute',
     right: 16,
     top: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  calendarButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  avatarContainer: {
     zIndex: 1,
   },
   avatarImage: {
