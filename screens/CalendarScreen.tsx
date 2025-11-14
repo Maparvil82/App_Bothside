@@ -858,8 +858,17 @@ export default function CalendarScreen() {
               >
                 {calendarDay.isCurrentMonth && (
                   <>
-                    {/* Si hay sesión, mostrar información completa de la sesión */}
-                    {daySessions.length > 0 ? (
+                    {/* Mostrar número del día */}
+                    {selectedDay === calendarDay.day ? (
+                      <View style={styles.selectedDayCircle}>
+                        <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.dayNumber}>{calendarDay.day}</Text>
+                    )}
+
+                    {/* Si hay sesión, mostrar información de la sesión debajo del día */}
+                    {daySessions.length > 0 && (
                       <View style={styles.sessionCellContent}>
                         <Text style={styles.sessionName} numberOfLines={1}>
                           {daySessions[0].name}
@@ -869,17 +878,6 @@ export default function CalendarScreen() {
                           {daySessions[0].end_time && ` – ${daySessions[0].end_time.substring(0, 5)}`}
                         </Text>
                       </View>
-                    ) : (
-                      <>
-                        {/* Si no hay sesión, mostrar el día normal */}
-                        {selectedDay === calendarDay.day ? (
-                          <View style={styles.selectedDayCircle}>
-                            <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
-                          </View>
-                        ) : (
-                          <Text style={styles.dayNumber}>{calendarDay.day}</Text>
-                        )}
-                      </>
                     )}
                   </>
                 )}
