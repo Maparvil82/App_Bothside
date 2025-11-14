@@ -58,6 +58,9 @@ export default function CalendarScreen() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
 
+  // Estado para las notas por sesión
+  const [notesBySessionId, setNotesBySessionId] = useState<Record<string, any[]>>({});
+
   // Estados para el modal
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
@@ -432,6 +435,48 @@ export default function CalendarScreen() {
     }
   };
 
+  // Función para cargar notas agrupadas por session_id
+  const loadNotesBySession = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { startOfMonth, endOfMonth } = getMonthRange(currentDate);
+      
+      // Convertir fechas a formato ISO
+      const startISO = startOfMonth.toISOString().split('T')[0];
+      const endISO = endOfMonth.toISOString().split('T')[0];
+
+      // Cargar todas las notas del mes actual
+      const { data: notes, error } = await supabase
+        .from('session_notes')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error al cargar notas:', error);
+        setNotesBySessionId({});
+        return;
+      }
+
+      // Agrupar notas por session_id
+      const groupedNotes: Record<string, any[]> = {};
+      if (notes && notes.length > 0) {
+        notes.forEach((note) => {
+          const sessionId = note.session_id;
+          if (!groupedNotes[sessionId]) {
+            groupedNotes[sessionId] = [];
+          }
+          groupedNotes[sessionId].push(note);
+        });
+      }
+
+      setNotesBySessionId(groupedNotes);
+    } catch (error) {
+      console.error('Error al cargar notas:', error);
+      setNotesBySessionId({});
+    }
+  };
+
   // Configurar notificaciones al montar el componente
   useEffect(() => {
     // Configurar categorías de notificaciones
@@ -502,6 +547,7 @@ export default function CalendarScreen() {
   // Cargar sesiones del mes desde Supabase
   useEffect(() => {
     loadSessions();
+    loadNotesBySession();
   }, [currentDate, user?.id]);
 
   // Generar la cuadrícula de días del calendario
@@ -641,19 +687,39 @@ export default function CalendarScreen() {
                       {/* Mostrar tarjetas verdes para sesiones */}
                       {daySessions.length > 0 && (
                         <View style={styles.sessionsContainer}>
-                          {daySessions.map((session) => (
-                            <View 
-                              key={session.id} 
-                              style={[styles.sessionCard, { backgroundColor: '#d1fae5' }]}
-                            >
-                              <Text style={styles.sessionName} numberOfLines={1}>
-                                {session.name}
-                              </Text>
-                              <Text style={styles.sessionTime}>
-                                {formatTime(session.start_time)}
-                              </Text>
-                            </View>
-                          ))}
+                          {daySessions.map((session) => {
+                            const hasNotes = notesBySessionId[session.id] !== undefined;
+                            
+                            return (
+                              <View 
+                                key={session.id}
+                              >
+                                <View 
+                                  style={[styles.sessionCard, { backgroundColor: '#d1fae5' }]}
+                                >
+                                  <Text style={styles.sessionName} numberOfLines={1}>
+                                    {session.name}
+                                  </Text>
+                                  <Text style={styles.sessionTime}>
+                                    {formatTime(session.start_time)}
+                                  </Text>
+                                </View>
+                                {/* Indicador de nota si existe */}
+                                {hasNotes && (
+                                  <View
+                                    style={{
+                                      width: 6,
+                                      height: 6,
+                                      borderRadius: 3,
+                                      backgroundColor: '#6BFF9C',
+                                      alignSelf: 'center',
+                                      marginTop: 4,
+                                    }}
+                                  />
+                                )}
+                              </View>
+                            );
+                          })}
                         </View>
                       )}
                     </>
