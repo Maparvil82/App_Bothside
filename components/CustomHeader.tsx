@@ -93,6 +93,15 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
   return (
     <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <View style={styles.header}>
+        {/* Icono del calendario al principio */}
+        {showCalendarIcon && (
+          <TouchableOpacity
+            style={styles.calendarButton}
+            onPress={handleCalendarPress}
+          >
+            <Ionicons name="calendar-outline" size={24} color={colors.text} />
+          </TouchableOpacity>
+        )}
         {showBackButton && (
           <TouchableOpacity 
             style={styles.backButton}
@@ -105,14 +114,6 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         </View>
         <View style={styles.rightContainer}>
-          {showCalendarIcon && (
-            <TouchableOpacity
-              style={styles.calendarButton}
-              onPress={handleCalendarPress}
-            >
-              <Ionicons name="calendar-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
-          )}
           {showAvatar && (
             <TouchableOpacity
               style={styles.avatarContainer}
@@ -183,6 +184,7 @@ const styles = StyleSheet.create({
   calendarButton: {
     padding: 8,
     marginRight: 8,
+    zIndex: 1,
   },
   avatarContainer: {
     zIndex: 1,
