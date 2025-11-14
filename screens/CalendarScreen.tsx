@@ -848,15 +848,12 @@ export default function CalendarScreen() {
                 key={index}
                 style={[
                   styles.dayCell,
-                  { 
-                    width: CELL_WIDTH,
-                    // Aplicar color del tag si hay sesión
-                    ...(cellColor ? {
-                      backgroundColor: cellColor,
-                      borderColor: cellColor,
-                    } : {}),
-                  },
                   calendarDay.isCurrentMonth ? styles.dayCellCurrent : styles.dayCellOtherMonth,
+                  { width: CELL_WIDTH },
+                  cellColor && {
+                    backgroundColor: cellColor,
+                    borderColor: cellColor,
+                  },
                 ]}
                 onPress={() => {
                   if (calendarDay.isCurrentMonth) {
@@ -1510,15 +1507,13 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   dayCellCurrent: {
-    backgroundColor: '#f5f5f5',
     borderWidth: 0.5,
     borderColor: '#e0e0e0',
   },
   dayCellOtherMonth: {
-    backgroundColor: '#fafafa',
+    opacity: 0.4,
     borderWidth: 0.5,
     borderColor: '#e0e0e0',
-    opacity: 0.4,
   },
   dayNumberOtherMonth: {
     color: '#C8C8C8',
