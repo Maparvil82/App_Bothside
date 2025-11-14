@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
 import TimePicker from '../components/TimePicker';
+import SessionsListView from '../components/SessionsListView';
 import {
   requestNotificationPermissions,
   scheduleNotificationsForSession,
@@ -66,6 +67,9 @@ export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // Estado para modo de vista (Calendario o Lista)
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   // Estados del formulario
   const [formName, setFormName] = useState('');
@@ -753,6 +757,58 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Toggle Vista Calendario / Lista */}
+      <View style={styles.viewToggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.viewToggleButton,
+            viewMode === 'calendar' && styles.viewToggleButtonActive,
+          ]}
+          onPress={() => setViewMode('calendar')}
+        >
+          <Ionicons
+            name="calendar"
+            size={18}
+            color={viewMode === 'calendar' ? '#fff' : '#666'}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.viewToggleButtonText,
+              viewMode === 'calendar' && styles.viewToggleButtonTextActive,
+            ]}
+          >
+            Calendario
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.viewToggleButton,
+            viewMode === 'list' && styles.viewToggleButtonActive,
+          ]}
+          onPress={() => setViewMode('list')}
+        >
+          <Ionicons
+            name="list"
+            size={18}
+            color={viewMode === 'list' ? '#fff' : '#666'}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.viewToggleButtonText,
+              viewMode === 'list' && styles.viewToggleButtonTextActive,
+            ]}
+          >
+            Lista
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Vista Calendario */}
+      {viewMode === 'calendar' && (
+      <>
       {/* Fila de días de la semana */}
       <View style={styles.weekDaysRow}>
         {weekDays.map((day, index) => (
@@ -843,6 +899,27 @@ export default function CalendarScreen() {
             );
           })}
   </View>
+      )}
+      </>
+      )}
+
+      {/* Vista Lista */}
+      {viewMode === 'list' && (
+        <SessionsListView
+          sessions={sessions}
+          onSessionPress={(session: Session) => {
+            setSelectedSession(session);
+            // Rellenar el formulario con los datos de la sesión
+            setFormName(session.name || '');
+            setFormStartTime(session.start_time || '');
+            setFormEndTime(session.end_time || '');
+            setFormQuickNote(session.quick_note || '');
+            setFormTag(session.tag || '');
+            setFormPaymentType(session.payment_type || 'gratis');
+            setFormPaymentAmount(session.payment_amount?.toString() || '');
+            setIsModalVisible(true);
+          }}
+        />
       )}
 
       {/* Modal para crear/editar sesión */}
@@ -1459,6 +1536,36 @@ const styles = StyleSheet.create({
   timePicker: {
     height: 120,
     marginTop: -10,
+  },
+  viewToggleContainer: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    gap: 10,
+  },
+  viewToggleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: '#F0F0F0',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  viewToggleButtonActive: {
+    backgroundColor: '#000',
+    borderColor: '#000',
+  },
+  viewToggleButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  viewToggleButtonTextActive: {
+    color: '#fff',
   },
 });
 
