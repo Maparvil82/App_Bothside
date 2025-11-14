@@ -310,6 +310,11 @@ export default function CalendarScreen() {
 
     setIsSaving(true);
     try {
+      // Asegurar que tenemos strings formateados HH:MM antes de insertar
+      const startTime = formStartTime || `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+      const endTime = formEndTime || `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+      console.log('Creando sesión - startTime, endTime:', startTime, endTime);
+
       const sessionDate = formatDateToString(
         currentDate.getFullYear(),
         currentDate.getMonth(),
@@ -320,8 +325,8 @@ export default function CalendarScreen() {
         user_id: user.id,
         name: formName.trim(),
         date: sessionDate,
-        start_time: formStartTime || null,
-        end_time: formEndTime || null,
+        start_time: startTime || null,
+        end_time: endTime || null,
         quick_note: formQuickNote.trim() || null,
         tag: formTag.trim() || null,
         payment_type: formPaymentType || null,
@@ -386,10 +391,15 @@ export default function CalendarScreen() {
         notification_post_id: prevNotificationIds.notification_post_id || undefined,
       });
 
+      // Asegurar que tenemos strings formateados HH:MM antes de actualizar
+      const startTime = formStartTime || `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
+      const endTime = formEndTime || `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+      console.log('Actualizando sesión - startTime, endTime:', startTime, endTime);
+
       const updateData: any = {
         name: formName.trim(),
-        start_time: formStartTime || null,
-        end_time: formEndTime || null,
+        start_time: startTime || null,
+        end_time: endTime || null,
         quick_note: formQuickNote.trim() || null,
         tag: formTag.trim() || null,
         payment_type: formPaymentType || null,
@@ -891,8 +901,11 @@ export default function CalendarScreen() {
                       onChange={(h, m) => {
                         setStartHour(h);
                         setStartMinute(m);
-                        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                        setFormStartTime(timeStr);
+                        const formatted = `${h.toString().padStart(2, "0")}:${m
+                          .toString()
+                          .padStart(2, "0")}`;
+                        // Asegurar el string usado por Supabase
+                        setFormStartTime(formatted);
                         if (validationErrors.time) setValidationErrors({ ...validationErrors, time: undefined });
                       }}
                     />
@@ -906,8 +919,11 @@ export default function CalendarScreen() {
                       onChange={(h, m) => {
                         setEndHour(h);
                         setEndMinute(m);
-                        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
-                        setFormEndTime(timeStr);
+                        const formatted = `${h.toString().padStart(2, "0")}:${m
+                          .toString()
+                          .padStart(2, "0")}`;
+                        // Asegurar el string usado por Supabase
+                        setFormEndTime(formatted);
                         if (validationErrors.time) setValidationErrors({ ...validationErrors, time: undefined });
                       }}
                     />

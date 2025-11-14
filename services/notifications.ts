@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ENV } from '../config/env';
 
 // Configurar el handler de notificaciones
 Notifications.setNotificationHandler({
@@ -62,57 +63,99 @@ export async function scheduleNotificationsForSession(session: {
     const sessionStartDateTime = new Date(sessionDate);
     sessionStartDateTime.setHours(startHours, startMinutes || 0, 0, 0);
 
-    // Calcular fecha de notificación 48h antes
-    const notification48hDate = new Date(sessionStartDateTime);
-    notification48hDate.setHours(notification48hDate.getHours() - 48);
-
-    // Programar notificación de 48h antes
+    // Decidir comportamiento según el flag de configuración
     let notification48hId: string | null = null;
-    if (notification48hDate > new Date()) {
-      // Solo programar si la fecha es en el futuro
-      notification48hId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: 'Sesión en 48 horas',
-          body: `"${session.name}" está programada para dentro de 48 horas`,
-          data: {
-            sessionId: session.id,
-            type: '48h_before',
-          },
-          categoryIdentifier: 'session_48h', // Para las acciones
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DATE,
-          date: notification48hDate,
-        },
-      });
-    }
-
-    // Calcular fecha de notificación 1h después del fin (si existe end_time)
     let notificationPostId: string | null = null;
-    if (session.end_time) {
-      const [endHours, endMinutes] = session.end_time.split(':').map(Number);
-      const sessionEndDateTime = new Date(sessionDate);
-      sessionEndDateTime.setHours(endHours, endMinutes || 0, 0, 0);
 
-      const notificationPostDate = new Date(sessionEndDateTime);
-      notificationPostDate.setHours(notificationPostDate.getHours() + 1);
+    if (ENV.NOTIFICATIONS_TEST_MODE) {
+      // En modo test programamos notificaciones a 30s y 60s desde ahora
+      try {
+        const notifPreview = new Date(Date.now() + 30000); // 30 segundos
+        const notifPost = new Date(Date.now() + 60000); // 60 segundos
 
-      if (notificationPostDate > new Date()) {
-        // Solo programar si la fecha es en el futuro
-        notificationPostId = await Notifications.scheduleNotificationAsync({
+        notification48hId = await Notifications.scheduleNotificationAsync({
           content: {
-            title: '¿Cómo fue tu sesión?',
-            body: 'Puedes añadir una nota para recordarlo.',
+            title: 'Sesión (TEST) en breve',
+            body: `"${session.name}" - recordatorio de prueba (30s)`,
             data: {
-              type: 'post_session_note',
-              session_id: session.id,
+              sessionId: session.id,
+              type: '48h_before_test',
             },
+            categoryIdentifier: 'session_48h',
           },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: notificationPostDate,
-          },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: notifPreview },
         });
+
+        // Solo programar post si session.end_time existe (mantener lógica original)
+        if (session.end_time) {
+          notificationPostId = await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '¿Cómo fue tu sesión? (TEST)',
+              body: 'Añade una nota - prueba (60s).',
+              data: {
+                type: 'post_session_note_test',
+                session_id: session.id,
+              },
+            },
+            trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: notifPost },
+          });
+        }
+      } catch (err) {
+        console.error('Error al programar notificaciones en TEST MODE:', err);
+      }
+    } else {
+      // Comportamiento normal: 48h antes y 1h después (si hay end_time)
+      try {
+        // Calcular fecha de notificación 48h antes
+        const notification48hDate = new Date(sessionStartDateTime);
+        notification48hDate.setHours(notification48hDate.getHours() - 48);
+
+        if (notification48hDate > new Date()) {
+          notification48hId = await Notifications.scheduleNotificationAsync({
+            content: {
+              title: 'Sesión en 48 horas',
+              body: `"${session.name}" está programada para dentro de 48 horas`,
+              data: {
+                sessionId: session.id,
+                type: '48h_before',
+              },
+              categoryIdentifier: 'session_48h',
+            },
+            trigger: {
+              type: Notifications.SchedulableTriggerInputTypes.DATE,
+              date: notification48hDate,
+            },
+          });
+        }
+
+        // Calcular fecha de notificación 1h después del fin (si existe end_time)
+        if (session.end_time) {
+          const [endHours, endMinutes] = session.end_time.split(':').map(Number);
+          const sessionEndDateTime = new Date(sessionDate);
+          sessionEndDateTime.setHours(endHours, endMinutes || 0, 0, 0);
+
+          const notificationPostDate = new Date(sessionEndDateTime);
+          notificationPostDate.setHours(notificationPostDate.getHours() + 1);
+
+          if (notificationPostDate > new Date()) {
+            notificationPostId = await Notifications.scheduleNotificationAsync({
+              content: {
+                title: '¿Cómo fue tu sesión?',
+                body: 'Puedes añadir una nota para recordarlo.',
+                data: {
+                  type: 'post_session_note',
+                  session_id: session.id,
+                },
+              },
+              trigger: {
+                type: Notifications.SchedulableTriggerInputTypes.DATE,
+                date: notificationPostDate,
+              },
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Error al programar notificaciones (modo normal):', err);
       }
     }
 
