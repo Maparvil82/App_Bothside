@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -715,6 +715,18 @@ export default function CalendarScreen() {
   // Memoizar la generación del calendario para evitar recalcular en cada render
   const calendarDays = useMemo(() => generateCalendarDays(), [currentDate]);
   const monthName = useMemo(() => getMonthName(currentDate), [currentDate]);
+
+  // Animated opacity for month change (fade-in)
+  const gridOpacity = useRef(new Animated.Value(1));
+  useEffect(() => {
+    // Fade out then in on month change
+    gridOpacity.current.setValue(0);
+    Animated.timing(gridOpacity.current, {
+      toValue: 1,
+      duration: 180,
+      useNativeDriver: true,
+    }).start();
+  }, [monthName]);
   
   const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
@@ -726,18 +738,18 @@ export default function CalendarScreen() {
           style={styles.monthButton}
           onPress={goToPreviousMonth}
         >
-          <Ionicons name="chevron-back" size={24} color={colors.text} />
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
         </TouchableOpacity>
-        
+
         <Text style={[styles.monthTitle, { color: colors.text }]}>
           {monthName}
         </Text>
-        
+
         <TouchableOpacity 
           style={styles.monthButton}
           onPress={goToNextMonth}
         >
-          <Ionicons name="chevron-forward" size={24} color={colors.text} />
+          <Ionicons name="chevron-forward" size={22} color={colors.text} />
         </TouchableOpacity>
       </View>
 
@@ -745,7 +757,7 @@ export default function CalendarScreen() {
       <View style={styles.weekDaysRow}>
         {weekDays.map((day, index) => (
           <View key={index} style={[styles.weekDayCell, { width: CELL_WIDTH }]}>
-            <Text style={[styles.weekDayText, { color: colors.text }]}>
+            <Text style={[styles.weekDayText, { color: '#A0A0A0' }]}>
               {day}
             </Text>
           </View>
@@ -758,7 +770,7 @@ export default function CalendarScreen() {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
-        <View style={styles.calendarGrid}>
+      <View style={[styles.calendarGrid]}>
           {calendarDays.map((calendarDay, index) => {
             // Obtener sesiones para este día (solo si es del mes actual)
             const daySessions = calendarDay.isCurrentMonth 
@@ -788,46 +800,27 @@ export default function CalendarScreen() {
               >
                 {calendarDay.isCurrentMonth && (
                   <>
-                    <Text 
-                      style={[
-                        styles.dayNumber,
-                        { color: colors.text }
-                      ]}
-                    >
-                      {calendarDay.day}
-                    </Text>
-                    {/* Mostrar tarjetas verdes para sesiones */}
+                    {/* Día y selección */}
+                    {selectedDay === calendarDay.day ? (
+                      <View style={styles.selectedDayCircle}>
+                        <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
+                      </View>
+                    ) : (
+                      <Text style={styles.dayNumber}>{calendarDay.day}</Text>
+                    )}
+
+                    {/* Mostrar píldoras para sesiones (estilo Google Calendar) */}
                     {daySessions.length > 0 && (
                       <View style={styles.sessionsContainer}>
                         {daySessions.map((session) => {
                           const hasNotes = notesBySessionId[session.id] !== undefined;
-                          
                           return (
-                            <View 
-                              key={session.id}
-                            >
-                              <View 
-                                style={[styles.sessionCard, { backgroundColor: '#d1fae5' }]}
-                              >
-                                <Text style={styles.sessionName} numberOfLines={1}>
-                                  {session.name}
-                                </Text>
-                                <Text style={styles.sessionTime}>
-                                  {formatTime(session.start_time)}
-                                </Text>
+                            <View key={session.id}>
+                              <View style={styles.sessionPill}>
+                                <Text style={styles.sessionPillText} numberOfLines={1}>{session.name || 'Sesión'}</Text>
                               </View>
-                              {/* Indicador de nota si existe */}
                               {hasNotes && (
-                                <View
-                                  style={{
-                                    width: 6,
-                                    height: 6,
-                                    borderRadius: 3,
-                                    backgroundColor: '#6BFF9C',
-                                    alignSelf: 'center',
-                                    marginTop: 4,
-                                  }}
-                                />
+                                <View style={styles.noteDot} />
                               )}
                             </View>
                           );
@@ -849,7 +842,7 @@ export default function CalendarScreen() {
               </TouchableOpacity>
             );
           })}
-        </View>
+  </View>
       )}
 
       {/* Modal para crear/editar sesión */}
@@ -1095,20 +1088,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 20,
+    paddingVertical: 14,
   },
   monthButton: {
     padding: 8,
   },
   monthTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '600',
+    textAlign: 'center',
   },
   weekDaysRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: 0,
-    paddingVertical: 12,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
@@ -1117,9 +1111,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   weekDayText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '500',
-    opacity: 0.6,
+    textTransform: 'uppercase',
+    color: '#A0A0A0',
+    textAlign: 'center',
+    height: 28,
   },
   calendarGrid: {
     flex: 1,
@@ -1131,16 +1128,23 @@ const styles = StyleSheet.create({
   },
   dayCell: {
     width: '14.28%', // 100% / 7 días
-    aspectRatio: 1,
-    borderBottomWidth: 1,
-    borderRightWidth: 1,
+    minHeight: 80,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
     padding: 8,
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
+    backgroundColor: '#FAFAFA',
   },
   dayNumber: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
+    color: '#111',
+  },
+
+  dayNumberSelected: {
+    fontWeight: '700',
+    color: '#111',
   },
   loadingContainer: {
     flex: 1,
@@ -1151,23 +1155,28 @@ const styles = StyleSheet.create({
   sessionsContainer: {
     width: '100%',
     marginTop: 4,
-    gap: 2,
+    gap: 4,
   },
-  sessionCard: {
-    padding: 4,
-    borderRadius: 4,
-    marginBottom: 2,
+  sessionPill: {
+    backgroundColor: '#34A853',
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    borderRadius: 20,
+    alignSelf: 'flex-start',
+    marginTop: 4,
   },
-  sessionName: {
-    fontSize: 10,
+  sessionPillText: {
+    color: '#fff',
+    fontSize: 12,
     fontWeight: '600',
-    color: '#065f46',
-    marginBottom: 2,
   },
-  sessionTime: {
-    fontSize: 9,
-    color: '#047857',
-    fontWeight: '500',
+  noteDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#6BFF9C',
+    alignSelf: 'center',
+    marginTop: 4,
   },
   // Estilos del modal
   modalOverlay: {
@@ -1408,10 +1417,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
     borderWidth: 0.5,
     borderColor: '#e0e0e0',
-    opacity: 0.5,
+    opacity: 0.4,
   },
   dayNumberOtherMonth: {
-    color: '#b5b5b5',
+    color: '#C8C8C8',
   },
   timeInput: {
     borderWidth: 1,
@@ -1425,6 +1434,13 @@ const styles = StyleSheet.create({
   timeInputText: {
     fontSize: 16,
     color: '#111',
+  },
+  selectedDayCircle: {
+    borderColor: '#34A853',
+    borderWidth: 1.5,
+    borderRadius: 20,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
   },
   timeRow: {
     flexDirection: 'row',
