@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
 import TimePicker from '../components/TimePicker';
+import SessionsListView from '../components/SessionsListView';
 import {
   requestNotificationPermissions,
   scheduleNotificationsForSession,
@@ -66,6 +67,9 @@ export default function CalendarScreen() {
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedSession, setSelectedSession] = useState<Session | null>(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // Estado para el toggle de vista (Calendario / Lista)
+  const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
 
   // Estados del formulario
   const [formName, setFormName] = useState('');
@@ -753,8 +757,60 @@ export default function CalendarScreen() {
         </TouchableOpacity>
       </View>
 
-      {/* Fila de días de la semana */}
-      <View style={styles.weekDaysRow}>
+      {/* Toggle Vista Calendario / Lista */}
+      <View style={styles.viewToggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.viewToggleButton,
+            viewMode === 'calendar' && styles.viewToggleButtonActive,
+          ]}
+          onPress={() => setViewMode('calendar')}
+        >
+          <Ionicons
+            name="calendar-outline"
+            size={18}
+            color={viewMode === 'calendar' ? '#fff' : '#666'}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.viewToggleButtonText,
+              viewMode === 'calendar' && styles.viewToggleButtonTextActive,
+            ]}
+          >
+            Calendario
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.viewToggleButton,
+            viewMode === 'list' && styles.viewToggleButtonActive,
+          ]}
+          onPress={() => setViewMode('list')}
+        >
+          <Ionicons
+            name="list-outline"
+            size={18}
+            color={viewMode === 'list' ? '#fff' : '#666'}
+            style={{ marginRight: 6 }}
+          />
+          <Text
+            style={[
+              styles.viewToggleButtonText,
+              viewMode === 'list' && styles.viewToggleButtonTextActive,
+            ]}
+          >
+            Lista
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Vista Calendario */}
+      {viewMode === 'calendar' && (
+        <>
+          {/* Fila de días de la semana */}
+          <View style={styles.weekDaysRow}>
         {weekDays.map((day, index) => (
           <View key={index} style={[styles.weekDayCell, { width: CELL_WIDTH }]}>
             <Text style={[styles.weekDayText, { color: '#A0A0A0' }]}>
