@@ -736,27 +736,6 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}edges={['top']}>
-      {/* Cabecera del mes */}
-      <View style={styles.monthHeader}>
-        <TouchableOpacity 
-          style={styles.monthButton}
-          onPress={goToPreviousMonth}
-        >
-          <Ionicons name="chevron-back" size={22} color={colors.text} />
-        </TouchableOpacity>
-
-        <Text style={[styles.monthTitle, { color: colors.text }]}>
-          {monthName}
-        </Text>
-
-        <TouchableOpacity 
-          style={styles.monthButton}
-          onPress={goToNextMonth}
-        >
-          <Ionicons name="chevron-forward" size={22} color={colors.text} />
-        </TouchableOpacity>
-      </View>
-
       {/* Toggle Vista Calendario / Lista */}
       <View style={styles.viewToggleContainer}>
         <TouchableOpacity
@@ -803,6 +782,27 @@ export default function CalendarScreen() {
           >
             Lista
           </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Cabecera del mes */}
+      <View style={styles.monthHeader}>
+        <TouchableOpacity 
+          style={styles.monthButton}
+          onPress={goToPreviousMonth}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </TouchableOpacity>
+
+        <Text style={[styles.monthTitle, { color: colors.text }]}>
+          {monthName}
+        </Text>
+
+        <TouchableOpacity 
+          style={styles.monthButton}
+          onPress={goToNextMonth}
+        >
+          <Ionicons name="chevron-forward" size={22} color={colors.text} />
         </TouchableOpacity>
       </View>
 
