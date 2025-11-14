@@ -1007,9 +1007,39 @@ export default function CalendarScreen() {
             <View style={styles.modalContent}>
               {/* Encabezado */}
               <View style={styles.modalHeaderNew}>
-                <Text style={styles.modalTitleNew}>
-                  {selectedSession ? 'Editar sesión' : 'Nueva sesión'}
-                </Text>
+                <View style={styles.modalTitleContainer}>
+                  <Text style={styles.modalTitleNew}>
+                    {selectedSession ? 'Editar sesión' : 'Nueva sesión'}
+                  </Text>
+                  {(() => {
+                    // Obtener la fecha: de la sesión existente o del día seleccionado
+                    let dateToFormat: Date;
+                    if (selectedSession) {
+                      dateToFormat = new Date(selectedSession.date);
+                    } else if (selectedDay !== null) {
+                      dateToFormat = new Date(
+                        currentDate.getFullYear(),
+                        currentDate.getMonth(),
+                        selectedDay
+                      );
+                    } else {
+                      return null;
+                    }
+
+                    // Formatear fecha: DD MMM en mayúsculas
+                    const formattedDate = dateToFormat
+                      .toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })
+                      .toUpperCase()
+                      .replace('.', '');
+
+                    return (
+                      <>
+                        <Text style={styles.modalDateSeparator}> · </Text>
+                        <Text style={styles.modalDateText}>{formattedDate}</Text>
+                      </>
+                    );
+                  })()}
+                </View>
                 <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButtonNew}>
                   <Ionicons name="close" size={28} color="#000" />
                 </TouchableOpacity>
@@ -1480,10 +1510,27 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
   },
+  modalTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   modalTitleNew: {
     fontSize: 22,
     fontWeight: '700',
     color: '#000',
+  },
+  modalDateSeparator: {
+    fontSize: 22,
+    fontWeight: '400',
+    color: '#888',
+    marginLeft: 4,
+  },
+  modalDateText: {
+    fontSize: 18,
+    fontWeight: '400',
+    color: '#888',
+    marginLeft: 4,
   },
   modalCloseButtonNew: {
     padding: 8,
