@@ -1,5 +1,6 @@
 import { supabase } from '../lib/supabase';
-import * as FileSystem from 'expo-file-system';
+// TODO: Migrar a la nueva API de filesystem cuando reescribamos las operaciones de archivos
+import * as FileSystem from 'expo-file-system/legacy';
 
 // Tipos para la base de datos
 export interface Album {

@@ -9,7 +9,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { Audio } from 'expo-av';
-import * as FileSystem from 'expo-file-system';
+// TODO: Migrar a la nueva API de filesystem cuando se reescriba el flujo de notas de audio
+import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { Buffer } from 'buffer';
