@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -75,6 +75,13 @@ export default function CalendarScreen() {
   const [formPaymentType, setFormPaymentType] = useState<'cerrado' | 'hora' | 'gratis'>('gratis');
   const [formPaymentAmount, setFormPaymentAmount] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // Estados de validación
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: string;
+    time?: string;
+    amount?: string;
+  }>({});
 
   // Función para ir al mes siguiente
   const goToNextMonth = () => {
@@ -217,13 +224,49 @@ export default function CalendarScreen() {
     setFormTag('');
     setFormPaymentType('gratis');
     setFormPaymentAmount('');
+    setValidationErrors({});
+  };
+
+  // Función para validar el formulario
+  const validateForm = (): boolean => {
+    const errors: typeof validationErrors = {};
+
+    // Validar nombre
+    if (!formName.trim()) {
+      errors.name = 'El nombre es obligatorio';
+    }
+
+    // Validar horario
+    if (formStartTime && formEndTime) {
+      const [startHours, startMinutes] = formStartTime.split(':').map(Number);
+      const [endHours, endMinutes] = formEndTime.split(':').map(Number);
+      
+      const startTotalMinutes = startHours * 60 + startMinutes;
+      const endTotalMinutes = endHours * 60 + endMinutes;
+
+      if (endTotalMinutes <= startTotalMinutes) {
+        errors.time = 'La hora de fin debe ser posterior a la de inicio';
+      }
+    }
+
+    // Validar cantidad si aplica
+    if (formPaymentType === 'cerrado' || formPaymentType === 'hora') {
+      const amount = parseFloat(formPaymentAmount);
+      if (!formPaymentAmount || isNaN(amount) || amount <= 0) {
+        errors.amount = 'Introduce una cantidad válida';
+      }
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   // Función para crear sesión
   const handleCreateSession = async () => {
     if (!user?.id || selectedDay === null) return;
-    if (!formName.trim()) {
-      Alert.alert('Error', 'El nombre de la sesión es obligatorio');
+
+    // Validar formulario
+    if (!validateForm()) {
       return;
     }
 
@@ -269,9 +312,12 @@ export default function CalendarScreen() {
           console.log('Notificaciones programadas:', notificationIds);
         }
 
+        // Mostrar feedback y cerrar modal
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Sesión creada', ToastAndroid.SHORT);
+        }
         handleCloseModal();
         await loadSessions();
-        Alert.alert('Éxito', 'Sesión creada correctamente');
       }
     } catch (error) {
       console.error('Error al crear sesión:', error);
@@ -284,8 +330,9 @@ export default function CalendarScreen() {
   // Función para actualizar sesión
   const handleUpdateSession = async () => {
     if (!selectedSession) return;
-    if (!formName.trim()) {
-      Alert.alert('Error', 'El nombre de la sesión es obligatorio');
+
+    // Validar formulario
+    if (!validateForm()) {
       return;
     }
 
@@ -338,9 +385,12 @@ export default function CalendarScreen() {
           console.log('Notificaciones reprogramadas:', notificationIds);
         }
 
+        // Mostrar feedback y cerrar modal
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Cambios guardados', ToastAndroid.SHORT);
+        }
         handleCloseModal();
         await loadSessions();
-        Alert.alert('Éxito', 'Sesión actualizada correctamente');
       }
     } catch (error) {
       console.error('Error al actualizar sesión:', error);
@@ -384,9 +434,12 @@ export default function CalendarScreen() {
                 console.error('Error al eliminar sesión:', error);
                 Alert.alert('Error', 'No se pudo eliminar la sesión');
               } else {
+                // Mostrar feedback y cerrar modal
+                if (Platform.OS === 'android') {
+                  ToastAndroid.show('Sesión eliminada', ToastAndroid.SHORT);
+                }
                 handleCloseModal();
                 await loadSessions();
-                Alert.alert('Éxito', 'Sesión eliminada correctamente');
               }
             } catch (error) {
               console.error('Error al eliminar sesión:', error);
@@ -751,159 +804,228 @@ export default function CalendarScreen() {
         onRequestClose={handleCloseModal}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: '#ffffff' }]}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                {selectedSession ? 'Editar sesión' : 'Nueva sesión'}
-              </Text>
-              <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButton}>
-                <Ionicons name="close" size={24} color={colors.text} />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-              {/* Nombre */}
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Nombre *</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-                  value={formName}
-                  onChangeText={setFormName}
-                  placeholder="Nombre de la sesión"
-                  placeholderTextColor={colors.text + '60'}
-                />
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.modalContentWrapper}
+          >
+            <View style={styles.modalContent}>
+              {/* Encabezado */}
+              <View style={styles.modalHeaderNew}>
+                <Text style={styles.modalTitleNew}>
+                  {selectedSession ? 'Editar sesión' : 'Nueva sesión'}
+                </Text>
+                <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButtonNew}>
+                  <Ionicons name="close" size={28} color="#000" />
+                </TouchableOpacity>
               </View>
 
-              {/* Hora de inicio */}
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Hora de inicio</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-                  value={formStartTime}
-                  onChangeText={setFormStartTime}
-                  placeholder="HH:MM (ej: 10:00)"
-                  placeholderTextColor={colors.text + '60'}
-                />
-              </View>
-
-              {/* Hora de fin */}
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Hora de fin</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-                  value={formEndTime}
-                  onChangeText={setFormEndTime}
-                  placeholder="HH:MM (ej: 12:00)"
-                  placeholderTextColor={colors.text + '60'}
-                />
-              </View>
-
-              {/* Nota rápida */}
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Nota rápida</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-                  value={formQuickNote}
-                  onChangeText={setFormQuickNote}
-                  placeholder="Notas adicionales..."
-                  placeholderTextColor={colors.text + '60'}
-                  multiline
-                  numberOfLines={3}
-                  textAlignVertical="top"
-                />
-              </View>
-
-              {/* Tag */}
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Tag</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-                  value={formTag}
-                  onChangeText={setFormTag}
-                  placeholder="Etiqueta"
-                  placeholderTextColor={colors.text + '60'}
-                />
-              </View>
-
-              {/* Tipo de pago */}
-              <View style={styles.formGroup}>
-                <Text style={[styles.label, { color: colors.text }]}>Tipo de pago</Text>
-                <View style={styles.pickerContainer}>
-                  {(['cerrado', 'hora', 'gratis'] as const).map((type) => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.pickerOption,
-                        formPaymentType === type && styles.pickerOptionSelected,
-                        { borderColor: colors.border }
-                      ]}
-                      onPress={() => setFormPaymentType(type)}
-                    >
-                      <Text style={[
-                        styles.pickerOptionText,
-                        { color: formPaymentType === type ? '#ffffff' : colors.text }
-                      ]}>
-                        {type.charAt(0).toUpperCase() + type.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
-
-              {/* Cantidad (si es cerrado o hora) */}
-              {(formPaymentType === 'cerrado' || formPaymentType === 'hora') && (
-                <View style={styles.formGroup}>
-                  <Text style={[styles.label, { color: colors.text }]}>Cantidad</Text>
+              <ScrollView
+                style={styles.modalBodyNew}
+                showsVerticalScrollIndicator={false}
+                bounces={false}
+              >
+                {/* Nombre */}
+                <View style={styles.formGroupNew}>
+                  <Text style={styles.labelNew}>Nombre <Text style={styles.requiredAsterisk}>*</Text></Text>
                   <TextInput
-                    style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
-                    value={formPaymentAmount}
-                    onChangeText={setFormPaymentAmount}
-                    placeholder="0.00"
-                    placeholderTextColor={colors.text + '60'}
-                    keyboardType="decimal-pad"
+                    style={[
+                      styles.inputNew,
+                      validationErrors.name ? styles.inputError : null,
+                    ]}
+                    value={formName}
+                    onChangeText={(text) => {
+                      setFormName(text);
+                      if (validationErrors.name) {
+                        setValidationErrors({ ...validationErrors, name: undefined });
+                      }
+                    }}
+                    placeholder="Nombre de la sesión"
+                    placeholderTextColor="#999"
+                  />
+                  {validationErrors.name && (
+                    <Text style={styles.errorText}>{validationErrors.name}</Text>
+                  )}
+                </View>
+
+                {/* Horario: Inicio y Fin lado a lado */}
+                <View style={styles.timeRowNew}>
+                  <View style={[styles.formGroupNew, { flex: 1, marginRight: 8 }]}>
+                    <Text style={styles.labelNew}>Hora inicio</Text>
+                    <TextInput
+                      style={[
+                        styles.inputNew,
+                        validationErrors.time ? styles.inputError : null,
+                      ]}
+                      value={formStartTime}
+                      onChangeText={(text) => {
+                        setFormStartTime(text);
+                        if (validationErrors.time) {
+                          setValidationErrors({ ...validationErrors, time: undefined });
+                        }
+                      }}
+                      placeholder="HH:MM"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+
+                  <View style={[styles.formGroupNew, { flex: 1, marginLeft: 8 }]}>
+                    <Text style={styles.labelNew}>Hora fin</Text>
+                    <TextInput
+                      style={[
+                        styles.inputNew,
+                        validationErrors.time ? styles.inputError : null,
+                      ]}
+                      value={formEndTime}
+                      onChangeText={(text) => {
+                        setFormEndTime(text);
+                        if (validationErrors.time) {
+                          setValidationErrors({ ...validationErrors, time: undefined });
+                        }
+                      }}
+                      placeholder="HH:MM"
+                      placeholderTextColor="#999"
+                    />
+                  </View>
+                </View>
+                {validationErrors.time && (
+                  <Text style={[styles.errorText, { marginBottom: 12 }]}>
+                    {validationErrors.time}
+                  </Text>
+                )}
+
+                {/* Nota rápida */}
+                <View style={styles.formGroupNew}>
+                  <Text style={styles.labelNew}>Nota rápida</Text>
+                  <TextInput
+                    style={[styles.inputNew, styles.textAreaNew]}
+                    value={formQuickNote}
+                    onChangeText={setFormQuickNote}
+                    placeholder="Notas adicionales..."
+                    placeholderTextColor="#999"
+                    multiline
+                    numberOfLines={3}
+                    textAlignVertical="top"
                   />
                 </View>
-              )}
+
+                {/* Tag */}
+                <View style={styles.formGroupNew}>
+                  <Text style={styles.labelNew}>Tag</Text>
+                  <TextInput
+                    style={styles.inputNew}
+                    value={formTag}
+                    onChangeText={setFormTag}
+                    placeholder="Etiqueta"
+                    placeholderTextColor="#999"
+                  />
+                </View>
+
+                {/* Tipo de pago */}
+                <View style={styles.formGroupNew}>
+                  <Text style={styles.labelNew}>Tipo de pago</Text>
+                  <View style={styles.paymentPickerNew}>
+                    {(['gratis', 'cerrado', 'hora'] as const).map((type) => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.paymentOptionNew,
+                          formPaymentType === type && styles.paymentOptionSelectedNew,
+                        ]}
+                        onPress={() => setFormPaymentType(type)}
+                      >
+                        <Text
+                          style={[
+                            styles.paymentOptionTextNew,
+                            formPaymentType === type && styles.paymentOptionTextSelectedNew,
+                          ]}
+                        >
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Cantidad (solo si no es gratis) */}
+                {(formPaymentType === 'cerrado' || formPaymentType === 'hora') && (
+                  <View style={styles.formGroupNew}>
+                    <Text style={styles.labelNew}>Cantidad</Text>
+                    <TextInput
+                      style={[
+                        styles.inputNew,
+                        validationErrors.amount ? styles.inputError : null,
+                      ]}
+                      value={formPaymentAmount}
+                      onChangeText={(text) => {
+                        setFormPaymentAmount(text);
+                        if (validationErrors.amount) {
+                          setValidationErrors({ ...validationErrors, amount: undefined });
+                        }
+                      }}
+                      placeholder="0.00"
+                      placeholderTextColor="#999"
+                      keyboardType="decimal-pad"
+                    />
+                    {validationErrors.amount && (
+                      <Text style={styles.errorText}>{validationErrors.amount}</Text>
+                    )}
+                  </View>
+                )}
+
+                {/* Espacio para botones */}
+                <View style={{ height: 20 }} />
+              </ScrollView>
 
               {/* Botones */}
-              <View style={styles.modalButtons}>
+              <View style={styles.modalButtonsNew}>
                 {selectedSession ? (
                   <>
                     <TouchableOpacity
-                      style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
+                      style={[
+                        styles.buttonPrimaryNew,
+                        isSaving || Object.keys(validationErrors).length > 0
+                          ? styles.buttonDisabledNew
+                          : null,
+                      ]}
                       onPress={handleUpdateSession}
-                      disabled={isSaving}
+                      disabled={isSaving || Object.keys(validationErrors).length > 0}
                     >
                       {isSaving ? (
-                        <ActivityIndicator color="#ffffff" />
+                        <ActivityIndicator color="#fff" size="small" />
                       ) : (
-                        <Text style={styles.buttonText}>Guardar cambios</Text>
+                        <Text style={styles.buttonTextPrimaryNew}>Guardar cambios</Text>
                       )}
                     </TouchableOpacity>
+
                     <TouchableOpacity
-                      style={[styles.button, styles.deleteButton, { backgroundColor: '#dc3545' }]}
+                      style={styles.buttonSecondaryNew}
                       onPress={handleDeleteSession}
                       disabled={isSaving}
                     >
-                      <Text style={styles.buttonText}>Eliminar sesión</Text>
+                      <Text style={styles.buttonTextSecondaryNew}>Eliminar sesión</Text>
                     </TouchableOpacity>
                   </>
                 ) : (
                   <TouchableOpacity
-                    style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
+                    style={[
+                      styles.buttonPrimaryNew,
+                      isSaving || !formName.trim()
+                        ? styles.buttonDisabledNew
+                        : null,
+                    ]}
                     onPress={handleCreateSession}
-                    disabled={isSaving}
+                    disabled={isSaving || !formName.trim()}
                   >
                     {isSaving ? (
-                      <ActivityIndicator color="#ffffff" />
+                      <ActivityIndicator color="#fff" size="small" />
                     ) : (
-                      <Text style={styles.buttonText}>Crear sesión</Text>
+                      <Text style={styles.buttonTextPrimaryNew}>Crear sesión</Text>
                     )}
                   </TouchableOpacity>
                 )}
               </View>
-            </ScrollView>
-          </View>
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </Modal>
     </SafeAreaView>
@@ -999,12 +1121,18 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
+  modalContentWrapper: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
   modalContent: {
     backgroundColor: '#ffffff',
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
     paddingBottom: 20,
+    flex: 1,
+    flexDirection: 'column',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -1084,6 +1212,136 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  
+  // ========== NUEVOS ESTILOS DEL MODAL MEJORADO ==========
+  modalHeaderNew: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  modalTitleNew: {
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#000',
+  },
+  modalCloseButtonNew: {
+    padding: 8,
+    borderRadius: 8,
+    backgroundColor: '#f5f5f5',
+  },
+  modalBodyNew: {
+    flex: 1,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+  },
+  formGroupNew: {
+    marginBottom: 16,
+  },
+  timeRowNew: {
+    flexDirection: 'row',
+    marginBottom: 16,
+  },
+  labelNew: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#000',
+  },
+  requiredAsterisk: {
+    color: '#ef4444',
+  },
+  inputNew: {
+    borderWidth: 1,
+    borderColor: '#dadada',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    fontSize: 16,
+    color: '#000',
+    minHeight: 48,
+  },
+  inputError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fef2f2',
+  },
+  textAreaNew: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+    paddingVertical: 12,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#ef4444',
+    marginTop: 6,
+    fontWeight: '500',
+  },
+  paymentPickerNew: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  paymentOptionNew: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#dadada',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  paymentOptionSelectedNew: {
+    backgroundColor: '#000',
+    borderColor: '#000',
+  },
+  paymentOptionTextNew: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+  },
+  paymentOptionTextSelectedNew: {
+    color: '#fff',
+  },
+  modalButtonsNew: {
+    flexDirection: 'column',
+    gap: 12,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  buttonPrimaryNew: {
+    paddingVertical: 16,
+    backgroundColor: '#000',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 52,
+  },
+  buttonDisabledNew: {
+    backgroundColor: '#ccc',
+    opacity: 0.6,
+  },
+  buttonTextPrimaryNew: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  buttonSecondaryNew: {
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  buttonTextSecondaryNew: {
+    color: '#ef4444',
     fontSize: 16,
     fontWeight: '600',
   },
