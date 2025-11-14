@@ -659,142 +659,137 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView style={styles.scrollView}>
-        {/* Cabecera del mes */}
-        <View style={styles.monthHeader}>
-          <TouchableOpacity 
-            style={styles.monthButton}
-            onPress={goToPreviousMonth}
-          >
-            <Ionicons name="chevron-back" size={24} color={colors.text} />
-          </TouchableOpacity>
-          
-          <Text style={[styles.monthTitle, { color: colors.text }]}>
-            {monthName}
-          </Text>
-          
-          <TouchableOpacity 
-            style={styles.monthButton}
-            onPress={goToNextMonth}
-          >
-            <Ionicons name="chevron-forward" size={24} color={colors.text} />
-          </TouchableOpacity>
-        </View>
+      {/* Cabecera del mes */}
+      <View style={styles.monthHeader}>
+        <TouchableOpacity 
+          style={styles.monthButton}
+          onPress={goToPreviousMonth}
+        >
+          <Ionicons name="chevron-back" size={24} color={colors.text} />
+        </TouchableOpacity>
+        
+        <Text style={[styles.monthTitle, { color: colors.text }]}>
+          {monthName}
+        </Text>
+        
+        <TouchableOpacity 
+          style={styles.monthButton}
+          onPress={goToNextMonth}
+        >
+          <Ionicons name="chevron-forward" size={24} color={colors.text} />
+        </TouchableOpacity>
+      </View>
 
-        {/* Fila de días de la semana */}
-        <View style={styles.weekDaysRow}>
-          {weekDays.map((day, index) => (
-            <View key={index} style={[styles.weekDayCell, { width: CELL_WIDTH }]}>
-              <Text style={[styles.weekDayText, { color: colors.text }]}>
-                {day}
-              </Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Cuadrícula del calendario */}
-        {loadingSessions ? (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color={colors.primary} />
+      {/* Fila de días de la semana */}
+      <View style={styles.weekDaysRow}>
+        {weekDays.map((day, index) => (
+          <View key={index} style={[styles.weekDayCell, { width: CELL_WIDTH }]}>
+            <Text style={[styles.weekDayText, { color: colors.text }]}>
+              {day}
+            </Text>
           </View>
-        ) : (
-          <View style={styles.calendarGrid}>
-            {calendarDays.map((calendarDay, index) => {
-              // Obtener sesiones para este día (solo si es del mes actual)
-              const daySessions = calendarDay.isCurrentMonth 
-                ? sessions.filter(session => {
-                    const sessionDay = getDayFromDate(session.date);
-                    return sessionDay === calendarDay.day && 
-                           isDateInCurrentMonth(session.date, currentDate);
-                  })
-                : [];
+        ))}
+      </View>
 
-              return (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.dayCell,
-                    { 
-                      width: CELL_WIDTH,
-                      backgroundColor: colors.card,
-                      borderColor: colors.border,
-                    }
-                  ]}
-                  onPress={() => {
-                    if (calendarDay.isCurrentMonth) {
-                      handleDayPress(calendarDay.day);
-                    }
-                  }}
-                  disabled={!calendarDay.isCurrentMonth}
-                >
-                  {calendarDay.isCurrentMonth && (
-                    <>
-                      <Text 
-                        style={[
-                          styles.dayNumber,
-                          { color: colors.text }
-                        ]}
-                      >
-                        {calendarDay.day}
-                      </Text>
-                      {/* Mostrar tarjetas verdes para sesiones */}
-                      {daySessions.length > 0 && (
-                        <View style={styles.sessionsContainer}>
-                          {daySessions.map((session) => {
-                            const hasNotes = notesBySessionId[session.id] !== undefined;
-                            
-                            return (
-                              <View 
-                                key={session.id}
-                              >
-                                <View 
-                                  style={[styles.sessionCard, { backgroundColor: '#d1fae5' }]}
-                                >
-                                  <Text style={styles.sessionName} numberOfLines={1}>
-                                    {session.name}
-                                  </Text>
-                                  <Text style={styles.sessionTime}>
-                                    {formatTime(session.start_time)}
-                                  </Text>
-                                </View>
-                                {/* Indicador de nota si existe */}
-                                {hasNotes && (
-                                  <View
-                                    style={{
-                                      width: 6,
-                                      height: 6,
-                                      borderRadius: 3,
-                                      backgroundColor: '#6BFF9C',
-                                      alignSelf: 'center',
-                                      marginTop: 4,
-                                    }}
-                                  />
-                                )}
-                              </View>
-                            );
-                          })}
-                        </View>
-                      )}
-                    </>
-                  )}
-                  {!calendarDay.isCurrentMonth && (
+      {/* Cuadrícula del calendario */}
+      {loadingSessions ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+        </View>
+      ) : (
+        <View style={styles.calendarGrid}>
+          {calendarDays.map((calendarDay, index) => {
+            // Obtener sesiones para este día (solo si es del mes actual)
+            const daySessions = calendarDay.isCurrentMonth 
+              ? sessions.filter(session => {
+                  const sessionDay = getDayFromDate(session.date);
+                  return sessionDay === calendarDay.day && 
+                         isDateInCurrentMonth(session.date, currentDate);
+                })
+              : [];
+
+            return (
+              <TouchableOpacity
+                key={index}
+                style={[
+                  styles.dayCell,
+                  { 
+                    width: CELL_WIDTH,
+                  },
+                  calendarDay.isCurrentMonth ? styles.dayCellCurrent : styles.dayCellOtherMonth,
+                ]}
+                onPress={() => {
+                  if (calendarDay.isCurrentMonth) {
+                    handleDayPress(calendarDay.day);
+                  }
+                }}
+                disabled={!calendarDay.isCurrentMonth}
+              >
+                {calendarDay.isCurrentMonth && (
+                  <>
                     <Text 
                       style={[
                         styles.dayNumber,
-                        { 
-                          color: colors.text + '40', // Opacidad reducida para días fuera del mes
-                        }
+                        { color: colors.text }
                       ]}
                     >
                       {calendarDay.day}
                     </Text>
-                  )}
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        )}
-      </ScrollView>
+                    {/* Mostrar tarjetas verdes para sesiones */}
+                    {daySessions.length > 0 && (
+                      <View style={styles.sessionsContainer}>
+                        {daySessions.map((session) => {
+                          const hasNotes = notesBySessionId[session.id] !== undefined;
+                          
+                          return (
+                            <View 
+                              key={session.id}
+                            >
+                              <View 
+                                style={[styles.sessionCard, { backgroundColor: '#d1fae5' }]}
+                              >
+                                <Text style={styles.sessionName} numberOfLines={1}>
+                                  {session.name}
+                                </Text>
+                                <Text style={styles.sessionTime}>
+                                  {formatTime(session.start_time)}
+                                </Text>
+                              </View>
+                              {/* Indicador de nota si existe */}
+                              {hasNotes && (
+                                <View
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 3,
+                                    backgroundColor: '#6BFF9C',
+                                    alignSelf: 'center',
+                                    marginTop: 4,
+                                  }}
+                                />
+                              )}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    )}
+                  </>
+                )}
+                {!calendarDay.isCurrentMonth && (
+                  <Text 
+                    style={[
+                      styles.dayNumber,
+                      styles.dayNumberOtherMonth,
+                    ]}
+                  >
+                    {calendarDay.day}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
 
       {/* Modal para crear/editar sesión */}
       <Modal
@@ -1071,13 +1066,16 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   calendarGrid: {
+    flex: 1,
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: 0,
     paddingTop: 0,
+    justifyContent: 'space-between',
   },
   dayCell: {
-    height: (width * 0.9) / 6, // Altura proporcional para 6 filas
+    width: '14.28%', // 100% / 7 días
+    aspectRatio: 1,
     borderBottomWidth: 1,
     borderRightWidth: 1,
     padding: 8,
@@ -1344,6 +1342,20 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontSize: 16,
     fontWeight: '600',
+  },
+  dayCellCurrent: {
+    backgroundColor: '#f5f5f5',
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+  },
+  dayCellOtherMonth: {
+    backgroundColor: '#fafafa',
+    borderWidth: 0.5,
+    borderColor: '#e0e0e0',
+    opacity: 0.5,
+  },
+  dayNumberOtherMonth: {
+    color: '#b5b5b5',
   },
 });
 
