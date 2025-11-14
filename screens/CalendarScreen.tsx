@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useSessionNoteModal } from '../contexts/SessionNoteContext';
 import {
   requestNotificationPermissions,
   scheduleNotificationsForSession,
@@ -43,8 +44,9 @@ export default function CalendarScreen() {
   const { colors } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation();
-  const notificationListener = useRef<Notifications.Subscription>();
-  const responseListener = useRef<Notifications.Subscription>();
+  const { openSessionNoteModal } = useSessionNoteModal();
+  const notificationListener = useRef<Notifications.Subscription | null>(null);
+  const responseListener = useRef<Notifications.Subscription | null>(null);
   
   // Estado para la fecha actual (primer día del mes)
   const [currentDate, setCurrentDate] = useState(() => {
@@ -462,31 +464,37 @@ export default function CalendarScreen() {
           // Programar snooze de 2 horas
           // Obtener nombre de la sesión desde la notificación o cargar desde Supabase
           const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
-          await scheduleSnoozeNotification(data.sessionId, sessionName, 2);
+          const sessionId = data.sessionId as string;
+          await scheduleSnoozeNotification(sessionId, sessionName, 2);
         } else if (actionIdentifier === 'snooze_4h') {
           // Programar snooze de 4 horas
           const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
-          await scheduleSnoozeNotification(data.sessionId, sessionName, 4);
+          const sessionId = data.sessionId as string;
+          await scheduleSnoozeNotification(sessionId, sessionName, 4);
         } else if (actionIdentifier === 'snooze_8h') {
           // Programar snooze de 8 horas
           const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
-          await scheduleSnoozeNotification(data.sessionId, sessionName, 8);
+          const sessionId = data.sessionId as string;
+          await scheduleSnoozeNotification(sessionId, sessionName, 8);
         }
       }
 
-      // Manejar notificación post-sesión
-      if (data?.type === 'post_session') {
-        console.log('Notificación post-sesión - Sesión:', data.sessionId);
-        // TODO: Navegar a la pantalla para dejar feedback
+      // Manejar notificación post-sesión - Abrir modal para dejar nota
+      if (data?.type === 'post_session_note') {
+        console.log('Notificación post-sesión - Sesión:', data.session_id);
+        const sessionId = data.session_id as string;
+        if (sessionId) {
+          openSessionNoteModal(sessionId);
+        }
       }
     });
 
     return () => {
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        notificationListener.current.remove();
       }
       if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+        responseListener.current.remove();
       }
     };
   }, []);

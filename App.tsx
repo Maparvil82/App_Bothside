@@ -3,6 +3,8 @@ import { StatusBar } from 'expo-status-bar';
 import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GemsProvider } from './contexts/GemsContext';
+import { SessionNoteProvider, useSessionNoteModal } from './contexts/SessionNoteContext';
+import { AddSessionNoteModal } from './components/AddSessionNoteModal';
 import AppNavigator from './navigation/AppNavigator';
 import { LoginScreen } from './screens/LoginScreen';
 import { validateEnv } from './config/env';
@@ -21,6 +23,21 @@ const AppContent: React.FC = () => {
   return <AppNavigator />;
 };
 
+const AppWithModal: React.FC = () => {
+  const { isModalVisible, sessionId, closeSessionNoteModal } = useSessionNoteModal();
+
+  return (
+    <>
+      <AppContent />
+      <AddSessionNoteModal
+        visible={isModalVisible}
+        sessionId={sessionId}
+        onClose={closeSessionNoteModal}
+      />
+    </>
+  );
+};
+
 export default function App() {
   React.useEffect(() => {
     if (!validateEnv()) {
@@ -34,10 +51,12 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <GemsProvider>
-        <StatusBar style="auto" />
-        <AppContent />
-      </GemsProvider>
+      <SessionNoteProvider>
+        <GemsProvider>
+          <StatusBar style="auto" />
+          <AppWithModal />
+        </GemsProvider>
+      </SessionNoteProvider>
     </AuthProvider>
   );
 }

@@ -101,11 +101,11 @@ export async function scheduleNotificationsForSession(session: {
         // Solo programar si la fecha es en el futuro
         notificationPostId = await Notifications.scheduleNotificationAsync({
           content: {
-            title: 'Sesión finalizada',
-            body: `"${session.name}" finalizó hace 1 hora. ¿Cómo fue?`,
+            title: '¿Cómo fue tu sesión?',
+            body: 'Puedes añadir una nota para recordarlo.',
             data: {
-              sessionId: session.id,
-              type: 'post_session',
+              type: 'post_session_note',
+              session_id: session.id,
             },
           },
           trigger: {
