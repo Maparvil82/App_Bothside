@@ -17,6 +17,7 @@ import {
   setupNotificationCategories,
   scheduleSnoozeNotification,
 } from '../services/notifications';
+import { getColorForTag } from '../src/utils/getColorForTag';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = width / 7;
@@ -837,6 +838,11 @@ export default function CalendarScreen() {
                 })
               : [];
 
+            // Obtener el color del tag de la primera sesión (si existe)
+            const cellColor = daySessions.length > 0 
+              ? getColorForTag(daySessions[0].tag)
+              : undefined;
+
             return (
               <TouchableOpacity
                 key={index}
@@ -844,10 +850,13 @@ export default function CalendarScreen() {
                   styles.dayCell,
                   { 
                     width: CELL_WIDTH,
+                    // Aplicar color del tag si hay sesión
+                    ...(cellColor ? {
+                      backgroundColor: cellColor,
+                      borderColor: cellColor,
+                    } : {}),
                   },
                   calendarDay.isCurrentMonth ? styles.dayCellCurrent : styles.dayCellOtherMonth,
-                  // Si el día tiene sesiones, aplicar estilo especial
-                  daySessions.length > 0 && styles.dayCellWithSession,
                 ]}
                 onPress={() => {
                   if (calendarDay.isCurrentMonth) {
@@ -872,10 +881,6 @@ export default function CalendarScreen() {
                       <View style={styles.sessionCellContent}>
                         <Text style={styles.sessionName} numberOfLines={1}>
                           {daySessions[0].name}
-                        </Text>
-                        <Text style={styles.sessionHour}>
-                          {daySessions[0].start_time && daySessions[0].start_time.substring(0, 5)}
-                          {daySessions[0].end_time && ` – ${daySessions[0].end_time.substring(0, 5)}`}
                         </Text>
                       </View>
                     )}
@@ -1212,12 +1217,12 @@ const styles = StyleSheet.create({
   dayNumber: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#111',
+    color: '#1B1B1B',
   },
 
   dayNumberSelected: {
     fontWeight: '700',
-    color: '#111',
+    color: '#1B1B1B',
   },
   loadingContainer: {
     flex: 1,
@@ -1243,13 +1248,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  dayCellWithSession: {
-    backgroundColor: '#E3F6EA',
-    borderColor: '#34A853',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 4,
-  },
   sessionTimeText: {
     fontSize: 11,
     fontWeight: '500',
@@ -1266,7 +1264,7 @@ const styles = StyleSheet.create({
   sessionName: {
     fontSize: 11,
     fontWeight: '600',
-    color: '#1B5E20',
+    color: '#1B1B1B',
   },
   sessionHour: {
     fontSize: 10,

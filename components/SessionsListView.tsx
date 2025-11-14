@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { getColorForTag } from '../src/utils/getColorForTag';
 
 interface Session {
   id: string;
@@ -67,10 +68,17 @@ export default function SessionsListView({ sessions, onSessionPress }: SessionsL
     const formattedDate = formatDate(item.date);
     const formattedTime = formatTime(item.start_time, item.end_time);
     const price = formatPrice(item.payment_type, item.payment_amount);
+    const bgColor = getColorForTag(item.tag);
 
     return (
       <TouchableOpacity
-        style={styles.sessionCard}
+        style={[
+          styles.sessionCard,
+          {
+            backgroundColor: bgColor,
+            borderColor: bgColor,
+          },
+        ]}
         onPress={() => onSessionPress(item)}
         activeOpacity={0.7}
       >
@@ -103,7 +111,7 @@ export default function SessionsListView({ sessions, onSessionPress }: SessionsL
         <Ionicons
           name="chevron-forward"
           size={20}
-          color="#999"
+          color="#1B1B1B"
           style={styles.chevronIcon}
         />
       </TouchableOpacity>
@@ -137,9 +145,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   sessionCard: {
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
-    borderColor: '#EDEDED',
     borderRadius: 12,
     padding: 14,
     marginVertical: 8,
@@ -153,7 +159,7 @@ const styles = StyleSheet.create({
   },
   dateText: {
     fontSize: 12,
-    color: '#999',
+    color: '#1B1B1B',
     fontWeight: '500',
     marginBottom: 4,
     width: 80,
@@ -166,12 +172,12 @@ const styles = StyleSheet.create({
   sessionName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#111',
+    color: '#1B1B1B',
     marginBottom: 4,
   },
   timeText: {
     fontSize: 13,
-    color: '#666',
+    color: '#1B1B1B',
     fontWeight: '400',
   },
   bottomRow: {
@@ -181,14 +187,14 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   tagPill: {
-    backgroundColor: '#F0F0F0',
+    backgroundColor: 'rgba(0, 0, 0, 0.1)',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 4,
   },
   tagText: {
     fontSize: 11,
-    color: '#666',
+    color: '#1B1B1B',
     fontWeight: '500',
   },
   priceText: {
