@@ -82,6 +82,10 @@ export default function CalendarScreen() {
   const [formPaymentAmount, setFormPaymentAmount] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
+  // Estados para autocomplete de tags
+  const [existingTags, setExistingTags] = useState<string[]>([]);
+  const [filteredTags, setFilteredTags] = useState<string[]>([]);
+
   // Estados de validación
   const [validationErrors, setValidationErrors] = useState<{
     name?: string;
@@ -211,6 +215,48 @@ export default function CalendarScreen() {
     return `${yearStr}-${monthStr}-${dayStr}`;
   };
 
+  // Función para cargar tags existentes desde Supabase
+  const loadExistingTags = async () => {
+    if (!user?.id) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('tag')
+        .eq('user_id', user.id)
+        .not('tag', 'is', null);
+
+      if (error) {
+        console.error('Error al cargar tags:', error);
+        setExistingTags([]);
+        return;
+      }
+
+      // Limpiar, normalizar y eliminar duplicados
+      const tagsSet = new Set<string>();
+      if (data) {
+        data.forEach((item) => {
+          if (item.tag) {
+            const normalizedTag = item.tag.trim();
+            if (normalizedTag) {
+              tagsSet.add(normalizedTag);
+            }
+          }
+        });
+      }
+
+      // Convertir a array y ordenar alfabéticamente
+      const sortedTags = Array.from(tagsSet).sort((a, b) =>
+        a.localeCompare(b, 'es', { sensitivity: 'base' })
+      );
+
+      setExistingTags(sortedTags);
+    } catch (error) {
+      console.error('Error al cargar tags:', error);
+      setExistingTags([]);
+    }
+  };
+
   // Función para abrir el modal al pulsar un día
   const handleDayPress = (day: number) => {
     if (!user?.id) return;
@@ -253,6 +299,8 @@ export default function CalendarScreen() {
     }
 
     setIsModalVisible(true);
+    // Cargar tags cuando se abre el modal
+    loadExistingTags();
   };
 
   // Función para cerrar el modal
@@ -269,6 +317,29 @@ export default function CalendarScreen() {
     setFormPaymentType('gratis');
     setFormPaymentAmount('');
     setValidationErrors({});
+    // Limpiar autocomplete
+    setFilteredTags([]);
+  };
+
+  // Función para manejar el cambio de texto en el input de tag
+  const handleTagInputChange = (text: string) => {
+    setFormTag(text);
+
+    // Filtrar tags existentes
+    if (text.length > 0) {
+      const filtered = existingTags.filter((tag) =>
+        tag.toLowerCase().includes(text.toLowerCase())
+      );
+      setFilteredTags(filtered);
+    } else {
+      setFilteredTags([]);
+    }
+  };
+
+  // Función para seleccionar un tag del autocomplete
+  const handleSelectTag = (tag: string) => {
+    setFormTag(tag);
+    setFilteredTags([]);
   };
 
   // Función para validar el formulario
@@ -1031,10 +1102,33 @@ export default function CalendarScreen() {
                   <TextInput
                     style={styles.inputNew}
                     value={formTag}
-                    onChangeText={setFormTag}
+                    onChangeText={handleTagInputChange}
                     placeholder="Etiqueta"
                     placeholderTextColor="#999"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                   />
+                  {/* Autocomplete de tags */}
+                  {filteredTags.length > 0 && formTag.length > 0 && (
+                    <View style={styles.autocompleteContainer}>
+                      {filteredTags.map((tag, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.autocompleteItem}
+                          onPress={() => handleSelectTag(tag)}
+                          activeOpacity={0.7}
+                        >
+                          <View
+                            style={[
+                              styles.autocompleteTagDot,
+                              { backgroundColor: getColorForTag(tag) },
+                            ]}
+                          />
+                          <Text style={styles.autocompleteItemText}>{tag}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
                 </View>
 
                 {/* Tipo de pago */}
@@ -1146,7 +1240,6 @@ export default function CalendarScreen() {
         </View>
       </Modal>
 
-      
     </SafeAreaView>
   );
 }
@@ -1585,6 +1678,41 @@ const styles = StyleSheet.create({
   },
   viewToggleButtonTextActive: {
     color: '#fff',
+  },
+  autocompleteContainer: {
+    marginTop: 4,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    maxHeight: 200,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  autocompleteItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  autocompleteTagDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+  },
+  autocompleteItemText: {
+    fontSize: 15,
+    color: '#1B1B1B',
+    flex: 1,
   },
 });
 
