@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,11 @@ interface Session {
   date: string;
   name: string;
   start_time: string;
+  end_time?: string;
+  quick_note?: string;
+  tag?: string;
+  payment_type?: 'cerrado' | 'hora' | 'gratis';
+  payment_amount?: number;
   created_at?: string;
 }
 
@@ -38,6 +43,21 @@ export default function CalendarScreen() {
   // Estado para las sesiones del mes
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(false);
+
+  // Estados para el modal
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  // Estados del formulario
+  const [formName, setFormName] = useState('');
+  const [formStartTime, setFormStartTime] = useState('');
+  const [formEndTime, setFormEndTime] = useState('');
+  const [formQuickNote, setFormQuickNote] = useState('');
+  const [formTag, setFormTag] = useState('');
+  const [formPaymentType, setFormPaymentType] = useState<'cerrado' | 'hora' | 'gratis'>('gratis');
+  const [formPaymentAmount, setFormPaymentAmount] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   // Función para ir al mes siguiente
   const goToNextMonth = () => {
@@ -115,42 +135,255 @@ export default function CalendarScreen() {
            date.getMonth() === currentMonth.getMonth();
   };
 
-  // Cargar sesiones del mes desde Supabase
-  useEffect(() => {
-    const loadSessions = async () => {
-      if (!user?.id) return;
+  // Función para formatear fecha a YYYY-MM-DD
+  const formatDateToString = (year: number, month: number, day: number): string => {
+    const date = new Date(year, month, day);
+    const yearStr = date.getFullYear();
+    const monthStr = String(date.getMonth() + 1).padStart(2, '0');
+    const dayStr = String(day).padStart(2, '0');
+    return `${yearStr}-${monthStr}-${dayStr}`;
+  };
 
-      setLoadingSessions(true);
-      try {
-        const { startOfMonth, endOfMonth } = getMonthRange(currentDate);
-        
-        // Convertir fechas a formato ISO para Supabase
-        const startISO = startOfMonth.toISOString();
-        const endISO = endOfMonth.toISOString();
+  // Función para abrir el modal al pulsar un día
+  const handleDayPress = (day: number) => {
+    if (!user?.id) return;
 
-        const { data, error } = await supabase
-          .from('sessions')
-          .select('*')
-          .eq('user_id', user.id)
-          .gte('date', startISO.split('T')[0]) // Comparar solo la parte de la fecha
-          .lte('date', endISO.split('T')[0])
-          .order('date', { ascending: true })
-          .order('start_time', { ascending: true });
+    setSelectedDay(day);
+    
+    // Buscar si existe una sesión para este día
+    const sessionDate = formatDateToString(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      day
+    );
+    
+    const existingSession = sessions.find(session => {
+      const sessionDay = getDayFromDate(session.date);
+      return sessionDay === day && isDateInCurrentMonth(session.date, currentDate);
+    });
 
-        if (error) {
-          console.error('Error al cargar sesiones:', error);
-          setSessions([]);
-        } else {
-          setSessions(data || []);
+    if (existingSession) {
+      setSelectedSession(existingSession);
+      // Rellenar el formulario con los datos de la sesión
+      setFormName(existingSession.name || '');
+      setFormStartTime(existingSession.start_time || '');
+      setFormEndTime(existingSession.end_time || '');
+      setFormQuickNote(existingSession.quick_note || '');
+      setFormTag(existingSession.tag || '');
+      setFormPaymentType(existingSession.payment_type || 'gratis');
+      setFormPaymentAmount(existingSession.payment_amount?.toString() || '');
+    } else {
+      setSelectedSession(null);
+      // Limpiar el formulario
+      setFormName('');
+      setFormStartTime('');
+      setFormEndTime('');
+      setFormQuickNote('');
+      setFormTag('');
+      setFormPaymentType('gratis');
+      setFormPaymentAmount('');
+    }
+
+    setIsModalVisible(true);
+  };
+
+  // Función para cerrar el modal
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setSelectedDay(null);
+    setSelectedSession(null);
+    // Limpiar formulario
+    setFormName('');
+    setFormStartTime('');
+    setFormEndTime('');
+    setFormQuickNote('');
+    setFormTag('');
+    setFormPaymentType('gratis');
+    setFormPaymentAmount('');
+  };
+
+  // Función para crear sesión
+  const handleCreateSession = async () => {
+    if (!user?.id || selectedDay === null) return;
+    if (!formName.trim()) {
+      Alert.alert('Error', 'El nombre de la sesión es obligatorio');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const sessionDate = formatDateToString(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        selectedDay
+      );
+
+      const sessionData: any = {
+        user_id: user.id,
+        name: formName.trim(),
+        date: sessionDate,
+        start_time: formStartTime || null,
+        end_time: formEndTime || null,
+        quick_note: formQuickNote.trim() || null,
+        tag: formTag.trim() || null,
+        payment_type: formPaymentType || null,
+      };
+
+      if (formPaymentType === 'cerrado' || formPaymentType === 'hora') {
+        const amount = parseFloat(formPaymentAmount);
+        if (!isNaN(amount)) {
+          sessionData.payment_amount = amount;
         }
-      } catch (error) {
+      }
+
+      const { error } = await supabase
+        .from('sessions')
+        .insert([sessionData]);
+
+      if (error) {
+        console.error('Error al crear sesión:', error);
+        Alert.alert('Error', 'No se pudo crear la sesión');
+      } else {
+        handleCloseModal();
+        await loadSessions();
+        Alert.alert('Éxito', 'Sesión creada correctamente');
+      }
+    } catch (error) {
+      console.error('Error al crear sesión:', error);
+      Alert.alert('Error', 'No se pudo crear la sesión');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Función para actualizar sesión
+  const handleUpdateSession = async () => {
+    if (!selectedSession) return;
+    if (!formName.trim()) {
+      Alert.alert('Error', 'El nombre de la sesión es obligatorio');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const updateData: any = {
+        name: formName.trim(),
+        start_time: formStartTime || null,
+        end_time: formEndTime || null,
+        quick_note: formQuickNote.trim() || null,
+        tag: formTag.trim() || null,
+        payment_type: formPaymentType || null,
+      };
+
+      if (formPaymentType === 'cerrado' || formPaymentType === 'hora') {
+        const amount = parseFloat(formPaymentAmount);
+        if (!isNaN(amount)) {
+          updateData.payment_amount = amount;
+        } else {
+          updateData.payment_amount = null;
+        }
+      } else {
+        updateData.payment_amount = null;
+      }
+
+      const { error } = await supabase
+        .from('sessions')
+        .update(updateData)
+        .eq('id', selectedSession.id);
+
+      if (error) {
+        console.error('Error al actualizar sesión:', error);
+        Alert.alert('Error', 'No se pudo actualizar la sesión');
+      } else {
+        handleCloseModal();
+        await loadSessions();
+        Alert.alert('Éxito', 'Sesión actualizada correctamente');
+      }
+    } catch (error) {
+      console.error('Error al actualizar sesión:', error);
+      Alert.alert('Error', 'No se pudo actualizar la sesión');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Función para eliminar sesión
+  const handleDeleteSession = async () => {
+    if (!selectedSession) return;
+
+    Alert.alert(
+      'Confirmar eliminación',
+      '¿Estás seguro de que quieres eliminar esta sesión?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            setIsSaving(true);
+            try {
+              const { error } = await supabase
+                .from('sessions')
+                .delete()
+                .eq('id', selectedSession.id);
+
+              if (error) {
+                console.error('Error al eliminar sesión:', error);
+                Alert.alert('Error', 'No se pudo eliminar la sesión');
+              } else {
+                handleCloseModal();
+                await loadSessions();
+                Alert.alert('Éxito', 'Sesión eliminada correctamente');
+              }
+            } catch (error) {
+              console.error('Error al eliminar sesión:', error);
+              Alert.alert('Error', 'No se pudo eliminar la sesión');
+            } finally {
+              setIsSaving(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  // Función para cargar sesiones del mes desde Supabase
+  const loadSessions = async () => {
+    if (!user?.id) return;
+
+    setLoadingSessions(true);
+    try {
+      const { startOfMonth, endOfMonth } = getMonthRange(currentDate);
+      
+      // Convertir fechas a formato ISO para Supabase
+      const startISO = startOfMonth.toISOString();
+      const endISO = endOfMonth.toISOString();
+
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('*')
+        .eq('user_id', user.id)
+        .gte('date', startISO.split('T')[0]) // Comparar solo la parte de la fecha
+        .lte('date', endISO.split('T')[0])
+        .order('date', { ascending: true })
+        .order('start_time', { ascending: true });
+
+      if (error) {
         console.error('Error al cargar sesiones:', error);
         setSessions([]);
-      } finally {
-        setLoadingSessions(false);
+      } else {
+        setSessions(data || []);
       }
-    };
+    } catch (error) {
+      console.error('Error al cargar sesiones:', error);
+      setSessions([]);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
 
+  // Cargar sesiones del mes desde Supabase
+  useEffect(() => {
     loadSessions();
   }, [currentDate, user?.id]);
 
@@ -272,9 +505,8 @@ export default function CalendarScreen() {
                     }
                   ]}
                   onPress={() => {
-                    // TODO: Lógica para manejar clic en día
                     if (calendarDay.isCurrentMonth) {
-                      console.log('Día seleccionado:', calendarDay.day);
+                      handleDayPress(calendarDay.day);
                     }
                   }}
                   disabled={!calendarDay.isCurrentMonth}
@@ -327,6 +559,170 @@ export default function CalendarScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Modal para crear/editar sesión */}
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: '#ffffff' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                {selectedSession ? 'Editar sesión' : 'Nueva sesión'}
+              </Text>
+              <TouchableOpacity onPress={handleCloseModal} style={styles.modalCloseButton}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              {/* Nombre */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Nombre *</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                  value={formName}
+                  onChangeText={setFormName}
+                  placeholder="Nombre de la sesión"
+                  placeholderTextColor={colors.text + '60'}
+                />
+              </View>
+
+              {/* Hora de inicio */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Hora de inicio</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                  value={formStartTime}
+                  onChangeText={setFormStartTime}
+                  placeholder="HH:MM (ej: 10:00)"
+                  placeholderTextColor={colors.text + '60'}
+                />
+              </View>
+
+              {/* Hora de fin */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Hora de fin</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                  value={formEndTime}
+                  onChangeText={setFormEndTime}
+                  placeholder="HH:MM (ej: 12:00)"
+                  placeholderTextColor={colors.text + '60'}
+                />
+              </View>
+
+              {/* Nota rápida */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Nota rápida</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                  value={formQuickNote}
+                  onChangeText={setFormQuickNote}
+                  placeholder="Notas adicionales..."
+                  placeholderTextColor={colors.text + '60'}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              {/* Tag */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Tag</Text>
+                <TextInput
+                  style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                  value={formTag}
+                  onChangeText={setFormTag}
+                  placeholder="Etiqueta"
+                  placeholderTextColor={colors.text + '60'}
+                />
+              </View>
+
+              {/* Tipo de pago */}
+              <View style={styles.formGroup}>
+                <Text style={[styles.label, { color: colors.text }]}>Tipo de pago</Text>
+                <View style={styles.pickerContainer}>
+                  {(['cerrado', 'hora', 'gratis'] as const).map((type) => (
+                    <TouchableOpacity
+                      key={type}
+                      style={[
+                        styles.pickerOption,
+                        formPaymentType === type && styles.pickerOptionSelected,
+                        { borderColor: colors.border }
+                      ]}
+                      onPress={() => setFormPaymentType(type)}
+                    >
+                      <Text style={[
+                        styles.pickerOptionText,
+                        { color: formPaymentType === type ? '#ffffff' : colors.text }
+                      ]}>
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Cantidad (si es cerrado o hora) */}
+              {(formPaymentType === 'cerrado' || formPaymentType === 'hora') && (
+                <View style={styles.formGroup}>
+                  <Text style={[styles.label, { color: colors.text }]}>Cantidad</Text>
+                  <TextInput
+                    style={[styles.input, { backgroundColor: colors.card, color: colors.text, borderColor: colors.border }]}
+                    value={formPaymentAmount}
+                    onChangeText={setFormPaymentAmount}
+                    placeholder="0.00"
+                    placeholderTextColor={colors.text + '60'}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              )}
+
+              {/* Botones */}
+              <View style={styles.modalButtons}>
+                {selectedSession ? (
+                  <>
+                    <TouchableOpacity
+                      style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
+                      onPress={handleUpdateSession}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? (
+                        <ActivityIndicator color="#ffffff" />
+                      ) : (
+                        <Text style={styles.buttonText}>Guardar cambios</Text>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.button, styles.deleteButton, { backgroundColor: '#dc3545' }]}
+                      onPress={handleDeleteSession}
+                      disabled={isSaving}
+                    >
+                      <Text style={styles.buttonText}>Eliminar sesión</Text>
+                    </TouchableOpacity>
+                  </>
+                ) : (
+                  <TouchableOpacity
+                    style={[styles.button, styles.saveButton, { backgroundColor: colors.primary }]}
+                    onPress={handleCreateSession}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? (
+                      <ActivityIndicator color="#ffffff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Crear sesión</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -413,6 +809,100 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: '#047857',
     fontWeight: '500',
+  },
+  // Estilos del modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '90%',
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1f2937',
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalBody: {
+    padding: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    marginBottom: 8,
+    color: '#1f2937',
+  },
+  input: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    minHeight: 44,
+  },
+  textArea: {
+    minHeight: 80,
+    paddingTop: 12,
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  pickerOption: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  pickerOptionText: {
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  modalButtons: {
+    marginTop: 20,
+    gap: 12,
+  },
+  button: {
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 50,
+  },
+  saveButton: {
+    backgroundColor: '#007AFF',
+  },
+  deleteButton: {
+    backgroundColor: '#dc3545',
+  },
+  buttonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
