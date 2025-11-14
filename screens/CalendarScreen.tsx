@@ -7,6 +7,7 @@ import * as Notifications from 'expo-notifications';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
+import TimePicker from '../components/TimePicker';
 import {
   requestNotificationPermissions,
   scheduleNotificationsForSession,
@@ -82,6 +83,43 @@ export default function CalendarScreen() {
     time?: string;
     amount?: string;
   }>({});
+
+  // Estados para los pickers embebidos (@react-native-community/datetimepicker)
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [endDate, setEndDate] = useState<Date>(new Date());
+
+  // Estados para hora y minutos (TimePicker personalizado)
+  const [startHour, setStartHour] = useState<number>(10);
+  const [startMinute, setStartMinute] = useState<number>(0);
+  const [endHour, setEndHour] = useState<number>(11);
+  const [endMinute, setEndMinute] = useState<number>(0);
+
+  // Sincronizar los Date objects con los strings de formulario (formStartTime / formEndTime)
+  useEffect(() => {
+    if (formStartTime) {
+      const parts = formStartTime.split(':').map(Number);
+      if (parts.length === 2) {
+        setStartHour(parts[0]);
+        setStartMinute(parts[1]);
+        const d = new Date();
+        d.setHours(parts[0], parts[1], 0, 0);
+        setStartDate(d);
+      }
+    }
+  }, [formStartTime]);
+
+  useEffect(() => {
+    if (formEndTime) {
+      const parts = formEndTime.split(':').map(Number);
+      if (parts.length === 2) {
+        setEndHour(parts[0]);
+        setEndMinute(parts[1]);
+        const d = new Date();
+        d.setHours(parts[0], parts[1], 0, 0);
+        setEndDate(d);
+      }
+    }
+  }, [formEndTime]);
 
   // Función para ir al mes siguiente
   const goToNextMonth = () => {
@@ -658,7 +696,7 @@ export default function CalendarScreen() {
   const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}edges={['top']}>
       {/* Cabecera del mes */}
       <View style={styles.monthHeader}>
         <TouchableOpacity 
@@ -794,14 +832,15 @@ export default function CalendarScreen() {
       {/* Modal para crear/editar sesión */}
       <Modal
         visible={isModalVisible}
-        animationType="slide"
+        animationType="fade"
         transparent={true}
         onRequestClose={handleCloseModal}
       >
-        <View style={styles.modalOverlay}>
+        <View style={styles.modalOverlay} pointerEvents="box-none">
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.modalContentWrapper}
+            pointerEvents="box-none"
           >
             <View style={styles.modalContent}>
               {/* Encabezado */}
@@ -842,43 +881,35 @@ export default function CalendarScreen() {
                   )}
                 </View>
 
-                {/* Horario: Inicio y Fin lado a lado */}
-                <View style={styles.timeRowNew}>
-                  <View style={[styles.formGroupNew, { flex: 1, marginRight: 8 }]}>
-                    <Text style={styles.labelNew}>Hora inicio</Text>
-                    <TextInput
-                      style={[
-                        styles.inputNew,
-                        validationErrors.time ? styles.inputError : null,
-                      ]}
-                      value={formStartTime}
-                      onChangeText={(text) => {
-                        setFormStartTime(text);
-                        if (validationErrors.time) {
-                          setValidationErrors({ ...validationErrors, time: undefined });
-                        }
+                {/* Horario: Inicio y Fin lado a lado (TimePicker personalizado) */}
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
+                  <View style={{ flex: 1, marginRight: 12 }}>
+                    <TimePicker
+                      label="Hora inicio"
+                      hour={startHour}
+                      minute={startMinute}
+                      onChange={(h, m) => {
+                        setStartHour(h);
+                        setStartMinute(m);
+                        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                        setFormStartTime(timeStr);
+                        if (validationErrors.time) setValidationErrors({ ...validationErrors, time: undefined });
                       }}
-                      placeholder="HH:MM"
-                      placeholderTextColor="#999"
                     />
                   </View>
 
-                  <View style={[styles.formGroupNew, { flex: 1, marginLeft: 8 }]}>
-                    <Text style={styles.labelNew}>Hora fin</Text>
-                    <TextInput
-                      style={[
-                        styles.inputNew,
-                        validationErrors.time ? styles.inputError : null,
-                      ]}
-                      value={formEndTime}
-                      onChangeText={(text) => {
-                        setFormEndTime(text);
-                        if (validationErrors.time) {
-                          setValidationErrors({ ...validationErrors, time: undefined });
-                        }
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <TimePicker
+                      label="Hora fin"
+                      hour={endHour}
+                      minute={endMinute}
+                      onChange={(h, m) => {
+                        setEndHour(h);
+                        setEndMinute(m);
+                        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+                        setFormEndTime(timeStr);
+                        if (validationErrors.time) setValidationErrors({ ...validationErrors, time: undefined });
                       }}
-                      placeholder="HH:MM"
-                      placeholderTextColor="#999"
                     />
                   </View>
                 </View>
@@ -1023,6 +1054,8 @@ export default function CalendarScreen() {
           </KeyboardAvoidingView>
         </View>
       </Modal>
+
+      
     </SafeAreaView>
   );
 }
@@ -1116,7 +1149,7 @@ const styles = StyleSheet.create({
   // Estilos del modal
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
     justifyContent: 'flex-end',
   },
   modalContentWrapper: {
@@ -1356,6 +1389,37 @@ const styles = StyleSheet.create({
   },
   dayNumberOtherMonth: {
     color: '#b5b5b5',
+  },
+  timeInput: {
+    borderWidth: 1,
+    borderColor: '#DADADA',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginBottom: 12,
+    backgroundColor: '#F5F5F5',
+  },
+  timeInputText: {
+    fontSize: 16,
+    color: '#111',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 20,
+  },
+  timeColumn: {
+    width: '48%',
+  },
+  timePickerLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+    color: '#000',
+  },
+  timePicker: {
+    height: 120,
+    marginTop: -10,
   },
 });
 
