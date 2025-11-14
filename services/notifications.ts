@@ -67,116 +67,61 @@ export async function scheduleNotificationsForSession(session: {
     const sessionStartDateTime = new Date(sessionDate);
     sessionStartDateTime.setHours(startHours, startMinutes || 0, 0, 0);
 
-    // Decidir comportamiento según el flag de configuración
+    // Programar la notificación oficial de 48 horas antes y la notificación post-sesión (1h después)
     let notification48hId: string | null = null;
     let notificationPostId: string | null = null;
+    try {
+      // Construir eventDateTime combinando fecha y hora de inicio (ISO)
+      // Ej: "2025-11-14T09:30:00"
+      const eventDateTime = new Date(`${session.date}T${session.start_time}:00`);
 
-    if (ENV.NOTIFICATIONS_TEST_MODE) {
-      // En modo test programamos notificaciones a 30s y 60s desde ahora
-      try {
-        const notifPreview = new Date(Date.now() + 30000); // 30 segundos
-        const notifPost = new Date(Date.now() + 60000); // 60 segundos
-
+      // Notificación previa: 48 horas antes
+      const notifPreview = new Date(eventDateTime.getTime() - 48 * 60 * 60 * 1000);
+      if (notifPreview > new Date()) {
         notification48hId = await Notifications.scheduleNotificationAsync({
           content: {
             title: `🎧 ${displayName}, tu próxima sesión está cerca`,
             body: `En dos días pinchas en "${sessionName}" ¿te ayudo a preparar la maleta?.`,
             data: {
-              sessionId: session.id,
-              type: '48h_before_test',
+              type: 'preview',
+              session_id: session.id,
             },
             categoryIdentifier: 'session_48h',
           },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: notifPreview },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: notifPreview,
+          },
         });
-
-        // Solo programar post si session.end_time existe (mantener lógica original)
-        if (session.end_time) {
-          notificationPostId = await Notifications.scheduleNotificationAsync({
-            content: {
-              title: `¿Cómo te fué en "${sessionName}"?`,
-              body: `${displayName}, cuéntame ¿tu sesión en "${sessionName}" fué lo que esperabas?.`,
-              data: {
-                type: 'post_session_note_test',
-                session_id: session.id,
-              },
-            },
-            trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: notifPost },
-          });
-        }
-      } catch (err) {
-        console.error('Error al programar notificaciones en TEST MODE:', err);
       }
-    } else {
-      // Comportamiento normal: 48h antes y 1h después (si hay end_time)
-      try {
-        // Calcular fecha de notificación 48h antes
-        const notification48hDate = new Date(sessionStartDateTime);
-        notification48hDate.setHours(notification48hDate.getHours() - 48);
 
-        if (notification48hDate > new Date()) {
-          notification48hId = await Notifications.scheduleNotificationAsync({
-            content: {
-              title: `🎧 ${displayName}, tu próxima sesión está cerca`,
-              body: `En dos días pinchas en "${sessionName}" ¿te ayudo a preparar la maleta?.`,
-              data: {
-                sessionId: session.id,
-                type: '48h_before',
-              },
-              categoryIdentifier: 'session_48h',
+      // Notificación post-sesión: 1 hora después del inicio/fin según especificación
+      const notifPost = new Date(eventDateTime.getTime() + 60 * 60 * 1000);
+      if (notifPost > new Date()) {
+        notificationPostId = await Notifications.scheduleNotificationAsync({
+          content: {
+            title: `¿Cómo te fue en "${sessionName}"?`,
+            body: `${displayName}, añade una nota rápida sobre la sesión "${sessionName}".`,
+            data: {
+              type: 'post_session_note',
+              session_id: session.id,
             },
-            trigger: {
-              type: Notifications.SchedulableTriggerInputTypes.DATE,
-              date: notification48hDate,
-            },
-          });
-        }
-
-        // Calcular fecha de notificación 1h después del fin (si existe end_time)
-        if (session.end_time) {
-          const [endHours, endMinutes] = session.end_time.split(':').map(Number);
-          const sessionEndDateTime = new Date(sessionDate);
-          sessionEndDateTime.setHours(endHours, endMinutes || 0, 0, 0);
-
-          const notificationPostDate = new Date(sessionEndDateTime);
-          notificationPostDate.setHours(notificationPostDate.getHours() + 1);
-
-          if (notificationPostDate > new Date()) {
-            notificationPostId = await Notifications.scheduleNotificationAsync({
-              content: {
-                title: `¿Cómo te fué en "${sessionName}"?`,
-                body: `${displayName}, cuéntame ¿tu sesión en "${sessionName}" fué lo que esperabas?.`,
-                data: {
-                  type: 'post_session_note',
-                  session_id: session.id,
-                },
-              },
-              trigger: {
-                type: Notifications.SchedulableTriggerInputTypes.DATE,
-                date: notificationPostDate,
-              },
-            });
-          }
-        }
-      } catch (err) {
-        console.error('Error al programar notificaciones (modo normal):', err);
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DATE,
+            date: notifPost,
+          },
+        });
       }
+    } catch (err) {
+      console.error('Error al programar notificaciones:', err);
     }
 
     // Guardar IDs en AsyncStorage (temporalmente hasta que se actualice la tabla)
     const storageKey = `session_notifications_${session.id}`;
-    await AsyncStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        notification_48h_id: notification48hId,
-        notification_post_id: notificationPostId,
-      })
-    );
+    await AsyncStorage.setItem(storageKey, JSON.stringify({ notification_48h_id: notification48hId, notification_post_id: null }));
 
-    return {
-      notification_48h_id: notification48hId,
-      notification_post_id: notificationPostId,
-    };
+    return { notification_48h_id: notification48hId, notification_post_id: null };
   } catch (error) {
     console.error('Error al programar notificaciones:', error);
     return { notification_48h_id: null, notification_post_id: null };
