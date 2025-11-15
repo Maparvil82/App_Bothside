@@ -253,18 +253,6 @@ export const SessionEarningsSection: React.FC = () => {
         <Text style={styles.earningsSubtext}>
           Estimado del mes: {formatCurrencyES(earningsData.estimatedMonthEarnings)}
         </Text>
-        <Text style={styles.earningsSubtext}>
-          {earningsData.sessionsCount}{' '}
-          {earningsData.sessionsCount === 1 ? 'sesión' : 'sesiones'} · media{' '}
-          {formatCurrencyES(earningsData.averagePerSession)} por sesión
-        </Text>
-        {earningsData.lastPaidSession && (
-          <Text style={styles.lastSessionText}>
-            Última sesión: {earningsData.lastPaidSession.name} —{' '}
-            {formatCurrencyES(earningsData.lastPaidSession.amountEarned)} —{' '}
-            {formatLastSessionDate(earningsData.lastPaidSession.date)}
-          </Text>
-        )}
       </View>
     </View>
   );
