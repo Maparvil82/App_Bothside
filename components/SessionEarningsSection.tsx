@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   ActivityIndicator,
   Alert,
   DeviceEventEmitter,
+  TouchableOpacity,
+  Animated,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,6 +48,7 @@ export const SessionEarningsSection: React.FC = () => {
   });
   const [loading, setLoading] = useState(true);
   const isFocused = useIsFocused();
+  const scale = useRef(new Animated.Value(1)).current;
 
   const loadSessionEarnings = async () => {
     if (!user?.id) return;
@@ -200,33 +203,81 @@ export const SessionEarningsSection: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Ionicons name="cash-outline" size={20} color="#ffffff" />
-          <Text style={styles.cardTitle}>Ganancias de Sesiones</Text>
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#ffffff" />
-          <Text style={styles.loadingText}>Cargando ganancias...</Text>
-        </View>
+      <View style={styles.outerContainer}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPressIn={() => {
+            Animated.spring(scale, {
+              toValue: 0.97,
+              useNativeDriver: true,
+              speed: 40,
+              bounciness: 6,
+            }).start();
+          }}
+          onPressOut={() => {
+            Animated.spring(scale, {
+              toValue: 1,
+              useNativeDriver: true,
+              speed: 40,
+              bounciness: 6,
+            }).start();
+          }}
+        >
+          <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+            <View style={styles.innerGradientLayer}>
+              <View style={styles.headerRow}>
+                <Ionicons name="cash-outline" size={18} color="#4A4A4A" />
+                <Text style={styles.cardTitle}>Ganancias del mes</Text>
+              </View>
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color="#1F8D59" />
+                <Text style={styles.loadingText}>Cargando ganancias...</Text>
+              </View>
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
       </View>
     );
   }
 
   if (earningsData.sessionsCount === 0) {
     return (
-      <View style={styles.card}>
-        <View style={styles.headerRow}>
-          <Ionicons name="cash-outline" size={20} color="#ffffff" />
-          <Text style={styles.cardTitle}>Ganancias de Sesiones</Text>
-        </View>
-        <View style={styles.emptyContainer}>
-          <Ionicons name="cash-outline" size={28} color="rgba(255,255,255,0.7)" />
-          <Text style={styles.emptyText}>No hay ganancias registradas</Text>
-          <Text style={styles.emptySubtext}>
-            Las ganancias de tus sesiones aparecerán aquí
-          </Text>
-        </View>
+      <View style={styles.outerContainer}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPressIn={() => {
+            Animated.spring(scale, {
+              toValue: 0.97,
+              useNativeDriver: true,
+              speed: 40,
+              bounciness: 6,
+            }).start();
+          }}
+          onPressOut={() => {
+            Animated.spring(scale, {
+              toValue: 1,
+              useNativeDriver: true,
+              speed: 40,
+              bounciness: 6,
+            }).start();
+          }}
+        >
+          <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
+            <View style={styles.innerGradientLayer}>
+              <View style={styles.headerRow}>
+                <Ionicons name="cash-outline" size={18} color="#4A4A4A" />
+                <Text style={styles.cardTitle}>Ganancias del mes</Text>
+              </View>
+              <View style={styles.emptyContainer}>
+                <Ionicons name="cash-outline" size={28} color="#1F8D59" />
+                <Text style={styles.emptyText}>No hay ganancias registradas</Text>
+                <Text style={styles.emptySubtext}>
+                  Las ganancias de tus sesiones aparecerán aquí
+                </Text>
+              </View>
+            </View>
+          </Animated.View>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -241,45 +292,80 @@ export const SessionEarningsSection: React.FC = () => {
   };
 
   return (
-    <View style={styles.card}>
-      <View style={styles.headerRow}>
-        <Ionicons name="cash-outline" size={20} color="#ffffff" />
-        <Text style={styles.cardTitle}>Ganancias de Sesiones</Text>
-      </View>
-      <View style={styles.earningsContainer}>
-        <Text style={styles.earningsAmount}>
-          {formatCurrencyES(earningsData.realEarnings)}
-        </Text>
-        <Text style={styles.earningsSubtext}>
-          Estimado del mes: {formatCurrencyES(earningsData.estimatedMonthEarnings)}
-        </Text>
-      </View>
+    <View style={styles.outerContainer}>
+      <TouchableOpacity
+        activeOpacity={0.9}
+        onPressIn={() => {
+          Animated.spring(scale, {
+            toValue: 0.97,
+            useNativeDriver: true,
+            speed: 40,
+            bounciness: 6,
+          }).start();
+        }}
+        onPressOut={() => {
+          Animated.spring(scale, {
+            toValue: 1,
+            useNativeDriver: true,
+            speed: 40,
+            bounciness: 6,
+          }).start();
+        }}
+      >
+        <Animated.View style={[styles.card, { transform: [{ scale }] }] }>
+          <View style={styles.innerGradientLayer}>
+            <View style={styles.headerRow}>
+              <Ionicons name="cash-outline" size={18} color="#4A4A4A" />
+              <Text style={styles.cardTitle}>Ganancias del mes</Text>
+            </View>
+            <View style={styles.earningsContainer}>
+              <Text style={styles.earningsAmount}>
+                {formatCurrencyES(earningsData.realEarnings)}
+              </Text>
+              <Text style={styles.earningsSubtext}>
+                Estimado mes completo: {formatCurrencyES(earningsData.estimatedMonthEarnings)}
+              </Text>
+
+            </View>
+          </View>
+        </Animated.View>
+      </TouchableOpacity>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    marginHorizontal: 16,
+    marginTop: 16,
+  },
   card: {
-    backgroundColor: '#34A853',
-    borderRadius: 12,
-    padding: 20,
-    margin: 16,
-    alignItems: 'center',
+    borderRadius: 16,
+    overflow: 'hidden',
+    minHeight: 140,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+    backgroundColor: '#E8F8EF',
+  },
+  innerGradientLayer: {
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#E8F8EF',
   },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ffffff',
+    color: '#4A4A4A',
     marginLeft: 8,
   },
   loadingContainer: {
@@ -300,37 +386,37 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginTop: 12,
-    color: '#ffffff',
+    color: '#4A4A4A',
   },
   emptySubtext: {
     fontSize: 14,
     marginTop: 4,
     textAlign: 'center',
-    color: 'rgba(255,255,255,0.9)',
+    color: 'rgba(0,0,0,0.45)',
   },
   earningsContainer: {
     alignItems: 'center',
     paddingVertical: 12,
   },
   earningsAmount: {
-    fontSize: 32,
+    fontSize: 34,
     fontWeight: '700',
-    color: '#ffffff',
+    color: '#1F8D59',
     marginBottom: 4,
   },
   earningsSubtext: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '400',
     textAlign: 'center',
     marginTop: 4,
-    color: 'rgba(255,255,255,0.9)',
+    color: '#373737',
   },
   lastSessionText: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: '400',
     textAlign: 'center',
-    marginTop: 6,
-    color: 'rgba(255,255,255,0.9)',
+    marginTop: 10,
+    color: 'rgba(0,0,0,0.45)',
   },
 });
 
