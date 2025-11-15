@@ -12,6 +12,7 @@ import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
 import { AddDiscScreen } from '../screens/AddDiscScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import DjStatsDashboard from '../screens/DjStatsDashboard';
 import { AdminScreen } from '../screens/AdminScreen';
 import GemsScreen from '../screens/GemsScreen';
 import ListsScreen from '../screens/ListsScreen';
@@ -126,6 +127,14 @@ const DashboardStack = () => (
       component={DashboardScreen}
       options={{
         header: () => <CustomHeader title="Bothside" />
+      }}
+    />
+    <Stack.Screen
+      name="DjStatsDashboard"
+      component={DjStatsDashboard}
+      options={{
+        headerShown: true,
+        header: () => <CustomHeader title="Panel DJ" showBackButton={true} />,
       }}
     />
     <Stack.Screen

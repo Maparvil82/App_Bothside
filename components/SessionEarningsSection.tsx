@@ -12,7 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import { useTheme } from '@react-navigation/native';
+import { useTheme, useNavigation } from '@react-navigation/native';
 import { formatCurrencyES } from '../src/utils/formatCurrency';
 import { useIsFocused } from '@react-navigation/native';
 
@@ -39,6 +39,7 @@ interface EarningsData {
 export const SessionEarningsSection: React.FC = () => {
   const { user } = useAuth();
   const { colors } = useTheme();
+  const navigation = useNavigation<any>();
   const [earningsData, setEarningsData] = useState<EarningsData>({
     realEarnings: 0,
     estimatedMonthEarnings: 0,
@@ -49,6 +50,11 @@ export const SessionEarningsSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const isFocused = useIsFocused();
   const scale = useRef(new Animated.Value(1)).current;
+
+  const handlePress = () => {
+    console.log('🔀 Navegando a DjStatsDashboard desde SessionEarningsSection');
+    navigation.navigate('DjStatsDashboard');
+  };
 
   const loadSessionEarnings = async () => {
     if (!user?.id) return;
@@ -222,6 +228,7 @@ export const SessionEarningsSection: React.FC = () => {
               bounciness: 6,
             }).start();
           }}
+          onPress={handlePress}
         >
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
@@ -261,6 +268,7 @@ export const SessionEarningsSection: React.FC = () => {
               bounciness: 6,
             }).start();
           }}
+          onPress={handlePress}
         >
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
@@ -311,6 +319,7 @@ export const SessionEarningsSection: React.FC = () => {
             bounciness: 6,
           }).start();
         }}
+        onPress={handlePress}
       >
         <Animated.View style={[styles.card, { transform: [{ scale }] }] }>
           <View style={styles.innerGradientLayer}>
