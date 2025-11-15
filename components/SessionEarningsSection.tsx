@@ -5,12 +5,14 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  DeviceEventEmitter,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '@react-navigation/native';
 import { formatCurrencyES } from '../src/utils/formatCurrency';
+import { useIsFocused } from '@react-navigation/native';
 
 interface Session {
   id: string;
@@ -43,12 +45,7 @@ export const SessionEarningsSection: React.FC = () => {
     lastPaidSession: null,
   });
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user) {
-      loadSessionEarnings();
-    }
-  }, [user]);
+  const isFocused = useIsFocused();
 
   const loadSessionEarnings = async () => {
     if (!user?.id) return;
@@ -173,6 +170,33 @@ export const SessionEarningsSection: React.FC = () => {
       setLoading(false);
     }
   };
+
+  // Cargar una vez cuando haya usuario
+  useEffect(() => {
+    if (user) {
+      loadSessionEarnings();
+    }
+  }, [user]);
+
+  // Recargar cada vez que la pantalla está en foco
+  useEffect(() => {
+    if (isFocused && user) {
+      loadSessionEarnings();
+    }
+  }, [isFocused, user]);
+
+  // Escuchar eventos globales de actualización de sesiones
+  useEffect(() => {
+    const sub = DeviceEventEmitter.addListener('sessionsUpdated', () => {
+      if (user) {
+        loadSessionEarnings();
+      }
+    });
+
+    return () => {
+      sub.remove();
+    };
+  }, [user]);
 
   if (loading) {
     return (

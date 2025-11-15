@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated, DeviceEventEmitter } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -98,35 +98,59 @@ export default function CalendarScreen() {
   const [endDate, setEndDate] = useState<Date>(new Date());
 
   // Estados para hora y minutos (TimePicker personalizado)
-  const [startHour, setStartHour] = useState<number>(10);
+  const now = new Date();
+  const [startHour, setStartHour] = useState<number>(now.getHours());
   const [startMinute, setStartMinute] = useState<number>(0);
-  const [endHour, setEndHour] = useState<number>(11);
+  const [endHour, setEndHour] = useState<number>((now.getHours() + 1) % 24);
   const [endMinute, setEndMinute] = useState<number>(0);
 
   // Sincronizar los Date objects con los strings de formulario (formStartTime / formEndTime)
+  const updateTimeStates = (timeString: string, isStartTime: boolean) => {
+    if (!timeString) return;
+    
+    const parts = timeString.split(':');
+    if (parts.length >= 2) {
+      const hours = parseInt(parts[0], 10);
+      const minutes = parseInt(parts[1], 10);
+      
+      if (!isNaN(hours) && !isNaN(minutes)) {
+        const d = new Date();
+        d.setHours(hours, minutes, 0, 0);
+        
+        if (isStartTime) {
+          setStartHour(hours);
+          setStartMinute(minutes);
+          setStartDate(d);
+          
+          // Si estamos editando una sesión existente, no actualizamos la hora de fin automáticamente
+          if (!selectedSession) {
+            // Para nuevas sesiones, establecer la hora de fin como 1 hora después
+            const endTime = new Date(d);
+            endTime.setHours(endTime.getHours() + 1);
+            setEndHour(endTime.getHours());
+            setEndMinute(endTime.getMinutes());
+            setEndDate(endTime);
+            setFormEndTime(`${String(endTime.getHours()).padStart(2, '0')}:${String(endTime.getMinutes()).padStart(2, '0')}`);
+          }
+        } else {
+          setEndHour(hours);
+          setEndMinute(minutes);
+          setEndDate(d);
+        }
+      }
+    }
+  };
+
+  // Efecto para sincronizar los estados de tiempo
   useEffect(() => {
     if (formStartTime) {
-      const parts = formStartTime.split(':').map(Number);
-      if (parts.length === 2) {
-        setStartHour(parts[0]);
-        setStartMinute(parts[1]);
-        const d = new Date();
-        d.setHours(parts[0], parts[1], 0, 0);
-        setStartDate(d);
-      }
+      updateTimeStates(formStartTime, true);
     }
   }, [formStartTime]);
 
   useEffect(() => {
     if (formEndTime) {
-      const parts = formEndTime.split(':').map(Number);
-      if (parts.length === 2) {
-        setEndHour(parts[0]);
-        setEndMinute(parts[1]);
-        const d = new Date();
-        d.setHours(parts[0], parts[1], 0, 0);
-        setEndDate(d);
-      }
+      updateTimeStates(formEndTime, false);
     }
   }, [formEndTime]);
 
@@ -279,8 +303,23 @@ export default function CalendarScreen() {
       setSelectedSession(existingSession);
       // Rellenar el formulario con los datos de la sesión
       setFormName(existingSession.name || '');
-      setFormStartTime(existingSession.start_time || '');
-      setFormEndTime(existingSession.end_time || '');
+      
+      // Establecer las horas de inicio y fin desde la sesión existente
+      if (existingSession.start_time) {
+        setFormStartTime(existingSession.start_time);
+      } else {
+        const now = new Date();
+        setFormStartTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      }
+      
+      if (existingSession.end_time) {
+        setFormEndTime(existingSession.end_time);
+      } else {
+        const now = new Date();
+        now.setHours(now.getHours() + 1);
+        setFormEndTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      }
+      
       setFormQuickNote(existingSession.quick_note || '');
       setFormTag(existingSession.tag || '');
       setFormPaymentType(existingSession.payment_type || 'gratis');
@@ -289,9 +328,18 @@ export default function CalendarScreen() {
       setSelectedSession(null);
       // Limpiar el formulario
       setFormName('');
-      // Inicializar start/end con los valores actuales del picker
-      setFormStartTime(`${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`);
-      setFormEndTime(`${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`);
+      
+      // Inicializar con la hora actual para inicio y 1 hora después para fin
+      const now = new Date();
+      const endTime = new Date(now);
+      endTime.setHours(now.getHours() + 1);
+      
+      const formatTime = (date: Date) => 
+        `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+      
+      setFormStartTime(formatTime(now));
+      setFormEndTime(formatTime(endTime));
+      
       setFormQuickNote('');
       setFormTag('');
       setFormPaymentType('gratis');
@@ -426,6 +474,8 @@ export default function CalendarScreen() {
         console.error('Error al crear sesión:', error);
         Alert.alert('Error', 'No se pudo crear la sesión');
       } else {
+        // Notificar globalmente que las sesiones han cambiado (para refrescar cards de ganancias, etc.)
+        DeviceEventEmitter.emit('sessionsUpdated');
         // Programar notificaciones para la sesión creada
         if (insertedData) {
           // Extraer nombre del usuario para personalizar notificaciones
@@ -510,6 +560,8 @@ export default function CalendarScreen() {
         console.error('Error al actualizar sesión:', error);
         Alert.alert('Error', 'No se pudo actualizar la sesión');
       } else {
+        // Notificar globalmente que las sesiones han cambiado (para refrescar cards de ganancias, etc.)
+        DeviceEventEmitter.emit('sessionsUpdated');
         // Programar nuevas notificaciones con los datos actualizados
         if (updatedData) {
           // Extraer nombre del usuario para personalizar notificaciones
