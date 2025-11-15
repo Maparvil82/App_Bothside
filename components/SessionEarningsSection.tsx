@@ -200,14 +200,14 @@ export const SessionEarningsSection: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
-        <View style={styles.header}>
-          <Ionicons name="cash-outline" size={20} color="#34A853" />
-          <Text style={[styles.title, { color: colors.text }]}>Ganancias de Sesiones</Text>
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+          <Ionicons name="cash-outline" size={20} color="#ffffff" />
+          <Text style={styles.cardTitle}>Ganancias de Sesiones</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#34A853" />
-          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando ganancias...</Text>
+          <ActivityIndicator size="small" color="#ffffff" />
+          <Text style={styles.loadingText}>Cargando ganancias...</Text>
         </View>
       </View>
     );
@@ -215,15 +215,15 @@ export const SessionEarningsSection: React.FC = () => {
 
   if (earningsData.sessionsCount === 0) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.card }]}>
-        <View style={styles.header}>
-          <Ionicons name="cash-outline" size={20} color="#34A853" />
-          <Text style={[styles.title, { color: colors.text }]}>Ganancias de Sesiones</Text>
+      <View style={styles.card}>
+        <View style={styles.headerRow}>
+          <Ionicons name="cash-outline" size={20} color="#ffffff" />
+          <Text style={styles.cardTitle}>Ganancias de Sesiones</Text>
         </View>
         <View style={styles.emptyContainer}>
-          <Ionicons name="cash-outline" size={24} color="#9CA3AF" />
-          <Text style={[styles.emptyText, { color: colors.text }]}>No hay ganancias registradas</Text>
-          <Text style={[styles.emptySubtext, { color: colors.text }]}>
+          <Ionicons name="cash-outline" size={28} color="rgba(255,255,255,0.7)" />
+          <Text style={styles.emptyText}>No hay ganancias registradas</Text>
+          <Text style={styles.emptySubtext}>
             Las ganancias de tus sesiones aparecerán aquí
           </Text>
         </View>
@@ -241,25 +241,25 @@ export const SessionEarningsSection: React.FC = () => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.card }]}>
-      <View style={styles.header}>
-        <Ionicons name="cash-outline" size={20} color="#34A853" />
-        <Text style={[styles.title, { color: colors.text }]}>Ganancias de Sesiones</Text>
+    <View style={styles.card}>
+      <View style={styles.headerRow}>
+        <Ionicons name="cash-outline" size={20} color="#ffffff" />
+        <Text style={styles.cardTitle}>Ganancias de Sesiones</Text>
       </View>
       <View style={styles.earningsContainer}>
         <Text style={styles.earningsAmount}>
           {formatCurrencyES(earningsData.realEarnings)}
         </Text>
-        <Text style={[styles.earningsSubtext, { color: colors.text }]}>
+        <Text style={styles.earningsSubtext}>
           Estimado del mes: {formatCurrencyES(earningsData.estimatedMonthEarnings)}
         </Text>
-        <Text style={[styles.earningsSubtext, { color: colors.text }]}>
+        <Text style={styles.earningsSubtext}>
           {earningsData.sessionsCount}{' '}
           {earningsData.sessionsCount === 1 ? 'sesión' : 'sesiones'} · media{' '}
           {formatCurrencyES(earningsData.averagePerSession)} por sesión
         </Text>
         {earningsData.lastPaidSession && (
-          <Text style={[styles.lastSessionText, { color: colors.text }]}>
+          <Text style={styles.lastSessionText}>
             Última sesión: {earningsData.lastPaidSession.name} —{' '}
             {formatCurrencyES(earningsData.lastPaidSession.amountEarned)} —{' '}
             {formatLastSessionDate(earningsData.lastPaidSession.date)}
@@ -271,25 +271,27 @@ export const SessionEarningsSection: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 20,
-    marginHorizontal: 16,
+  card: {
+    backgroundColor: '#34A853',
     borderRadius: 12,
-    padding: 16,
+    padding: 20,
+    margin: 16,
+    alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  header: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  title: {
-    fontSize: 18,
+  cardTitle: {
+    fontSize: 16,
     fontWeight: '600',
+    color: '#ffffff',
     marginLeft: 8,
   },
   loadingContainer: {
@@ -300,6 +302,7 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 14,
     marginLeft: 8,
+    color: '#ffffff',
   },
   emptyContainer: {
     alignItems: 'center',
@@ -309,11 +312,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginTop: 12,
+    color: '#ffffff',
   },
   emptySubtext: {
     fontSize: 14,
     marginTop: 4,
     textAlign: 'center',
+    color: 'rgba(255,255,255,0.9)',
   },
   earningsContainer: {
     alignItems: 'center',
@@ -322,7 +327,7 @@ const styles = StyleSheet.create({
   earningsAmount: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#34A853',
+    color: '#ffffff',
     marginBottom: 4,
   },
   earningsSubtext: {
@@ -330,13 +335,14 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     textAlign: 'center',
     marginTop: 4,
+    color: 'rgba(255,255,255,0.9)',
   },
   lastSessionText: {
     fontSize: 13,
     fontWeight: '400',
     textAlign: 'center',
     marginTop: 6,
-    opacity: 0.7,
+    color: 'rgba(255,255,255,0.9)',
   },
 });
 

@@ -620,6 +620,9 @@ export default function DashboardScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
+        {/* Ganancias de sesiones (primera card) */}
+        {showSessionEarnings && <SessionEarningsSection />}
+
         {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
           <View style={styles.valueCard}>
