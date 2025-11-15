@@ -239,6 +239,42 @@ export default function CalendarScreen() {
     return `${yearStr}-${monthStr}-${dayStr}`;
   };
 
+  // Construir un Date a partir de una fecha base y hora/minuto
+  const buildDateTimeFromParts = (baseDate: Date, hour: number, minute: number): Date => {
+    const d = new Date(baseDate);
+    d.setHours(hour, minute, 0, 0);
+    return d;
+  };
+
+  // Calcular duración en horas entre dos horas (HH:MM) sobre una fecha base
+  const getDurationHours = (baseDate: Date, startTime: string, endTime: string): number | null => {
+    if (!startTime || !endTime) return null;
+
+    const [startHours, startMinutes] = startTime.split(":").map(Number);
+    const [endHours, endMinutes] = endTime.split(":").map(Number);
+
+    if (
+      [startHours, startMinutes, endHours, endMinutes].some(
+        (v) => Number.isNaN(v) || v < 0
+      )
+    ) {
+      return null;
+    }
+
+    const startDateTime = buildDateTimeFromParts(baseDate, startHours, startMinutes);
+    let endDateTime = buildDateTimeFromParts(baseDate, endHours, endMinutes);
+
+    // Si la hora de fin es menor o igual que la de inicio, asumimos que pasa al día siguiente
+    if (endDateTime <= startDateTime) {
+      endDateTime.setDate(endDateTime.getDate() + 1);
+    }
+
+    const ms = endDateTime.getTime() - startDateTime.getTime();
+    if (ms <= 0) return null;
+
+    return ms / (1000 * 60 * 60);
+  };
+
   // Función para cargar tags existentes desde Supabase
   const loadExistingTags = async () => {
     if (!user?.id) return;
@@ -323,7 +359,30 @@ export default function CalendarScreen() {
       setFormQuickNote(existingSession.quick_note || '');
       setFormTag(existingSession.tag || '');
       setFormPaymentType(existingSession.payment_type || 'gratis');
-      setFormPaymentAmount(existingSession.payment_amount?.toString() || '');
+
+      // Para sesiones por hora queremos mostrar la TARIFA/hora en el input, no el total guardado
+      if (
+        existingSession.payment_type === 'hora' &&
+        existingSession.payment_amount &&
+        existingSession.start_time &&
+        existingSession.end_time
+      ) {
+        const baseDate = new Date(existingSession.date);
+        const durationHours = getDurationHours(
+          baseDate,
+          existingSession.start_time,
+          existingSession.end_time
+        );
+
+        if (durationHours && durationHours > 0) {
+          const hourlyRate = existingSession.payment_amount / durationHours;
+          setFormPaymentAmount(hourlyRate.toFixed(2));
+        } else {
+          setFormPaymentAmount(existingSession.payment_amount.toString());
+        }
+      } else {
+        setFormPaymentAmount(existingSession.payment_amount?.toString() || '');
+      }
     } else {
       setSelectedSession(null);
       // Limpiar el formulario
@@ -399,16 +458,18 @@ export default function CalendarScreen() {
       errors.name = 'El nombre es obligatorio';
     }
 
-    // Validar horario
+    // Validar horario usando duración real sobre la fecha de la sesión
     if (formStartTime && formEndTime) {
-      const [startHours, startMinutes] = formStartTime.split(':').map(Number);
-      const [endHours, endMinutes] = formEndTime.split(':').map(Number);
-      
-      const startTotalMinutes = startHours * 60 + startMinutes;
-      const endTotalMinutes = endHours * 60 + endMinutes;
+      const baseDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        selectedDay ?? currentDate.getDate()
+      );
 
-      if (endTotalMinutes <= startTotalMinutes) {
-        errors.time = 'La hora de fin debe ser posterior a la de inicio';
+      const durationHours = getDurationHours(baseDate, formStartTime, formEndTime);
+
+      if (!durationHours || durationHours <= 0) {
+        errors.time = 'La duración debe ser mayor que 0';
       }
     }
 
@@ -436,11 +497,25 @@ export default function CalendarScreen() {
     setIsSaving(true);
     try {
       // Asegurar que tenemos strings formateados HH:MM antes de insertar
-      const startTime = formStartTime || `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
-      const endTime = formEndTime || `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+      const startTime =
+        formStartTime ||
+        `${startHour.toString().padStart(2, '0')}:${startMinute
+          .toString()
+          .padStart(2, '0')}`;
+      const endTime =
+        formEndTime ||
+        `${endHour.toString().padStart(2, '0')}:${endMinute
+          .toString()
+          .padStart(2, '0')}`;
       console.log('Creando sesión - startTime, endTime:', startTime, endTime);
 
       const sessionDate = formatDateToString(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        selectedDay
+      );
+
+      const baseDate = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth(),
         selectedDay
@@ -457,10 +532,27 @@ export default function CalendarScreen() {
         payment_type: formPaymentType || null,
       };
 
-      if (formPaymentType === 'cerrado' || formPaymentType === 'hora') {
+      if (formPaymentType === 'gratis') {
+        sessionData.payment_amount = 0;
+      } else if (formPaymentType === 'cerrado') {
         const amount = parseFloat(formPaymentAmount);
-        if (!isNaN(amount)) {
+        if (!Number.isNaN(amount) && amount > 0) {
           sessionData.payment_amount = amount;
+        }
+      } else if (formPaymentType === 'hora') {
+        const hourlyRate = parseFloat(formPaymentAmount);
+        if (!Number.isNaN(hourlyRate) && hourlyRate > 0) {
+          const durationHours = getDurationHours(baseDate, startTime, endTime);
+
+          if (!durationHours || durationHours <= 0) {
+            Alert.alert('Error', 'La duración debe ser mayor que 0');
+            setIsSaving(false);
+            return;
+          }
+
+          const total = hourlyRate * durationHours;
+          console.log('Pago por hora - horas, total:', durationHours, total);
+          sessionData.payment_amount = Number(total.toFixed(2));
         }
       }
 
@@ -525,9 +617,23 @@ export default function CalendarScreen() {
       });
 
       // Asegurar que tenemos strings formateados HH:MM antes de actualizar
-      const startTime = formStartTime || `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`;
-      const endTime = formEndTime || `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`;
+      const startTime =
+        formStartTime ||
+        `${startHour.toString().padStart(2, '0')}:${startMinute
+          .toString()
+          .padStart(2, '0')}`;
+      const endTime =
+        formEndTime ||
+        `${endHour.toString().padStart(2, '0')}:${endMinute
+          .toString()
+          .padStart(2, '0')}`;
       console.log('Actualizando sesión - startTime, endTime:', startTime, endTime);
+
+      const baseDate = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        selectedDay ?? getDayFromDate(selectedSession.date)
+      );
 
       const updateData: any = {
         name: formName.trim(),
@@ -538,10 +644,29 @@ export default function CalendarScreen() {
         payment_type: formPaymentType || null,
       };
 
-      if (formPaymentType === 'cerrado' || formPaymentType === 'hora') {
+      if (formPaymentType === 'gratis') {
+        updateData.payment_amount = 0;
+      } else if (formPaymentType === 'cerrado') {
         const amount = parseFloat(formPaymentAmount);
-        if (!isNaN(amount)) {
+        if (!Number.isNaN(amount) && amount > 0) {
           updateData.payment_amount = amount;
+        } else {
+          updateData.payment_amount = null;
+        }
+      } else if (formPaymentType === 'hora') {
+        const hourlyRate = parseFloat(formPaymentAmount);
+        if (!Number.isNaN(hourlyRate) && hourlyRate > 0) {
+          const durationHours = getDurationHours(baseDate, startTime, endTime);
+
+          if (!durationHours || durationHours <= 0) {
+            Alert.alert('Error', 'La duración debe ser mayor que 0');
+            setIsSaving(false);
+            return;
+          }
+
+          const total = hourlyRate * durationHours;
+          console.log('Pago por hora (update) - horas, total:', durationHours, total);
+          updateData.payment_amount = Number(total.toFixed(2));
         } else {
           updateData.payment_amount = null;
         }
