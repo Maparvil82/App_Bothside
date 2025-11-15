@@ -57,7 +57,6 @@ export const SearchScreen: React.FC = () => {
   const [filterByLocation, setFilterByLocation] = useState<string>('');
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -253,6 +252,18 @@ export const SearchScreen: React.FC = () => {
       setRefreshing(false);
     }
   };
+
+  // Función para limpiar todos los filtros
+  const clearFilters = () => {
+    setFilterByStyle('');
+    setFilterByYear('');
+    setFilterByLabel('');
+    setFilterByLocation('');
+    setQuery('');
+  };
+
+  // Verificar si hay algún filtro activo
+  const hasActiveFilters = filterByStyle || filterByYear || filterByLabel || filterByLocation || query.trim();
 
   // Función para cargar las estanterías del usuario
   const loadUserLists = async () => {
@@ -1326,7 +1337,7 @@ export const SearchScreen: React.FC = () => {
           // 3. Verificar que no sea un artista diferente con nombre similar
           const isSimilarArtist = searchArtistWords.some(word => {
             // Lista de palabras que podrían confundirse
-            const similarWords = {
+            const similarWords: { [key: string]: string[] } = {
               'bill': ['billy', 'william', 'will'],
               'john': ['johnny', 'jon', 'jonathan'],
               'mike': ['michael', 'mickey', 'mick'],
@@ -1341,7 +1352,7 @@ export const SearchScreen: React.FC = () => {
             
             const similar = similarWords[word.toLowerCase()];
             if (similar) {
-              return similar.some(sim => albumArtist.includes(sim));
+              return similar.some((sim: string) => albumArtist.includes(sim));
             }
             return false;
           });
@@ -1477,63 +1488,6 @@ export const SearchScreen: React.FC = () => {
     </View>
   );
 
-  const renderGridItem = ({ item }: { item: any }) => (
-    <TouchableOpacity 
-      style={[styles.collectionItemGrid, { backgroundColor: colors.card }]}
-      onLongPress={() => handleLongPress(item)}
-      onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
-      activeOpacity={0.7}
-    >
-      <Image
-        source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-        style={styles.collectionThumbnailGrid}
-      />
-      <View style={styles.collectionInfoGrid}>
-        <Text style={[styles.collectionTitleGrid, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-          {item.albums?.title}
-        </Text>
-        <Text style={[styles.collectionArtistGrid, { color: colors.text }]}>{item.albums?.artist}</Text>
-        <View style={styles.collectionDetailsGrid}>
-          <Text style={[styles.collectionDetailGrid, { color: colors.text }]}>
-            {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-              ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
-              : item.albums?.label && item.albums.label !== ''
-                ? `Sello: ${item.albums.label}`
-                : item.albums?.release_year
-                  ? `Año: ${item.albums.release_year}`
-                  : ''
-            }
-          </Text>
-          
-          {/* Tags reordenados */}
-          <View style={styles.tagsContainerGrid}>
-            {/* Tag de ubicación física - PRIMERO */}
-            {item.in_shelf && (
-              <View style={styles.shelfTagGrid}>
-                <Ionicons name="location" size={10} color="#28a745" />
-                <Text style={styles.shelfTagTextGrid}>{item.shelf_name || 'Ubicación'}</Text>
-              </View>
-            )}
-
-            {/* Tag de audio - SEGUNDO (solo icono) */}
-            {item.audio_note && (
-              <View style={styles.audioTagGridIconOnly}>
-                <Ionicons name="mic" size={10} color="#007AFF" />
-              </View>
-            )}
-            
-            {/* Tag de gem - TERCERO (solo icono) */}
-            {item.is_gem && (
-              <View style={styles.gemTagGridIconOnly}>
-                <Ionicons name="diamond" size={10} color="#d97706" />
-              </View>
-            )}
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
     <View style={[styles.releaseItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
       <Image
@@ -1624,28 +1578,32 @@ export const SearchScreen: React.FC = () => {
           </TouchableOpacity>
           
           <TouchableOpacity
-            style={styles.toolbarButton}
-            onPress={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-          >
-            <Ionicons 
-              name={viewMode === 'grid' ? 'list-outline' : 'grid-outline'} 
-              size={24} 
-              color={colors.text} 
-            />
-          </TouchableOpacity>
-          
-          <TouchableOpacity
             style={[
               styles.toolbarButton,
               { backgroundColor: showFilters ? colors.border : 'transparent' }
             ]}
             onPress={() => setShowFilters(!showFilters)}
           >
-            <Ionicons 
-              name="filter-outline" 
-              size={24} 
-              color={colors.text} 
-            />
+            <View style={{ position: 'relative' }}>
+              <Ionicons 
+                name="filter-outline" 
+                size={24} 
+                color={hasActiveFilters ? '#34A853' : colors.text} 
+              />
+              {hasActiveFilters && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: -2,
+                    right: -2,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 4,
+                    backgroundColor: '#34A853',
+                  }}
+                />
+              )}
+            </View>
           </TouchableOpacity>
         </View>
       </View>
@@ -1814,67 +1772,53 @@ export const SearchScreen: React.FC = () => {
             </ScrollView>
           </View>
 
+          {/* Botón Limpiar filtros */}
+          {hasActiveFilters && (
+            <View style={styles.clearFiltersContainer}>
+              <TouchableOpacity
+                style={styles.clearFiltersButton}
+                onPress={clearFilters}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close-circle-outline" size={16} color="#888" style={{ marginRight: 4 }} />
+                <Text style={styles.clearFiltersText}>Limpiar filtros</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
         </View>
       )}
 
       {/* Lista combinada */}
       {user ? (
-        viewMode === 'list' ? (
-          <SwipeListView
-            data={filteredCollection}
-            renderItem={renderCollectionItem}
-            renderHiddenItem={renderSwipeActions}
-            rightOpenValue={-180}
-            disableRightSwipe
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            previewOpenValue={0}
-            previewOpenDelay={0}
-            ListEmptyComponent={renderEmptyState}
-            contentContainerStyle={filteredCollection.length === 0 ? { flexGrow: 1 } : undefined}
-            ListFooterComponent={
-              releases.length > 0 ? (
-                <View style={styles.footerContainer}>
-                  <Text style={[styles.footerText, { color: colors.text }]}>Resultados de búsqueda en Discogs</Text>
-                  <FlatList
-                    data={releases}
-                    renderItem={renderRelease}
-                    keyExtractor={(item) => item.id.toString()}
-                    showsVerticalScrollIndicator={false}
-                  />
-                </View>
-              ) : null
-            }
-          />
-        ) : (
-          <FlatList
-            data={filteredCollection}
-            renderItem={renderGridItem}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            columnWrapperStyle={styles.gridRow}
-            showsVerticalScrollIndicator={false}
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            ListEmptyComponent={renderEmptyState}
-            contentContainerStyle={filteredCollection.length === 0 ? { flexGrow: 1 } : undefined}
-            ListFooterComponent={
-              releases.length > 0 ? (
-                <View style={styles.footerContainer}>
-                  <Text style={[styles.footerText, { color: colors.text }]}>Resultados de búsqueda en Discogs</Text>
-                  <FlatList
-                    data={releases}
-                    renderItem={renderRelease}
-                    keyExtractor={(item) => item.id.toString()}
-                    showsVerticalScrollIndicator={false}
-                  />
-                </View>
-              ) : null
-            }
-          />
-        )
+        <SwipeListView
+          data={filteredCollection}
+          renderItem={renderCollectionItem}
+          renderHiddenItem={renderSwipeActions}
+          rightOpenValue={-180}
+          disableRightSwipe
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          previewOpenValue={0}
+          previewOpenDelay={0}
+          ListEmptyComponent={renderEmptyState}
+          contentContainerStyle={filteredCollection.length === 0 ? { flexGrow: 1 } : undefined}
+          ListFooterComponent={
+            releases.length > 0 ? (
+              <View style={styles.footerContainer}>
+                <Text style={[styles.footerText, { color: colors.text }]}>Resultados de búsqueda en Discogs</Text>
+                <FlatList
+                  data={releases}
+                  renderItem={renderRelease}
+                  keyExtractor={(item) => item.id.toString()}
+                  showsVerticalScrollIndicator={false}
+                />
+              </View>
+            ) : null
+          }
+        />
       ) : (
         <FlatList
           data={releases}
@@ -2469,6 +2413,25 @@ const styles = StyleSheet.create({
   filterChipTextActive: {
     color: 'white',
   },
+  clearFiltersContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    marginTop: 8,
+  },
+  clearFiltersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: '#888',
+    textDecorationLine: 'underline',
+  },
   collectionItemContainer: {
     marginBottom: 0,
   },
@@ -2506,48 +2469,6 @@ const styles = StyleSheet.create({
   collectionDetail: {
     fontSize: 12,
     marginBottom: 2,
-  },
-  collectionItemGrid: {
-    flex: 1,
-    margin: 5,
-    padding: 10,
-    borderRadius: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
-  },
-  collectionThumbnailGrid: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 4,
-    marginBottom: 8,
-  },
-  collectionInfoGrid: {
-    alignItems: 'flex-start',
-  },
-  collectionTitleGrid: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 4,
-    textAlign: 'left',
-  },
-  collectionArtistGrid: {
-    fontSize: 12,
-    marginBottom: 4,
-    textAlign: 'left',
-  },
-  collectionDetailsGrid: {
-    marginTop: 4,
-  },
-  collectionDetailGrid: {
-    fontSize: 10,
-    marginBottom: 2,
-  },
-
-  gridRow: {
-    justifyContent: 'space-between',
   },
   releaseItem: {
     flexDirection: 'row',
@@ -2973,89 +2894,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  // Estilos para el tag de nota de audio en grid
-  audioTagGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e0f7fa',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  audioTagTextGrid: {
-    fontSize: 10,
-    color: '#007AFF',
-    marginLeft: 5,
-  },
-
-  // Estilos para el tag de gem en grid
-  gemTagGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef3c7',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginTop: 8,
-    marginLeft: 8,
-    alignSelf: 'flex-start',
-  },
-  gemTagTextGrid: {
-    fontSize: 10,
-    color: '#d97706',
-    marginLeft: 5,
-  },
-
-  // Estilos para el tag de estantería en grid
-  shelfTagGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e8f5e9', // Un color más suave para la estantería
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
-    marginTop: 8,
-    alignSelf: 'flex-start',
-  },
-  shelfTagTextGrid: {
-    fontSize: 10,
-    color: '#28a745',
-    marginLeft: 5,
-  },
-
-  // Contenedor para tags en vista de grid
-  tagsContainerGrid: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    marginTop: 4,
-  },
-
-  // Estilos para tags de solo icono en grid
-  audioTagGridIconOnly: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#e0f7fa',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginTop: 8,
-    marginLeft: 8,
-    alignSelf: 'flex-start',
-  },
-  gemTagGridIconOnly: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fef3c7',
-    borderRadius: 12,
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    marginTop: 8,
-    marginLeft: 8,
-    alignSelf: 'flex-start',
-  },
 
   // Estilos para la selección de ubicación física
   selectShelfTitle: {

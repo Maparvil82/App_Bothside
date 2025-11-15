@@ -26,6 +26,7 @@ export const ProfileScreen: React.FC = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
+  const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
 
   useEffect(() => {
     setIsDarkMode(mode === 'dark');
@@ -37,11 +38,14 @@ export const ProfileScreen: React.FC = () => {
       // Actualizar ranking persistido
       GamificationService.upsertUserRanking(user.id).catch((e) => console.warn('upsertUserRanking error:', e));
     }
-    // Cargar preferencia de tema
+    // Cargar preferencias
     (async () => {
       try {
-        const pref = await AsyncStorage.getItem('theme:mode');
-        setIsDarkMode(pref === 'dark');
+        const themePref = await AsyncStorage.getItem('theme:mode');
+        setIsDarkMode(themePref === 'dark');
+        
+        const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
+        setShowSessionEarnings(earningsPref !== 'false'); // Por defecto true
       } catch {}
     })();
   }, [user?.id]);
@@ -132,6 +136,15 @@ export const ProfileScreen: React.FC = () => {
     } catch {}
   };
 
+  const toggleSessionEarnings = async (value: boolean) => {
+    try {
+      setShowSessionEarnings(value);
+      await AsyncStorage.setItem('settings:showSessionEarnings', value.toString());
+    } catch (error) {
+      console.error('Error saving session earnings setting:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }] }>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -161,6 +174,13 @@ export const ProfileScreen: React.FC = () => {
             <Switch
               value={isDarkMode}
               onValueChange={toggleTheme}
+            />
+          </View>
+          <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>Mostrar ganancias de sesiones</Text>
+            <Switch
+              value={showSessionEarnings}
+              onValueChange={toggleSessionEarnings}
             />
           </View>
         </View>

@@ -22,6 +22,8 @@ import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { TopItemsLineChart } from '../components/TopItemsLineChart';
 import ShelfGrid from '../components/ShelfGrid';
 import { CollectorRankCard } from '../components/CollectorRankCard';
+import { SessionEarningsSection } from '../components/SessionEarningsSection';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get('window');
 
@@ -70,6 +72,7 @@ export default function DashboardScreen() {
   const [userPosition, setUserPosition] = useState<number | null>(null);
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
 
   const [shelves, setShelves] = useState<Shelf[]>([]);
 
@@ -539,6 +542,18 @@ export default function DashboardScreen() {
     }
   }, [user?.id, stats]);
 
+  // Cargar preferencia de mostrar ganancias de sesiones
+  useEffect(() => {
+    (async () => {
+      try {
+        const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
+        setShowSessionEarnings(earningsPref !== 'false'); // Por defecto true
+      } catch (error) {
+        console.error('Error loading session earnings setting:', error);
+      }
+    })();
+  }, []);
+
   useEffect(() => {
     fetchCollectionStats();
     fetchShelves();
@@ -548,6 +563,15 @@ export default function DashboardScreen() {
   useFocusEffect(
     useCallback(() => {
       fetchShelves();
+      // Recargar preferencia de mostrar ganancias cuando se vuelve a la pantalla
+      (async () => {
+        try {
+          const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
+          setShowSessionEarnings(earningsPref !== 'false');
+        } catch (error) {
+          console.error('Error loading session earnings setting:', error);
+        }
+      })();
     }, [fetchShelves])
   );
 
@@ -769,6 +793,9 @@ export default function DashboardScreen() {
             ))}
           </View>
         )}
+
+        {/* Sección de Ganancias de Sesiones */}
+        {showSessionEarnings && <SessionEarningsSection />}
 
         {/* Top Artistas */}
         {stats.topArtists.length > 0 && (
