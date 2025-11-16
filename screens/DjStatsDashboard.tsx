@@ -400,42 +400,6 @@ const DjStatsDashboard: React.FC = () => {
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}> 
-      {/* Header premium */}
-      <View style={styles.headerCard}>
-        <View style={styles.headerTopRow}>
-          <View style={styles.headerLeft}>
-            <View style={styles.avatarCircle}>
-              <Text style={styles.avatarText}>{displayInitial}</Text>
-            </View>
-            <View>
-              <Text style={styles.headerGreeting}>Panel DJ</Text>
-              <Text style={styles.headerName}>{displayName}</Text>
-            </View>
-          </View>
-          <TouchableOpacity
-            style={styles.addSessionButton}
-            onPress={() => {
-              console.log('Añadir sesión desde DjStatsDashboard');
-              // Navegación específica a la pantalla de calendario/sesiones si existe ruta
-              // (navigation as any).navigate('Calendar');
-            }}
-          >
-            <Ionicons name="add-outline" size={18} color="#FFFFFF" />
-            <Text style={styles.addSessionText}>Añadir sesión</Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.activityRow}>
-          <View style={styles.activityTextCol}>
-            <Text style={styles.activityLabel}>Nivel de actividad</Text>
-            <Text style={styles.activityValue}>{activityLevel.label}</Text>
-          </View>
-          <View style={styles.activityProgressBar}>
-            <View style={[styles.activityProgressFill, { flex: activityLevel.progress }]} />
-            <View style={{ flex: 1 - activityLevel.progress }} />
-          </View>
-        </View>
-      </View>
 
       {/* Métricas rápidas */}
       <View style={styles.quickMetricsRow}>
