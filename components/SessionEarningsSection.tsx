@@ -50,6 +50,12 @@ export const SessionEarningsSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const isFocused = useIsFocused();
   const scale = useRef(new Animated.Value(1)).current;
+  const monthLabel = React.useMemo(() => {
+    const formatter = new Intl.DateTimeFormat('es-ES', { month: 'long' });
+    const name = formatter.format(new Date());
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }, []);
+  const cardTitleText = `Ganancias de ${monthLabel}`;
 
   const handlePress = () => {
     console.log('🔀 Navegando a DjStatsDashboard desde SessionEarningsSection');
@@ -234,7 +240,7 @@ export const SessionEarningsSection: React.FC = () => {
             <View style={styles.innerGradientLayer}>
               <View style={styles.headerRow}>
                 <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
-                <Text style={styles.cardTitle}>Ganancias del mes</Text>
+                <Text style={styles.cardTitle}>{cardTitleText}</Text>
               </View>
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color="#1F8D59" />
@@ -274,7 +280,7 @@ export const SessionEarningsSection: React.FC = () => {
             <View style={styles.innerGradientLayer}>
               <View style={styles.headerRow}>
                 <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
-                <Text style={styles.cardTitle}>Ganancias del mes</Text>
+                <Text style={styles.cardTitle}>{cardTitleText}</Text>
               </View>
               <View style={styles.emptyContainer}>
                 <Ionicons name="cash-outline" size={28} color="#1F8D59" />
@@ -321,11 +327,11 @@ export const SessionEarningsSection: React.FC = () => {
         }}
         onPress={handlePress}
       >
-        <Animated.View style={[styles.card, { transform: [{ scale }] }] }>
+        <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
           <View style={styles.innerGradientLayer}>
             <View style={styles.headerRow}>
-              <Ionicons name="cash-outline" size={18} color="#4A4A4A" />
-              <Text style={styles.cardTitle}>Ganancias del mes</Text>
+              <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
+              <Text style={styles.cardTitle}>{cardTitleText}</Text>
             </View>
             <View style={styles.earningsContainer}>
               <Text style={styles.earningsAmount}>
@@ -357,14 +363,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 2,
-    backgroundColor: '#E8F8EF',
+    backgroundColor: '#ffffff',
   },
   innerGradientLayer: {
     paddingVertical: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E8F8EF',
+    backgroundColor: '#ffffff',
   },
   headerRow: {
     flexDirection: 'row',
