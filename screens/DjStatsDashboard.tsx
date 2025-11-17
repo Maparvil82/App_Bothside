@@ -12,6 +12,7 @@ import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { DjOverallDashboard, DjOverallDashboardData } from '../components/DjOverallDashboard';
 
 interface SessionRow {
   id: string;
@@ -86,6 +87,12 @@ const formatDuration = (hours: number): string => {
   if (h > 0 && m > 0) return `${h}h ${m}m`;
   if (h > 0) return `${h}h`;
   return `${m}m`;
+};
+
+const formatHoursValue = (hours: number): string => {
+  if (!hours || hours <= 0) return '0 h';
+  if (hours >= 10) return `${Math.round(hours)} h`;
+  return `${hours.toFixed(1)} h`;
 };
 
 const getMonthKey = (date: string): string => {
@@ -354,6 +361,19 @@ const DjStatsDashboard: React.FC = () => {
     };
   }, [sessions, currentMonthKey]);
 
+  const overallDashboardData: DjOverallDashboardData = useMemo(() => {
+    return {
+      ganadoMesActual: formatCurrency(summary.monthEarnings),
+      estimadoMesActual: formatCurrency(summary.monthEstimated),
+      sesionesHechas: summary.monthSessionsDone.toString(),
+      sesionesRestantes: summary.monthSessionsRemaining.toString(),
+      horasPinchadas: formatHoursValue(summary.monthHoursPlayed),
+      horasEstimadas: formatHoursValue(summary.monthHoursEstimated),
+      promedioHora: summary.monthAvgPerHour > 0 ? formatCurrency(summary.monthAvgPerHour) : '0 €',
+      intervaloMasComun: summary.monthMostCommonInterval ?? '–',
+    };
+  }, [summary]);
+
   const monthlyEarnings = useMemo(() => {
     const map = new Map<string, number>();
     sessions.forEach((s) => {
@@ -476,11 +496,24 @@ const DjStatsDashboard: React.FC = () => {
     );
   }
 
-  const displayName = ((user as any)?.username as string | undefined) || user?.email || 'DJ Bothside';
+  const userFullName =
+    ((user as any)?.user_metadata?.full_name as string | undefined) ||
+    ((user as any)?.user_metadata?.name as string | undefined) ||
+    ((user as any)?.full_name as string | undefined);
+  const displayName =
+    userFullName ||
+    ((user as any)?.username as string | undefined) ||
+    (user?.email ? user.email.split('@')[0] : 'DJ Bothside');
   const displayInitial = displayName[0]?.toUpperCase() || 'D';
 
   return (
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]}> 
+
+      <Text style={styles.greetingText}>Hola {displayName}</Text>
+
+      <View style={styles.overallDashboardWrapper}>
+        <DjOverallDashboard data={overallDashboardData} />
+      </View>
 
       {/* Métricas rápidas */}
       <View style={styles.quickMetricsRow}>
@@ -545,6 +578,18 @@ const DjStatsDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  greetingText: {
+    marginHorizontal: 16,
+    marginTop: 20,
+    marginBottom: 10,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#323232',
+  },
+  overallDashboardWrapper: {
+    marginHorizontal: 16,
+    marginTop: 16,
   },
   headerCard: {
     marginHorizontal: 16,

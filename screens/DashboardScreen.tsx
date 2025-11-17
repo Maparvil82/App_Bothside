@@ -11,7 +11,6 @@ import {
   Dimensions,
   Image,
   SafeAreaView,
-  DeviceEventEmitter,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -24,9 +23,7 @@ import { TopItemsLineChart } from '../components/TopItemsLineChart';
 import ShelfGrid from '../components/ShelfGrid';
 import { CollectorRankCard } from '../components/CollectorRankCard';
 import { SessionEarningsSection } from '../components/SessionEarningsSection';
-import { DjOverallDashboard, DjOverallDashboardData } from '../components/DjOverallDashboard';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { formatCurrencyES } from '../src/utils/formatCurrency';
 
 const { width } = Dimensions.get('window');
 
@@ -63,24 +60,6 @@ interface AudioNoteAlbum {
   added_at: string;
 }
 
-interface SessionRow {
-  id: string;
-  date: string;
-  start_time: string | null;
-  end_time: string | null;
-  payment_type: 'cerrado' | 'hora' | 'gratis' | null;
-  payment_amount: number | null;
-}
-
-const buildDateTimeFromParts = (baseDate: Date, time: string | null): Date | null => {
-  if (!time) return null;
-  const [h, m] = time.split(':').map((v) => parseInt(v, 10));
-  if (Number.isNaN(h) || Number.isNaN(m)) return null;
-  const d = new Date(baseDate);
-  d.setHours(h, m, 0, 0);
-  return d;
-};
-
 const extractAlbumStats = (album: any) => {
   if (!album) return null;
   const stats = album.album_stats;
@@ -88,28 +67,6 @@ const extractAlbumStats = (album: any) => {
     return stats[0];
   }
   return stats || null;
-};
-
-const getDurationHours = (dateString: string, start: string | null, end: string | null): number => {
-  if (!start || !end) return 0;
-  const baseDate = new Date(dateString);
-  const startDt = buildDateTimeFromParts(baseDate, start);
-  let endDt = buildDateTimeFromParts(baseDate, end);
-  if (!startDt || !endDt) return 0;
-  if (endDt <= startDt) {
-    endDt.setDate(endDt.getDate() + 1);
-  }
-  const diffMs = endDt.getTime() - startDt.getTime();
-  if (diffMs <= 0) return 0;
-  return diffMs / (1000 * 60 * 60);
-};
-
-const formatHoursValue = (hours: number): string => {
-  if (!hours || hours <= 0) return '0 h';
-  if (hours >= 10) {
-    return `${Math.round(hours)} h`;
-  }
-  return `${hours.toFixed(1)} h`;
 };
 
 export default function DashboardScreen() {
@@ -127,8 +84,6 @@ export default function DashboardScreen() {
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
 
   const [shelves, setShelves] = useState<Shelf[]>([]);
-  const [djDashboardData, setDjDashboardData] = useState<DjOverallDashboardData | null>(null);
-  const [loadingDjDashboard, setLoadingDjDashboard] = useState(false);
 
   // Si la autenticación aún está cargando, mostrar loading
   if (authLoading) {
@@ -472,110 +427,6 @@ export default function DashboardScreen() {
     }
   }, [user]);
 
-  const loadDjDashboard = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      setLoadingDjDashboard(true);
-      const { data, error } = await supabase
-        .from('sessions')
-        .select('id, date, start_time, end_time, payment_type, payment_amount')
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      const sessions: SessionRow[] = data || [];
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-
-      const isCurrentMonth = (dateString: string): boolean => {
-        const d = new Date(dateString);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      };
-
-      const validSessions = sessions.filter(
-        (s) =>
-          s.payment_type &&
-          s.payment_type !== 'gratis' &&
-          s.payment_amount &&
-          s.payment_amount > 0
-      );
-
-      const currentMonthSessions = sessions.filter((s) => isCurrentMonth(s.date));
-      const pastSessionsThisMonth = currentMonthSessions.filter((s) => {
-        const d = new Date(s.date);
-        d.setHours(0, 0, 0, 0);
-        return d < today;
-      });
-
-      const paidPastSessionsThisMonth = pastSessionsThisMonth.filter(
-        (s) => s.payment_type !== 'gratis' && s.payment_amount && s.payment_amount > 0
-      );
-
-      const monthEarnings = paidPastSessionsThisMonth.reduce(
-        (sum, s) => sum + (s.payment_amount || 0),
-        0
-      );
-
-      const paidSessionsThisMonth = validSessions.filter((s) => isCurrentMonth(s.date));
-      const monthEstimated = paidSessionsThisMonth.reduce(
-        (sum, s) => sum + (s.payment_amount || 0),
-        0
-      );
-
-      const monthSessionsDone = pastSessionsThisMonth.length;
-      const monthSessionsRemaining = Math.max(currentMonthSessions.length - monthSessionsDone, 0);
-
-      const monthHoursPlayed = pastSessionsThisMonth.reduce(
-        (sum, s) => sum + getDurationHours(s.date, s.start_time, s.end_time),
-        0
-      );
-
-      const monthHoursEstimated = currentMonthSessions.reduce(
-        (sum, s) => sum + getDurationHours(s.date, s.start_time, s.end_time),
-        0
-      );
-
-      const monthAvgPerHour = monthHoursPlayed > 0 ? monthEarnings / monthHoursPlayed : 0;
-
-      const intervalCounts = new Map<string, number>();
-      pastSessionsThisMonth.forEach((s) => {
-        if (!s.start_time || !s.end_time) return;
-        const formatTime = (time: string) => time.slice(0, 5);
-        const key = `${formatTime(s.start_time)} - ${formatTime(s.end_time)}`;
-        intervalCounts.set(key, (intervalCounts.get(key) || 0) + 1);
-      });
-
-      let monthMostCommonInterval: string | null = null;
-      let maxCount = 0;
-      intervalCounts.forEach((count, key) => {
-        if (count > maxCount) {
-          maxCount = count;
-          monthMostCommonInterval = key;
-        }
-      });
-
-      setDjDashboardData({
-        ganadoMesActual: formatCurrencyES(monthEarnings),
-        estimadoMesActual: formatCurrencyES(monthEstimated),
-        sesionesHechas: monthSessionsDone.toString(),
-        sesionesRestantes: monthSessionsRemaining.toString(),
-        horasPinchadas: formatHoursValue(monthHoursPlayed),
-        horasEstimadas: formatHoursValue(monthHoursEstimated),
-        promedioHora: monthAvgPerHour > 0 ? `${formatCurrencyES(monthAvgPerHour)}` : '0 €',
-        intervaloMasComun: monthMostCommonInterval ?? '–',
-      });
-    } catch (error) {
-      console.error('Error loading DJ overall dashboard data:', error);
-    } finally {
-      setLoadingDjDashboard(false);
-    }
-  }, [user?.id]);
-
   const loadAlbumsWithAudio = useCallback(async () => {
     if (!user) return;
 
@@ -719,13 +570,11 @@ export default function DashboardScreen() {
     fetchCollectionStats();
     fetchShelves();
     loadAlbumsWithAudio();
-    loadDjDashboard();
-  }, [user, fetchCollectionStats, fetchShelves, loadAlbumsWithAudio, loadDjDashboard]);
+  }, [user, fetchCollectionStats, fetchShelves, loadAlbumsWithAudio]);
 
   useFocusEffect(
     useCallback(() => {
       fetchShelves();
-      loadDjDashboard();
       // Recargar preferencia de mostrar ganancias cuando se vuelve a la pantalla
       (async () => {
         try {
@@ -735,15 +584,8 @@ export default function DashboardScreen() {
           console.error('Error loading session earnings setting:', error);
         }
       })();
-    }, [fetchShelves, loadDjDashboard])
+    }, [fetchShelves])
   );
-
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('sessionsUpdated', loadDjDashboard);
-    return () => {
-      sub.remove();
-    };
-  }, [loadDjDashboard]);
 
   if (loading) {
     return (
@@ -792,18 +634,6 @@ export default function DashboardScreen() {
       >
         {/* Ganancias de sesiones (primera card) */}
         {showSessionEarnings && <SessionEarningsSection />}
-
-        {/* Dashboard general DJ */}
-        <View style={styles.dashboardWrapper}>
-          {djDashboardData ? (
-            <DjOverallDashboard data={djDashboardData} />
-          ) : (
-            <View style={styles.dashboardPlaceholder}>
-              <ActivityIndicator size="small" color="#ffffff" />
-              <Text style={styles.dashboardPlaceholderText}>Calculando métricas...</Text>
-            </View>
-          )}
-        </View>
 
         {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
@@ -979,9 +809,6 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Sección de Ganancias de Sesiones */}
-        {showSessionEarnings && <SessionEarningsSection />}
-
         {/* Top Artistas */}
         {stats.topArtists.length > 0 && (
           <TopItemsLineChart 
@@ -1124,23 +951,6 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
     padding: 10,
     gap: 10,
-  },
-  dashboardWrapper: {
-    marginHorizontal: 16,
-    marginTop: 16,
-  },
-  dashboardPlaceholder: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 16,
-    paddingVertical: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dashboardPlaceholderText: {
-    color: '#FFFFFF',
-    marginTop: 10,
-    fontSize: 13,
-    opacity: 0.7,
   },
   statCard: {
     flex: 1,

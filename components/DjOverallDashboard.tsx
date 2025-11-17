@@ -145,11 +145,11 @@ const styles = StyleSheet.create({
   miniGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    justifyContent: 'space-between',
   },
   miniCard: {
-    flexBasis: '30%',
-    flexGrow: 1,
+    width: '48%',
+    marginBottom: 12,
     backgroundColor: '#E6E6E6',
     borderRadius: 12,
     paddingVertical: 16,
