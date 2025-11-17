@@ -1091,6 +1091,13 @@ export default function CalendarScreen() {
               ? getColorForTag(daySessions[0].tag)
               : undefined;
 
+            const today = new Date();
+            const isToday =
+              calendarDay.isCurrentMonth &&
+              today.getFullYear() === currentDate.getFullYear() &&
+              today.getMonth() === currentDate.getMonth() &&
+              today.getDate() === calendarDay.day;
+
             return (
               <TouchableOpacity
                 key={index}
@@ -1116,6 +1123,10 @@ export default function CalendarScreen() {
                     {selectedDay === calendarDay.day ? (
                       <View style={styles.selectedDayCircle}>
                         <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
+                      </View>
+                    ) : isToday ? (
+                      <View style={styles.todayCircle}>
+                        <Text style={[styles.dayNumber, styles.dayNumberToday]}>{calendarDay.day}</Text>
                       </View>
                     ) : (
                       <Text style={styles.dayNumber}>{calendarDay.day}</Text>
@@ -1520,6 +1531,18 @@ const styles = StyleSheet.create({
   dayNumberSelected: {
     fontWeight: '700',
     color: '#1B1B1B',
+  },
+  todayCircle: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    backgroundColor: '#22C55E',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayNumberToday: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,
