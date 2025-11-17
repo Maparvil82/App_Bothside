@@ -515,62 +515,7 @@ const DjStatsDashboard: React.FC = () => {
         <DjOverallDashboard data={overallDashboardData} />
       </View>
 
-      {/* Métricas rápidas */}
-      <View style={styles.quickMetricsRow}>
-        <View style={styles.quickMetricCard}>
-          <View style={styles.quickMetricHeader}>
-            <Text style={styles.quickMetricLabel}>
-              Ganado en <Text style={{ fontWeight: '700' }}>{currentMonthName}</Text>
-            </Text>
-          </View>
-          <Text style={styles.quickMetricValue}>{formatCurrency(summary.monthEarnings)}</Text>
-        </View>
-        <View style={styles.quickMetricCard}>
-          <View style={styles.quickMetricHeader}>
-            <Text style={styles.quickMetricLabel}>
-              Estimado en <Text style={{ fontWeight: '700' }}>{currentMonthName}</Text>
-            </Text>
-          </View>
-          <Text style={styles.quickMetricValue}>{formatCurrency(summary.monthEstimated)}</Text>
-        </View>
-      </View>
-
-      <View style={styles.section}>
-        <SectionTitle icon="calendar-outline" title={`Resumen ${currentMonthName}`} />
-        <View style={styles.summaryStatsRow}>
-          <View style={styles.summaryStatItem}>
-            <Text style={styles.summaryStatLabel}>Sesiones hechas</Text>
-            <Text style={styles.summaryStatValue}>{summary.monthSessionsDone}</Text>
-          </View>
-          <View style={styles.summaryStatItem}>
-            <Text style={styles.summaryStatLabel}>Sesiones restantes</Text>
-            <Text style={styles.summaryStatValue}>{summary.monthSessionsRemaining}</Text>
-          </View>
-        </View>
-        <View style={styles.summaryStatsRow}>
-          <View style={styles.summaryStatItem}>
-            <Text style={styles.summaryStatLabel}>Horas pinchadas</Text>
-            <Text style={styles.summaryStatValue}>{summary.monthHoursPlayed.toFixed(1)}h</Text>
-          </View>
-          <View style={styles.summaryStatItem}>
-            <Text style={styles.summaryStatLabel}>Horas estimadas</Text>
-            <Text style={styles.summaryStatValue}>{summary.monthHoursEstimated.toFixed(1)}h</Text>
-          </View>
-        </View>
-        <View style={styles.summaryStatsRow}>
-          <View style={styles.summaryStatItem}>
-            <Text style={styles.summaryStatLabel}>Promedio €/h (hecho)</Text>
-            <Text style={styles.summaryStatValue}>{formatCurrency(summary.monthAvgPerHour || 0)}</Text>
-          </View>
-          <View style={styles.summaryStatItem}>
-            <Text style={styles.summaryStatLabel}>Intervalo más común</Text>
-            <Text style={styles.summaryStatValue}>
-              {summary.monthMostCommonInterval || '-'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
+      
       </ScrollView>
   );
 };
