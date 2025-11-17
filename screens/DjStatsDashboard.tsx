@@ -209,6 +209,8 @@ const DjStatsDashboard: React.FC = () => {
 
   const now = new Date();
   const currentMonthKey = getMonthKey(now.toISOString());
+  const currentMonthNameRaw = now.toLocaleDateString('es-ES', { month: 'long' });
+  const currentMonthName = currentMonthNameRaw.charAt(0).toUpperCase() + currentMonthNameRaw.slice(1);
 
   const summary = useMemo(() => {
     if (!sessions.length) {
@@ -244,11 +246,40 @@ const DjStatsDashboard: React.FC = () => {
       }
     });
 
-    const monthEarnings = sessions
-      .filter((s) => getMonthKey(s.date) === currentMonthKey && s.payment_amount && s.payment_amount > 0)
-      .reduce((sum, s) => sum + (s.payment_amount || 0), 0);
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
 
-    const monthEstimated = monthEarnings; // aquí podrías extender lógica futura
+    const isCurrentMonth = (dateString: string): boolean => {
+      const d = new Date(dateString);
+      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+    };
+
+    const validSessions = sessions.filter((s) => {
+      return (
+        s.payment_type &&
+        s.payment_type !== 'gratis' &&
+        s.payment_amount &&
+        s.payment_amount > 0
+      );
+    });
+
+    const pastSessionsCurrentMonth = validSessions.filter((s) => {
+      const d = new Date(s.date);
+      d.setHours(0, 0, 0, 0);
+      return d < today && isCurrentMonth(s.date);
+    });
+
+    const monthEarnings = pastSessionsCurrentMonth.reduce(
+      (sum, s) => sum + (s.payment_amount || 0),
+      0,
+    );
+
+    const currentMonthSessions = validSessions.filter((s) => isCurrentMonth(s.date));
+
+    const monthEstimated = currentMonthSessions.reduce(
+      (sum, s) => sum + (s.payment_amount || 0),
+      0,
+    );
 
     const avgPerSession = totalSessions > 0 ? totalEarnings / totalSessions : 0;
 
@@ -405,22 +436,17 @@ const DjStatsDashboard: React.FC = () => {
       <View style={styles.quickMetricsRow}>
         <View style={styles.quickMetricCard}>
           <View style={styles.quickMetricHeader}>
-            <Ionicons name="cash-outline" size={16} color="#16A34A" />
-            <Text style={styles.quickMetricLabel}>Ganado este mes</Text>
+            <Text style={styles.quickMetricLabel}>
+              Ganado en <Text style={{ fontWeight: '700' }}>{currentMonthName}</Text>
+            </Text>
           </View>
           <Text style={styles.quickMetricValue}>{formatCurrency(summary.monthEarnings)}</Text>
         </View>
         <View style={styles.quickMetricCard}>
           <View style={styles.quickMetricHeader}>
-            <Ionicons name="time-outline" size={16} color="#0EA5E9" />
-            <Text style={styles.quickMetricLabel}>Horas este mes</Text>
-          </View>
-          <Text style={styles.quickMetricValue}>{summary.monthHours.toFixed(1)}h</Text>
-        </View>
-        <View style={styles.quickMetricCard}>
-          <View style={styles.quickMetricHeader}>
-            <Ionicons name="trending-up-outline" size={16} color="#F97316" />
-            <Text style={styles.quickMetricLabel}>Estimado mes</Text>
+            <Text style={styles.quickMetricLabel}>
+              Estimado en <Text style={{ fontWeight: '700' }}>{currentMonthName}</Text>
+            </Text>
           </View>
           <Text style={styles.quickMetricValue}>{formatCurrency(summary.monthEstimated)}</Text>
         </View>
@@ -757,8 +783,8 @@ const styles = StyleSheet.create({
   quickMetricCard: {
     flex: 1,
     marginHorizontal: 4,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingVertical: 22,
+    paddingHorizontal: 18,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
@@ -766,6 +792,7 @@ const styles = StyleSheet.create({
     shadowRadius: 10,
     shadowOffset: { width: 0, height: 4 },
     elevation: 2,
+    justifyContent: 'center',
   },
   quickMetricHeader: {
     flexDirection: 'row',
@@ -774,15 +801,16 @@ const styles = StyleSheet.create({
   },
   quickMetricLabel: {
     marginLeft: 6,
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '500',
     color: '#6B7280',
   },
   quickMetricValue: {
-    marginTop: 6,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    marginTop: 12,
+    fontSize: 32,
+    fontWeight: '700',
+    color: '#12bd5cff',
+    textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,

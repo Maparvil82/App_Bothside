@@ -233,7 +233,7 @@ export const SessionEarningsSection: React.FC = () => {
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
               <View style={styles.headerRow}>
-                <Ionicons name="cash-outline" size={18} color="#4A4A4A" />
+                <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
                 <Text style={styles.cardTitle}>Ganancias del mes</Text>
               </View>
               <View style={styles.loadingContainer}>
@@ -273,7 +273,7 @@ export const SessionEarningsSection: React.FC = () => {
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
               <View style={styles.headerRow}>
-                <Ionicons name="cash-outline" size={18} color="#4A4A4A" />
+                <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
                 <Text style={styles.cardTitle}>Ganancias del mes</Text>
               </View>
               <View style={styles.emptyContainer}>
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     overflow: 'hidden',
-    minHeight: 140,
+    minHeight: 180,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
@@ -360,7 +360,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#E8F8EF',
   },
   innerGradientLayer: {
-    paddingVertical: 14,
+    paddingVertical: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -369,10 +369,10 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    
+    marginBottom: 16,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: '600',
     color: '#4A4A4A',
     marginLeft: 8,
@@ -405,16 +405,16 @@ const styles = StyleSheet.create({
   },
   earningsContainer: {
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   earningsAmount: {
-    fontSize: 34,
+    fontSize: 56,
     fontWeight: '700',
     color: '#1F8D59',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   earningsSubtext: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '400',
     textAlign: 'center',
     marginTop: 4,
