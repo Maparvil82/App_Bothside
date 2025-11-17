@@ -226,6 +226,8 @@ const DjStatsDashboard: React.FC = () => {
         monthSessionsRemaining: 0,
         monthHoursPlayed: 0,
         monthHoursEstimated: 0,
+        monthAvgPerHour: 0,
+        monthMostCommonInterval: null as string | null,
         bestSession: null as { name: string; amount: number } | null,
       };
     }
@@ -304,6 +306,25 @@ const DjStatsDashboard: React.FC = () => {
       0,
     );
 
+    const monthAvgPerHour = monthHoursPlayed > 0 ? monthEarnings / monthHoursPlayed : 0;
+
+    const intervalCounts = new Map<string, number>();
+    pastSessionsAllCurrentMonth.forEach((s) => {
+      if (!s.start_time || !s.end_time) return;
+      const formatTime = (t: string) => t.slice(0, 5); // HH:MM
+      const key = `${formatTime(s.start_time)} - ${formatTime(s.end_time)}`;
+      intervalCounts.set(key, (intervalCounts.get(key) || 0) + 1);
+    });
+
+    let monthMostCommonInterval: string | null = null;
+    let maxCount = 0;
+    intervalCounts.forEach((count, key) => {
+      if (count > maxCount) {
+        maxCount = count;
+        monthMostCommonInterval = key;
+      }
+    });
+
     const avgPerSession = totalSessions > 0 ? totalEarnings / totalSessions : 0;
 
     let bestSession: { name: string; amount: number } | null = null;
@@ -327,6 +348,8 @@ const DjStatsDashboard: React.FC = () => {
       monthSessionsRemaining,
       monthHoursPlayed,
       monthHoursEstimated,
+      monthAvgPerHour,
+      monthMostCommonInterval,
       bestSession,
     };
   }, [sessions, currentMonthKey]);
@@ -499,6 +522,18 @@ const DjStatsDashboard: React.FC = () => {
           <View style={styles.summaryStatItem}>
             <Text style={styles.summaryStatLabel}>Horas estimadas</Text>
             <Text style={styles.summaryStatValue}>{summary.monthHoursEstimated.toFixed(1)}h</Text>
+          </View>
+        </View>
+        <View style={styles.summaryStatsRow}>
+          <View style={styles.summaryStatItem}>
+            <Text style={styles.summaryStatLabel}>Promedio €/h (hecho)</Text>
+            <Text style={styles.summaryStatValue}>{formatCurrency(summary.monthAvgPerHour || 0)}</Text>
+          </View>
+          <View style={styles.summaryStatItem}>
+            <Text style={styles.summaryStatLabel}>Intervalo más común</Text>
+            <Text style={styles.summaryStatValue}>
+              {summary.monthMostCommonInterval || '-'}
+            </Text>
           </View>
         </View>
       </View>
@@ -876,7 +911,7 @@ const styles = StyleSheet.create({
   summaryCard: {
     marginHorizontal: 16,
     marginTop: 16,
-    padding: 18,
+    padding: 16,
     borderRadius: 16,
     backgroundColor: '#F5F7FB',
     shadowColor: '#000',
@@ -942,9 +977,9 @@ const styles = StyleSheet.create({
     color: '#6E7A89',
   },
   summaryStatValue: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: '600',
-    color: '#111827',
+    color: '#12161eff',
     marginTop: 4,
   },
   bestSessionRow: {
