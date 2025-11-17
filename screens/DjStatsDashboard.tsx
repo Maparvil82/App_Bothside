@@ -515,6 +515,15 @@ const DjStatsDashboard: React.FC = () => {
         <DjOverallDashboard data={overallDashboardData} />
       </View>
 
+      <View style={styles.ctaCard}>
+        <Text style={styles.ctaTitle}>DJ Planner Pro</Text>
+        <Text style={styles.ctaText}>
+          Bothside incluye funciones esenciales para registrar tus sesiones. Si quieres estadísticas
+          avanzadas, análisis de ingresos, informes y un panel profesional, prueba nuestra app
+          especializada <Text style={styles.ctaTextLink}>DJ Planner Pro</Text>.
+        </Text>
+      </View>
+
       
       </ScrollView>
   );
@@ -535,6 +544,24 @@ const styles = StyleSheet.create({
   overallDashboardWrapper: {
     marginHorizontal: 16,
     marginTop: 16,
+  },
+  ctaCard: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    backgroundColor: '#111',
+    borderRadius: 16,
+    padding: 16,
+  },
+  ctaTitle: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  ctaText: {
+    color: '#D4D4D4',
+    fontSize: 14,
+    lineHeight: 20,
   },
   headerCard: {
     marginHorizontal: 16,
@@ -987,6 +1014,10 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     color: '#4B5563',
+  },
+  ctaTextLink: {
+    color: '#1F8D59',
+    fontWeight: '700',
   },
 });
 
