@@ -222,6 +222,10 @@ const DjStatsDashboard: React.FC = () => {
         avgPerSession: 0,
         totalHours: 0,
         monthHours: 0,
+        monthSessionsDone: 0,
+        monthSessionsRemaining: 0,
+        monthHoursPlayed: 0,
+        monthHoursEstimated: 0,
         bestSession: null as { name: string; amount: number } | null,
       };
     }
@@ -246,12 +250,9 @@ const DjStatsDashboard: React.FC = () => {
       }
     });
 
-    const currentMonth = today.getMonth();
-    const currentYear = today.getFullYear();
-
     const isCurrentMonth = (dateString: string): boolean => {
       const d = new Date(dateString);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      return d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
     };
 
     const validSessions = sessions.filter((s) => {
@@ -281,6 +282,28 @@ const DjStatsDashboard: React.FC = () => {
       0,
     );
 
+    const sessionsInCurrentMonth = sessions.filter((s) => isCurrentMonth(s.date));
+
+    const pastSessionsAllCurrentMonth = sessionsInCurrentMonth.filter((s) => {
+      const d = new Date(s.date);
+      d.setHours(0, 0, 0, 0);
+      return d < today;
+    });
+
+    const monthSessionsDone = pastSessionsAllCurrentMonth.length;
+    const monthSessionsTotal = sessionsInCurrentMonth.length;
+    const monthSessionsRemaining = Math.max(monthSessionsTotal - monthSessionsDone, 0);
+
+    const monthHoursPlayed = pastSessionsAllCurrentMonth.reduce(
+      (sum, s) => sum + (s.durationHours || 0),
+      0,
+    );
+
+    const monthHoursEstimated = sessionsInCurrentMonth.reduce(
+      (sum, s) => sum + (s.durationHours || 0),
+      0,
+    );
+
     const avgPerSession = totalSessions > 0 ? totalEarnings / totalSessions : 0;
 
     let bestSession: { name: string; amount: number } | null = null;
@@ -300,6 +323,10 @@ const DjStatsDashboard: React.FC = () => {
       avgPerSession,
       totalHours,
       monthHours,
+      monthSessionsDone,
+      monthSessionsRemaining,
+      monthHoursPlayed,
+      monthHoursEstimated,
       bestSession,
     };
   }, [sessions, currentMonthKey]);
@@ -449,6 +476,30 @@ const DjStatsDashboard: React.FC = () => {
             </Text>
           </View>
           <Text style={styles.quickMetricValue}>{formatCurrency(summary.monthEstimated)}</Text>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <SectionTitle icon="calendar-outline" title={`Resumen ${currentMonthName}`} />
+        <View style={styles.summaryStatsRow}>
+          <View style={styles.summaryStatItem}>
+            <Text style={styles.summaryStatLabel}>Sesiones hechas</Text>
+            <Text style={styles.summaryStatValue}>{summary.monthSessionsDone}</Text>
+          </View>
+          <View style={styles.summaryStatItem}>
+            <Text style={styles.summaryStatLabel}>Sesiones restantes</Text>
+            <Text style={styles.summaryStatValue}>{summary.monthSessionsRemaining}</Text>
+          </View>
+        </View>
+        <View style={styles.summaryStatsRow}>
+          <View style={styles.summaryStatItem}>
+            <Text style={styles.summaryStatLabel}>Horas pinchadas</Text>
+            <Text style={styles.summaryStatValue}>{summary.monthHoursPlayed.toFixed(1)}h</Text>
+          </View>
+          <View style={styles.summaryStatItem}>
+            <Text style={styles.summaryStatLabel}>Horas estimadas</Text>
+            <Text style={styles.summaryStatValue}>{summary.monthHoursEstimated.toFixed(1)}h</Text>
+          </View>
         </View>
       </View>
 
@@ -784,7 +835,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 4,
     paddingVertical: 22,
-    paddingHorizontal: 18,
+    paddingHorizontal: 8,
     borderRadius: 16,
     backgroundColor: '#FFFFFF',
     shadowColor: '#000',
@@ -801,13 +852,13 @@ const styles = StyleSheet.create({
   },
   quickMetricLabel: {
     marginLeft: 6,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '500',
     color: '#6B7280',
   },
   quickMetricValue: {
     marginTop: 12,
-    fontSize: 32,
+    fontSize: 40,
     fontWeight: '700',
     color: '#12bd5cff',
     textAlign: 'center',
@@ -857,7 +908,7 @@ const styles = StyleSheet.create({
     paddingLeft: 16,
   },
   summaryLabel: {
-    fontSize: 13,
+    fontSize: 14,
     color: '#6E7A89',
     marginBottom: 4,
   },
@@ -872,7 +923,7 @@ const styles = StyleSheet.create({
     color: '#111827',
   },
   summaryHint: {
-    fontSize: 12,
+    fontSize: 14,
     marginTop: 2,
     color: '#6E7A89',
   },
@@ -887,11 +938,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   summaryStatLabel: {
-    fontSize: 12,
+    fontSize: 16,
     color: '#6E7A89',
   },
   summaryStatValue: {
-    fontSize: 14,
+    fontSize: 32,
     fontWeight: '600',
     color: '#111827',
     marginTop: 4,
