@@ -94,7 +94,7 @@ export const DjOverallDashboard: React.FC<DjOverallDashboardProps> = ({
 const styles = StyleSheet.create({
   container: {
     backgroundColor: '#1A1A1A',
-    borderRadius: 16,
+    borderRadius: 8,
     padding: 20,
     width: '100%',
   },
@@ -151,7 +151,7 @@ const styles = StyleSheet.create({
     width: '48%',
     marginBottom: 12,
     backgroundColor: '#E6E6E6',
-    borderRadius: 12,
+    borderRadius: 8,
     paddingVertical: 16,
     paddingHorizontal: 10,
     alignItems: 'center',
