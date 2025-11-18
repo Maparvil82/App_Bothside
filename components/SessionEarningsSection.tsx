@@ -239,7 +239,7 @@ export const SessionEarningsSection: React.FC = () => {
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
               <View style={styles.headerRow}>
-                <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
+                <Ionicons name="cash-outline" size={20} color="#ffffff" />
                 <Text style={styles.cardTitle}>{cardTitleText}</Text>
               </View>
               <View style={styles.loadingContainer}>
@@ -278,12 +278,9 @@ export const SessionEarningsSection: React.FC = () => {
         >
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
-              <View style={styles.headerRow}>
-                <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
-                <Text style={styles.cardTitle}>{cardTitleText}</Text>
-              </View>
+             
               <View style={styles.emptyContainer}>
-                <Ionicons name="cash-outline" size={28} color="#1F8D59" />
+                
                 <Text style={styles.emptyText}>No hay ganancias registradas</Text>
                 <Text style={styles.emptySubtext}>
                   Las ganancias de tus sesiones aparecerán aquí
@@ -330,18 +327,26 @@ export const SessionEarningsSection: React.FC = () => {
         <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
           <View style={styles.innerGradientLayer}>
             <View style={styles.headerRow}>
-              <Ionicons name="cash-outline" size={20} color="#4A4A4A" />
+              
               <Text style={styles.cardTitle}>{cardTitleText}</Text>
             </View>
             <View style={styles.earningsContainer}>
-              <Text style={styles.earningsAmount}>
-                {formatCurrencyES(earningsData.realEarnings)}
-              </Text>
-              <Text style={styles.earningsSubtext}>
-                Estimado mes completo: {formatCurrencyES(earningsData.estimatedMonthEarnings)}
-              </Text>
-
+              <View style={styles.earningsColumn}>
+                <Text style={styles.earningsAmount}>
+                  {formatCurrencyES(earningsData.realEarnings)}
+                </Text>
+                <Text style={styles.earningsLabel}>Ganado este mes</Text>
+              </View>
+              <View style={styles.earningsColumn}>
+                <Text style={styles.earningsAmount}>
+                  {formatCurrencyES(earningsData.estimatedMonthEarnings)}
+                </Text>
+                <Text style={styles.earningsLabel}>Estimado del mes</Text>
+              </View>
             </View>
+            
+              <Text style={styles.statsButtonText}>Ver estadísticas</Text>
+           
           </View>
         </Animated.View>
       </TouchableOpacity>
@@ -363,14 +368,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1c1c1c',
   },
   innerGradientLayer: {
     paddingVertical: 24,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#1c1c1c',
   },
   headerRow: {
     flexDirection: 'row',
@@ -380,7 +385,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#4A4A4A',
+    color: '#ffffff',
     marginLeft: 8,
   },
   loadingContainer: {
@@ -410,21 +415,26 @@ const styles = StyleSheet.create({
     color: 'rgba(0,0,0,0.45)',
   },
   earningsContainer: {
-    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     paddingVertical: 8,
+    gap: 20,
+  },
+  earningsColumn: {
+    flex: 1,
+    alignItems: 'center',
   },
   earningsAmount: {
-    fontSize: 56,
+    fontSize: 42,
     fontWeight: '700',
-    color: '#1F8D59',
-    marginBottom: 8,
+    color: '#ffffff',
+    marginBottom: 4,
   },
-  earningsSubtext: {
-    fontSize: 16,
+  earningsLabel: {
+    fontSize: 14,
     fontWeight: '400',
     textAlign: 'center',
-    marginTop: 4,
-    color: '#373737',
+    color: '#ffffff',
   },
   lastSessionText: {
     fontSize: 12,
@@ -432,6 +442,22 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 10,
     color: 'rgba(0,0,0,0.45)',
+  },
+  statsButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: '#3A3A3A',
+    alignSelf: 'center',
+  },
+  statsButtonText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: '#FFFFFF',
+    marginTop: 16,
   },
 });
 
