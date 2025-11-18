@@ -809,44 +809,66 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Top Artistas */}
-        {stats.topArtists.length > 0 && (
-          <TopItemsLineChart 
-            data={stats.topArtists} 
-            title="Top 5 Artistas" 
-            keyName="artist" 
-            icon="people" 
-          />
-        )}
+        {/* Gráficas en scroll horizontal */}
+        {(stats.topArtists.length > 0 || stats.topLabels.length > 0 || stats.topStyles.length > 0 || stats.albumsByDecade.length > 0) && (
+          <View>
+            <ScrollView 
+              horizontal 
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chartsScrollContainer}
+              style={styles.chartsScrollView}
+              pagingEnabled
+            >
+            {stats.topArtists.length > 0 && (
+              <View style={styles.chartItem}>
+                <TopItemsLineChart 
+                  data={stats.topArtists} 
+                  title="Top 5 Artistas" 
+                  keyName="artist" 
+                  icon="people" 
+                />
+              </View>
+            )}
 
-        {/* Top Sellos */}
-        {stats.topLabels.length > 0 && (
-          <TopItemsLineChart 
-            data={stats.topLabels} 
-            title="Top 5 Sellos" 
-            keyName="label" 
-            icon="business" 
-          />
-        )}
+            {stats.topLabels.length > 0 && (
+              <View style={styles.chartItem}>
+                <TopItemsLineChart 
+                  data={stats.topLabels} 
+                  title="Top 5 Sellos" 
+                  keyName="label" 
+                  icon="business" 
+                />
+              </View>
+            )}
 
-        {/* Top Estilos */}
-        {stats.topStyles.length > 0 && (
-          <TopItemsLineChart 
-            data={stats.topStyles} 
-            title="Top 5 Estilos" 
-            keyName="style" 
-            icon="musical-notes" 
-          />
-        )}
+            {stats.topStyles.length > 0 && (
+              <View style={styles.chartItem}>
+                <TopItemsLineChart 
+                  data={stats.topStyles} 
+                  title="Top 5 Estilos" 
+                  keyName="style" 
+                  icon="musical-notes" 
+                />
+              </View>
+            )}
 
-        {/* Álbumes por Década */}
-        {stats.albumsByDecade.length > 0 && (
-          <TopItemsLineChart 
-            data={stats.albumsByDecade} 
-            title="Álbumes por Década" 
-            keyName="decade" 
-            icon="calendar" 
-          />
+            {stats.albumsByDecade.length > 0 && (
+              <View style={styles.chartItem}>
+                <TopItemsLineChart 
+                  data={stats.albumsByDecade} 
+                  title="Álbumes por Década" 
+                  keyName="decade" 
+                  icon="calendar" 
+                />
+              </View>
+            )}
+            </ScrollView>
+            <View style={styles.scrollIndicator}>
+              <Ionicons name="chevron-back" size={16} color={colors.text} style={{ opacity: 0.5 }} />
+              <Text style={[styles.scrollHint, { color: colors.text }]}>Desliza para ver más</Text>
+              <Ionicons name="chevron-forward" size={16} color={colors.text} style={{ opacity: 0.5 }} />
+            </View>
+          </View>
         )}
 
         {/* Últimos Álbumes Añadidos */}
@@ -1192,6 +1214,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6c757d',
     marginTop: 4,
+  },
+  chartsScrollView: {
+    marginTop: 10,
+  },
+  chartsScrollContainer: {
+    paddingHorizontal: 0,
+  },
+  chartItem: {
+    width: width - 16,
+    marginRight: 0,
+  },
+  scrollIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+    marginBottom: 8,
+    gap: 8,
+  },
+  scrollHint: {
+    fontSize: 12,
+    opacity: 0.6,
   },
   floatingAIButton: {
     position: 'absolute',
