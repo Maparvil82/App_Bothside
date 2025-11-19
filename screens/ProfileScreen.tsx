@@ -43,10 +43,10 @@ export const ProfileScreen: React.FC = () => {
       try {
         const themePref = await AsyncStorage.getItem('theme:mode');
         setIsDarkMode(themePref === 'dark');
-        
+
         const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
         setShowSessionEarnings(earningsPref !== 'false'); // Por defecto true
-      } catch {}
+      } catch { }
     })();
   }, [user?.id]);
 
@@ -133,7 +133,7 @@ export const ProfileScreen: React.FC = () => {
     try {
       setIsDarkMode(value);
       await setMode(value ? 'dark' : 'light');
-    } catch {}
+    } catch { }
   };
 
   const toggleSessionEarnings = async (value: boolean) => {
@@ -146,7 +146,7 @@ export const ProfileScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }] }>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.profileInfo, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handleChangeAvatar}>
@@ -188,8 +188,8 @@ export const ProfileScreen: React.FC = () => {
         {/* Producto */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Producto</Text>
-          <TouchableOpacity 
-            style={[styles.menuItem, { borderBottomColor: colors.border }]} 
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomColor: colors.border }]}
             onPress={() => navigation.navigate('Feedback' as never)}
           >
             <Text style={[styles.menuItemText, { color: colors.text }]}>Feedback</Text>
@@ -202,6 +202,19 @@ export const ProfileScreen: React.FC = () => {
           <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]} onPress={handleSignOut}>
             <Text style={[styles.menuItemText, { color: '#ff3b30' }]}>Cerrar sesión</Text>
           </TouchableOpacity>
+        </View>
+
+        {/* Legal - Third-Party Data Sources */}
+        <View style={[styles.section, { backgroundColor: colors.card }]}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Legal</Text>
+          <View style={styles.legalContent}>
+            <Text style={[styles.legalSectionTitle, { color: colors.text }]}>
+              Third-Party Data Sources
+            </Text>
+            <Text style={[styles.legalText, { color: colors.text }]}>
+              This application uses Discogs' API but is not affiliated with, sponsored or endorsed by Discogs. 'Discogs' is a trademark of Zink Media, LLC.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -223,4 +236,7 @@ const styles = StyleSheet.create({
   settingLabel: { fontSize: 16, color: '#333' },
   menuItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   menuItemText: { fontSize: 16, color: '#ff3b30', fontWeight: '600' },
+  legalContent: { paddingVertical: 15 },
+  legalSectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
+  legalText: { fontSize: 14, lineHeight: 20, opacity: 0.8 },
 }); 

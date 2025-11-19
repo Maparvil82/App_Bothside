@@ -30,6 +30,7 @@ import { UserCollectionService, AlbumService } from '../services/database';
 import { needsDiscogsRefresh, hoursSinceCache } from '../utils/cache';
 import ShelfGrid from '../components/ShelfGrid';
 import { ListCoverCollage } from '../components/ListCoverCollage';
+import { DiscogsAttribution } from '../components/DiscogsAttribution';
 
 const { width } = Dimensions.get('window');
 
@@ -1050,6 +1051,10 @@ export default function AlbumDetailScreen() {
           )}
         </View>
 
+        {/* Discogs Attribution - Required by Discogs API Terms */}
+        {album.albums.discogs_id && (
+          <DiscogsAttribution releaseId={album.albums.discogs_id} />
+        )}
         {/* Sección de Valor */}
         {album.albums.album_stats?.avg_price && (
           <View style={[styles.valueCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -2669,10 +2674,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginTop: 8,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#436484ff',
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: '#f0f0f0ff',
   },
   seeMoreButtonText: {
     fontSize: 14,
@@ -3545,7 +3550,7 @@ const styles = StyleSheet.create({
   listsInfoContainer: {
     marginTop: 16,
     padding: 16,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#ffffffff',
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
