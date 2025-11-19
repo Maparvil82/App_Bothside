@@ -1566,16 +1566,7 @@ export const SearchScreen: React.FC = () => {
             />
           </TouchableOpacity>
           
-          <TouchableOpacity
-            style={styles.toolbarButton}
-            onPress={handleCameraPress}
-          >
-            <Ionicons 
-              name="camera-outline" 
-              size={24} 
-              color={colors.text} 
-            />
-          </TouchableOpacity>
+          {/* Cámara eliminada: función de búsqueda por cámara desactivada */}
           
           <TouchableOpacity
             style={[
