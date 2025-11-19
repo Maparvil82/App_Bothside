@@ -22,11 +22,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
-import { getAlbumEditions } from '../services/discogs';
+import { getAlbumEditions, DiscogsService } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
-import { UserCollectionService } from '../services/database';
+import { UserCollectionService, AlbumService } from '../services/database';
+import { needsDiscogsRefresh, hoursSinceCache } from '../utils/cache';
 import ShelfGrid from '../components/ShelfGrid';
 import { ListCoverCollage } from '../components/ListCoverCollage';
 
@@ -58,6 +59,8 @@ interface AlbumDetail {
     album_youtube_urls?: Array<{ url: string }>;
     album_stats?: { avg_price: number; want?: number; have?: number };
     tracks?: Array<{ position: string; title: string; duration: string }>;
+    discogs_id?: number;
+    discogs_cached_at?: string;
   };
   user_list_items?: Array<{
     id: string;
@@ -117,6 +120,10 @@ export default function AlbumDetailScreen() {
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
+
+  // Estado para refresco de Discogs
+  const [isRefreshingDiscogs, setIsRefreshingDiscogs] = useState(false);
+  const refreshInProgressRef = useRef<boolean>(false);
 
   // Estados para álbumes similares
   const [similarAlbums, setSimilarAlbums] = useState<any[]>([]);
@@ -211,6 +218,49 @@ export default function AlbumDetailScreen() {
       console.error('Error al cargar respuestas del TypeForm:', error);
     }
   }, [user?.id, album?.id]);
+
+  // Refresh Discogs CC0 data if cache is older than 6 hours
+  const refreshDiscogsData = useCallback(async (albumDbId: string, discogsId: number) => {
+    // Prevent multiple simultaneous refreshes
+    if (refreshInProgressRef.current) {
+      console.log('⏭️ Discogs refresh already in progress, skipping...');
+      return;
+    }
+
+    try {
+      refreshInProgressRef.current = true;
+      setIsRefreshingDiscogs(true);
+
+      console.log(`🔄 Refreshing Discogs data for album ${albumDbId}, release ${discogsId}...`);
+
+      // Fetch fresh CC0 data from Discogs
+      const cc0Data = await DiscogsService.refreshReleaseCC0Data(discogsId);
+
+      if (!cc0Data) {
+        console.warn('⚠️ Could not refresh Discogs data, keeping cached version');
+        return;
+      }
+
+      // Update database with fresh data
+      const success = await AlbumService.updateAlbumCC0Data(albumDbId, cc0Data);
+
+      if (success) {
+        console.log('✅ Discogs data refreshed successfully, reloading album...');
+        // Trigger a reload by calling loadAlbumDetail again
+        setTimeout(() => {
+          if (user?.id) {
+            loadAlbumDetail();
+          }
+        }, 100);
+      }
+    } catch (error) {
+      console.error('❌ Error refreshing Discogs data:', error);
+      // Don't show error to user, just log it
+    } finally {
+      setIsRefreshingDiscogs(false);
+      refreshInProgressRef.current = false;
+    }
+  }, [user?.id]);
 
   const loadAlbumDetail = useCallback(() => {
     const fetchFullAlbumData = async () => {
@@ -332,10 +382,24 @@ export default function AlbumDetailScreen() {
 
         if (fullAlbumData.albums) {
           await loadAlbumEditions(fullAlbumData.albums.artist, fullAlbumData.albums.title);
+
+          // Check if Discogs data needs refresh (>6 hours old)
+          const cachedAt = (fullAlbumData.albums as any)?.discogs_cached_at;
+          const discogsId = (fullAlbumData as any)?.albums?.discogs_id;
+
+          if (discogsId && needsDiscogsRefresh(cachedAt)) {
+            const hoursSince = hoursSinceCache(cachedAt);
+            console.log(`🔄 Album data is ${hoursSince.toFixed(1)}h old, refreshing from Discogs...`);
+
+            // Refresh in background without blocking UI
+            refreshDiscogsData(fullAlbumData.albums.id, discogsId);
+          } else if (discogsId) {
+            console.log(`✅ Album data is fresh (${hoursSinceCache(cachedAt).toFixed(1)}h old)`);
+          }
+
           // Backfill de tracks y YouTube para usuarios nuevos si faltan datos
           const hasTracks = Array.isArray((fullAlbumData.albums as any)?.tracks) && (fullAlbumData.albums as any)?.tracks.length > 0;
           const hasYouTube = Array.isArray((fullAlbumData.albums as any)?.album_youtube_urls) && (fullAlbumData.albums as any)?.album_youtube_urls.length > 0;
-          const discogsId = (fullAlbumData as any)?.albums?.discogs_id;
           if ((!hasTracks || !hasYouTube) && discogsId && lastBackfilledAlbumIdRef.current !== fullAlbumData.albums.id) {
             lastBackfilledAlbumIdRef.current = fullAlbumData.albums.id;
             backfillDiscogsDetails(fullAlbumData.albums.id, discogsId).catch(() => {

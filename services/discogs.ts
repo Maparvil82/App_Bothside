@@ -110,13 +110,13 @@ export class DiscogsService {
     try {
       const encodedQuery = encodeURIComponent(query);
       const endpoint = `/database/search?q=${encodedQuery}&type=release&page=${page}&per_page=20`;
-      
+
       const result = await this.makeRequest(endpoint, { cacheTtlMs: 2 * 60 * 1000, retries: 1 });
       if (result === null) {
         console.warn('⚠️ No se pudo buscar en Discogs - token inválido');
         return null;
       }
-      
+
       return result;
     } catch (error) {
       console.error('Error searching releases:', error);
@@ -178,10 +178,10 @@ export class DiscogsService {
       if (!releaseData) {
         return null;
       }
-      
+
       // Obtener sugerencias de precios por condición
       const priceSuggestions = await this.getReleaseMarketplaceStats(releaseId);
-      
+
       // Inicializar stats con datos del release
       const stats: any = {
         lowest_price: releaseData.lowest_price,
@@ -192,44 +192,93 @@ export class DiscogsService {
         last_sold_date: releaseData.last_sold_date,
         price_suggestions: priceSuggestions
       };
-      
+
       // Calcular precios desde las sugerencias si están disponibles
       if (priceSuggestions && Object.keys(priceSuggestions).length > 0) {
         const prices = Object.values(priceSuggestions).map((suggestion: any) => suggestion.value);
         if (prices.length > 0) {
           // Calcular precio medio
           stats.avg_price = prices.reduce((sum: number, price: number) => sum + price, 0) / prices.length;
-          
+
           // Calcular precio más alto
           stats.highest_price = Math.max(...prices);
-          
+
           // Si no hay lowest_price del release, usar el más bajo de las sugerencias
           if (!stats.lowest_price) {
             stats.lowest_price = Math.min(...prices);
           }
         }
       }
-      
+
       return stats;
     } catch (error) {
       console.error('Error getting release stats:', error);
       return null;
     }
   }
-} 
+
+  /**
+   * Refresh CC0 data for a release (title, year, artists, images, labels, genres, styles, tracklist)
+   * Does NOT include marketplace data (prices, stats)
+   * @param releaseId - Discogs release ID
+   * @returns CC0 data object or null if failed
+   */
+  static async refreshReleaseCC0Data(releaseId: number): Promise<{
+    title: string;
+    year: number;
+    artists: string;
+    cover_url: string | null;
+    label: string;
+    genres: string[];
+    styles: string[];
+    tracklist: Array<{ position: string; title: string; duration: string }>;
+  } | null> {
+    try {
+      console.log(`🔄 Refreshing CC0 data for release ${releaseId}...`);
+
+      const release = await this.getRelease(releaseId);
+      if (!release) {
+        console.warn(`⚠️ Could not fetch release ${releaseId} from Discogs`);
+        return null;
+      }
+
+      // Extract CC0 data only (no marketplace data)
+      const cc0Data = {
+        title: release.title || '',
+        year: release.year || 0,
+        artists: release.artists?.map((a: any) => a.name).join(', ') || '',
+        cover_url: release.images?.[0]?.uri || null,
+        label: release.labels?.[0]?.name || '',
+        genres: release.genres || [],
+        styles: release.styles || [],
+        tracklist: (release.tracklist || []).map((track: any) => ({
+          position: track.position || '',
+          title: track.title || '',
+          duration: track.duration || '',
+        })),
+      };
+
+      console.log(`✅ CC0 data refreshed for: ${cc0Data.title}`);
+      return cc0Data;
+    } catch (error) {
+      console.error(`❌ Error refreshing CC0 data for release ${releaseId}:`, error);
+      return null;
+    }
+  }
+}
 
 export const getAlbumEditions = async (artist: string, title: string): Promise<any[]> => {
   try {
     // Buscar el álbum en Discogs usando el servicio
     const searchQuery = `${artist} ${title}`;
     const searchResult = await DiscogsService.searchReleases(searchQuery, 1);
-    
+
     if (!searchResult || !searchResult.results) {
       return [];
     }
 
     const releases = searchResult.results;
-    
+
     // Filtrar y procesar las ediciones más relevantes
     const processedEditions = releases
       .filter((release: any) => {
@@ -237,27 +286,27 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
         if (release.type !== 'release' || !release.title) {
           return false;
         }
-        
+
         // Filtrar solo formatos de vinilo
         const format = Array.isArray(release.format) ? release.format.join(', ').toLowerCase() : (release.format || '').toLowerCase();
-        const isVinyl = format.includes('vinyl') || 
-                       format.includes('lp') || 
-                       format.includes('12"') || 
-                       format.includes('7"') || 
-                       format.includes('10"') ||
-                       format.includes('single') ||
-                       format.includes('ep') ||
-                       format.includes('maxi-single');
-        
+        const isVinyl = format.includes('vinyl') ||
+          format.includes('lp') ||
+          format.includes('12"') ||
+          format.includes('7"') ||
+          format.includes('10"') ||
+          format.includes('single') ||
+          format.includes('ep') ||
+          format.includes('maxi-single');
+
         // Excluir explícitamente formatos que no son vinilo
-        const isNotVinyl = format.includes('cd') || 
-                          format.includes('dvd') || 
-                          format.includes('cassette') || 
-                          format.includes('mp3') || 
-                          format.includes('digital') ||
-                          format.includes('blu-ray') ||
-                          format.includes('vhs');
-        
+        const isNotVinyl = format.includes('cd') ||
+          format.includes('dvd') ||
+          format.includes('cassette') ||
+          format.includes('mp3') ||
+          format.includes('digital') ||
+          format.includes('blu-ray') ||
+          format.includes('vhs');
+
         return isVinyl && !isNotVinyl;
       })
       .slice(0, 10) // Limitar a 10 ediciones
@@ -265,7 +314,7 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
         // Extraer artista del título si no está disponible
         let extractedArtist = release.artist;
         let extractedTitle = release.title;
-        
+
         if (!extractedArtist && release.title) {
           // Intentar extraer artista del título (formato: "Artista - Título")
           const titleParts = release.title.split(' - ');
@@ -276,7 +325,7 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
             extractedArtist = 'Artista desconocido';
           }
         }
-        
+
         return {
           id: release.id,
           title: extractedTitle,
@@ -296,4 +345,4 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
     console.error('❌ Error obteniendo ediciones:', error);
     return [];
   }
-}; 
+};

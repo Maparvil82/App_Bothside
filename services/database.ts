@@ -109,7 +109,7 @@ export const StyleService = {
       .select('*')
       .eq('name', name)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     return data;
   },
@@ -121,7 +121,7 @@ export const StyleService = {
       .insert([{ name }])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -145,7 +145,7 @@ export const StyleService = {
       }])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
@@ -159,7 +159,7 @@ export const AlbumService = {
       .from('albums')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -171,7 +171,7 @@ export const AlbumService = {
       .select('*')
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -183,12 +183,12 @@ export const AlbumService = {
       .select('*')
       .or(`title.ilike.%${query}%,artist.ilike.%${query}%,label.ilike.%${query}%`)
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Database error:', error);
       throw error;
     }
-    
+
     return data;
   },
 
@@ -199,7 +199,7 @@ export const AlbumService = {
       .insert([album])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -212,7 +212,7 @@ export const AlbumService = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -223,7 +223,7 @@ export const AlbumService = {
       .from('albums')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
   },
 
@@ -232,7 +232,7 @@ export const AlbumService = {
     const statsData: Partial<AlbumStats> = {
       album_id: albumId,
     };
-    
+
     // Extraer datos de las estadísticas de Discogs
     if (discogsStats.lowest_price !== undefined) {
       statsData.low_price = discogsStats.lowest_price;
@@ -283,7 +283,7 @@ export const AlbumService = {
         throw error;
       }
     }
-    
+
     return null;
   },
 
@@ -325,6 +325,138 @@ export const AlbumService = {
       albumsWithoutStats: (albumsWithDiscogs || 0) - (albumsWithStats || 0),
       percentageWithStats: (albumsWithDiscogs || 0) > 0 ? ((albumsWithStats || 0) / (albumsWithDiscogs || 0) * 100) : 0
     };
+  },
+
+  /**
+   * Update album CC0 data from Discogs and refresh cache timestamp
+   * Only updates CC0 data (title, year, artists, cover, label, genres, styles, tracklist)
+   * Does NOT update user data or marketplace data
+   */
+  async updateAlbumCC0Data(
+    albumId: string,
+    cc0Data: {
+      title: string;
+      year: number;
+      artists: string;
+      cover_url: string | null;
+      label: string;
+      genres: string[];
+      styles: string[];
+      tracklist: Array<{ position: string; title: string; duration: string }>;
+    }
+  ): Promise<boolean> {
+    try {
+      console.log(`🔄 Updating CC0 data for album ${albumId}...`);
+
+      // Update album basic data
+      const { error: albumError } = await supabase
+        .from('albums')
+        .update({
+          title: cc0Data.title,
+          artist: cc0Data.artists,
+          release_year: cc0Data.year.toString(),
+          label: cc0Data.label,
+          cover_url: cc0Data.cover_url,
+          discogs_cached_at: new Date().toISOString(),
+        })
+        .eq('id', albumId);
+
+      if (albumError) {
+        console.error('❌ Error updating album:', albumError);
+        throw albumError;
+      }
+
+      // Update tracks
+      if (cc0Data.tracklist.length > 0) {
+        // Delete existing tracks
+        const { error: deleteTracksError } = await supabase
+          .from('tracks')
+          .delete()
+          .eq('album_id', albumId);
+
+        if (deleteTracksError) {
+          console.warn('⚠️ Error deleting old tracks:', deleteTracksError);
+        }
+
+        // Insert new tracks
+        const tracksToInsert = cc0Data.tracklist.map((track) => ({
+          album_id: albumId,
+          position: track.position,
+          title: track.title,
+          duration: track.duration,
+        }));
+
+        const { error: tracksError } = await supabase
+          .from('tracks')
+          .insert(tracksToInsert);
+
+        if (tracksError) {
+          console.warn('⚠️ Error inserting new tracks:', tracksError);
+        }
+      }
+
+      // Update styles
+      if (cc0Data.styles.length > 0) {
+        // Delete existing styles
+        const { error: deleteStylesError } = await supabase
+          .from('album_styles')
+          .delete()
+          .eq('album_id', albumId);
+
+        if (deleteStylesError) {
+          console.warn('⚠️ Error deleting old styles:', deleteStylesError);
+        }
+
+        // Get or create style IDs and link them
+        for (const styleName of cc0Data.styles) {
+          try {
+            // Check if style exists
+            const { data: existingStyle } = await supabase
+              .from('styles')
+              .select('id')
+              .eq('name', styleName)
+              .single();
+
+            let styleId = existingStyle?.id;
+
+            // Create style if it doesn't exist
+            if (!styleId) {
+              const { data: newStyle, error: createStyleError } = await supabase
+                .from('styles')
+                .insert({ name: styleName })
+                .select('id')
+                .single();
+
+              if (createStyleError) {
+                console.warn(`⚠️ Error creating style ${styleName}:`, createStyleError);
+                continue;
+              }
+
+              styleId = newStyle?.id;
+            }
+
+            // Link style to album
+            if (styleId) {
+              const { error: linkError } = await supabase
+                .from('album_styles')
+                .insert({ album_id: albumId, style_id: styleId });
+
+              if (linkError) {
+                console.warn(`⚠️ Error linking style ${styleName}:`, linkError);
+              }
+            }
+          } catch (error) {
+            console.warn(`⚠️ Error processing style ${styleName}:`, error);
+          }
+        }
+      }
+
+      console.log(`✅ Album ${albumId} CC0 data updated successfully`);
+      return true;
+    } catch (error) {
+      console.error(`❌ Error updating album CC0 data:`, error);
+      return false;
+    }
   }
 };
 
@@ -345,7 +477,7 @@ export const UserCollectionService = {
       `)
       .eq('user_id', userId)
       .order('added_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -361,7 +493,7 @@ export const UserCollectionService = {
       }])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -373,7 +505,7 @@ export const UserCollectionService = {
       .delete()
       .eq('user_id', userId)
       .eq('album_id', albumId);
-    
+
     if (error) throw error;
   },
 
@@ -385,7 +517,7 @@ export const UserCollectionService = {
       .eq('user_id', userId)
       .eq('album_id', albumId)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     return !!data;
   },
@@ -393,7 +525,7 @@ export const UserCollectionService = {
   // Toggle gem status de un álbum
   async toggleGemStatus(userId: string, albumId: string) {
     console.log('🔍 UserCollectionService: toggleGemStatus called with:', { userId, albumId });
-    
+
     // Primero obtener el estado actual
     const { data: currentData, error: fetchError } = await supabase
       .from('user_collection')
@@ -401,18 +533,18 @@ export const UserCollectionService = {
       .eq('user_id', userId)
       .eq('album_id', albumId)
       .single();
-    
+
     if (fetchError) {
       console.error('❌ UserCollectionService: Error fetching current gem status:', fetchError);
       throw fetchError;
     }
-    
+
     console.log('✅ UserCollectionService: Current gem status:', currentData);
-    
+
     // Toggle el estado
     const newGemStatus = !currentData.is_gem;
     console.log('🔄 UserCollectionService: Toggling gem status from', currentData.is_gem, 'to', newGemStatus);
-    
+
     const { data, error } = await supabase
       .from('user_collection')
       .update({ is_gem: newGemStatus })
@@ -420,12 +552,12 @@ export const UserCollectionService = {
       .eq('album_id', albumId)
       .select()
       .single();
-    
+
     if (error) {
       console.error('❌ UserCollectionService: Error updating gem status:', error);
       throw error;
     }
-    
+
     console.log('✅ UserCollectionService: Gem status updated successfully:', data);
     return data;
   },
@@ -433,28 +565,28 @@ export const UserCollectionService = {
   // Obtener solo los gems del usuario
   async getUserGems(userId: string) {
     console.log('🔍 UserCollectionService: getUserGems called for user:', userId);
-    
+
     // Primero obtener todas las colecciones del usuario para contar
     const { data: userRecords, error: userError } = await supabase
       .from('user_collection')
       .select('is_gem')
       .eq('user_id', userId);
-    
+
     if (userError) {
       console.error('❌ UserCollectionService: Error getting user records:', userError);
       throw userError;
     }
-    
+
     console.log('📊 UserCollectionService: Total records for user:', userRecords?.length || 0);
-    
+
     const gemsCount = userRecords?.filter(record => record.is_gem === true).length || 0;
     const nonGemsCount = userRecords?.filter(record => record.is_gem === false).length || 0;
     const nullGemsCount = userRecords?.filter(record => record.is_gem === null).length || 0;
-    
+
     console.log('💎 UserCollectionService: Records with is_gem = true:', gemsCount);
     console.log('📋 UserCollectionService: Records with is_gem = false:', nonGemsCount);
     console.log('❓ UserCollectionService: Records with is_gem = null:', nullGemsCount);
-    
+
     // Ahora obtener solo los gems con información básica del álbum
     const { data, error } = await supabase
       .from('user_collection')
@@ -473,12 +605,12 @@ export const UserCollectionService = {
       .eq('user_id', userId)
       .eq('is_gem', true)
       .order('added_at', { ascending: false });
-    
+
     if (error) {
       console.error('❌ UserCollectionService: Error getting user gems:', error);
       throw error;
     }
-    
+
     console.log('✅ UserCollectionService: Found', data?.length || 0, 'gems for user');
     if (data && data.length > 0) {
       console.log('📋 UserCollectionService: First gem:', {
@@ -490,28 +622,28 @@ export const UserCollectionService = {
         isGem: data[0].is_gem
       });
     }
-    
+
     return data || [];
   },
 
   // Guardar nota de audio
   async saveAudioNote(userId: string, albumId: string, audioUri: string) {
     console.log('🔍 UserCollectionService: saveAudioNote called with:', { userId, albumId, audioUri });
-    
+
     // Verificar autenticación actual
     const { data: { user: currentUser }, error: authError } = await supabase.auth.getUser();
     if (authError) {
       console.error('❌ UserCollectionService: Auth error:', authError);
       throw new Error('Error de autenticación');
     }
-    
+
     if (!currentUser) {
       console.error('❌ UserCollectionService: No user authenticated');
       throw new Error('Usuario no autenticado');
     }
-    
+
     console.log('✅ UserCollectionService: User authenticated:', currentUser.id);
-    
+
     // Primero verificar si el álbum está en la colección del usuario
     console.log('🔍 UserCollectionService: Checking if album exists in collection...');
     const { data: existingRecord, error: checkError } = await supabase
@@ -520,9 +652,9 @@ export const UserCollectionService = {
       .eq('user_id', userId)
       .eq('album_id', albumId)
       .single();
-    
+
     console.log('🔍 UserCollectionService: Check result:', { existingRecord, checkError });
-    
+
     if (checkError && checkError.code === 'PGRST116') {
       // El álbum no está en la colección, agregarlo primero
       console.log('📝 UserCollectionService: Album not in collection, adding it first...');
@@ -535,7 +667,7 @@ export const UserCollectionService = {
         }])
         .select()
         .single();
-      
+
       if (insertError) {
         console.error('❌ UserCollectionService: Error adding album to collection:', insertError);
         console.error('❌ UserCollectionService: Insert error details:', {
@@ -546,14 +678,14 @@ export const UserCollectionService = {
         });
         throw insertError;
       }
-      
+
       console.log('✅ UserCollectionService: Album added to collection with audio note:', newRecord);
       return newRecord;
     } else if (checkError) {
       console.error('❌ UserCollectionService: Error checking collection:', checkError);
       throw checkError;
     }
-    
+
     // El álbum ya está en la colección, actualizar la nota de audio
     console.log('📝 UserCollectionService: Album exists, updating audio note...');
     const { data, error } = await supabase
@@ -563,7 +695,7 @@ export const UserCollectionService = {
       .eq('album_id', albumId)
       .select()
       .single();
-    
+
     if (error) {
       console.error('❌ UserCollectionService: Error saving audio note:', error);
       console.error('❌ UserCollectionService: Update error details:', {
@@ -574,7 +706,7 @@ export const UserCollectionService = {
       });
       throw error;
     }
-    
+
     console.log('✅ UserCollectionService: Audio note saved successfully:', data);
     return data;
   },
@@ -588,7 +720,7 @@ export const UserCollectionService = {
       .eq('album_id', albumId)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
@@ -606,7 +738,7 @@ export const WishlistService = {
       `)
       .eq('user_id', userId)
       .order('added_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -621,7 +753,7 @@ export const WishlistService = {
       }])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -633,7 +765,7 @@ export const WishlistService = {
       .delete()
       .eq('user_id', userId)
       .eq('album_id', albumId);
-    
+
     if (error) throw error;
   },
 
@@ -645,7 +777,7 @@ export const WishlistService = {
       .eq('user_id', userId)
       .eq('album_id', albumId)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     return !!data;
   }
@@ -663,7 +795,7 @@ export const ListingService = {
         users!listings_user_id_fkey (username)
       `)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -678,7 +810,7 @@ export const ListingService = {
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   },
@@ -690,7 +822,7 @@ export const ListingService = {
       .insert([listing])
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -703,7 +835,7 @@ export const ListingService = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -714,7 +846,7 @@ export const ListingService = {
       .from('listings')
       .delete()
       .eq('id', id);
-    
+
     if (error) throw error;
   }
 };
@@ -724,18 +856,18 @@ export const UserListService = {
   // Obtener todas las listas del usuario
   async getUserLists(userId: string) {
     console.log('Getting lists for user:', userId);
-    
+
     const { data, error } = await supabase
       .from('user_lists')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       console.error('Error getting user lists:', error);
       throw error;
     }
-    
+
     console.log('User lists retrieved:', data);
     return data;
   },
@@ -743,19 +875,19 @@ export const UserListService = {
   // Obtener listas del usuario con álbumes incluidos para collage
   async getUserListsWithAlbums(userId: string) {
     console.log('🔍 UserListService: Getting lists with albums for user:', userId);
-    
+
     // Primero obtener las listas
     const { data: lists, error: listsError } = await supabase
       .from('user_lists')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
-    
+
     if (listsError) {
       console.error('❌ UserListService: Error getting user lists:', listsError);
       throw listsError;
     }
-    
+
     // Para cada lista, obtener sus álbumes
     const listsWithAlbums = await Promise.all(
       (lists || []).map(async (list) => {
@@ -773,12 +905,12 @@ export const UserListService = {
             `)
             .eq('list_id', list.id)
             .limit(4); // Solo los últimos 4 para el collage
-          
+
           if (albumsError) {
             console.error('❌ UserListService: Error getting albums for list:', list.id, albumsError);
             return { ...list, albums: [] };
           }
-          
+
           return { ...list, albums: albums || [] };
         } catch (error) {
           console.error('❌ UserListService: Error processing list:', list.id, error);
@@ -786,7 +918,7 @@ export const UserListService = {
         }
       })
     );
-    
+
     console.log('✅ UserListService: Found', listsWithAlbums.length, 'lists with albums');
     return listsWithAlbums;
   },
@@ -798,7 +930,7 @@ export const UserListService = {
       .select('*')
       .eq('id', listId)
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -806,18 +938,18 @@ export const UserListService = {
   // Crear nueva lista
   async createList(list: Omit<UserList, 'id' | 'created_at'>) {
     console.log('Creating list with data:', list);
-    
+
     const { data, error } = await supabase
       .from('user_lists')
       .insert([list])
       .select()
       .single();
-    
+
     if (error) {
       console.error('Error creating list:', error);
       throw error;
     }
-    
+
     console.log('List created successfully:', data);
     return data;
   },
@@ -830,7 +962,7 @@ export const UserListService = {
       .eq('id', id)
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   },
@@ -838,17 +970,17 @@ export const UserListService = {
   // Eliminar lista
   async deleteList(id: string) {
     console.log('🗑️ UserListService: Deleting list with ID:', id);
-    
+
     const { error } = await supabase
       .from('user_lists')
       .delete()
       .eq('id', id);
-    
+
     if (error) {
       console.error('❌ UserListService: Error deleting list:', error);
       throw error;
     }
-    
+
     console.log('✅ UserListService: List deleted successfully');
   },
 
@@ -866,7 +998,7 @@ export const UserListService = {
         )
       `)
       .eq('list_id', listId);
-    
+
     if (error) throw error;
     return data;
   },
@@ -879,7 +1011,7 @@ export const UserListService = {
         list_id: listId,
         album_id: albumId
       }]);
-    
+
     if (error) throw error;
     return { list_id: listId, album_id: albumId };
   },
@@ -891,7 +1023,7 @@ export const UserListService = {
       .delete()
       .eq('list_id', listId)
       .eq('album_id', albumId);
-    
+
     if (error) throw error;
   },
 
@@ -903,7 +1035,7 @@ export const UserListService = {
       .eq('list_id', listId)
       .eq('album_id', albumId)
       .single();
-    
+
     if (error && error.code !== 'PGRST116') throw error;
     return !!data;
   },
@@ -918,7 +1050,7 @@ export const UserListService = {
       `)
       .eq('is_public', true)
       .order('created_at', { ascending: false });
-    
+
     if (error) throw error;
     return data;
   }
