@@ -116,7 +116,7 @@ export default function DashboardScreen() {
     try {
       setLoading(true);
 
-                              // Obtener datos básicos de la colección con estadísticas de precios
+      // Obtener datos básicos de la colección con estadísticas de precios
       const { data: collectionData, error: collectionError } = await supabase
         .from('user_collection')
         .select(`
@@ -170,7 +170,7 @@ export default function DashboardScreen() {
 
       console.log('📊 Datos de colección recibidos:', collectionData.length, 'álbumes');
       console.log('📊 Ejemplo de datos:', JSON.stringify(collectionData[0], null, 2));
-      
+
       // Debug: Verificar estructura de datos
       if (collectionData.length > 0) {
         const firstAlbum = (collectionData[0] as any).albums;
@@ -178,7 +178,7 @@ export default function DashboardScreen() {
         console.log('📊 Primer álbum - artist (directo):', firstAlbum?.artist);
         console.log('📊 Primer álbum - label (directo):', firstAlbum?.label);
         console.log('📊 Primer álbum - album_styles:', firstAlbum?.album_styles);
-        
+
         // Verificar si hay datos en los campos directos
         if (firstAlbum?.artist) {
           console.log('📊 Primer artista (directo):', firstAlbum.artist);
@@ -202,36 +202,36 @@ export default function DashboardScreen() {
         const album = item.albums;
         if (!album) return;
 
-                          // Contar artistas (campo directo)
-                  if (album.artist && album.artist.trim() !== '') {
-                    const artistName = album.artist.trim();
-                    artists.set(artistName, (artists.get(artistName) || 0) + 1);
-                  }
+        // Contar artistas (campo directo)
+        if (album.artist && album.artist.trim() !== '') {
+          const artistName = album.artist.trim();
+          artists.set(artistName, (artists.get(artistName) || 0) + 1);
+        }
 
-                  // Contar sellos (campo directo)
-                  if (album.label && album.label.trim() !== '') {
-                    const labelName = album.label.trim();
-                    labels.set(labelName, (labels.get(labelName) || 0) + 1);
-                  }
+        // Contar sellos (campo directo)
+        if (album.label && album.label.trim() !== '') {
+          const labelName = album.label.trim();
+          labels.set(labelName, (labels.get(labelName) || 0) + 1);
+        }
 
-                  // Contar estilos
-                  if (album.album_styles && Array.isArray(album.album_styles) && album.album_styles.length > 0) {
-                    album.album_styles.forEach((styleItem: any) => {
-                      if (styleItem && styleItem.styles && styleItem.styles.name) {
-                        const styleName = styleItem.styles.name;
-                        styles.set(styleName, (styles.get(styleName) || 0) + 1);
-                      }
-                    });
-                  }
+        // Contar estilos
+        if (album.album_styles && Array.isArray(album.album_styles) && album.album_styles.length > 0) {
+          album.album_styles.forEach((styleItem: any) => {
+            if (styleItem && styleItem.styles && styleItem.styles.name) {
+              const styleName = styleItem.styles.name;
+              styles.set(styleName, (styles.get(styleName) || 0) + 1);
+            }
+          });
+        }
 
-                            // Años
-                    if (album.release_year && !isNaN(Number(album.release_year))) {
-                      const year = Number(album.release_year);
-                      years.push(year);
-                      const decade = Math.floor(year / 10) * 10;
-                      const decadeLabel = `${decade}s`;
-                      decades.set(decadeLabel, (decades.get(decadeLabel) || 0) + 1);
-                    }
+        // Años
+        if (album.release_year && !isNaN(Number(album.release_year))) {
+          const year = Number(album.release_year);
+          years.push(year);
+          const decade = Math.floor(year / 10) * 10;
+          const decadeLabel = `${decade}s`;
+          decades.set(decadeLabel, (decades.get(decadeLabel) || 0) + 1);
+        }
       });
 
       // Calcular estadísticas
@@ -240,35 +240,35 @@ export default function DashboardScreen() {
       const totalLabels = labels.size;
       const totalStyles = styles.size;
 
-                        console.log('📊 Estadísticas calculadas:');
-                  console.log('📊 Total álbumes:', totalAlbums);
-                  console.log('📊 Total artistas únicos:', totalArtists);
-                  console.log('📊 Total sellos únicos:', totalLabels);
-                  console.log('📊 Total estilos únicos:', totalStyles);
-                  console.log('📊 Artistas encontrados:', Array.from(artists.keys()));
-                  console.log('📊 Sellos encontrados:', Array.from(labels.keys()));
-                  console.log('📊 Estilos encontrados:', Array.from(styles.keys()));
-                  console.log('📊 Años encontrados:', years);
-                  console.log('📊 Décadas encontradas:', Array.from(decades.entries()));
-                  
-                  // Debug: Verificar algunos álbumes específicos
-                  console.log('📊 Verificando álbumes con artistas...');
-                  collectionData.slice(0, 5).forEach((item: any, index: number) => {
-                    const album = item.albums;
-                    if (album && album.artist && album.artist.trim() !== '') {
-                      console.log(`📊 Álbum ${index + 1} con artista:`, album.title, album.artist);
-                    }
-                  });
-                  
-                  console.log('📊 Verificando álbumes con sellos...');
-                  collectionData.slice(0, 5).forEach((item: any, index: number) => {
-                    const album = item.albums;
-                    if (album && album.label && album.label.trim() !== '') {
-                      console.log(`📊 Álbum ${index + 1} con sello:`, album.title, album.label);
-                    }
-                  });
-                        const oldestAlbum = years.length > 0 ? Math.min(...years) : 0;
-                  const newestAlbum = years.length > 0 ? Math.max(...years) : 0;
+      console.log('📊 Estadísticas calculadas:');
+      console.log('📊 Total álbumes:', totalAlbums);
+      console.log('📊 Total artistas únicos:', totalArtists);
+      console.log('📊 Total sellos únicos:', totalLabels);
+      console.log('📊 Total estilos únicos:', totalStyles);
+      console.log('📊 Artistas encontrados:', Array.from(artists.keys()));
+      console.log('📊 Sellos encontrados:', Array.from(labels.keys()));
+      console.log('📊 Estilos encontrados:', Array.from(styles.keys()));
+      console.log('📊 Años encontrados:', years);
+      console.log('📊 Décadas encontradas:', Array.from(decades.entries()));
+
+      // Debug: Verificar algunos álbumes específicos
+      console.log('📊 Verificando álbumes con artistas...');
+      collectionData.slice(0, 5).forEach((item: any, index: number) => {
+        const album = item.albums;
+        if (album && album.artist && album.artist.trim() !== '') {
+          console.log(`📊 Álbum ${index + 1} con artista:`, album.title, album.artist);
+        }
+      });
+
+      console.log('📊 Verificando álbumes con sellos...');
+      collectionData.slice(0, 5).forEach((item: any, index: number) => {
+        const album = item.albums;
+        if (album && album.label && album.label.trim() !== '') {
+          console.log(`📊 Álbum ${index + 1} con sello:`, album.title, album.label);
+        }
+      });
+      const oldestAlbum = years.length > 0 ? Math.min(...years) : 0;
+      const newestAlbum = years.length > 0 ? Math.max(...years) : 0;
 
       // Top 5 artistas
       const topArtists = Array.from(artists.entries())
@@ -288,137 +288,137 @@ export default function DashboardScreen() {
         .slice(0, 5)
         .map(([style, count]) => ({ style, count }));
 
-                        // Álbumes por década
-                  const albumsByDecade = Array.from(decades.entries())
-                    .sort((a, b) => {
-                      const decadeA = parseInt(a[0].replace('s', ''));
-                      const decadeB = parseInt(b[0].replace('s', ''));
-                      return decadeA - decadeB;
-                    })
-                    .map(([decade, count]) => ({ decade, count }));
+      // Álbumes por década
+      const albumsByDecade = Array.from(decades.entries())
+        .sort((a, b) => {
+          const decadeA = parseInt(a[0].replace('s', ''));
+          const decadeB = parseInt(b[0].replace('s', ''));
+          return decadeA - decadeB;
+        })
+        .map(([decade, count]) => ({ decade, count }));
 
-                  // Últimos 5 álbumes añadidos
-                  const latestAlbums = collectionData
-                    .slice(0, 5)
-                    .map((item: any) => {
-                      const album = item.albums;
-                      if (!album) return null;
-                      
-                      return {
-                        id: item.album_id, // Assuming album_id is the ID for navigation
-                        title: album.title || 'Sin título',
-                        artist: album.artist || 'Artista desconocido',
-                        year: album.release_year || 'Año desconocido',
-                        imageUrl: album.cover_url,
-                        addedAt: new Date(item.added_at).toLocaleDateString('es-ES', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })
-                      };
-                    })
-                    .filter(Boolean) as Array<{ id: string; title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
+      // Últimos 5 álbumes añadidos
+      const latestAlbums = collectionData
+        .slice(0, 5)
+        .map((item: any) => {
+          const album = item.albums;
+          if (!album) return null;
 
-                  // Top 5 discos más caros (por precio medio)
-                  const mostExpensiveAlbums = collectionData
-                    .map((item: any) => {
-                      const album = item.albums;
-                      const stats = extractAlbumStats(album);
-                      if (!album || !stats || !stats.avg_price) return null;
-                      
-                      return {
-                        id: item.album_id, // Assuming album_id is the ID for navigation
-                        title: album.title || 'Sin título',
-                        artist: album.artist || 'Artista desconocido',
-                        price: stats.avg_price,
-                        imageUrl: album.cover_url,
-                      };
-                    })
-                    .filter(Boolean)
-                    .sort((a: any, b: any) => b.price - a.price)
-                    .slice(0, 5) as Array<{ id: string; title: string; artist: string; price: number; imageUrl?: string }>;
+          return {
+            id: item.album_id, // Assuming album_id is the ID for navigation
+            title: album.title || 'Sin título',
+            artist: album.artist || 'Artista desconocido',
+            year: album.release_year || 'Año desconocido',
+            imageUrl: album.cover_url,
+            addedAt: new Date(item.added_at).toLocaleDateString('es-ES', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            })
+          };
+        })
+        .filter(Boolean) as Array<{ id: string; title: string; artist: string; year: string; addedAt: string; imageUrl?: string }>;
 
-                  // Calcular valor total de la colección
-                  const collectionValue = collectionData
-                    .reduce((total: number, item: any) => {
-                      const album = item.albums;
-                      const stats = extractAlbumStats(album);
-                      if (album && stats && stats.avg_price) {
-                        return total + stats.avg_price;
-                      }
-                      return total;
-                    }, 0);
+      // Top 5 discos más caros (por precio medio)
+      const mostExpensiveAlbums = collectionData
+        .map((item: any) => {
+          const album = item.albums;
+          const stats = extractAlbumStats(album);
+          if (!album || !stats || !stats.avg_price) return null;
 
-                  console.log('💰 Valor total de la colección:', collectionValue.toFixed(2), '€');
+          return {
+            id: item.album_id, // Assuming album_id is the ID for navigation
+            title: album.title || 'Sin título',
+            artist: album.artist || 'Artista desconocido',
+            price: stats.avg_price,
+            imageUrl: album.cover_url,
+          };
+        })
+        .filter(Boolean)
+        .sort((a: any, b: any) => b.price - a.price)
+        .slice(0, 5) as Array<{ id: string; title: string; artist: string; price: number; imageUrl?: string }>;
 
-                  // Función para calcular el ratio de venta
-                  const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
-                    if (!want || !have || have === 0) {
-                      return { ratio: 0, level: 'Sin datos', color: '#6c757d' };
-                    }
-                    
-                    const ratio = want / have;
-                    
-                    // Ratio alto = más demanda que disponibilidad = MEJOR
-                    if (ratio >= 25) {
-                      return { ratio, level: 'Excepcional', color: '#6f42c1' };
-                    } else if (ratio >= 8 && ratio < 25) {
-                      return { ratio, level: 'Alto', color: '#28a745' };
-                    } else if (ratio >= 2 && ratio < 8) {
-                      return { ratio, level: 'Medio', color: '#ffc107' };
-                    } else {
-                      return { ratio, level: 'Bajo', color: '#dc3545' };
-                    }
-                  };
+      // Calcular valor total de la colección
+      const collectionValue = collectionData
+        .reduce((total: number, item: any) => {
+          const album = item.albums;
+          const stats = extractAlbumStats(album);
+          if (album && stats && stats.avg_price) {
+            return total + stats.avg_price;
+          }
+          return total;
+        }, 0);
 
-                  // Top 5 discos con mayor ratio de venta
-                  const highestRatioAlbums = collectionData
-                    .map((item: any) => {
-                      const album = item.albums;
-                      const stats = extractAlbumStats(album);
-                      if (!album || !stats || !stats.want || !stats.have) return null;
-                      
-                      const { ratio, level, color } = calculateSalesRatio(stats.want, stats.have);
-                      
-                      if (ratio === 0) return null; // Excluir los que no tienen datos
-                      
-                      return {
-                        id: item.album_id,
-                        title: album.title || 'Sin título',
-                        artist: album.artist || 'Artista desconocido',
-                        ratio,
-                        level,
-                        color,
-                        want: stats.want,
-                        have: stats.have,
-                        imageUrl: album.cover_url,
-                      };
-                    })
-                    .filter(Boolean)
-                    .sort((a: any, b: any) => b.ratio - a.ratio)
-                    .slice(0, 5) as Array<{ id: string; title: string; artist: string; ratio: number; level: string; color: string; want: number; have: number; imageUrl?: string }>;
+      console.log('💰 Valor total de la colección:', collectionValue.toFixed(2), '€');
 
-                  console.log('📈 Álbumes con mayor ratio de venta:', highestRatioAlbums.length);
+      // Función para calcular el ratio de venta
+      const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
+        if (!want || !have || have === 0) {
+          return { ratio: 0, level: 'Sin datos', color: '#6c757d' };
+        }
 
-                  setStats({
-                    totalAlbums,
-                    totalArtists,
-                    totalLabels,
-                    totalStyles,
-                    oldestAlbum,
-                    newestAlbum,
-                    collectionValue,
-                    topArtists,
-                    topLabels,
-                    topStyles,
-                    albumsByDecade,
-                    latestAlbums,
-                    mostExpensiveAlbums,
-                    highestRatioAlbums,
-                  });
+        const ratio = want / have;
 
-                  // Fetch user position after stats are loaded
-                  fetchUserPosition();
+        // Ratio alto = más demanda que disponibilidad = MEJOR
+        if (ratio >= 25) {
+          return { ratio, level: 'Excepcional', color: '#6f42c1' };
+        } else if (ratio >= 8 && ratio < 25) {
+          return { ratio, level: 'Alto', color: '#28a745' };
+        } else if (ratio >= 2 && ratio < 8) {
+          return { ratio, level: 'Medio', color: '#ffc107' };
+        } else {
+          return { ratio, level: 'Bajo', color: '#dc3545' };
+        }
+      };
+
+      // Top 5 discos con mayor ratio de venta
+      const highestRatioAlbums = collectionData
+        .map((item: any) => {
+          const album = item.albums;
+          const stats = extractAlbumStats(album);
+          if (!album || !stats || !stats.want || !stats.have) return null;
+
+          const { ratio, level, color } = calculateSalesRatio(stats.want, stats.have);
+
+          if (ratio === 0) return null; // Excluir los que no tienen datos
+
+          return {
+            id: item.album_id,
+            title: album.title || 'Sin título',
+            artist: album.artist || 'Artista desconocido',
+            ratio,
+            level,
+            color,
+            want: stats.want,
+            have: stats.have,
+            imageUrl: album.cover_url,
+          };
+        })
+        .filter(Boolean)
+        .sort((a: any, b: any) => b.ratio - a.ratio)
+        .slice(0, 5) as Array<{ id: string; title: string; artist: string; ratio: number; level: string; color: string; want: number; have: number; imageUrl?: string }>;
+
+      console.log('📈 Álbumes con mayor ratio de venta:', highestRatioAlbums.length);
+
+      setStats({
+        totalAlbums,
+        totalArtists,
+        totalLabels,
+        totalStyles,
+        oldestAlbum,
+        newestAlbum,
+        collectionValue,
+        topArtists,
+        topLabels,
+        topStyles,
+        albumsByDecade,
+        latestAlbums,
+        mostExpensiveAlbums,
+        highestRatioAlbums,
+      });
+
+      // Fetch user position after stats are loaded
+      fetchUserPosition();
 
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
@@ -659,9 +659,9 @@ export default function DashboardScreen() {
         </View>
 
         {/* Rango de Coleccionista */}
-        <CollectorRankCard 
-          totalAlbums={stats.totalAlbums} 
-          collectionValue={stats.collectionValue} 
+        <CollectorRankCard
+          totalAlbums={stats.totalAlbums}
+          collectionValue={stats.collectionValue}
           onPress={() => (navigation as any).navigate('Leaderboard')}
           userPosition={userPosition || undefined}
         />
@@ -673,7 +673,7 @@ export default function DashboardScreen() {
             <Text style={[styles.shelfStatNumber, { color: colors.primary }]}>{shelves.length}</Text>
             <Text style={[styles.shelfStatText, { color: colors.text }]}>Ubicaciones Creadas</Text>
           </View>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.configButton}
             onPress={() => (navigation as any).navigate('ShelvesList')}
           >
@@ -689,15 +689,15 @@ export default function DashboardScreen() {
           <View style={[styles.section, { backgroundColor: colors.card }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Álbumes Más Caros</Text>
             {stats.mostExpensiveAlbums.map((album, index) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={styles.albumItem}
                 onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
               >
                 <View style={styles.albumImageContainer}>
                   {album.imageUrl ? (
-                    <Image 
-                      source={{ uri: album.imageUrl }} 
+                    <Image
+                      source={{ uri: album.imageUrl }}
                       style={styles.albumImage}
                       resizeMode="cover"
                     />
@@ -730,15 +730,15 @@ export default function DashboardScreen() {
               Discos más cotizados: mayor demanda que disponibilidad en Discogs. Ratio alto = más valioso.
             </Text>
             {stats.highestRatioAlbums.map((album, index) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={styles.albumItem}
                 onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
               >
                 <View style={styles.albumImageContainer}>
                   {album.imageUrl ? (
-                    <Image 
-                      source={{ uri: album.imageUrl }} 
+                    <Image
+                      source={{ uri: album.imageUrl }}
                       style={styles.albumImage}
                       resizeMode="cover"
                     />
@@ -774,17 +774,17 @@ export default function DashboardScreen() {
         {/* Sección de Notas de Audio */}
         {albumsWithAudio.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Notas de Audio ({albumsWithAudio.length})</Text>
-            {albumsWithAudio.map((album, index) => (
-              <TouchableOpacity 
-                key={album.id} 
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Últimas Notas de Audio</Text>
+            {albumsWithAudio.slice(0, 5).map((album, index) => (
+              <TouchableOpacity
+                key={album.id}
                 style={styles.albumItem}
                 onPress={() => handlePlayAudio(album.audio_note, album.title)}
               >
                 <View style={styles.albumImageContainer}>
                   {album.cover_url ? (
-                    <Image 
-                      source={{ uri: album.cover_url }} 
+                    <Image
+                      source={{ uri: album.cover_url }}
                       style={styles.albumImage}
                       resizeMode="cover"
                     />
@@ -812,56 +812,56 @@ export default function DashboardScreen() {
         {/* Gráficas en scroll horizontal */}
         {(stats.topArtists.length > 0 || stats.topLabels.length > 0 || stats.topStyles.length > 0 || stats.albumsByDecade.length > 0) && (
           <View>
-            <ScrollView 
-              horizontal 
+            <ScrollView
+              horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chartsScrollContainer}
               style={styles.chartsScrollView}
               pagingEnabled
             >
-            {stats.topArtists.length > 0 && (
-              <View style={styles.chartItem}>
-                <TopItemsLineChart 
-                  data={stats.topArtists} 
-                  title="Top 5 Artistas" 
-                  keyName="artist" 
-                  icon="people" 
-                />
-              </View>
-            )}
+              {stats.topArtists.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.topArtists}
+                    title="Top 5 Artistas"
+                    keyName="artist"
+                    icon="people"
+                  />
+                </View>
+              )}
 
-            {stats.topLabels.length > 0 && (
-              <View style={styles.chartItem}>
-                <TopItemsLineChart 
-                  data={stats.topLabels} 
-                  title="Top 5 Sellos" 
-                  keyName="label" 
-                  icon="business" 
-                />
-              </View>
-            )}
+              {stats.topLabels.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.topLabels}
+                    title="Top 5 Sellos"
+                    keyName="label"
+                    icon="business"
+                  />
+                </View>
+              )}
 
-            {stats.topStyles.length > 0 && (
-              <View style={styles.chartItem}>
-                <TopItemsLineChart 
-                  data={stats.topStyles} 
-                  title="Top 5 Estilos" 
-                  keyName="style" 
-                  icon="musical-notes" 
-                />
-              </View>
-            )}
+              {stats.topStyles.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.topStyles}
+                    title="Top 5 Estilos"
+                    keyName="style"
+                    icon="musical-notes"
+                  />
+                </View>
+              )}
 
-            {stats.albumsByDecade.length > 0 && (
-              <View style={styles.chartItem}>
-                <TopItemsLineChart 
-                  data={stats.albumsByDecade} 
-                  title="Álbumes por Década" 
-                  keyName="decade" 
-                  icon="calendar" 
-                />
-              </View>
-            )}
+              {stats.albumsByDecade.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.albumsByDecade}
+                    title="Álbumes por Década"
+                    keyName="decade"
+                    icon="calendar"
+                  />
+                </View>
+              )}
             </ScrollView>
             <View style={styles.scrollIndicator}>
               <Ionicons name="chevron-back" size={16} color={colors.text} style={{ opacity: 0.5 }} />
@@ -876,15 +876,15 @@ export default function DashboardScreen() {
           <View style={[styles.section, { backgroundColor: colors.card }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Últimos 5 Álbumes Añadidos</Text>
             {stats.latestAlbums.map((album, index) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={styles.albumItem}
                 onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: album.id })}
               >
                 <View style={styles.albumImageContainer}>
                   {album.imageUrl ? (
-                    <Image 
-                      source={{ uri: album.imageUrl }} 
+                    <Image
+                      source={{ uri: album.imageUrl }}
                       style={styles.albumImage}
                       resizeMode="cover"
                     />
@@ -980,7 +980,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     padding: 16,
     alignItems: 'center',
-    
+
   },
   statValue: {
     fontSize: 24,
@@ -1002,8 +1002,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     shadowColor: '#000',
-   
-   
+
+
   },
   sectionTitle: {
     fontSize: 18,
@@ -1043,139 +1043,139 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
-                emptySubtext: {
-                fontSize: 14,
-                color: '#adb5bd',
-                textAlign: 'center',
-              },
-              albumItem: {
-                flexDirection: 'row',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                paddingVertical: 12,
-                borderBottomWidth: 1,
-                borderBottomColor: '#f1f3f4',
-              },
-              albumInfo: {
-                flex: 1,
-                marginRight: 12,
-              },
-              albumTitle: {
-                fontSize: 16,
-                fontWeight: '600',
-                color: '#212529',
-                marginBottom: 2,
-              },
-              albumArtist: {
-                fontSize: 14,
-                color: '#495057',
-                marginBottom: 2,
-              },
-              albumYear: {
-                fontSize: 12,
-                color: '#6c757d',
-              },
-              albumDate: {
-                fontSize: 12,
-                color: '#007AFF',
-                fontWeight: '500',
-              },
-              albumImageContainer: {
-                width: 80,
-                height: 80,
-                marginRight: 12,
-                borderRadius: 6,
-                overflow: 'hidden',
-              },
-              albumImage: {
-                width: '100%',
-                height: '100%',
-              },
-              albumImagePlaceholder: {
-                width: '100%',
-                height: '100%',
-                backgroundColor: '#e9ecef',
-                justifyContent: 'center',
-                alignItems: 'center',
-              },
-              albumImagePlaceholderText: {
-                fontSize: 10,
-                color: '#6c757d',
-                textAlign: 'center',
-              },
-              albumPrice: {
-                fontSize: 14,
-                fontWeight: 'bold',
-                color: '#28a745',
-              },
-              albumRank: {
-                backgroundColor: '#007AFF',
-                borderRadius: 12,
-                width: 24,
-                height: 24,
-                justifyContent: 'center',
-                alignItems: 'center',
-              },
-              albumRankText: {
-                fontSize: 12,
-                fontWeight: 'bold',
-                color: 'white',
-              },
-              valueCard: {
-                backgroundColor: '#007AFF',
-                borderRadius: 12,
-                padding: 20,
-                margin: 16,
-                alignItems: 'center',
-                shadowColor: '#000',
-                shadowOffset: {
-                  width: 0,
-                  height: 2,
-                },
-                shadowOpacity: 0.1,
-                shadowRadius: 4,
-                elevation: 3,
-              },
-              valueCardTitle: {
-                fontSize: 16,
-                fontWeight: '600',
-                color: 'white',
-                marginBottom: 8,
-              },
-              valueCardAmount: {
-                fontSize: 32,
-                fontWeight: 'bold',
-                color: 'white',
-                marginBottom: 4,
-              },
-              valueCardSubtitle: {
-                fontSize: 12,
-                color: 'rgba(255, 255, 255, 0.8)',
-                textAlign: 'center',
-              },
-              emptyShelfText: {
-                fontSize: 14,
-                color: '#6c757d',
-                textAlign: 'center',
-                marginTop: 8,
-                marginBottom: 16,
-                lineHeight: 20,
-              },
-              configButton: {
-                flexDirection: 'row',
-                alignItems: 'center',
-                justifyContent: 'center',
-                backgroundColor: '#007AFF',
-                borderRadius: 8,
-                paddingVertical: 12,
-                marginTop: 16,
-                gap: 8,
-              },
-              configButtonText: {
-                color: '#fff',
-                fontSize: 16,
-                fontWeight: '600',
-              },
+  emptySubtext: {
+    fontSize: 14,
+    color: '#adb5bd',
+    textAlign: 'center',
+  },
+  albumItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f3f4',
+  },
+  albumInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  albumTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#212529',
+    marginBottom: 2,
+  },
+  albumArtist: {
+    fontSize: 14,
+    color: '#495057',
+    marginBottom: 2,
+  },
+  albumYear: {
+    fontSize: 12,
+    color: '#6c757d',
+  },
+  albumDate: {
+    fontSize: 12,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  albumImageContainer: {
+    width: 80,
+    height: 80,
+    marginRight: 12,
+    borderRadius: 6,
+    overflow: 'hidden',
+  },
+  albumImage: {
+    width: '100%',
+    height: '100%',
+  },
+  albumImagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#e9ecef',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  albumImagePlaceholderText: {
+    fontSize: 10,
+    color: '#6c757d',
+    textAlign: 'center',
+  },
+  albumPrice: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#28a745',
+  },
+  albumRank: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  albumRankText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  valueCard: {
+    backgroundColor: '#007AFF',
+    borderRadius: 12,
+    padding: 20,
+    margin: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  valueCardTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'white',
+    marginBottom: 8,
+  },
+  valueCardAmount: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 4,
+  },
+  valueCardSubtitle: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+  },
+  emptyShelfText: {
+    fontSize: 14,
+    color: '#6c757d',
+    textAlign: 'center',
+    marginTop: 8,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  configButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#007AFF',
+    borderRadius: 8,
+    paddingVertical: 12,
+    marginTop: 16,
+    gap: 8,
+  },
+  configButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   shelfStatContainer: {
     alignItems: 'center',
     paddingVertical: 16,
