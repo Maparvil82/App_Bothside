@@ -105,24 +105,24 @@ export default function AlbumDetailScreen() {
   const [showListsModal, setShowListsModal] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const lastBackfilledAlbumIdRef = useRef<string | null>(null);
-  
+
   // Estados para TypeForm
   const [showTypeForm, setShowTypeForm] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [typeFormAnswers, setTypeFormAnswers] = useState<string[]>(['', '', '', '', '']);
   const [existingTypeFormResponse, setExistingTypeFormResponse] = useState<any>(null);
   const [loadingTypeForm, setLoadingTypeForm] = useState(false);
-  
+
   // Estados para reproductor de audio
   const [audioUrl, setAudioUrl] = useState<string>('');
   const [isLoadingAudio, setIsLoadingAudio] = useState(false);
   const [audioError, setAudioError] = useState<string | null>(null);
-  
+
   // Estados para álbumes similares
   const [similarAlbums, setSimilarAlbums] = useState<any[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
-  
-  
+
+
   const { albumId } = route.params as { albumId: string };
 
   // Preguntas del TypeForm
@@ -193,7 +193,7 @@ export default function AlbumDetailScreen() {
   // Cargar respuestas existentes del TypeForm
   const loadExistingTypeFormResponse = useCallback(async () => {
     if (!user?.id || !album?.id) return;
-    
+
     try {
       const { data, error } = await supabase
         .from('album_typeform_responses')
@@ -222,7 +222,7 @@ export default function AlbumDetailScreen() {
 
       setLoading(true);
       setError(null);
-      
+
       try {
         const { data: albumData, error: albumError } = await supabase
           .from('user_collection')
@@ -246,7 +246,7 @@ export default function AlbumDetailScreen() {
 
         if (albumError) throw new Error(`Error al cargar el álbum: ${albumError.message}`);
         if (!albumData) throw new Error("Álbum no encontrado en tu colección.");
-        
+
         // Normalizar estructura del álbum y asignar nombre de estantería si viene en la consulta
         const normalizedAlbums = Array.isArray((albumData as any).albums)
           ? (albumData as any).albums[0]
@@ -261,7 +261,7 @@ export default function AlbumDetailScreen() {
         const { data: shelvesData, error: shelvesError } = await supabase
           .from('shelves')
           .select('id, name, shelf_rows, shelf_columns');
-        
+
         if (shelvesError) throw new Error(`Error al cargar las estanterías: ${shelvesError.message}`);
 
         // Obtener las listas donde está guardado este álbum con sus álbumes para portadas
@@ -294,15 +294,15 @@ export default function AlbumDetailScreen() {
                 `)
                 .eq('list_id', item.user_lists.id)
                 .limit(4); // Solo los primeros 4 para el collage
-              
+
               if (albumsError) {
                 console.error('Error getting albums for list:', item.user_lists.id, albumsError);
                 return { ...item.user_lists, albums: [] };
               }
-              
-              return { 
-                ...item.user_lists, 
-                albums: albums?.map(la => la.albums).filter(Boolean) || [] 
+
+              return {
+                ...item.user_lists,
+                albums: albums?.map(la => la.albums).filter(Boolean) || []
               };
             } catch (error) {
               console.error('Error processing list:', item.user_lists.id, error);
@@ -329,19 +329,19 @@ export default function AlbumDetailScreen() {
 
         setAlbum(albumWithLists);
         setShelves(shelvesData || []);
-        
+
         if (fullAlbumData.albums) {
-            await loadAlbumEditions(fullAlbumData.albums.artist, fullAlbumData.albums.title);
-            // Backfill de tracks y YouTube para usuarios nuevos si faltan datos
-            const hasTracks = Array.isArray((fullAlbumData.albums as any)?.tracks) && (fullAlbumData.albums as any)?.tracks.length > 0;
-            const hasYouTube = Array.isArray((fullAlbumData.albums as any)?.album_youtube_urls) && (fullAlbumData.albums as any)?.album_youtube_urls.length > 0;
-            const discogsId = (fullAlbumData as any)?.albums?.discogs_id;
-            if ((!hasTracks || !hasYouTube) && discogsId && lastBackfilledAlbumIdRef.current !== fullAlbumData.albums.id) {
-              lastBackfilledAlbumIdRef.current = fullAlbumData.albums.id;
-              backfillDiscogsDetails(fullAlbumData.albums.id, discogsId).catch(() => {
-                // noop
-              });
-            }
+          await loadAlbumEditions(fullAlbumData.albums.artist, fullAlbumData.albums.title);
+          // Backfill de tracks y YouTube para usuarios nuevos si faltan datos
+          const hasTracks = Array.isArray((fullAlbumData.albums as any)?.tracks) && (fullAlbumData.albums as any)?.tracks.length > 0;
+          const hasYouTube = Array.isArray((fullAlbumData.albums as any)?.album_youtube_urls) && (fullAlbumData.albums as any)?.album_youtube_urls.length > 0;
+          const discogsId = (fullAlbumData as any)?.albums?.discogs_id;
+          if ((!hasTracks || !hasYouTube) && discogsId && lastBackfilledAlbumIdRef.current !== fullAlbumData.albums.id) {
+            lastBackfilledAlbumIdRef.current = fullAlbumData.albums.id;
+            backfillDiscogsDetails(fullAlbumData.albums.id, discogsId).catch(() => {
+              // noop
+            });
+          }
         }
 
       } catch (e: any) {
@@ -350,7 +350,7 @@ export default function AlbumDetailScreen() {
         setLoading(false);
       }
     };
-    
+
     fetchFullAlbumData();
   }, [albumId, user?.id]);
 
@@ -381,29 +381,29 @@ export default function AlbumDetailScreen() {
     try {
       // Backfill directo desde el cliente usando DiscogsService
       console.log('🎵 Iniciando backfill directo para álbum:', internalAlbumId, 'discogs:', discogsId);
-      
+
       // Importar y usar DiscogsService directamente
       const { DiscogsService } = await import('../services/discogs');
       const release: any = await DiscogsService.getRelease(Number(discogsId));
-      
+
       if (!release) {
         console.warn('❌ No se pudo obtener release de Discogs');
         return;
       }
-      
+
       console.log('📀 Release obtenido de Discogs:', release.title);
-      
+
       // Procesar videos de YouTube
       const videos = release.videos || [];
       console.log('🎬 Videos encontrados:', videos.length);
-      
+
       if (videos.length > 0) {
-        const youtubeVideos = videos.filter((v: any) => 
+        const youtubeVideos = videos.filter((v: any) =>
           v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be'))
         );
-        
+
         console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
-        
+
         if (youtubeVideos.length > 0) {
           // Eliminar URLs existentes importadas desde Discogs (como hace save-discogs-release)
           console.log('🧹 Eliminando URLs de YouTube importadas previamente desde Discogs...');
@@ -412,35 +412,35 @@ export default function AlbumDetailScreen() {
             .delete()
             .eq('album_id', internalAlbumId)
             .eq('imported_from_discogs', true);
-          
+
           if (deleteError) {
             console.warn('❌ Error eliminando URLs anteriores:', deleteError.message);
           } else {
             console.log('✅ URLs anteriores eliminadas');
           }
-          
+
           // Preparar todas las URLs para inserción (sin filtrar duplicados ya que las eliminamos)
           const urlsToInsert = youtubeVideos.map((v: any) => ({
-              album_id: internalAlbumId,
-              url: v.uri,
-              title: v.title || 'Video de YouTube',
-              is_playlist: false,
-              imported_from_discogs: true,
-              discogs_video_id: v.id?.toString() || null
-            }));
-          
+            album_id: internalAlbumId,
+            url: v.uri,
+            title: v.title || 'Video de YouTube',
+            is_playlist: false,
+            imported_from_discogs: true,
+            discogs_video_id: v.id?.toString() || null
+          }));
+
           console.log('➕ URLs a insertar:', urlsToInsert.length);
-          
+
           if (urlsToInsert.length > 0) {
             const { error: insertError } = await supabase
               .from('album_youtube_urls')
               .insert(urlsToInsert);
-            
+
             if (insertError) {
               console.warn('❌ Error insertando URLs:', insertError.message);
             } else {
               console.log('✅ URLs de YouTube insertadas exitosamente');
-              
+
               // Actualizar el estado inmediatamente
               setAlbum(prevAlbum => {
                 if (!prevAlbum) return prevAlbum;
@@ -453,7 +453,7 @@ export default function AlbumDetailScreen() {
                   }
                 };
               });
-              
+
               // Recargar después de un momento
               setTimeout(() => {
                 console.log('🔄 Recargando detalle completo...');
@@ -463,7 +463,7 @@ export default function AlbumDetailScreen() {
           }
         }
       }
-      
+
       // Procesar tracks si faltan
       const tracklist = release.tracklist || [];
       if (tracklist.length > 0) {
@@ -471,13 +471,13 @@ export default function AlbumDetailScreen() {
           .from('tracks')
           .select('position, title, duration')
           .eq('album_id', internalAlbumId);
-        
+
         const existingTrackKeys = new Set(
-          (existingTracks || []).map((t: any) => 
+          (existingTracks || []).map((t: any) =>
             `${(t.position || '').toString().trim()}|${(t.title || '').toString().trim()}|${(t.duration || '').toString().trim()}`
           )
         );
-        
+
         const tracksToInsert = tracklist
           .filter((t: any) => t?.title)
           .map((t: any) => ({
@@ -489,12 +489,12 @@ export default function AlbumDetailScreen() {
           .filter((t: any) => !existingTrackKeys.has(
             `${(t.position || '').toString().trim()}|${(t.title || '').toString().trim()}|${(t.duration || '').toString().trim()}`
           ));
-        
+
         if (tracksToInsert.length > 0) {
           const { error: tracksError } = await supabase
             .from('tracks')
             .insert(tracksToInsert);
-          
+
           if (tracksError) {
             console.warn('❌ Error insertando tracks:', tracksError.message);
           } else {
@@ -594,7 +594,7 @@ export default function AlbumDetailScreen() {
               const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
               const discogsUrl = `https://www.discogs.com/search/?q=${encodeURIComponent(searchQuery)}&type=release`;
               console.log('🔗 Abriendo Discogs:', discogsUrl);
-              
+
               const supported = await Linking.canOpenURL(discogsUrl);
               if (supported) {
                 await Linking.openURL(discogsUrl);
@@ -614,7 +614,7 @@ export default function AlbumDetailScreen() {
               const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
               const marketplaceUrl = `https://www.discogs.com/sell/release?q=${encodeURIComponent(searchQuery)}`;
               console.log('💰 Abriendo Marketplace:', marketplaceUrl);
-              
+
               const supported = await Linking.canOpenURL(marketplaceUrl);
               if (supported) {
                 await Linking.openURL(marketplaceUrl);
@@ -650,9 +650,9 @@ export default function AlbumDetailScreen() {
     if (!want || !have || have === 0) {
       return { ratio: 0, level: 'Sin datos', color: '#9ca3af' };
     }
-    
+
     const ratio = want / have;
-    
+
     if (ratio < 2) {
       return { ratio, level: 'Bajo', color: '#dc3545' };
     } else if (ratio >= 2 && ratio < 8) {
@@ -711,6 +711,7 @@ export default function AlbumDetailScreen() {
   // ========== FUNCIONES DE YOUTUBE (ABRIR DIRECTAMENTE) ==========
 
   // Abrir YouTube directamente en el navegador
+  // Abrir YouTube directamente en el navegador (MODIFICADO: Ahora reproduce solo audio)
   const handlePlayYouTubeDirect = () => {
     if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
       Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
@@ -723,22 +724,20 @@ export default function AlbumDetailScreen() {
       return;
     }
 
-    // Abrir directamente en el navegador
-    Linking.openURL(youtubeUrl).catch(err => {
-      console.error('Error opening URL:', err);
-      Alert.alert('Error', 'No se pudo abrir el enlace');
-    });
+    // En lugar de abrir en navegador, usamos el reproductor flotante que ya maneja URLs de YouTube
+    // extrayendo el audio automáticamente
+    handlePlayAudio(youtubeUrl);
   };
 
 
   // ========== FIN FUNCIONES YOUTUBE ==========
 
   // ========== FUNCIONES ÁLBUMES SIMILARES ==========
-  
+
   // Cargar álbumes similares de la colección del usuario
   const loadSimilarAlbums = useCallback(async () => {
     if (!user || !album?.albums) return;
-    
+
     setLoadingSimilar(true);
     try {
       // Obtener álbumes del mismo artista o con estilos similares
@@ -770,15 +769,15 @@ export default function AlbumDetailScreen() {
       const filteredAlbums = similarData?.filter(item => {
         const albumData = item.albums;
         if (!albumData) return false;
-        
+
         // Priorizar mismo artista
         const sameArtist = albumData.artist === album.albums.artist;
-        
+
         // Priorizar estilos similares
         const currentStyles = album.albums.album_styles?.map((s: any) => s.styles?.name).filter(Boolean) || [];
         const itemStyles = albumData.album_styles?.map((s: any) => s.styles?.name).filter(Boolean) || [];
         const hasSimilarStyle = currentStyles.some((style: string) => itemStyles.includes(style));
-        
+
         return sameArtist || hasSimilarStyle;
       }).slice(0, 8) || []; // Limitar a 8 álbumes
 
@@ -793,16 +792,16 @@ export default function AlbumDetailScreen() {
   // ========== FIN FUNCIONES ÁLBUMES SIMILARES ==========
 
   // ========== FUNCIONES GEMS Y LISTAS ==========
-  
+
   // Función para cargar las listas del usuario con portadas
   const loadUserLists = useCallback(async () => {
     if (!user?.id) return;
-    
+
     try {
       // Usar exactamente el mismo servicio que usa ListsScreen
       const { UserListService } = await import('../services/database');
       const listsWithAlbums = await UserListService.getUserListsWithAlbums(user.id);
-      
+
       console.log('✅ Listas cargadas con portadas:', listsWithAlbums?.length || 0);
       if (listsWithAlbums && listsWithAlbums.length > 0) {
         console.log('📋 Primera lista:', {
@@ -826,17 +825,17 @@ export default function AlbumDetailScreen() {
       albumAlbumsId: album?.albums?.id,
       isCurrentlyGem: album?.albums?.id ? isGem(album.albums.id) : 'undefined'
     });
-    
+
     if (!user?.id || !album?.albums?.id) {
       console.log('❌ Validación falló:', { userId: user?.id, albumAlbumsId: album?.albums?.id });
       return;
     }
-    
+
     try {
       // Usar el ID del álbum para verificar si es gem
       const isCurrentlyGem = isGem(album.albums.id);
       console.log('💎 Estado actual del gem:', isCurrentlyGem);
-      
+
       if (isCurrentlyGem) {
         console.log('🗑️ Removiendo gem para album.albums.id:', album.albums.id);
         // Usar el servicio de base de datos para toggle
@@ -852,11 +851,11 @@ export default function AlbumDetailScreen() {
         updateGemStatus(album.albums.id, true);
         Alert.alert('Gem Añadido', 'El álbum se ha añadido a tus Gems');
       }
-      
+
       // Recargar el álbum para actualizar el estado
       console.log('🔄 Recargando álbum...');
       loadAlbumDetail();
-      
+
       // Refrescar el contexto de gems para sincronizar
       console.log('🔄 Refrescando contexto de gems...');
       refreshGems();
@@ -869,12 +868,12 @@ export default function AlbumDetailScreen() {
   // Función para añadir álbum a una lista
   const handleAddToList = async (listId: string) => {
     if (!user?.id || !album?.albums.id) return;
-    
+
     try {
       // Verificar si el álbum ya está en la lista usando el servicio correcto
       const { UserListService } = await import('../services/database');
       const isAlreadyInList = await UserListService.isAlbumInList(listId, album.albums.id);
-      
+
       if (isAlreadyInList) {
         Alert.alert('Ya en la lista', 'Este álbum ya está en esta lista');
         return;
@@ -886,7 +885,7 @@ export default function AlbumDetailScreen() {
       Alert.alert('¡Añadido!', 'El álbum se ha añadido a la lista');
       setShowListsModal(false);
       setSelectedListId(null);
-      
+
       // Recargar las listas para actualizar la información
       loadUserLists();
       // Recargar el álbum para actualizar la información
@@ -948,7 +947,7 @@ export default function AlbumDetailScreen() {
         <Ionicons name="alert-circle" size={48} color="#dc3545" />
         <Text style={styles.errorText}>{error || 'No se encontró el álbum'}</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
-            <Text style={styles.errorButtonText}>Volver</Text>
+          <Text style={styles.errorButtonText}>Volver</Text>
         </TouchableOpacity>
       </View>
     );
@@ -970,7 +969,7 @@ export default function AlbumDetailScreen() {
         <Text style={[styles.headerTitle, { color: colors.text }]}>{album.albums.title}</Text>
         <View style={styles.headerRight} />
       </View>
-      
+
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Portada */}
         <View style={[styles.coverSection, { backgroundColor: colors.card }]}>
@@ -1006,7 +1005,7 @@ export default function AlbumDetailScreen() {
               album.albums.album_stats.have
             );
             return (
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.ratioCard, { backgroundColor: color }]}
                 onPress={() => {
                   setCurrentRatioData({ ratio, level, color });
@@ -1025,7 +1024,7 @@ export default function AlbumDetailScreen() {
                 </Text>
                 <Text style={styles.ratioCardLevel}>{level}</Text>
                 <Text style={styles.ratioCardSubtitle}>
-                  {ratio > 0 
+                  {ratio > 0
                     ? `${album.albums.album_stats.want.toLocaleString()} quieren / ${album.albums.album_stats.have.toLocaleString()} tienen`
                     : 'Demanda vs. oferta en Discogs'
                   }
@@ -1061,12 +1060,12 @@ export default function AlbumDetailScreen() {
               )}
             </View>
           )}
-          
+
           {/* Géneros y Estilos */}
           {(mergedGenres.length > 0 || mergedStyles.length > 0) && (
             <View style={styles.stylesContainer}>
               {mergedGenres.map((genre: string, index: number) => (
-                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: colors.border }]}> 
+                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: colors.border }]}>
                   <Text style={[styles.styleText, { color: colors.text }]}>{genre}</Text>
                 </View>
               ))}
@@ -1077,7 +1076,7 @@ export default function AlbumDetailScreen() {
               ))}
             </View>
           )}
-          
+
           {/* Tags de Gem y Audio Note */}
           <View style={styles.tagsContainer}>
             {album.is_gem && (
@@ -1106,10 +1105,10 @@ export default function AlbumDetailScreen() {
               ]}
               onPress={handleToggleGem}
             >
-              <Ionicons 
-                name={isGem(album.albums.id) ? "diamond" : "diamond-outline"} 
-                size={20} 
-                color={isGem(album.albums.id) ? "#d97706" : colors.text} 
+              <Ionicons
+                name={isGem(album.albums.id) ? "diamond" : "diamond-outline"}
+                size={20}
+                color={isGem(album.albums.id) ? "#d97706" : colors.text}
               />
               <Text style={[
                 styles.actionButtonText,
@@ -1137,13 +1136,13 @@ export default function AlbumDetailScreen() {
           <View style={[styles.section, { backgroundColor: colors.card }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>Guardado en estas listas</Text>
             {album.user_list_items.map((item, index) => (
-              <TouchableOpacity 
-                key={index} 
+              <TouchableOpacity
+                key={index}
                 style={[styles.listItemContainer, { backgroundColor: colors.border, borderColor: colors.border }]}
                 onPress={() => {
-                  console.log('🔍 AlbumDetailScreen: Navigating to ViewList with:', { 
-                    listId: item.id, 
-                    listTitle: item.title 
+                  console.log('🔍 AlbumDetailScreen: Navigating to ViewList with:', {
+                    listId: item.id,
+                    listTitle: item.title
                   });
                   // Navegar al tab de Lists y luego a ViewList
                   (navigation as any).navigate('Main', {
@@ -1159,9 +1158,9 @@ export default function AlbumDetailScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <ListCoverCollage 
-                  albums={(item.albums || []).map(album => ({ albums: album }))} 
-                  size={60} 
+                <ListCoverCollage
+                  albums={(item.albums || []).map(album => ({ albums: album }))}
+                  size={60}
                 />
                 <View style={styles.listInfo}>
                   <Text style={[styles.listTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
@@ -1224,8 +1223,8 @@ export default function AlbumDetailScreen() {
                   style={[styles.editionItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
                 >
                   {edition.thumb && (
-                    <Image 
-                      source={{ uri: edition.thumb }} 
+                    <Image
+                      source={{ uri: edition.thumb }}
                       style={styles.editionCover}
                       resizeMode="cover"
                     />
@@ -1233,7 +1232,7 @@ export default function AlbumDetailScreen() {
                   <View style={styles.editionInfo}>
                     <Text style={[styles.editionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
                     <Text style={[styles.editionArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
-                    
+
                     {/* Formato */}
                     {edition.format && (
                       <View style={styles.editionDetailRow}>
@@ -1241,7 +1240,7 @@ export default function AlbumDetailScreen() {
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
                       </View>
                     )}
-                    
+
                     {/* Sello */}
                     {edition.label && (
                       <View style={styles.editionDetailRow}>
@@ -1249,7 +1248,7 @@ export default function AlbumDetailScreen() {
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
                       </View>
                     )}
-                    
+
                     {/* Año */}
                     {edition.year && (
                       <View style={styles.editionDetailRow}>
@@ -1257,7 +1256,7 @@ export default function AlbumDetailScreen() {
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
                       </View>
                     )}
-                    
+
                     {/* País */}
                     {edition.country && (
                       <View style={styles.editionDetailRow}>
@@ -1265,7 +1264,7 @@ export default function AlbumDetailScreen() {
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
                       </View>
                     )}
-                    
+
                     {/* Catálogo */}
                     {edition.catno && (
                       <View style={styles.editionDetailRow}>
@@ -1276,7 +1275,7 @@ export default function AlbumDetailScreen() {
                   </View>
                 </View>
               ))}
-              
+
               {/* Botón "Ver más" o "Ver menos" */}
               {editions.length > 3 && (
                 <TouchableOpacity
@@ -1286,10 +1285,10 @@ export default function AlbumDetailScreen() {
                   <Text style={[styles.seeMoreButtonText, { color: colors.primary }]}>
                     {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
                   </Text>
-                  <Ionicons 
-                    name={showAllEditions ? "chevron-up" : "chevron-down"} 
-                    size={16} 
-                    color={colors.primary} 
+                  <Ionicons
+                    name={showAllEditions ? "chevron-up" : "chevron-down"}
+                    size={16}
+                    color={colors.primary}
                   />
                 </TouchableOpacity>
               )}
@@ -1311,7 +1310,7 @@ export default function AlbumDetailScreen() {
                   <Text style={[styles.audioInfoText, { color: colors.text }]}>Tienes una nota de audio para este álbum</Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.playAudioButton, { backgroundColor: colors.border, borderColor: colors.border }]}
                 onPress={() => handlePlayAudio(album.audio_note!)}
               >
@@ -1328,7 +1327,7 @@ export default function AlbumDetailScreen() {
                   <Text style={[styles.audioInfoText, { color: colors.text }]}>No tienes una nota de audio para este álbum</Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={[styles.recordAudioButton, { backgroundColor: colors.border, borderColor: colors.border }]}
                 onPress={() => handleRecordAudio()}
               >
@@ -1342,159 +1341,159 @@ export default function AlbumDetailScreen() {
 
         {/* Nueva Sección de Ubicación RECONSTRUIDA */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Ubicación</Text>
-            
-            {album.shelf_id && album.location_row && album.location_column ? (
-              <>
-                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>Actualmente en: {album.shelf_name || 'Estantería sin nombre'}</Text>
-                <ShelfGrid 
-                  rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0} 
-                  columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
-                  highlightRow={album.location_row}
-                  highlightColumn={album.location_column}
-                />
-                <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Cambiar ubicación:</Text>
-              </>
-            ) : (
-              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Asignar a una estantería:</Text>
-            )}
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ubicación</Text>
 
-            {shelves.map((shelf) => {
-              const isCurrentShelf = album.shelf_id === shelf.id;
+          {album.shelf_id && album.location_row && album.location_column ? (
+            <>
+              <Text style={[styles.currentShelfTitle, { color: colors.text }]}>Actualmente en: {album.shelf_name || 'Estantería sin nombre'}</Text>
+              <ShelfGrid
+                rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
+                columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
+                highlightRow={album.location_row}
+                highlightColumn={album.location_column}
+              />
+              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Cambiar ubicación:</Text>
+            </>
+          ) : (
+            <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Asignar a una estantería:</Text>
+          )}
+
+          {shelves.map((shelf) => {
+            const isCurrentShelf = album.shelf_id === shelf.id;
+            return (
+              <TouchableOpacity
+                key={shelf.id}
+                style={[
+                  styles.shelfSelectItem,
+                  { backgroundColor: colors.border, borderColor: colors.border }
+                ]}
+                onPress={() => (navigation as any).navigate('SelectCell', {
+                  user_collection_id: album.id,
+                  shelf: shelf,
+                  current_row: isCurrentShelf ? album.location_row : undefined,
+                  current_column: isCurrentShelf ? album.location_column : undefined,
+                })}
+              >
+                <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
+                <Ionicons name="chevron-forward" size={20} color={colors.text} />
+              </TouchableOpacity>
+            );
+          })}
+          {shelves.length === 0 && (
+            <Text style={[styles.noShelvesText, { color: colors.text }]}>No tienes estanterías para asignar.</Text>
+          )}
+        </View>
+
+
+
+        {/* Sección TypeForm */}
+        <View style={[styles.typeFormSection, { backgroundColor: colors.card }]}>
+          <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>Cuéntanos sobre este álbum</Text>
+          <Text style={[styles.typeFormSectionSubtitle, { color: colors.text }]}>
+            Responde las preguntas que quieras para personalizar tu experiencia
+          </Text>
+
+          {/* Mostrar todas las preguntas directamente */}
+          <View style={styles.typeFormQuestionsContainer}>
+            {typeFormQuestions.map((question, index) => {
+              const hasAnswer = existingTypeFormResponse?.[`question_${index + 1}`];
               return (
                 <TouchableOpacity
-                  key={shelf.id}
+                  key={index}
                   style={[
-                    styles.shelfSelectItem,
+                    styles.typeFormQuestionItem,
+                    hasAnswer && styles.typeFormQuestionItemAnswered,
                     { backgroundColor: colors.border, borderColor: colors.border }
                   ]}
-                  onPress={() => (navigation as any).navigate('SelectCell', { 
-                    user_collection_id: album.id, 
-                    shelf: shelf,
-                    current_row: isCurrentShelf ? album.location_row : undefined,
-                    current_column: isCurrentShelf ? album.location_column : undefined,
-                  })}
+                  onPress={() => {
+                    // Cargar respuesta existente si la hay
+                    const currentAnswers = [...typeFormAnswers];
+                    currentAnswers[index] = existingTypeFormResponse?.[`question_${index + 1}`] || '';
+                    setTypeFormAnswers(currentAnswers);
+                    setCurrentQuestion(index);
+                    setShowTypeForm(true);
+                  }}
                 >
-                  <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
-                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                  <View style={styles.typeFormQuestionHeader}>
+                    <Text style={[styles.typeFormQuestionNumber, { color: colors.primary }]}>
+                      {index + 1}
+                    </Text>
+                    <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
+                      {question}
+                    </Text>
+                    {hasAnswer ? (
+                      <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+                    ) : (
+                      <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
+                    )}
+                  </View>
+                  {hasAnswer && (
+                    <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
+                      {existingTypeFormResponse[`question_${index + 1}`]}
+                    </Text>
+                  )}
                 </TouchableOpacity>
               );
             })}
-            {shelves.length === 0 && (
-              <Text style={[styles.noShelvesText, { color: colors.text }]}>No tienes estanterías para asignar.</Text>
-            )}
           </View>
+        </View>
 
-
-
-          {/* Sección TypeForm */}
-          <View style={[styles.typeFormSection, { backgroundColor: colors.card }]}>
-            <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>Cuéntanos sobre este álbum</Text>
-            <Text style={[styles.typeFormSectionSubtitle, { color: colors.text }]}>
-              Responde las preguntas que quieras para personalizar tu experiencia
-            </Text>
-            
-            {/* Mostrar todas las preguntas directamente */}
-            <View style={styles.typeFormQuestionsContainer}>
-              {typeFormQuestions.map((question, index) => {
-                const hasAnswer = existingTypeFormResponse?.[`question_${index + 1}`];
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.typeFormQuestionItem,
-                      hasAnswer && styles.typeFormQuestionItemAnswered,
-                      { backgroundColor: colors.border, borderColor: colors.border }
-                    ]}
-                    onPress={() => {
-                      // Cargar respuesta existente si la hay
-                      const currentAnswers = [...typeFormAnswers];
-                      currentAnswers[index] = existingTypeFormResponse?.[`question_${index + 1}`] || '';
-                      setTypeFormAnswers(currentAnswers);
-                      setCurrentQuestion(index);
-                      setShowTypeForm(true);
-                    }}
-                  >
-                    <View style={styles.typeFormQuestionHeader}>
-                      <Text style={[styles.typeFormQuestionNumber, { color: colors.primary }]}>
-                        {index + 1}
-                      </Text>
-                      <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
-                        {question}
-                      </Text>
-                      {hasAnswer ? (
-                        <Ionicons name="checkmark-circle" size={20} color="#28a745" />
-                      ) : (
-                        <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
-                      )}
-                    </View>
-                    {hasAnswer && (
-                      <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
-                        {existingTypeFormResponse[`question_${index + 1}`]}
+        {/* Sección de Álbumes Similares */}
+        {similarAlbums.length > 0 && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>De tu colección</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.similarAlbumsContainer}
+              contentContainerStyle={styles.similarAlbumsContent}
+            >
+              {similarAlbums.map((item, index) => (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.similarAlbumCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  onPress={() => {
+                    // Navegar al álbum similar
+                    (navigation as any).navigate('AlbumDetail', { albumId: item.id });
+                  }}
+                  activeOpacity={0.8}
+                >
+                  <View style={styles.similarAlbumImageContainer}>
+                    {item.albums?.cover_url ? (
+                      <Image
+                        source={{ uri: item.albums.cover_url }}
+                        style={styles.similarAlbumImage}
+                        resizeMode="cover"
+                      />
+                    ) : (
+                      <View style={[styles.similarAlbumImage, styles.similarAlbumPlaceholder, { backgroundColor: colors.border }]}>
+                        <Ionicons name="musical-notes" size={24} color={colors.text} />
+                      </View>
+                    )}
+                    {item.is_gem && (
+                      <View style={styles.similarAlbumGemBadge}>
+                        <Ionicons name="diamond" size={12} color="#FFD700" />
+                      </View>
+                    )}
+                  </View>
+                  <View style={styles.similarAlbumInfo}>
+                    <Text style={[styles.similarAlbumTitle, { color: colors.text }]} numberOfLines={2} ellipsizeMode="tail">
+                      {item.albums?.title || 'Sin título'}
+                    </Text>
+                    <Text style={[styles.similarAlbumArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+                      {item.albums?.artist || 'Artista desconocido'}
+                    </Text>
+                    {item.albums?.year && (
+                      <Text style={[styles.similarAlbumYear, { color: colors.text }]}>
+                        {item.albums.year}
                       </Text>
                     )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
-
-          {/* Sección de Álbumes Similares */}
-          {similarAlbums.length > 0 && (
-            <View style={[styles.section, { backgroundColor: colors.card }]}>
-              <Text style={[styles.sectionTitle, { color: colors.text }]}>De tu colección</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.similarAlbumsContainer}
-                contentContainerStyle={styles.similarAlbumsContent}
-              >
-                {similarAlbums.map((item, index) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.similarAlbumCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-                    onPress={() => {
-                      // Navegar al álbum similar
-                      (navigation as any).navigate('AlbumDetail', { albumId: item.id });
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.similarAlbumImageContainer}>
-                      {item.albums?.cover_url ? (
-                        <Image 
-                          source={{ uri: item.albums.cover_url }} 
-                          style={styles.similarAlbumImage}
-                          resizeMode="cover"
-                        />
-                      ) : (
-                        <View style={[styles.similarAlbumImage, styles.similarAlbumPlaceholder, { backgroundColor: colors.border }]}>
-                          <Ionicons name="musical-notes" size={24} color={colors.text} />
-                        </View>
-                      )}
-                      {item.is_gem && (
-                        <View style={styles.similarAlbumGemBadge}>
-                          <Ionicons name="diamond" size={12} color="#FFD700" />
-                        </View>
-                      )}
-                    </View>
-                    <View style={styles.similarAlbumInfo}>
-                      <Text style={[styles.similarAlbumTitle, { color: colors.text }]} numberOfLines={2} ellipsizeMode="tail">
-                        {item.albums?.title || 'Sin título'}
-                      </Text>
-                      <Text style={[styles.similarAlbumArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-                        {item.albums?.artist || 'Artista desconocido'}
-                      </Text>
-                      {item.albums?.year && (
-                        <Text style={[styles.similarAlbumYear, { color: colors.text }]}>
-                          {item.albums.year}
-                        </Text>
-                      )}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-          )}
+        )}
       </ScrollView>
 
 
@@ -1533,7 +1532,7 @@ export default function AlbumDetailScreen() {
                 <Ionicons name="close" size={24} color="#9ca3af" />
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView style={styles.modalBody}>
               {userLists.length > 0 ? (
                 userLists.map((list) => (
@@ -1542,9 +1541,9 @@ export default function AlbumDetailScreen() {
                     style={styles.listOption}
                     onPress={() => handleAddToList(list.id)}
                   >
-                    <ListCoverCollage 
-                      albums={list.albums || []} 
-                      size={60} 
+                    <ListCoverCollage
+                      albums={list.albums || []}
+                      size={60}
                     />
                     <View style={styles.listOptionInfo}>
                       <Text style={styles.listOptionTitle}>{list.title}</Text>
@@ -1560,7 +1559,7 @@ export default function AlbumDetailScreen() {
                   <Text style={styles.emptyListsText}>No tienes listas creadas</Text>
                 </View>
               )}
-              
+
               <TouchableOpacity
                 style={styles.createListButton}
                 onPress={handleCreateNewList}
@@ -1595,7 +1594,7 @@ export default function AlbumDetailScreen() {
                     <Ionicons name="close" size={24} color="#9ca3af" />
                   </TouchableOpacity>
                 </View>
-                
+
                 <ScrollView style={styles.modalBody}>
                   <View style={styles.ratioInfoSection}>
                     <Text style={styles.ratioInfoTitle}>Significado</Text>
@@ -1603,14 +1602,14 @@ export default function AlbumDetailScreen() {
                       {getRatioInfo(currentRatioData.level).significado}
                     </Text>
                   </View>
-                  
+
                   <View style={styles.ratioInfoSection}>
                     <Text style={styles.ratioInfoTitle}>Probabilidad de venta</Text>
                     <Text style={styles.ratioInfoText}>
                       {getRatioInfo(currentRatioData.level).probabilidad}
                     </Text>
                   </View>
-                  
+
                   <View style={styles.ratioInfoSection}>
                     <Text style={styles.ratioInfoTitle}>Estrategia</Text>
                     <Text style={styles.ratioInfoText}>
@@ -1621,22 +1620,22 @@ export default function AlbumDetailScreen() {
               </>
             )}
           </View>
-          </View>
-        </Modal>
+        </View>
+      </Modal>
 
-        {/* TypeForm Modal */}
-        <Modal
-          visible={showTypeForm}
-          animationType="slide"
-          presentationStyle="fullScreen"
-        >
-          <SafeAreaView style={styles.typeFormContainer}>
-            <KeyboardAvoidingView 
-              style={styles.typeFormKeyboardContainer}
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-            >
-                          {/* Header del TypeForm */}
+      {/* TypeForm Modal */}
+      <Modal
+        visible={showTypeForm}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <SafeAreaView style={styles.typeFormContainer}>
+          <KeyboardAvoidingView
+            style={styles.typeFormKeyboardContainer}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+          >
+            {/* Header del TypeForm */}
             <View style={styles.header}>
               <TouchableOpacity
                 style={styles.backButton}
@@ -1654,12 +1653,12 @@ export default function AlbumDetailScreen() {
               <View style={styles.headerRight} />
             </View>
 
-                          {/* Contenido de la pregunta */}
+            {/* Contenido de la pregunta */}
             <ScrollView style={styles.typeFormContent} showsVerticalScrollIndicator={false}>
               <Text style={styles.typeFormQuestion}>
                 {typeFormQuestions[currentQuestion]}
               </Text>
-              
+
               {currentQuestion === 0 && album?.albums?.tracks && album.albums.tracks.length > 0 ? (
                 // Primera pregunta: Selección de canción favorita
                 <View style={styles.tracklistContainer}>
@@ -1705,7 +1704,7 @@ export default function AlbumDetailScreen() {
               )}
             </ScrollView>
 
-                          {/* Botón Guardar */}
+            {/* Botón Guardar */}
             <View style={[styles.typeFormFooter, { justifyContent: 'center' }]}>
               <TouchableOpacity
                 style={[
@@ -1719,44 +1718,44 @@ export default function AlbumDetailScreen() {
                 <Ionicons name="checkmark" size={20} color="white" />
               </TouchableOpacity>
             </View>
-            </KeyboardAvoidingView>
-          </SafeAreaView>
-        </Modal>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </Modal>
 
-        {/* Botón flotante de YouTube */}
-        {youtubeUrls.length > 0 && (
-          <TouchableOpacity
-            style={[styles.floatingPlayButton, styles.youtubeButton]}
-            onPress={handlePlayYouTubeDirect}
-            activeOpacity={0.8}
-          >
-            <Ionicons 
-              name="logo-youtube" 
-              size={24} 
-              color="#fff" 
-            />
-          </TouchableOpacity>
-        )}
+      {/* Botón flotante de YouTube */}
+      {youtubeUrls.length > 0 && !showFloatingPlayer && (
+        <TouchableOpacity
+          style={[styles.floatingPlayButton, styles.youtubeButton]}
+          onPress={handlePlayYouTubeDirect}
+          activeOpacity={0.8}
+        >
+          <Ionicons
+            name="logo-youtube"
+            size={24}
+            color="#fff"
+          />
+        </TouchableOpacity>
+      )}
 
-        {/* Reproductor de audio flotante */}
-        {currentAudioUrl && (
-          <View style={styles.floatingAudioPlayer}>
-            <AudioPlayer
-              audioUrl={currentAudioUrl}
-              title={album?.albums?.title || 'Música del álbum'}
-              onError={(error) => {
-                console.error('Audio player error:', error);
-                setIsPlaying(false);
-                setCurrentAudioUrl(null);
-              }}
-            />
-          </View>
-        )}
+      {/* Reproductor de audio flotante */}
+      {currentAudioUrl && (
+        <View style={styles.floatingAudioPlayer}>
+          <AudioPlayer
+            audioUrl={currentAudioUrl}
+            title={album?.albums?.title || 'Música del álbum'}
+            onError={(error) => {
+              console.error('Audio player error:', error);
+              setIsPlaying(false);
+              setCurrentAudioUrl(null);
+            }}
+          />
+        </View>
+      )}
 
 
-      </SafeAreaView>
-    );
-  }
+    </SafeAreaView>
+  );
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -2577,7 +2576,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     flex: 1,
     textAlign: 'center',
-    
+
   },
   closeButton: {
     padding: 4,
@@ -3236,7 +3235,7 @@ const styles = StyleSheet.create({
   trackItemSelected: {
     backgroundColor: '#f0f9ff',
     borderColor: '#007AFF',
-   
+
   },
   trackTitleSelected: {
     color: '#007AFF',
@@ -3311,16 +3310,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   errorButton: {
-      marginTop: 20,
-      backgroundColor: '#007AFF',
-      paddingVertical: 10,
-      paddingHorizontal: 20,
-      borderRadius: 8,
+    marginTop: 20,
+    backgroundColor: '#007AFF',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
   errorButtonText: {
-      color: '#fff',
-      fontSize: 16,
-      fontWeight: '600',
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   floatingYouTubeButton: {
     position: 'absolute',

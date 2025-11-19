@@ -98,6 +98,8 @@ export class YouTubeAudioServiceV2 {
   // Intentar extraer audio usando diferentes servicios
   private static async tryExtractAudio(videoId: string): Promise<string | null> {
     const methods = [
+      () => this.extractWithCobalt(videoId),
+      () => this.extractWithInvidious(videoId),
       () => this.extractWithY2Mate(videoId),
       () => this.extractWithYTMP3(videoId),
       () => this.extractWithLoaderTo(videoId),
@@ -124,11 +126,122 @@ export class YouTubeAudioServiceV2 {
     return null;
   }
 
+  // Método 0.5: Invidious API (Instancias descentralizadas de YouTube)
+  private static async extractWithInvidious(videoId: string): Promise<string | null> {
+    const instances = [
+      'https://inv.tux.pizza',
+      'https://vid.puffyan.us',
+      'https://invidious.projectsegfau.lt',
+      'https://invidious.fdn.fr',
+      'https://yt.artemislena.eu'
+    ];
+
+    console.log('🎵 [V2] Probando Invidious API...');
+
+    for (const instance of instances) {
+      try {
+        console.log(`🎵 [V2] Probando instancia Invidious: ${instance}`);
+
+        const response = await fetch(`${instance}/api/v1/videos/${videoId}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+
+          // Buscar streams de audio
+          if (data.adaptiveFormats && data.adaptiveFormats.length > 0) {
+            // Filtrar solo audio, preferiblemente m4a o webm
+            const audioStreams = data.adaptiveFormats.filter((f: any) =>
+              f.type && f.type.includes('audio')
+            );
+
+            if (audioStreams.length > 0) {
+              // Ordenar por bitrate (calidad) descendente
+              audioStreams.sort((a: any, b: any) => parseInt(b.bitrate) - parseInt(a.bitrate));
+
+              const bestAudio = audioStreams[0];
+              if (bestAudio && bestAudio.url) {
+                console.log(`🎵 [V2] ✅ Invidious (${instance}) exitoso`);
+                return bestAudio.url;
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn(`🎵 [V2] Instancia Invidious falló (${instance}):`, error);
+      }
+    }
+
+    throw new Error('Todas las instancias de Invidious fallaron');
+  }
+
+  // Método 0: Cobalt API (Muy confiable - con múltiples instancias)
+  private static async extractWithCobalt(videoId: string): Promise<string | null> {
+    const instances = [
+      'https://api.cobalt.tools/api/json',
+      'https://cobalt.api.wuk.sh/api/json',
+      'https://api.server.cobalt.tools/api/json',
+      'https://co.wuk.sh/api/json'
+    ];
+
+    console.log('🎵 [V2] Probando Cobalt API con múltiples instancias...');
+
+    for (const instance of instances) {
+      try {
+        console.log(`🎵 [V2] Probando instancia Cobalt: ${instance}`);
+
+        const response = await fetch(instance, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.0 Mobile/15E148 Safari/604.1',
+            'Origin': 'https://cobalt.tools',
+            'Referer': 'https://cobalt.tools/'
+          },
+          body: JSON.stringify({
+            url: `https://www.youtube.com/watch?v=${videoId}`,
+            vCodec: 'h264',
+            vQuality: '720',
+            aFormat: 'mp3',
+            isAudioOnly: true,
+            isNoTTWatermark: true,
+            dubLang: false
+          })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log(`🎵 [V2] Respuesta de Cobalt (${instance}):`, data);
+
+          if (data.status === 'success' && data.url) {
+            console.log('🎵 [V2] ✅ Cobalt exitoso - URL obtenida');
+            return data.url;
+          } else if (data.status === 'stream' && data.url) {
+            console.log('🎵 [V2] ✅ Cobalt stream exitoso - URL obtenida');
+            return data.url;
+          } else if (data.status === 'error') {
+            console.warn(`🎵 [V2] Error de Cobalt (${instance}):`, data.text);
+          }
+        } else {
+          console.warn(`🎵 [V2] Cobalt HTTP error (${instance}):`, response.status, response.statusText);
+        }
+      } catch (error) {
+        console.warn(`🎵 [V2] Instancia Cobalt falló (${instance}):`, error);
+      }
+    }
+
+    throw new Error('Todas las instancias de Cobalt fallaron');
+  }
+
   // Método 1: Y2Mate (más confiable)
   private static async extractWithY2Mate(videoId: string): Promise<string | null> {
     try {
       console.log('🎵 [V2] Probando Y2Mate...');
-      
+
       // Paso 1: Obtener la página de Y2Mate
       const searchUrl = `https://www.y2mate.com/youtube-mp3/${videoId}`;
       const response = await fetch(searchUrl, {
@@ -142,14 +255,14 @@ export class YouTubeAudioServiceV2 {
       }
 
       const html = await response.text();
-      
+
       // Buscar el enlace de descarga en el HTML
       const downloadMatch = html.match(/href="([^"]*download[^"]*\.mp3[^"]*)"/);
       if (downloadMatch && downloadMatch[1]) {
-        const downloadUrl = downloadMatch[1].startsWith('http') 
-          ? downloadMatch[1] 
+        const downloadUrl = downloadMatch[1].startsWith('http')
+          ? downloadMatch[1]
           : `https://www.y2mate.com${downloadMatch[1]}`;
-        
+
         console.log('🎵 [V2] ✅ Y2Mate exitoso');
         return downloadUrl;
       }
@@ -165,7 +278,7 @@ export class YouTubeAudioServiceV2 {
   private static async extractWithYTMP3(videoId: string): Promise<string | null> {
     try {
       console.log('🎵 [V2] Probando YTMP3...');
-      
+
       const response = await fetch('https://ytmp3.cc/api/convert', {
         method: 'POST',
         headers: {
@@ -178,7 +291,7 @@ export class YouTubeAudioServiceV2 {
       if (response.ok) {
         const data = await response.json();
         console.log('🎵 [V2] Respuesta de YTMP3:', data);
-        
+
         if (data.status === 'success' && data.link) {
           console.log('🎵 [V2] ✅ YTMP3 exitoso');
           return data.link;
@@ -196,7 +309,7 @@ export class YouTubeAudioServiceV2 {
   private static async extractWithLoaderTo(videoId: string): Promise<string | null> {
     try {
       console.log('🎵 [V2] Probando Loader.to...');
-      
+
       const response = await fetch('https://loader.to/ajax/search', {
         method: 'POST',
         headers: {
@@ -209,7 +322,7 @@ export class YouTubeAudioServiceV2 {
       if (response.ok) {
         const data = await response.json();
         console.log('🎵 [V2] Respuesta de Loader.to:', data);
-        
+
         if (data.status === 'success' && data.links && data.links.mp3) {
           const mp3Links = Object.values(data.links.mp3);
           if (mp3Links.length > 0) {
@@ -233,7 +346,7 @@ export class YouTubeAudioServiceV2 {
   private static async extractWithSaveTube(videoId: string): Promise<string | null> {
     try {
       console.log('🎵 [V2] Probando SaveTube...');
-      
+
       const response = await fetch(`https://savetube.me/api/v1/tetr?url=https://www.youtube.com/watch?v=${videoId}`, {
         method: 'GET',
         headers: {
@@ -245,7 +358,7 @@ export class YouTubeAudioServiceV2 {
       if (response.ok) {
         const data = await response.json();
         console.log('🎵 [V2] Respuesta de SaveTube:', data);
-        
+
         if (data.status === 'success' && data.data && data.data.audio) {
           const audioUrl = data.data.audio[0]?.url;
           if (audioUrl) {
@@ -266,32 +379,35 @@ export class YouTubeAudioServiceV2 {
   private static async validateAudioUrl(url: string): Promise<boolean> {
     try {
       console.log('🎵 [V2] Validando URL de audio:', url);
-      
+
       // Verificar formato de URL
       new URL(url);
-      
+
       // Para URLs de YouTube o servicios de extracción, hacer validación HTTP
-      const response = await fetch(url, { 
-        method: 'HEAD',
+      // Usamos GET con Range para no descargar todo el archivo, solo verificar que existe
+      const response = await fetch(url, {
+        method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Range': 'bytes=0-10' // Solo pedir los primeros bytes
         }
       });
-      
+
       const contentType = response.headers.get('content-type');
       const contentLength = response.headers.get('content-length');
-      
-      // Verificar que sea un archivo de audio válido
-      const hasValidContentType = contentType ? (contentType.includes('audio') || contentType.includes('video')) : false;
-      const hasValidSize = contentLength ? parseInt(contentLength) > 1000 : false;
-      const isValid = response.ok && (hasValidContentType || hasValidSize); // Al menos 1KB
-      
-      console.log('🎵 [V2] URL válida:', isValid, 'Content-Type:', contentType, 'Size:', contentLength);
-      
+
+      // Verificar que sea un archivo de audio válido o que la respuesta sea exitosa (200 o 206 Partial Content)
+      const hasValidContentType = contentType ? (contentType.includes('audio') || contentType.includes('video') || contentType.includes('octet-stream')) : false;
+      const isValid = (response.status === 200 || response.status === 206) && hasValidContentType;
+
+      console.log('🎵 [V2] URL válida:', isValid, 'Status:', response.status, 'Content-Type:', contentType);
+
       return isValid;
     } catch (error) {
       console.warn('🎵 [V2] Error validando URL:', error);
-      return false; // Si hay error, consideramos la URL como inválida
+      // Si falla la validación pero la URL parece válida, le damos el beneficio de la duda
+      // para evitar falsos negativos por problemas de red o bloqueos de HEAD/Range
+      return true;
     }
   }
 }
