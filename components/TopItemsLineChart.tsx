@@ -18,14 +18,14 @@ interface TopItemsLineChartProps {
 
 const { width } = Dimensions.get('window');
 
-export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({ 
-  data, 
-  title, 
-  keyName, 
-  icon 
+export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
+  data,
+  title,
+  keyName,
+  icon
 }) => {
   const { colors } = useTheme();
-  
+
   if (!data || data.length === 0) {
     return null;
   }
@@ -39,23 +39,39 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
     return label.substring(0, maxLength) + '...';
   };
 
-  // Asignar colores según el tipo de gráfica
+  // Asignar colores según el tipo de gráfica con gradientes más vibrantes
   const getChartColor = () => {
     switch (icon) {
       case 'people': // Artistas
-        return '#007AFF'; // Azul de la app
+        return '#FF6B6B'; // Rojo coral vibrante
       case 'business': // Sellos
         return '#4ECDC4'; // Turquesa
       case 'musical-notes': // Estilos
-        return '#45B7D1'; // Azul
+        return '#A78BFA'; // Púrpura
       case 'calendar': // Décadas
-        return '#96CEB4'; // Verde menta
+        return '#34D399'; // Verde esmeralda
       default:
         return '#007AFF'; // Azul por defecto
     }
   };
 
+  const getGradientColors = () => {
+    switch (icon) {
+      case 'people':
+        return { from: '#FF6B6B', to: '#FF8E8E' };
+      case 'business':
+        return { from: '#4ECDC4', to: '#6FE5DC' };
+      case 'musical-notes':
+        return { from: '#A78BFA', to: '#C4B5FD' };
+      case 'calendar':
+        return { from: '#34D399', to: '#6EE7B7' };
+      default:
+        return { from: '#007AFF', to: '#4DA3FF' };
+    }
+  };
+
   const chartColor = getChartColor();
+  const gradientColors = getGradientColors();
 
   const chartData = {
     labels: top5Data.map(item => truncateLabel(String(item[keyName]), 8)),
@@ -63,84 +79,90 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
       {
         data: top5Data.map(item => item.count),
         color: (opacity = 1) => `${chartColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
-        strokeWidth: 3,
+        strokeWidth: 4,
       },
     ],
   };
 
   const bgColor = colors.card || '#ffffff';
-  // Asegurar que el texto sea siempre visible - usar siempre negro para el título
-  const titleColor = '#212529'; // Negro oscuro siempre visible
-  const isLightBg = bgColor === '#ffffff' || bgColor === '#fff' || !bgColor || (typeof bgColor === 'string' && bgColor.toLowerCase().includes('fff'));
-  // Usar siempre negro para los labels para asegurar visibilidad
-  const labelTextColor = '#212529';
-  
+  const titleColor = '#1F2937';
+  const labelTextColor = '#4B5563';
+
   const chartConfig = {
     backgroundColor: bgColor,
-    backgroundGradientFrom: bgColor,
-    backgroundGradientTo: bgColor,
+    backgroundGradientFrom: gradientColors.from,
+    backgroundGradientTo: gradientColors.to,
+    backgroundGradientFromOpacity: 0.05,
+    backgroundGradientToOpacity: 0.05,
     decimalPlaces: 0,
     color: (opacity = 1) => `${chartColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
     labelColor: (opacity = 1) => {
-      // Siempre usar negro con opacidad para asegurar visibilidad
-      return `rgba(33, 37, 41, ${opacity})`; // #212529 con opacidad
+      return `rgba(75, 85, 99, ${opacity})`;
     },
     style: {
       borderRadius: 16,
     },
     propsForDots: {
-      r: '6',
-      strokeWidth: '2',
+      r: '7',
+      strokeWidth: '3',
       stroke: chartColor,
+      fill: bgColor,
+    },
+    propsForBackgroundLines: {
+      strokeDasharray: '',
+      stroke: '#E5E7EB',
+      strokeWidth: 1,
     },
     propsForLabels: {
-      fontSize: 11,
+      fontSize: 12,
       fill: labelTextColor,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     propsForVerticalLabels: {
-      fontSize: 11,
+      fontSize: 12,
       fill: labelTextColor,
-      fontWeight: '500',
+      fontWeight: '600',
     },
     propsForHorizontalLabels: {
-      fontSize: 10,
+      fontSize: 11,
       fill: labelTextColor,
-      fontWeight: '500',
+      fontWeight: '600',
       rotation: -45,
     },
   };
 
   return (
     <View style={[styles.container, { backgroundColor: bgColor }]}>
-      <View style={styles.header}>
-        <Ionicons name={icon as any} size={20} color={chartColor} />
+      <View style={[styles.header, { borderLeftColor: chartColor }]}>
+        <View style={[styles.iconContainer, { backgroundColor: `${chartColor}15` }]}>
+          <Ionicons name={icon as any} size={24} color={chartColor} />
+        </View>
         <Text style={[styles.title, { color: titleColor }]} numberOfLines={1}>{title}</Text>
       </View>
-      
+
       <View style={styles.chartContainer}>
         <LineChart
           data={chartData}
           width={width - 56}
-          height={250}
+          height={260}
           yAxisLabel=""
           chartConfig={chartConfig}
           bezier={true}
           style={{
-            marginVertical: 8,
+            marginVertical: 12,
             borderRadius: 16,
           }}
           withDots={true}
-          withShadow={false}
+          withShadow={true}
           withScrollableDot={false}
           withInnerLines={true}
-          withOuterLines={true}
+          withOuterLines={false}
           withVerticalLabels={true}
           withHorizontalLabels={true}
           horizontalLabelRotation={-45}
           verticalLabelRotation={0}
           fromZero={true}
-          segments={4}
+          segments={5}
         />
       </View>
     </View>
@@ -150,22 +172,43 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     margin: 0,
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 12,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: '#F3F4F6',
+    borderLeftWidth: 4,
+    paddingLeft: 12,
+  },
+  iconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
   },
   title: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginLeft: 8,
-    color: '#212529', // Color fijo para asegurar visibilidad
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#1F2937',
+    letterSpacing: 0.3,
   },
   chartContainer: {
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 8,
   },
 }); 

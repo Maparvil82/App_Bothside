@@ -1216,14 +1216,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   chartsScrollView: {
-    marginTop: 10,
+    marginTop: 16,
+    marginBottom: 8,
   },
   chartsScrollContainer: {
-    paddingHorizontal: 0,
+    paddingHorizontal: 8,
+    gap: 16,
   },
   chartItem: {
-    width: width - 16,
-    marginRight: 0,
+    width: width - 32,
+    marginRight: 16,
   },
   scrollIndicator: {
     flexDirection: 'row',
