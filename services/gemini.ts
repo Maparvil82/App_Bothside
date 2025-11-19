@@ -39,13 +39,22 @@ interface CollectionAlbum {
   };
 }
 
+interface AlbumStory {
+  user_collection_id: string;
+  question_1?: string; // ¿Qué significa este álbum para ti?
+  question_2?: string; // ¿Cuál es tu canción favorita y por qué?
+  question_3?: string; // ¿Tienes algún recuerdo especial asociado?
+  question_4?: string; // ¿Cuándo sueles escucharlo?
+  question_5?: string; // Notas adicionales
+}
+
 export class GeminiService {
   private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent';
   private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent';
   private static readonly API_KEY = ENV.GEMINI_API_KEY;
 
   static async generateResponse(
-    userMessage: string, 
+    userMessage: string,
     collectionContext: string,
     collectionData?: CollectionAlbum[]
   ): Promise<string> {
@@ -57,29 +66,29 @@ export class GeminiService {
       } else {
         webInfo = await WebSearchService.enrichResponse(userMessage, collectionContext);
       }
-      
-      const systemPrompt = `Eres un asistente experto en música y colecciones de discos con acceso completo a toda la información de la colección del usuario, como si fueras Gemini Web.
 
+      const systemPrompt = `Eres un asistente experto en música y colecciones de discos con acceso completo a toda la información de la colección del usuario, como si fueras Gemini Web.
+      
+      INSTRUCCIONES IMPORTANTES:
+      - Tienes acceso completo a todos los datos de la colección (171 álbumes, 144 artistas, 28 estilos) listados en el "CATÁLOGO COMPLETO DE ÁLBUMES".
+      - ADEMÁS, tienes acceso a "HISTORIAS Y NOTAS PERSONALES" que el usuario ha escrito sobre algunos discos.
+      - Responde de manera amigable y útil en español.
+      - Sé específico y detallado con los datos de la colección.
+      - Si te preguntan sobre un artista específico, menciona TODOS sus álbumes con detalles.
+      - Si te preguntan sobre un estilo musical, menciona ejemplos específicos de álbumes.
+      - Si te preguntan sobre precios, usa los valores exactos de la colección.
+      - Si te preguntan sobre sellos discográficos, menciona los álbumes específicos.
+      - Proporciona análisis detallados y respuestas completas.
+      - Puedes hacer comparaciones entre artistas, estilos, años, etc.
+      - Termina tus respuestas de manera natural, no las cortes abruptamente.
+      - Usa la información completa disponible para dar respuestas precisas.
+      - Si hay información web adicional, úsala para enriquecer tu respuesta con datos históricos, biográficos o técnicos.
+      - Combina la información de la colección con los datos web y las historias personales para dar respuestas más completas y personalizadas.
+      
       INFORMACIÓN COMPLETA DE LA COLECCIÓN:
       ${collectionContext}
       
-      ${webInfo ? `INFORMACIÓN ADICIONAL DE LA WEB:\n${webInfo}` : ''}
-      
-      INSTRUCCIONES IMPORTANTES:
-      - Tienes acceso completo a todos los datos de la colección (171 álbumes, 144 artistas, 28 estilos)
-      - Responde de manera amigable y útil en español
-      - Sé específico y detallado con los datos de la colección
-      - Si te preguntan sobre un artista específico, menciona TODOS sus álbumes con detalles
-      - Si te preguntan sobre un estilo musical, menciona ejemplos específicos de álbumes
-      - Si te preguntan sobre precios, usa los valores exactos de la colección
-      - Si te preguntan sobre sellos discográficos, menciona los álbumes específicos
-      - Proporciona análisis detallados y respuestas completas
-      - Puedes hacer comparaciones entre artistas, estilos, años, etc.
-      - Termina tus respuestas de manera natural, no las cortes abruptamente
-      - Usa la información completa disponible para dar respuestas precisas
-      - Si hay información web adicional, úsala para enriquecer tu respuesta con datos históricos, biográficos o técnicos
-      - Combina la información de la colección con los datos web para dar respuestas más completas
-      - Si se mencionan álbumes específicos, incluye los enlaces a Discogs cuando estén disponibles`;
+      ${webInfo ? `INFORMACIÓN ADICIONAL DE LA WEB:\n${webInfo}` : ''}`;
 
       const fullPrompt = `${systemPrompt}\n\nUsuario: ${userMessage}`;
 
@@ -110,7 +119,7 @@ export class GeminiService {
       }
 
       const data: GeminiResponse = await response.json();
-      
+
       if (!data.candidates || data.candidates.length === 0) {
         throw new Error('No se recibió respuesta de la API');
       }
@@ -129,10 +138,10 @@ export class GeminiService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔍 Analizando imagen de álbum con Gemini Vision... (Intento ${attempt}/${maxRetries})`);
-        
+
         // Remover el prefijo data:image/jpeg;base64, si está presente
         const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-        
+
         // PROMPT DE EXPERTO EN MÚSICA para análisis completo del disco
         const prompt = `Eres un EXPERTO EN MÚSICA y DISCOGRAFÍA con 30 años de experiencia. Analiza esta imagen de un álbum con la precisión de un profesional.
 
@@ -213,7 +222,7 @@ Sin explicaciones adicionales.`;
           }
 
           const data: GeminiResponse = await response.json();
-          
+
           if (!data.candidates || data.candidates.length === 0) {
             throw new Error('No se recibió respuesta de la API Vision');
           }
@@ -254,7 +263,7 @@ Sin explicaciones adicionales.`;
             lastError = fetchError;
             console.log(`❌ Error en intento ${attempt}:`, fetchError.message);
           }
-          
+
           // Si no es el último intento, esperar un poco antes de reintentar
           if (attempt < maxRetries) {
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Espera progresiva
@@ -264,7 +273,7 @@ Sin explicaciones adicionales.`;
       } catch (error) {
         lastError = error as Error;
         console.error(`Error al analizar imagen con Gemini Vision (intento ${attempt}):`, error);
-        
+
         // Si no es el último intento, esperar un poco antes de reintentar
         if (attempt < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Espera progresiva
@@ -277,7 +286,7 @@ Sin explicaciones adicionales.`;
     throw new Error('No se pudo analizar la imagen del álbum después de varios intentos. Intenta con otra foto o verifica tu conexión.');
   }
 
-  static formatCollectionContext(collectionData: any[]): string {
+  static formatCollectionContext(collectionData: any[], albumStories: AlbumStory[] = []): string {
     if (!collectionData || collectionData.length === 0) {
       return 'La colección está vacía.';
     }
@@ -288,9 +297,18 @@ Sin explicaciones adicionales.`;
     const labels = new Set();
     const years = new Set();
     let totalValue = 0;
-    
+
+    // Crear mapa de historias para acceso rápido
+    const storiesMap = new Map<string, AlbumStory>();
+    albumStories.forEach(story => {
+      if (story.user_collection_id) {
+        storiesMap.set(story.user_collection_id, story);
+      }
+    });
+
     // Crear listas detalladas de álbumes
     const albumDetails: Array<{
+      id: string; // user_collection_id
       title: string;
       artist: string;
       year: string;
@@ -298,7 +316,9 @@ Sin explicaciones adicionales.`;
       price: number;
       styles: string[];
       discogsId: string | null;
+      hasStory: boolean;
     }> = [];
+
     const artistAlbums = new Map<string, Array<{
       title: string;
       year: string;
@@ -311,7 +331,7 @@ Sin explicaciones adicionales.`;
       if (album) {
         if (album.artist) {
           artists.add(album.artist);
-          
+
           // Agrupar álbumes por artista
           if (!artistAlbums.has(album.artist)) {
             artistAlbums.set(album.artist, []);
@@ -338,24 +358,46 @@ Sin explicaciones adicionales.`;
             }
           });
         }
-        
+
         // Añadir detalles del álbum
         albumDetails.push({
+          id: item.id || item.album_id, // Asegurar que tenemos el ID correcto para mapear historias
           title: album.title || 'Sin título',
           artist: album.artist || 'Artista desconocido',
           year: album.release_year || 'Año desconocido',
           label: album.label || 'Sello desconocido',
           price: album.album_stats?.avg_price || 0,
           styles: album.album_styles?.map((s: any) => s.styles?.name).filter(Boolean) || [],
-          discogsId: album.discogs_id || null
+          discogsId: album.discogs_id || null,
+          hasStory: storiesMap.has(item.id || item.album_id)
         });
       }
     });
 
-    // Crear lista de artistas con sus álbumes
-    const artistList = Array.from(artistAlbums.entries()).map(([artist, albums]) => {
-      return `${artist} (${albums.length} álbum${albums.length > 1 ? 'es' : ''}): ${albums.map((a: any) => a.title).join(', ')}`;
-    });
+    // Formatear historias de usuarios
+    let storiesContext = '';
+    const albumsWithStories = albumDetails.filter(a => a.hasStory);
+
+    if (albumsWithStories.length > 0) {
+      storiesContext = `
+      📖 HISTORIAS Y NOTAS PERSONALES DEL USUARIO (${albumsWithStories.length} historias):
+      El usuario ha compartido detalles personales sobre los siguientes álbumes. USA ESTA INFORMACIÓN para personalizar tus respuestas y recomendaciones.
+      
+      ${albumsWithStories.map(album => {
+        const story = storiesMap.get(album.id);
+        if (!story) return '';
+
+        const parts = [];
+        if (story.question_1) parts.push(`- Significado: "${story.question_1}"`);
+        if (story.question_2) parts.push(`- Canción favorita: "${story.question_2}"`);
+        if (story.question_3) parts.push(`- Recuerdo: "${story.question_3}"`);
+        if (story.question_4) parts.push(`- Momento de escucha: "${story.question_4}"`);
+        if (story.question_5) parts.push(`- Notas: "${story.question_5}"`);
+
+        return `📀 SOBRE "${album.title}" de ${album.artist}:\n${parts.join('\n')}`;
+      }).join('\n\n')}
+      `;
+    }
 
     const context = `
       📊 RESUMEN DE LA COLECCIÓN:
@@ -391,18 +433,20 @@ Sin explicaciones adicionales.`;
       
       📈 ÁLBUMES POR ESTILO:
       ${Array.from(styles).map((style) => {
-        const albumsInStyle = albumDetails.filter(album => album.styles.includes(style as string));
-        return `${style} (${albumsInStyle.length}): ${albumsInStyle.slice(0, 5).map(a => a.title).join(', ')}${albumsInStyle.length > 5 ? ` y ${albumsInStyle.length - 5} más` : ''}`;
-      }).join('\n')}
+          const albumsInStyle = albumDetails.filter(album => album.styles.includes(style as string));
+          return `${style} (${albumsInStyle.length}): ${albumsInStyle.slice(0, 5).map(a => a.title).join(', ')}${albumsInStyle.length > 5 ? ` y ${albumsInStyle.length - 5} más` : ''}`;
+        }).join('\n')}
       
       📋 CATÁLOGO COMPLETO DE ÁLBUMES:
       ${albumDetails
         .sort((a, b) => a.artist.localeCompare(b.artist))
         .map(album => {
-          const discogsInfo = album.discogsId ? ` - 🔗 https://www.discogs.com/es/release/${album.discogsId}` : '';
-          return `• ${album.title} - ${album.artist} (${album.year}) - ${album.label} - ${album.price.toFixed(2)}€ - Estilos: ${album.styles.join(', ')}${discogsInfo}`;
+          const storyIndicator = album.hasStory ? ' [⭐ TIENE HISTORIA PERSONAL]' : '';
+          return `• ${album.title} - ${album.artist} (${album.year}) - ${album.label} - ${album.price.toFixed(2)}€ - Estilos: ${album.styles.join(', ')}${storyIndicator}`;
         })
         .join('\n')}
+
+      ${storiesContext}
     `;
 
     return context;

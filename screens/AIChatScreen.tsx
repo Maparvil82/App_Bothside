@@ -75,6 +75,7 @@ export default function AIChatScreen() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [collectionData, setCollectionData] = useState<any[]>([]);
+  const [albumStories, setAlbumStories] = useState<any[]>([]);
   const scrollViewRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -136,9 +137,11 @@ export default function AIChatScreen() {
     if (!user) return;
 
     try {
+      // Cargar colección
       const { data, error } = await supabase
         .from('user_collection')
         .select(`
+          id,
           album_id,
           added_at,
           albums (
@@ -165,6 +168,20 @@ export default function AIChatScreen() {
       }
 
       setCollectionData(data || []);
+
+      // Cargar historias (respuestas del typeform)
+      const { data: storiesData, error: storiesError } = await supabase
+        .from('album_typeform_responses')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (storiesError) {
+        console.error('Error loading stories:', storiesError);
+      } else {
+        console.log('📖 Historias cargadas:', storiesData?.length || 0);
+        setAlbumStories(storiesData || []);
+      }
+
     } catch (error) {
       console.error('Error loading collection data:', error);
     }
@@ -189,9 +206,9 @@ export default function AIChatScreen() {
     await saveChatHistory(updatedMessages);
 
     try {
-      const collectionContext = GeminiService.formatCollectionContext(collectionData);
+      const collectionContext = GeminiService.formatCollectionContext(collectionData, albumStories);
       const response = await GeminiService.generateResponse(
-        userMessage.text, 
+        userMessage.text,
         collectionContext,
         collectionData
       );
@@ -205,7 +222,7 @@ export default function AIChatScreen() {
 
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
-      
+
       // Guardar la conversación completa después de la respuesta de la IA
       await saveChatHistory(finalMessages);
     } catch (error) {
@@ -216,10 +233,10 @@ export default function AIChatScreen() {
         isUser: false,
         timestamp: new Date(),
       };
-      
+
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
-      
+
       // Guardar también en caso de error
       await saveChatHistory(finalMessages);
     } finally {
@@ -233,10 +250,10 @@ export default function AIChatScreen() {
 
   const handlePredefinedQuestion = (question: string) => {
     if (!question.trim() || isLoading) return;
-    
+
     // Set the input text and trigger send
     setInputText(question);
-    
+
     // Use a small delay to ensure the input is set before sending
     setTimeout(() => {
       sendMessage();
@@ -257,12 +274,12 @@ export default function AIChatScreen() {
 
   const handleSendMessage = () => {
     if (!inputText.trim() || isLoading) return;
-    
+
     // Hacer scroll inmediatamente cuando el usuario envía un mensaje
     setTimeout(() => {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 50);
-    
+
     sendMessage();
   };
 
@@ -282,11 +299,11 @@ export default function AIChatScreen() {
         </TouchableOpacity>
         <View style={styles.headerTextContainer}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Bothside IA</Text>
-       
+
         </View>
         <View style={styles.rightButtonContainer}>
           {messages.length > 0 ? (
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.clearButton}
               onPress={clearChat}
             >
@@ -298,7 +315,7 @@ export default function AIChatScreen() {
         </View>
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
@@ -342,7 +359,7 @@ export default function AIChatScreen() {
               </Text>
             </View>
           ))}
-          
+
           {isLoading && (
             <View style={[styles.messageContainer, styles.aiMessage]}>
               <View style={[styles.messageBubble, styles.aiBubble, { backgroundColor: colors.card }]}>
@@ -402,9 +419,9 @@ export default function AIChatScreen() {
         <View style={[styles.inputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <TextInput
             style={[
-              styles.textInput, 
-              { 
-                backgroundColor: colors.background, 
+              styles.textInput,
+              {
+                backgroundColor: colors.background,
                 color: colors.text,
                 marginRight: inputText.trim() ? 10 : 0
               }
