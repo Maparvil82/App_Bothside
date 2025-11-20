@@ -204,17 +204,15 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {/* Legal - Third-Party Data Sources */}
+        {/* Legal */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Legal</Text>
-          <View style={styles.legalContent}>
-            <Text style={[styles.legalSectionTitle, { color: colors.text }]}>
-              Third-Party Data Sources
-            </Text>
-            <Text style={[styles.legalText, { color: colors.text }]}>
-              This application uses Discogs' API but is not affiliated with, sponsored or endorsed by Discogs. 'Discogs' is a trademark of Zink Media, LLC.
-            </Text>
-          </View>
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomColor: colors.border }]}
+            onPress={() => navigation.navigate('Legal' as never)}
+          >
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Información Legal</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>

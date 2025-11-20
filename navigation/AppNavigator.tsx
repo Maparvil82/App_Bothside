@@ -37,6 +37,7 @@ import { LoginScreen } from '../screens/LoginScreen';
 import { PricingScreen } from '../screens/PricingScreen';
 import { FeedbackScreen } from '../screens/FeedbackScreen';
 import CalendarScreen from '../screens/CalendarScreen';
+import { LegalScreen } from '../screens/LegalScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -192,6 +193,24 @@ const ProfileStack = () => (
       component={AdminScreen}
       options={{ title: 'Administración' }}
     />
+    <Stack.Screen
+      name="Legal"
+      component={LegalScreen}
+      options={{
+        title: 'Información Legal',
+        headerShown: true,
+        headerBackTitle: 'Atrás'
+      }}
+    />
+    <Stack.Screen
+      name="Feedback"
+      component={FeedbackScreen}
+      options={{
+        title: 'Feedback',
+        headerShown: true,
+        headerBackTitle: 'Atrás'
+      }}
+    />
   </Stack.Navigator>
 );
 
@@ -237,7 +256,7 @@ const TabNavigator = () => (
 const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { mode } = useThemeMode();
   const theme = mode === 'dark' ? AppDarkTheme : DefaultTheme; // light remains existing
-  
+
   // Configuración de deep linking
   const linking = {
     prefixes: [Linking.createURL('/'), 'bothside://'],
@@ -261,8 +280,8 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   return (
-    <NavigationContainer 
-      theme={theme} 
+    <NavigationContainer
+      theme={theme}
       linking={linking}
       fallback={<ActivityIndicator size="large" color="#007AFF" />}
     >
