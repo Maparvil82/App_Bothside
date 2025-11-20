@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Image, StyleSheet } from 'react-native';
 
-interface ListCoverCollageProps {
+interface MaletaCoverCollageProps {
   albums: Array<{
     albums: {
       cover_url?: string;
@@ -10,7 +10,7 @@ interface ListCoverCollageProps {
   size?: number;
 }
 
-export const ListCoverCollage: React.FC<ListCoverCollageProps> = ({ 
+export const MaletaCoverCollage: React.FC<MaletaCoverCollageProps> = ({ 
   albums, 
   size = 80 
 }) => {

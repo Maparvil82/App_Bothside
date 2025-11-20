@@ -26,10 +26,10 @@ import { getAlbumEditions, DiscogsService } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
-import { UserCollectionService, AlbumService } from '../services/database';
+import { UserCollectionService, AlbumService, UserMaletaService } from '../services/database';
 import { needsDiscogsRefresh, hoursSinceCache } from '../utils/cache';
 import ShelfGrid from '../components/ShelfGrid';
-import { ListCoverCollage } from '../components/ListCoverCollage';
+import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { DiscogsAttribution } from '../components/DiscogsAttribution';
 
 const { width } = Dimensions.get('window');
@@ -103,7 +103,7 @@ export default function AlbumDetailScreen() {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [fallbackGenres, setFallbackGenres] = useState<string[]>([]);
   const [fallbackStyles, setFallbackStyles] = useState<string[]>([]);
-  const [userLists, setUserLists] = useState<any[]>([]);
+  const [userMaletas, setUserMaletas] = useState<any[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [showListsModal, setShowListsModal] = useState(false);
@@ -317,10 +317,10 @@ export default function AlbumDetailScreen() {
 
         // Obtener las listas donde está guardado este álbum con sus álbumes para portadas
         const { data: listItems, error: listItemsError } = await supabase
-          .from('list_albums')
+          .from('maleta_albums')
           .select(`
             *,
-            user_lists (
+            user_maletas (
               id,
               title,
               description
@@ -333,7 +333,7 @@ export default function AlbumDetailScreen() {
           (listItems || []).map(async (item) => {
             try {
               const { data: albums, error: albumsError } = await supabase
-                .from('list_albums')
+                .from('maleta_albums')
                 .select(`
                   *,
                   albums (
@@ -343,21 +343,21 @@ export default function AlbumDetailScreen() {
                     cover_url
                   )
                 `)
-                .eq('list_id', item.user_lists.id)
+                .eq('maleta_id', item.user_maletas.id)
                 .limit(4); // Solo los primeros 4 para el collage
 
               if (albumsError) {
-                console.error('Error getting albums for list:', item.user_lists.id, albumsError);
-                return { ...item.user_lists, albums: [] };
+                console.error('Error getting albums for list:', item.user_maletas.id, albumsError);
+                return { ...item.user_maletas, albums: [] };
               }
 
               return {
-                ...item.user_lists,
+                ...item.user_maletas,
                 albums: albums?.map(la => la.albums).filter(Boolean) || []
               };
             } catch (error) {
-              console.error('Error processing list:', item.user_lists.id, error);
-              return { ...item.user_lists, albums: [] };
+              console.error('Error processing list:', item.user_maletas.id, error);
+              return { ...item.user_maletas, albums: [] };
             }
           })
         );
@@ -864,21 +864,21 @@ export default function AlbumDetailScreen() {
 
     try {
       // Usar exactamente el mismo servicio que usa ListsScreen
-      const { UserListService } = await import('../services/database');
-      const listsWithAlbums = await UserListService.getUserListsWithAlbums(user.id);
+      const { UserMaletaService } = await import('../services/database');
+      const maletas = await UserMaletaService.getUserMaletasWithAlbums(user.id);
 
-      console.log('✅ Listas cargadas con portadas:', listsWithAlbums?.length || 0);
-      if (listsWithAlbums && listsWithAlbums.length > 0) {
+      console.log('✅ Listas cargadas con portadas:', maletas?.length || 0);
+      if (maletas && maletas.length > 0) {
         console.log('📋 Primera lista:', {
-          id: listsWithAlbums[0].id,
-          title: listsWithAlbums[0].title,
-          albumsCount: listsWithAlbums[0].albums?.length || 0
+          id: maletas[0].id,
+          title: maletas[0].title,
+          albumsCount: maletas[0].albums?.length || 0
         });
       }
-      setUserLists(listsWithAlbums || []);
+      setUserMaletas(maletas || []);
     } catch (error) {
       console.error('Error cargando listas:', error);
-      setUserLists([]);
+      setUserMaletas([]);
     }
   }, [user?.id]);
 
@@ -936,8 +936,8 @@ export default function AlbumDetailScreen() {
 
     try {
       // Verificar si el álbum ya está en la lista usando el servicio correcto
-      const { UserListService } = await import('../services/database');
-      const isAlreadyInList = await UserListService.isAlbumInList(listId, album.albums.id);
+      const { UserMaletaService } = await import('../services/database');
+      const isAlreadyInList = await UserMaletaService.isAlbumInMaleta(listId, album.albums.id);
 
       if (isAlreadyInList) {
         Alert.alert('Ya en la lista', 'Este álbum ya está en esta lista');
@@ -945,7 +945,7 @@ export default function AlbumDetailScreen() {
       }
 
       // Añadir el álbum a la lista usando el servicio correcto
-      await UserListService.addAlbumToList(listId, album.albums.id);
+      await UserMaletaService.addAlbumToMaleta(listId, album.albums.id);
 
       Alert.alert('¡Añadido!', 'El álbum se ha añadido a la lista');
       setShowListsModal(false);
@@ -968,11 +968,11 @@ export default function AlbumDetailScreen() {
     setShowListsModal(false);
     // Pequeño delay para asegurar que el modal se cierre
     setTimeout(() => {
-      // Navegar al tab de Lists y luego a CreateList
+      // Navegar al tab de Maletas y luego a CreateMaleta
       (navigation as any).navigate('Main', {
-        screen: 'ListsTab',
+        screen: 'MaletasTab',
         params: {
-          screen: 'CreateList'
+          screen: 'CreateMaleta'
         }
       });
     }, 100);
@@ -1227,7 +1227,7 @@ export default function AlbumDetailScreen() {
                 }}
                 activeOpacity={0.7}
               >
-                <ListCoverCollage
+                <MaletaCoverCollage
                   albums={(item.albums || []).map(album => ({ albums: album }))}
                   size={60}
                 />
@@ -1603,14 +1603,14 @@ export default function AlbumDetailScreen() {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              {userLists.length > 0 ? (
-                userLists.map((list) => (
+              {userMaletas.length > 0 ? (
+                userMaletas.map((list: any) => (
                   <TouchableOpacity
                     key={list.id}
                     style={styles.listOption}
                     onPress={() => handleAddToList(list.id)}
                   >
-                    <ListCoverCollage
+                    <MaletaCoverCollage
                       albums={list.albums || []}
                       size={60}
                     />

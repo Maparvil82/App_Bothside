@@ -11,8 +11,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useAuth } from '../contexts/AuthContext';
-import { UserListService } from '../services/database';
-import { useRealtimeListAlbums } from '../hooks/useRealtimeListAlbums';
+import { UserMaletaService } from '../services/database';
+import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
 
 interface ViewListScreenProps {
   navigation: any;
@@ -21,17 +21,17 @@ interface ViewListScreenProps {
 
 const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
-  const { listId, listTitle } = route.params;
-  
+  const { maletaId, listTitle } = route.params;
+
   const [list, setList] = useState<any>(null);
-  const { albums, loading: albumsLoading } = useRealtimeListAlbums(listId);
+  const { albums, loading: albumsLoading } = useRealtimeMaletaAlbums(maletaId);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const loadListData = async () => {
     try {
       setLoading(true);
-      const listData = await UserListService.getListById(listId);
+      const listData = await UserMaletaService.getMaletaById(maletaId);
       setList(listData);
     } catch (error) {
       console.error('Error loading list data:', error);
@@ -49,16 +49,16 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   useEffect(() => {
     loadListData();
-  }, [listId]);
+  }, [maletaId]);
 
   const handleEditList = () => {
     console.log('🔍 ViewListScreen: Navigating to EditList with:', { list });
-    navigation.navigate('EditList', { list });
+    navigation.navigate('EditMaleta', { list });
   };
 
   const handleAddAlbum = () => {
-    console.log('🔍 ViewListScreen: Navigating to AddAlbumToList with:', { listId, listTitle });
-    navigation.navigate('AddAlbumToList', { listId, listTitle });
+    console.log('🔍 ViewListScreen: Navigating to AddAlbumToList with:', { maletaId, listTitle });
+    navigation.navigate('AddAlbumToMaleta', { maletaId, listTitle });
   };
 
   const handleRemoveAlbum = async (albumId: string) => {
@@ -72,7 +72,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           style: 'destructive',
           onPress: async () => {
             try {
-              await UserListService.removeAlbumFromList(listId, albumId);
+              await UserMaletaService.removeAlbumFromMaleta(maletaId, albumId);
               await loadListData();
               Alert.alert('Éxito', 'Álbum removido de la lista');
             } catch (error) {
@@ -175,8 +175,8 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   return (
     <View style={styles.container}>
-            <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Lists')} style={styles.backButton}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => navigation.navigate('Maletas')} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#007AFF" />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
@@ -199,7 +199,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       )}
 
       <View style={styles.albumsHeader}>
-        <Text style={styles.albumsTitle}>Álbumes en la Estantería</Text>
+        <Text style={styles.albumsTitle}>Álbumes en la Maleta</Text>
         <TouchableOpacity onPress={handleAddAlbum} style={styles.addAlbumButton}>
           <Ionicons name="add" size={20} color="#007AFF" />
           <Text style={styles.addAlbumButtonText}>Añadir</Text>
@@ -335,7 +335,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   albumsContainer: {
-    
+
   },
   albumItemContainer: {
     backgroundColor: 'white',

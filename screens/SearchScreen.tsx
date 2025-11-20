@@ -24,10 +24,10 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
 import { useStats } from '../contexts/StatsContext';
 import { DiscogsService } from '../services/discogs';
-import { AlbumService, UserCollectionService, UserListService } from '../services/database';
+import { AlbumService, UserCollectionService, UserMaletaService } from '../services/database';
 import { DiscogsRelease } from '../types';
 import { supabase } from '../lib/supabase';
-import { ListCoverCollage } from '../components/ListCoverCollage';
+import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
@@ -60,18 +60,18 @@ export const SearchScreen: React.FC = () => {
 
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Estados para la funcionalidad de cámara
   const [showCamera, setShowCamera] = useState(false);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResults, setAiResults] = useState<any[]>([]);
   const [recognizedAlbum, setRecognizedAlbum] = useState<string>('');
-  
+
   // Animaciones para el modal de carga
   const progressAnimation = useRef(new Animated.Value(0)).current;
   const pulseAnimation = useRef(new Animated.Value(1)).current;
-  
+
   // Efecto para animaciones cuando se activa el loading
   useEffect(() => {
     if (aiLoading) {
@@ -90,7 +90,7 @@ export const SearchScreen: React.FC = () => {
           }),
         ])
       );
-      
+
       // Animación de progreso
       const progressLoop = Animated.loop(
         Animated.timing(progressAnimation, {
@@ -99,10 +99,10 @@ export const SearchScreen: React.FC = () => {
           useNativeDriver: false,
         })
       );
-      
+
       pulseLoop.start();
       progressLoop.start();
-      
+
       return () => {
         pulseLoop.stop();
         progressLoop.stop();
@@ -111,10 +111,10 @@ export const SearchScreen: React.FC = () => {
       };
     }
   }, [aiLoading, progressAnimation, pulseAnimation]);
-  
+
   // Estados para el modal de añadir a maleta
   const [showAddToShelfModal, setShowAddToShelfModal] = useState(false);
-  const [userLists, setUserLists] = useState<any[]>([]);
+  const [userLists, setUserMaletas] = useState<any[]>([]);
   const [selectedAlbum, setSelectedAlbum] = useState<any>(null);
   const [showCreateShelfForm, setShowCreateShelfForm] = useState(false);
   const [newShelfTitle, setNewShelfTitle] = useState('');
@@ -200,7 +200,7 @@ export const SearchScreen: React.FC = () => {
       const collectionWithShelfInfo = (userCollection || []).map((item) => {
         const hasLocation = item.shelves && item.shelves.name;
         const shelfName = hasLocation ? (item.shelves as any).name : null;
-        
+
         return {
           ...item,
           in_shelf: hasLocation,
@@ -209,7 +209,7 @@ export const SearchScreen: React.FC = () => {
       });
 
       setCollection(collectionWithShelfInfo);
-      
+
       // Actualizar estadísticas
       await refreshStats();
     } catch (error) {
@@ -222,19 +222,19 @@ export const SearchScreen: React.FC = () => {
   // Función temporal para verificar y asignar estilos a álbumes que no los tienen
   const checkAndAssignStyles = async (collectionData: any[]) => {
     console.log('🔍 Checking albums for missing styles...');
-    
-    const albumsWithoutStyles = collectionData.filter(item => 
+
+    const albumsWithoutStyles = collectionData.filter(item =>
       !item.albums?.album_styles || item.albums.album_styles.length === 0
     );
-    
+
     console.log(`📊 Found ${albumsWithoutStyles.length} albums without styles`);
-    
+
     if (albumsWithoutStyles.length > 0) {
       console.log('⚠️ Albums without styles:');
       albumsWithoutStyles.forEach((item, index) => {
         console.log(`  ${index + 1}. "${item.albums?.title}" by ${item.albums?.artist}`);
       });
-      
+
       // Por ahora, solo mostrar un mensaje informativo
       console.log('💡 To fix this, you need to:');
       console.log('   1. Ensure albums have styles assigned in the database');
@@ -266,11 +266,11 @@ export const SearchScreen: React.FC = () => {
   const hasActiveFilters = filterByStyle || filterByYear || filterByLabel || filterByLocation || query.trim();
 
   // Función para cargar las estanterías del usuario
-  const loadUserLists = async () => {
+  const loadUserMaletas = async () => {
     if (!user) return;
     try {
-      const lists = await UserListService.getUserListsWithAlbums(user.id);
-      setUserLists(lists || []);
+      const lists = await UserMaletaService.getUserMaletasWithAlbums(user.id);
+      setUserMaletas(lists || []);
     } catch (error) {
       console.error('Error loading user lists:', error);
       Alert.alert('Error', 'No se pudieron cargar las estanterías');
@@ -278,25 +278,25 @@ export const SearchScreen: React.FC = () => {
   };
 
   // Función para añadir álbum a una estantería
-  const addAlbumToShelf = async (listId: string) => {
+  const addAlbumToShelf = async (maletaId: string) => {
     if (!selectedAlbum || !user) return;
-    
+
     try {
       // Verificar si el álbum ya está en la estantería
-      const isAlreadyInList = await UserListService.isAlbumInList(listId, selectedAlbum.albums.id);
-      
+      const isAlreadyInList = await UserMaletaService.isAlbumInMaleta(maletaId, selectedAlbum.albums.id);
+
       if (isAlreadyInList) {
         Alert.alert('Aviso', 'Este álbum ya está en esta estantería');
         return;
       }
-      
-      await UserListService.addAlbumToList(listId, selectedAlbum.albums.id);
+
+      await UserMaletaService.addAlbumToMaleta(maletaId, selectedAlbum.albums.id);
       Alert.alert('Éxito', 'Álbum añadido a la estantería');
       setShowAddToShelfModal(false);
       setSelectedAlbum(null);
-      
-      // Navegar a Mis Estanterías
-      navigation.navigate('ListsTab');
+
+      // Navegar a Mis Maletas
+      navigation.navigate('MaletasTab');
     } catch (error) {
       console.error('Error adding album to list:', error);
       Alert.alert('Error', 'No se pudo añadir el álbum a la estantería');
@@ -306,28 +306,28 @@ export const SearchScreen: React.FC = () => {
   // Función para crear nueva estantería
   const createNewShelf = async () => {
     if (!user || !newShelfTitle.trim()) return;
-    
+
     try {
-      const newList = await UserListService.createList({
+      const newList = await UserMaletaService.createMaleta({
         title: newShelfTitle.trim(),
         description: newShelfDescription.trim(),
         is_public: newShelfIsPublic,
         user_id: user.id
       });
-      
+
       // Añadir el álbum a la nueva estantería
-      await UserListService.addAlbumToList(newList.id, selectedAlbum.albums.id);
-      
-      Alert.alert('Éxito', 'Estantería creada y álbum añadido');
+      await UserMaletaService.addAlbumToMaleta(newList.id, selectedAlbum.albums.id);
+
+      Alert.alert('Éxito', 'Maleta creada y álbum añadido');
       setShowAddToShelfModal(false);
       setShowCreateShelfForm(false);
       setSelectedAlbum(null);
       setNewShelfTitle('');
       setNewShelfDescription('');
       setNewShelfIsPublic(false);
-      
-      // Navegar a Mis Estanterías
-      navigation.navigate('ListsTab');
+
+      // Navegar a Mis Maletas
+      navigation.navigate('MaletasTab');
     } catch (error) {
       console.error('Error creating list:', error);
       Alert.alert('Error', 'No se pudo crear la estantería');
@@ -337,15 +337,15 @@ export const SearchScreen: React.FC = () => {
   // Función para cargar las estanterías físicas (shelves)
   const loadPhysicalShelves = async () => {
     if (!user) return;
-    
+
     try {
       const { data: shelvesData, error: shelvesError } = await supabase
         .from('shelves')
         .select('id, name, shelf_rows, shelf_columns')
         .eq('user_id', user.id);
-      
+
       if (shelvesError) throw shelvesError;
-      
+
       setPhysicalShelves(shelvesData || []);
     } catch (error) {
       console.error('Error loading physical shelves:', error);
@@ -403,7 +403,7 @@ export const SearchScreen: React.FC = () => {
 
   const handleToggleGem = async (item: any) => {
     if (!user) return;
-    
+
     try {
       console.log('🔍 handleToggleGem: Toggling gem for item:', {
         itemId: item.id,
@@ -411,29 +411,29 @@ export const SearchScreen: React.FC = () => {
         albumTitle: item.albums?.title,
         currentGemStatus: item.is_gem
       });
-      
+
       // Actualizar inmediatamente en la UI local
       const newStatus = !item.is_gem;
       console.log('🔄 handleToggleGem: Updating local UI to:', newStatus);
-      
+
       setCollection(prev => {
-        const updated = prev.map(col => 
-          col.id === item.id 
+        const updated = prev.map(col =>
+          col.id === item.id
             ? { ...col, is_gem: newStatus }
             : col
         );
         console.log('📊 handleToggleGem: Collection updated, new count:', updated.length);
         return updated;
       });
-      
+
       console.log('📞 handleToggleGem: Calling UserCollectionService.toggleGemStatus');
       const result = await UserCollectionService.toggleGemStatus(user.id, item.albums.id);
       console.log('✅ handleToggleGem: Service call successful:', result);
-      
+
       // Actualizar el contexto de gems inmediatamente
       console.log('📢 handleToggleGem: Updating gem status in context');
       updateGemStatus(item.albums.id, newStatus);
-      
+
       if (newStatus) {
         // Si se añadió un gem, añadirlo al contexto
         console.log('📢 handleToggleGem: Adding gem to context');
@@ -443,22 +443,22 @@ export const SearchScreen: React.FC = () => {
         console.log('📢 handleToggleGem: Removing gem from context');
         removeGem(item.id);
       }
-      
+
       Alert.alert(
         'Gem Status',
-        newStatus 
+        newStatus
           ? `"${item.albums?.title}" añadido a tus Gems 💎`
           : `"${item.albums?.title}" removido de tus Gems`
       );
     } catch (error) {
       console.error('❌ handleToggleGem: Error toggling gem status:', error);
       Alert.alert('Error', 'No se pudo cambiar el estado del Gem');
-      
+
       // Revertir el cambio local si hay error
       console.log('🔄 handleToggleGem: Reverting local change due to error');
-      setCollection(prev => 
-        prev.map(col => 
-          col.id === item.id 
+      setCollection(prev =>
+        prev.map(col =>
+          col.id === item.id
             ? { ...col, is_gem: !item.is_gem }
             : col
         )
@@ -472,7 +472,7 @@ export const SearchScreen: React.FC = () => {
       // Usar el contexto para determinar si es gem
       const isItemGem = isGem(item.albums?.id);
       const gemAction = isItemGem ? 'Remover de Gems' : 'Añadir a Gems';
-      
+
       console.log('🔍 handleSwipeOptions: Item gem status:', {
         itemId: item.id,
         albumId: item.albums?.id,
@@ -480,17 +480,17 @@ export const SearchScreen: React.FC = () => {
         isGem: isItemGem,
         localIsGem: item.is_gem
       });
-      
+
       // Preparar opciones dinámicas
-              const options = ['Cancelar', 'Asignar Ubicación', 'Añadir a Maleta', gemAction, 'Cambiar versión'];
-      
+      const options = ['Cancelar', 'Asignar Ubicación', 'Añadir a Maleta', gemAction, 'Cambiar versión'];
+
       // Añadir opciones de audio
       if (item.audio_note) {
         options.push('Reproducir audio', 'Eliminar audio');
       } else {
         options.push('Grabar nota de audio');
       }
-      
+
       if (Platform.OS === 'ios') {
         ActionSheetIOS.showActionSheetWithOptions(
           {
@@ -508,7 +508,7 @@ export const SearchScreen: React.FC = () => {
                 break;
               case 2: // Añadir a Maleta
                 setSelectedAlbum(item);
-                loadUserLists();
+                loadUserMaletas();
                 setShowAddToShelfModal(true);
                 break;
               case 3: // Gem action
@@ -538,16 +538,20 @@ export const SearchScreen: React.FC = () => {
           '¿Qué quieres hacer con este álbum?',
           [
             { text: 'Cancelar', style: 'cancel' },
-            { text: 'Asignar Ubicación', onPress: () => {
-              setSelectedAlbumForLocation(item);
-              loadPhysicalShelves();
-              setShowLocationModal(true);
-            }},
-            { text: 'Añadir a Maleta', onPress: () => {
-              setSelectedAlbum(item);
-              loadUserLists();
-              setShowAddToShelfModal(true);
-            }},
+            {
+              text: 'Asignar Ubicación', onPress: () => {
+                setSelectedAlbumForLocation(item);
+                loadPhysicalShelves();
+                setShowLocationModal(true);
+              }
+            },
+            {
+              text: 'Añadir a Maleta', onPress: () => {
+                setSelectedAlbum(item);
+                loadUserMaletas();
+                setShowAddToShelfModal(true);
+              }
+            },
             { text: gemAction, onPress: () => handleToggleGem(item) },
             { text: 'Cambiar versión', onPress: () => handleEditAlbum(item) },
             ...(item.audio_note ? [
@@ -572,7 +576,7 @@ export const SearchScreen: React.FC = () => {
         </View>
       );
     }
-    
+
     if (collection.length === 0) {
       return (
         <View style={styles.emptyState}>
@@ -588,7 +592,7 @@ export const SearchScreen: React.FC = () => {
         </View>
       );
     }
-    
+
     return (
       <View style={styles.emptyContainer}>
         <Text style={[styles.emptyText, { color: colors.text }]}>No se encontraron resultados</Text>
@@ -602,7 +606,7 @@ export const SearchScreen: React.FC = () => {
     // Filtrar por búsqueda
     if (query.trim()) {
       const searchTerm = query.toLowerCase();
-      filtered = filtered.filter(item => 
+      filtered = filtered.filter(item =>
         item.albums?.title?.toLowerCase().includes(searchTerm) ||
         item.albums?.artist?.toLowerCase().includes(searchTerm) ||
         item.albums?.label?.toLowerCase().includes(searchTerm)
@@ -616,7 +620,7 @@ export const SearchScreen: React.FC = () => {
         if (item.albums?.album_styles?.some((as: any) => as.styles?.name === filterByStyle)) {
           return true;
         }
-        
+
         // Si no tiene estilos en la base de datos, usar lógica de respaldo
         // Por ahora, mostrar todos los álbumes cuando se selecciona un estilo de respaldo
         // ya que no podemos determinar el estilo real sin datos
@@ -663,7 +667,7 @@ export const SearchScreen: React.FC = () => {
 
   const addToCollection = async (release: DiscogsRelease) => {
     if (!user) return;
-    
+
     try {
       const albumData = {
         title: release.title,
@@ -673,12 +677,12 @@ export const SearchScreen: React.FC = () => {
         cover_url: release.cover_image || release.thumb,
         discogs_id: release.id,
       };
-      
+
       const album = await AlbumService.createAlbum(albumData);
       await UserCollectionService.addToCollection(user.id, album.id);
-      
+
       await loadCollection();
-      
+
       // Mostrar opciones después de añadir el disco
       Alert.alert(
         'Disco añadido correctamente',
@@ -708,7 +712,7 @@ export const SearchScreen: React.FC = () => {
 
   const getUniqueStyles = () => {
     const styles = new Set<string>();
-    
+
     // Primero intentar obtener estilos de la base de datos
     collection.forEach(item => {
       if (item.albums?.album_styles && Array.isArray(item.albums.album_styles)) {
@@ -719,9 +723,9 @@ export const SearchScreen: React.FC = () => {
         });
       }
     });
-    
+
     const result = Array.from(styles).sort();
-    
+
     // Si no hay estilos en la base de datos, proporcionar estilos comunes
     if (result.length === 0) {
       const fallbackStyles = [
@@ -746,11 +750,11 @@ export const SearchScreen: React.FC = () => {
         'Gospel',
         'World Music'
       ];
-      
+
       fallbackStyles.forEach(style => styles.add(style));
       return Array.from(styles).sort();
     }
-    
+
     return result;
   };
 
@@ -791,7 +795,7 @@ export const SearchScreen: React.FC = () => {
 
   const getLocatedPercentage = () => {
     if (collection.length === 0) return 0;
-    
+
     const locatedAlbums = collection.filter(item => item.shelf_name);
     const percentage = (locatedAlbums.length / collection.length) * 100;
     return Math.round(percentage);
@@ -801,11 +805,11 @@ export const SearchScreen: React.FC = () => {
     setEditionsLoading(true);
     try {
       console.log(`🔍 Buscando ediciones para: "${albumTitle}" - "${artist}"`);
-      
+
       // Construir la consulta de búsqueda
       const searchQuery = `${albumTitle} ${artist}`.trim();
       const encodedQuery = encodeURIComponent(searchQuery);
-      
+
       const response = await fetch(
         `https://api.discogs.com/database/search?q=${encodedQuery}&type=release&format=vinyl&per_page=50`,
         {
@@ -815,27 +819,27 @@ export const SearchScreen: React.FC = () => {
           }
         }
       );
-      
+
       if (!response.ok) {
         throw new Error(`Error de API: ${response.status} ${response.statusText}`);
       }
-      
+
       const data = await response.json();
       console.log(`📊 Respuesta de Discogs:`, data);
-      
+
       const releases = data.results || [];
       console.log(`📋 Total de resultados: ${releases.length}`);
-      
+
       // Filtrar y formatear las ediciones con criterios más flexibles
       const formattedEditions = releases
         .filter((release: any) => {
           // Verificar que las propiedades existan antes de usar toLowerCase()
           const title = release.title || '';
           const artist = release.artist || '';
-          
+
           const titleMatch = title.toLowerCase().includes(albumTitle.toLowerCase());
           const artistMatch = artist.toLowerCase().includes(artist.toLowerCase());
-          
+
           // Ser más flexible con la coincidencia
           return titleMatch || artistMatch;
         })
@@ -843,7 +847,7 @@ export const SearchScreen: React.FC = () => {
           // Extraer artista del título si no está disponible directamente
           let extractedArtist = release.artist;
           let extractedTitle = release.title || 'Sin título';
-          
+
           if (!extractedArtist && release.title) {
             // Intentar extraer artista del título (formato: "Artista - Título")
             const titleParts = release.title.split(' - ');
@@ -855,7 +859,7 @@ export const SearchScreen: React.FC = () => {
               extractedArtist = artist; // Usar el artista del álbum original
             }
           }
-          
+
           return {
             id: release.id,
             title: extractedTitle,
@@ -871,20 +875,20 @@ export const SearchScreen: React.FC = () => {
           };
         })
         .slice(0, 15); // Aumentar el límite a 15 ediciones
-      
+
       console.log(`✅ Ediciones filtradas: ${formattedEditions.length}`);
       setEditions(formattedEditions);
-      
+
       if (formattedEditions.length === 0) {
         Alert.alert(
-          'Sin resultados', 
+          'Sin resultados',
           `No se encontraron ediciones para "${albumTitle}" de "${artist}". Intenta con una búsqueda más específica.`
         );
       }
     } catch (error) {
       console.error('❌ Error searching editions:', error);
       Alert.alert(
-        'Error de conexión', 
+        'Error de conexión',
         'No se pudieron cargar las ediciones. Verifica tu conexión a internet y el token de Discogs.'
       );
     } finally {
@@ -900,28 +904,28 @@ export const SearchScreen: React.FC = () => {
 
   const handleReplaceEdition = async (newEdition: any) => {
     if (!user || !selectedAlbumForEdit) return;
-    
+
     try {
       console.log(`🔄 Reemplazando edición:`, {
         currentAlbum: selectedAlbumForEdit.albums,
         newEdition: newEdition
       });
-      
+
       // Mostrar confirmación antes de reemplazar
       Alert.alert(
         'Confirmar reemplazo',
         `¿Estás seguro de que quieres reemplazar "${selectedAlbumForEdit.albums.title}" con "${newEdition.title}"?`,
         [
           { text: 'Cancelar', style: 'cancel' },
-          { 
-            text: 'Reemplazar', 
+          {
+            text: 'Reemplazar',
             style: 'destructive',
             onPress: async () => {
               try {
                 // Primero eliminar la edición actual
                 console.log('🗑️ Eliminando edición actual...');
                 await UserCollectionService.removeFromCollection(user.id, selectedAlbumForEdit.albums.id);
-                
+
                 // Luego añadir la nueva edición
                 console.log('➕ Añadiendo nueva edición...');
                 const releaseData = {
@@ -933,16 +937,16 @@ export const SearchScreen: React.FC = () => {
                   cover_image: newEdition.cover_image,
                   thumb: newEdition.thumb
                 } as any;
-                
+
                 await addToCollection(releaseData);
-                
+
                 setShowEditionsModal(false);
                 setSelectedAlbumForEdit(null);
                 setEditions([]);
-                
+
                 // Recargar la colección
                 await loadCollection();
-                
+
                 Alert.alert('✅ Éxito', 'Edición reemplazada correctamente');
               } catch (error) {
                 console.error('❌ Error replacing edition:', error);
@@ -962,20 +966,20 @@ export const SearchScreen: React.FC = () => {
   const handlePlayAudio = async (item: any) => {
     console.log('🔍 handlePlayAudio called with item:', item);
     console.log('🔍 item.audio_note:', item.audio_note);
-    
+
     if (!item.audio_note) {
       console.log('❌ No audio note found');
       return;
     }
-    
+
     console.log('🔍 Setting up floating player with URI:', item.audio_note);
     console.log('🔍 Album title:', item.albums?.title || 'Álbum');
-    
+
     // Configurar el reproductor flotante
     setFloatingAudioUri(item.audio_note);
     setFloatingAlbumTitle(item.albums?.title || 'Álbum');
     setShowFloatingPlayer(true);
-    
+
     console.log('🔍 Floating player should now be visible');
   };
 
@@ -992,18 +996,18 @@ export const SearchScreen: React.FC = () => {
       console.log('🔍 handleSaveAudioNote: Audio URI:', audioUri);
       console.log('🔍 handleSaveAudioNote: Selected album:', selectedAlbumForAudio);
       console.log('🔍 handleSaveAudioNote: Album ID:', selectedAlbumForAudio.albums?.id);
-      
+
       await UserCollectionService.saveAudioNote(
         user!.id,
         selectedAlbumForAudio.albums.id,
         audioUri
       );
-      
+
       console.log('🔍 handleSaveAudioNote: Audio note saved successfully');
-      
+
       // Recargar la colección para mostrar el tag de audio
       await loadCollection();
-      
+
       setShowAudioRecorder(false);
       setSelectedAlbumForAudio(null);
     } catch (error) {
@@ -1018,17 +1022,17 @@ export const SearchScreen: React.FC = () => {
     try {
       console.log('🔍 handleDeleteAudioNote: Deleting audio note for item:', item);
       console.log('🔍 handleDeleteAudioNote: Album ID:', item.albums?.id);
-      
+
       await UserCollectionService.deleteAudioNote(
-        user.id, 
+        user.id,
         item.albums.id
       );
-      
+
       console.log('🔍 handleDeleteAudioNote: Audio note deleted successfully');
-      
+
       // Recargar la colección
       await loadCollection();
-      
+
       Alert.alert('Éxito', 'Nota de audio eliminada correctamente');
     } catch (error) {
       console.error('❌ Error deleting audio note:', error);
@@ -1037,7 +1041,7 @@ export const SearchScreen: React.FC = () => {
   };
 
   // ========== FUNCIONES DE CÁMARA Y RECONOCIMIENTO ==========
-  
+
   const handleCameraPress = () => {
     // Abrir directamente la cámara sin mostrar opciones
     openCamera();
@@ -1110,10 +1114,10 @@ export const SearchScreen: React.FC = () => {
 
     try {
       console.log('🤖 Iniciando reconocimiento de álbum con Gemini Vision...');
-      
+
       // Convertir imagen a base64
       let base64Data = imageUri;
-      
+
       if (imageUri.startsWith('file://') || imageUri.startsWith('http')) {
         console.log('📤 Convirtiendo URI a base64...');
         const response = await fetch(imageUri);
@@ -1130,10 +1134,10 @@ export const SearchScreen: React.FC = () => {
 
       // Usar Gemini Vision para reconocer el álbum
       const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
-      
+
       console.log('🎵 Álbum reconocido por IA:', { artist, album });
       setRecognizedAlbum(`${album} - ${artist}`);
-      
+
       // Buscar en la colección del usuario
       if (artist && album) {
         await searchInUserCollection(`${artist} ${album}`);
@@ -1152,11 +1156,11 @@ export const SearchScreen: React.FC = () => {
     try {
       // Limpiar y preparar el texto de búsqueda
       const cleanSearchText = searchText.trim();
-      
+
       // Extraer palabras clave del texto reconocido
       const words = cleanSearchText.split(' ').filter(word => word.length > 2);
       console.log('🔍 Palabras clave extraídas:', words);
-      
+
       // Si el texto contiene " - ", separar artista y álbum
       let artistSearch = '';
       let albumSearch = '';
@@ -1166,10 +1170,10 @@ export const SearchScreen: React.FC = () => {
         albumSearch = parts[1]?.trim() || '';
         console.log('🎵 Artista:', artistSearch, '| Álbum:', albumSearch);
       }
-      
+
       // Crear array de consultas más inteligentes
       const searchQueries = [];
-      
+
       // 1. Búsqueda exacta del texto completo SOLO si no tenemos artista y álbum separados
       if (!artistSearch || !albumSearch) {
         searchQueries.push(
@@ -1189,7 +1193,7 @@ export const SearchScreen: React.FC = () => {
             .eq('user_id', user!.id)
             .ilike('albums.title', `%${cleanSearchText}%`)
         );
-        
+
         searchQueries.push(
           supabase
             .from('user_collection')
@@ -1208,7 +1212,7 @@ export const SearchScreen: React.FC = () => {
             .ilike('albums.artist', `%${cleanSearchText}%`)
         );
       }
-      
+
       // 2. Si tenemos artista y álbum separados, buscar SOLO combinaciones exactas
       if (artistSearch && albumSearch) {
         // Buscar por artista Y título (coincidencia estricta)
@@ -1230,11 +1234,11 @@ export const SearchScreen: React.FC = () => {
             .ilike('albums.artist', `%${artistSearch}%`)
             .ilike('albums.title', `%${albumSearch}%`)
         );
-        
+
         // NO buscar variaciones del artista - solo coincidencia exacta
         // Esto evita mostrar discos de otros artistas que tengan palabras en común
       }
-      
+
       // 3. Búsqueda por palabras individuales SOLO si no tenemos artista y álbum separados
       if (!artistSearch || !albumSearch) {
         for (const word of words) {
@@ -1256,7 +1260,7 @@ export const SearchScreen: React.FC = () => {
               .eq('user_id', user!.id)
               .ilike('albums.title', `%${word}%`)
           );
-          
+
           searchQueries.push(
             supabase
               .from('user_collection')
@@ -1276,7 +1280,7 @@ export const SearchScreen: React.FC = () => {
           );
         }
       }
-      
+
       // Ejecutar todas las consultas en paralelo
       const results = await Promise.all(searchQueries);
 
@@ -1292,48 +1296,48 @@ export const SearchScreen: React.FC = () => {
           allResults.push(...result.data);
         }
       }
-      
+
       console.log(`🔍 Total de resultados encontrados: ${allResults.length}`);
-      
+
       // Eliminar duplicados basándose en el ID del álbum
-      const uniqueResults = allResults.filter((item, index, self) => 
-        item.albums && item.albums.id && 
+      const uniqueResults = allResults.filter((item, index, self) =>
+        item.albums && item.albums.id &&
         index === self.findIndex(t => t.albums && t.albums.id === item.albums.id)
       );
-      
+
       console.log(`🎯 Resultados únicos después de eliminar duplicados: ${uniqueResults.length}`);
-      
+
       // Log de los resultados encontrados para debug
       uniqueResults.forEach((item, index) => {
         console.log(`📀 ${index + 1}. ${item.albums?.artist} - ${item.albums?.title}`);
       });
-      
+
       // Filtrar resultados para mostrar solo coincidencias EXACTAS
       let filteredResults = uniqueResults;
-      
+
       if (artistSearch && albumSearch) {
         // Solo mostrar discos que coincidan EXACTAMENTE con el artista Y el álbum reconocidos
         filteredResults = uniqueResults.filter(item => {
           if (!item.albums) return false;
-          
+
           const albumArtist = item.albums.artist?.toLowerCase().trim() || '';
           const albumTitle = item.albums.title?.toLowerCase().trim() || '';
           const searchArtist = artistSearch.toLowerCase().trim();
           const searchAlbum = albumSearch.toLowerCase().trim();
-          
+
           // VALIDACIÓN DE EXPERTO: Análisis completo del disco
-          
+
           // 1. Coincidencia exacta (máxima precisión)
           const artistExactMatch = albumArtist === searchArtist;
           const albumExactMatch = albumTitle === searchAlbum;
-          
+
           // 2. Análisis de palabras clave
           const searchArtistWords = searchArtist.split(' ').filter(word => word.length > 2);
           const searchAlbumWords = searchAlbum.split(' ').filter(word => word.length > 2);
-          
+
           const artistWordsMatch = searchArtistWords.every(word => albumArtist.includes(word));
           const albumWordsMatch = searchAlbumWords.every(word => albumTitle.includes(word));
-          
+
           // 3. Verificar que no sea un artista diferente con nombre similar
           const isSimilarArtist = searchArtistWords.some(word => {
             // Lista de palabras que podrían confundirse
@@ -1349,31 +1353,31 @@ export const SearchScreen: React.FC = () => {
               'bob': ['robert', 'bobby'],
               'dan': ['daniel', 'danny']
             };
-            
+
             const similar = similarWords[word.toLowerCase()];
             if (similar) {
               return similar.some((sim: string) => albumArtist.includes(sim));
             }
             return false;
           });
-          
+
           // 4. Verificar que no haya confusión con artistas famosos
           const famousArtists = ['beatles', 'stones', 'pink floyd', 'led zeppelin', 'queen', 'ac/dc', 'nirvana', 'radiohead'];
-          const isConfusedWithFamous = famousArtists.some(famous => 
+          const isConfusedWithFamous = famousArtists.some(famous =>
             (searchArtist.includes(famous) && !albumArtist.includes(famous)) ||
             (albumArtist.includes(famous) && !searchArtist.includes(famous))
           );
-          
+
           // 5. Verificar que no sea un nombre parcial
           const isPartialName = searchArtistWords.some(word => {
             return albumArtist.includes(word) && albumArtist.length > word.length + 5;
           });
-          
+
           // 6. Cálculo final de coincidencia
           const exactMatch = artistExactMatch && albumExactMatch;
-          const wordsMatch = artistWordsMatch && albumWordsMatch && 
-                           !isSimilarArtist && !isConfusedWithFamous && !isPartialName;
-          
+          const wordsMatch = artistWordsMatch && albumWordsMatch &&
+            !isSimilarArtist && !isConfusedWithFamous && !isPartialName;
+
           const isMatch = exactMatch || wordsMatch;
           console.log(`🎯 ${item.albums.artist} - ${item.albums.title}:`);
           console.log(`   Coincidencia exacta: ${exactMatch}`);
@@ -1382,13 +1386,13 @@ export const SearchScreen: React.FC = () => {
           console.log(`   Confusión con famosos: ${isConfusedWithFamous}`);
           console.log(`   Es nombre parcial: ${isPartialName}`);
           console.log(`   ✅ MATCH FINAL: ${isMatch}`);
-          
+
           return isMatch;
         });
-        
+
         console.log(`🎯 Resultados filtrados (análisis de experto): ${filteredResults.length}`);
       }
-      
+
       const collectionData = filteredResults;
 
       if (collectionData && collectionData.length > 0) {
@@ -1444,46 +1448,46 @@ export const SearchScreen: React.FC = () => {
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
         activeOpacity={0.7}
       >
-          <Image
-            source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-            style={styles.collectionThumbnail}
-          />
-          <View style={styles.collectionInfo}>
-            <Text style={[styles.collectionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-              {item.albums?.title}
+        <Image
+          source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+          style={styles.collectionThumbnail}
+        />
+        <View style={styles.collectionInfo}>
+          <Text style={[styles.collectionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+            {item.albums?.title}
+          </Text>
+          <Text style={[styles.collectionArtist, { color: colors.text }]}>{item.albums?.artist}</Text>
+          <View style={styles.collectionDetails}>
+            <Text style={[styles.collectionDetail, { color: colors.text }]}>
+              {item.albums?.label} • {item.albums?.release_year}
             </Text>
-            <Text style={[styles.collectionArtist, { color: colors.text }]}>{item.albums?.artist}</Text>
-            <View style={styles.collectionDetails}>
-              <Text style={[styles.collectionDetail, { color: colors.text }]}>
-                {item.albums?.label} • {item.albums?.release_year}
-              </Text>
-              
-              {/* Tags reordenados */}
-              <View style={styles.tagsContainer}>
-                {/* Tag de ubicación física - PRIMERO */}
-                {item.in_shelf && (
-                  <View style={styles.shelfTag}>
-                    <Ionicons name="location" size={12} color="#28a745" />
-                    <Text style={styles.shelfTagText}>{item.shelf_name || 'Ubicación física'}</Text>
-                  </View>
-                )}
 
-                {/* Tag de audio - SEGUNDO (solo icono) */}
-                {item.audio_note && (
-                  <View style={styles.audioTagIconOnly}>
-                    <Ionicons name="mic" size={12} color="#007AFF" />
-                  </View>
-                )}
-                
-                {/* Tag de gem - TERCERO (solo icono) */}
-                {item.is_gem && (
-                  <View style={styles.gemTagIconOnly}>
-                    <Ionicons name="diamond" size={12} color="#d97706" />
-                  </View>
-                )}
-              </View>
+            {/* Tags reordenados */}
+            <View style={styles.tagsContainer}>
+              {/* Tag de ubicación física - PRIMERO */}
+              {item.in_shelf && (
+                <View style={styles.shelfTag}>
+                  <Ionicons name="location" size={12} color="#28a745" />
+                  <Text style={styles.shelfTagText}>{item.shelf_name || 'Ubicación física'}</Text>
+                </View>
+              )}
+
+              {/* Tag de audio - SEGUNDO (solo icono) */}
+              {item.audio_note && (
+                <View style={styles.audioTagIconOnly}>
+                  <Ionicons name="mic" size={12} color="#007AFF" />
+                </View>
+              )}
+
+              {/* Tag de gem - TERCERO (solo icono) */}
+              {item.is_gem && (
+                <View style={styles.gemTagIconOnly}>
+                  <Ionicons name="diamond" size={12} color="#d97706" />
+                </View>
+              )}
             </View>
           </View>
+        </View>
       </TouchableOpacity>
     </View>
   );
@@ -1546,10 +1550,10 @@ export const SearchScreen: React.FC = () => {
             {filteredCollection.length} discos
           </Text>
           <Text style={[styles.locatedPercentage, { color: colors.text }]}>
-            {' • '}{getLocatedPercentage()}% Ubicados 
+            {' • '}{getLocatedPercentage()}% Ubicados
           </Text>
         </Text>
-        
+
         {/* Botones de búsqueda, vista y filtros a la derecha */}
         <View style={styles.toolbarButtons}>
           <TouchableOpacity
@@ -1559,15 +1563,15 @@ export const SearchScreen: React.FC = () => {
             ]}
             onPress={() => setShowSearch(!showSearch)}
           >
-            <Ionicons 
-              name="search-outline" 
-              size={24} 
-              color={colors.text} 
+            <Ionicons
+              name="search-outline"
+              size={24}
+              color={colors.text}
             />
           </TouchableOpacity>
-          
+
           {/* Cámara eliminada: función de búsqueda por cámara desactivada */}
-          
+
           <TouchableOpacity
             style={[
               styles.toolbarButton,
@@ -1576,10 +1580,10 @@ export const SearchScreen: React.FC = () => {
             onPress={() => setShowFilters(!showFilters)}
           >
             <View style={{ position: 'relative' }}>
-              <Ionicons 
-                name="filter-outline" 
-                size={24} 
-                color={hasActiveFilters ? '#34A853' : colors.text} 
+              <Ionicons
+                name="filter-outline"
+                size={24}
+                color={hasActiveFilters ? '#34A853' : colors.text}
               />
               {hasActiveFilters && (
                 <View
@@ -1598,7 +1602,7 @@ export const SearchScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </View>
-      
+
       {/* Campo de búsqueda */}
       {showSearch && (
         <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
@@ -1868,8 +1872,8 @@ export const SearchScreen: React.FC = () => {
                   <Text style={styles.createNewShelfText}>Crear nueva estantería</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.shelfListTitle}>Estanterías existentes:</Text>
-                
+                <Text style={styles.shelfListTitle}>Maletas existentes:</Text>
+
                 {userLists.length === 0 ? (
                   <Text style={styles.noShelvesText}>No tienes estanterías creadas</Text>
                 ) : (
@@ -1880,7 +1884,7 @@ export const SearchScreen: React.FC = () => {
                       onPress={() => addAlbumToShelf(list.id)}
                     >
                       <View style={styles.shelfItemImage}>
-                        <ListCoverCollage albums={list.albums || []} size={50} />
+                        <MaletaCoverCollage albums={list.albums || []} size={50} />
                       </View>
                       <View style={styles.shelfItemInfo}>
                         <Text style={styles.shelfItemTitle}>{list.title}</Text>
@@ -1902,7 +1906,7 @@ export const SearchScreen: React.FC = () => {
               // Formulario para crear nueva estantería
               <ScrollView style={styles.modalBody}>
                 <Text style={styles.formTitle}>Crear nueva estantería</Text>
-                
+
                 <View style={styles.formField}>
                   <Text style={styles.formLabel}>Título *</Text>
                   <TextInput
@@ -1928,7 +1932,7 @@ export const SearchScreen: React.FC = () => {
 
                 <View style={styles.formField}>
                   <View style={styles.publicToggleContainer}>
-                    <Text style={styles.formLabel}>Estantería pública</Text>
+                    <Text style={styles.formLabel}>Maleta pública</Text>
                     <TouchableOpacity
                       style={styles.toggleButton}
                       onPress={() => setNewShelfIsPublic(!newShelfIsPublic)}
@@ -1961,7 +1965,7 @@ export const SearchScreen: React.FC = () => {
                   >
                     <Text style={styles.cancelButtonText}>Cancelar</Text>
                   </TouchableOpacity>
-                  
+
                   <TouchableOpacity
                     style={[
                       styles.formCreateButton,
@@ -2004,7 +2008,7 @@ export const SearchScreen: React.FC = () => {
 
             <ScrollView style={styles.modalBody}>
               <Text style={styles.selectShelfTitle}>Selecciona una ubicación física:</Text>
-              
+
               {physicalShelves.length === 0 ? (
                 <View style={styles.emptyShelvesContainer}>
                   <Ionicons name="grid-outline" size={48} color="#ccc" />
@@ -2029,8 +2033,8 @@ export const SearchScreen: React.FC = () => {
                     style={styles.shelfSelectItem}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('SelectCell', { 
-                        user_collection_id: selectedAlbumForLocation?.id, 
+                      navigation.navigate('SelectCell', {
+                        user_collection_id: selectedAlbumForLocation?.id,
                         shelf: shelf,
                         current_row: undefined,
                         current_column: undefined,
@@ -2081,7 +2085,7 @@ export const SearchScreen: React.FC = () => {
               <Text style={styles.formTitle}>
                 Ediciones disponibles ({editions.length} encontradas):
               </Text>
-              
+
               {editionsLoading ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="search" size={48} color="#ccc" />
@@ -2177,7 +2181,7 @@ export const SearchScreen: React.FC = () => {
               >
                 <Ionicons name="close" size={24} color="white" />
               </TouchableOpacity>
-              
+
               <View style={styles.cameraBottomControls}>
                 <TouchableOpacity
                   style={styles.cameraCaptureButton}
@@ -2211,7 +2215,7 @@ export const SearchScreen: React.FC = () => {
                 <Ionicons name="close" size={24} color="#6c757d" />
               </TouchableOpacity>
             </View>
-            
+
             <ScrollView style={styles.modalBody}>
               {recognizedAlbum && (
                 <View style={styles.extractedTextContainer}>
@@ -2223,11 +2227,11 @@ export const SearchScreen: React.FC = () => {
                   </Text>
                 </View>
               )}
-              
+
               <Text style={[styles.resultsTitle, { color: colors.text }]}>
                 Resultados en tu colección:
               </Text>
-              
+
               {aiResults.map((item, index) => (
                 <TouchableOpacity
                   key={item.id}
@@ -2272,7 +2276,7 @@ export const SearchScreen: React.FC = () => {
       >
         <View style={styles.loadingOverlay}>
           <View style={[styles.loadingContainer, { backgroundColor: colors.card }]}>
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.loadingIconContainer,
                 { transform: [{ scale: pulseAnimation }] }
@@ -2289,7 +2293,7 @@ export const SearchScreen: React.FC = () => {
             </Text>
             <View style={styles.loadingProgressContainer}>
               <View style={styles.loadingProgressBar}>
-                <Animated.View 
+                <Animated.View
                   style={[
                     styles.loadingProgressFill,
                     {
@@ -2300,7 +2304,7 @@ export const SearchScreen: React.FC = () => {
                         })
                       }]
                     }
-                  ]} 
+                  ]}
                 />
               </View>
             </View>
@@ -2569,9 +2573,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-end',
-   
-    
-    
+
+
+
     gap: 0, // Sin espacio entre botones para que se vean como una barra continua
   },
   swipeAction: {
@@ -2868,7 +2872,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 10,
     marginTop: 8,
-    
+
     alignSelf: 'flex-start',
   },
   shelfTagText: {
@@ -2986,7 +2990,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 5,
   },
-  
+
   // Estilos para la cámara
   cameraContainer: {
     flex: 1,
@@ -3034,7 +3038,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: 'white',
   },
-  
+
   // Estilos para IA
   extractedTextContainer: {
     backgroundColor: '#f0f8ff',

@@ -77,7 +77,7 @@ export interface Order {
   created_at: string;
 }
 
-export interface UserList {
+export interface UserMaleta {
   id: string;
   title: string;
   description?: string;
@@ -95,8 +95,8 @@ export interface UserList {
   }>;
 }
 
-export interface ListAlbum {
-  list_id: string;
+export interface MaletaAlbum {
+  maleta_id: string;
   album_id: string;
 }
 
@@ -801,7 +801,7 @@ export const ListingService = {
   },
 
   // Obtener anuncios de un usuario
-  async getUserListings(userId: string) {
+  async getUserMaletaings(userId: string) {
     const { data, error } = await supabase
       .from('listings')
       .select(`
@@ -816,7 +816,7 @@ export const ListingService = {
   },
 
   // Crear nuevo anuncio
-  async createListing(listing: Omit<Listing, 'id' | 'created_at'>) {
+  async createMaletaing(listing: Omit<Listing, 'id' | 'created_at'>) {
     const { data, error } = await supabase
       .from('listings')
       .insert([listing])
@@ -828,7 +828,7 @@ export const ListingService = {
   },
 
   // Actualizar anuncio
-  async updateListing(id: string, updates: Partial<Listing>) {
+  async updateMaletaing(id: string, updates: Partial<Listing>) {
     const { data, error } = await supabase
       .from('listings')
       .update(updates)
@@ -841,7 +841,7 @@ export const ListingService = {
   },
 
   // Eliminar anuncio
-  async deleteListing(id: string) {
+  async deleteMaletaing(id: string) {
     const { error } = await supabase
       .from('listings')
       .delete()
@@ -851,49 +851,49 @@ export const ListingService = {
   }
 };
 
-// Servicios de listas de usuario
-export const UserListService = {
-  // Obtener todas las listas del usuario
-  async getUserLists(userId: string) {
-    console.log('Getting lists for user:', userId);
+// Servicios de maletas de usuario
+export const UserMaletaService = {
+  // Obtener todas las maletas del usuario
+  async getUserMaletas(userId: string) {
+    console.log('Getting maletas for user:', userId);
 
     const { data, error } = await supabase
-      .from('user_lists')
+      .from('user_maletas')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error getting user lists:', error);
+      console.error('Error getting user maletas:', error);
       throw error;
     }
 
-    console.log('User lists retrieved:', data);
+    console.log('User maletas retrieved:', data);
     return data;
   },
 
-  // Obtener listas del usuario con álbumes incluidos para collage
-  async getUserListsWithAlbums(userId: string) {
-    console.log('🔍 UserListService: Getting lists with albums for user:', userId);
+  // Obtener maletas del usuario con álbumes incluidos para collage
+  async getUserMaletasWithAlbums(userId: string) {
+    console.log('🔍 UserMaletaService: Getting maletas with albums for user:', userId);
 
-    // Primero obtener las listas
-    const { data: lists, error: listsError } = await supabase
-      .from('user_lists')
+    // Primero obtener las maletas
+    const { data: maletas, error: maletasError } = await supabase
+      .from('user_maletas')
       .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
-    if (listsError) {
-      console.error('❌ UserListService: Error getting user lists:', listsError);
-      throw listsError;
+    if (maletasError) {
+      console.error('❌ UserMaletaService: Error getting user maletas:', maletasError);
+      throw maletasError;
     }
 
-    // Para cada lista, obtener sus álbumes
-    const listsWithAlbums = await Promise.all(
-      (lists || []).map(async (list) => {
+    // Para cada maleta, obtener sus álbumes
+    const maletasWithAlbums = await Promise.all(
+      (maletas || []).map(async (maleta) => {
         try {
           const { data: albums, error: albumsError } = await supabase
-            .from('list_albums')
+            .from('maleta_albums')
             .select(`
               *,
               albums (
@@ -903,61 +903,61 @@ export const UserListService = {
                 cover_url
               )
             `)
-            .eq('list_id', list.id)
+            .eq('maleta_id', maleta.id)
             .limit(4); // Solo los últimos 4 para el collage
 
           if (albumsError) {
-            console.error('❌ UserListService: Error getting albums for list:', list.id, albumsError);
-            return { ...list, albums: [] };
+            console.error('❌ UserMaletaService: Error getting albums for maleta:', maleta.id, albumsError);
+            return { ...maleta, albums: [] };
           }
 
-          return { ...list, albums: albums || [] };
+          return { ...maleta, albums: albums || [] };
         } catch (error) {
-          console.error('❌ UserListService: Error processing list:', list.id, error);
-          return { ...list, albums: [] };
+          console.error('❌ UserMaletaService: Error processing maleta:', maleta.id, error);
+          return { ...maleta, albums: [] };
         }
       })
     );
 
-    console.log('✅ UserListService: Found', listsWithAlbums.length, 'lists with albums');
-    return listsWithAlbums;
+    console.log('✅ UserMaletaService: Found', maletasWithAlbums.length, 'maletas with albums');
+    return maletasWithAlbums;
   },
 
-  // Obtener lista por ID
-  async getListById(listId: string) {
+  // Obtener maleta por ID
+  async getMaletaById(maletaId: string) {
     const { data, error } = await supabase
-      .from('user_lists')
+      .from('user_maletas')
       .select('*')
-      .eq('id', listId)
+      .eq('id', maletaId)
       .single();
 
     if (error) throw error;
     return data;
   },
 
-  // Crear nueva lista
-  async createList(list: Omit<UserList, 'id' | 'created_at'>) {
-    console.log('Creating list with data:', list);
+  // Crear nueva maleta
+  async createMaleta(maleta: Omit<UserMaleta, 'id' | 'created_at'>) {
+    console.log('Creating maleta with data:', maleta);
 
     const { data, error } = await supabase
-      .from('user_lists')
-      .insert([list])
+      .from('user_maletas')
+      .insert([maleta])
       .select()
       .single();
 
     if (error) {
-      console.error('Error creating list:', error);
+      console.error('Error creating maleta:', error);
       throw error;
     }
 
-    console.log('List created successfully:', data);
+    console.log('Maleta created successfully:', data);
     return data;
   },
 
-  // Actualizar lista
-  async updateList(id: string, updates: Partial<UserList>) {
+  // Actualizar maleta
+  async updateMaleta(id: string, updates: Partial<UserMaleta>) {
     const { data, error } = await supabase
-      .from('user_lists')
+      .from('user_maletas')
       .update(updates)
       .eq('id', id)
       .select()
@@ -967,27 +967,27 @@ export const UserListService = {
     return data;
   },
 
-  // Eliminar lista
-  async deleteList(id: string) {
-    console.log('🗑️ UserListService: Deleting list with ID:', id);
+  // Eliminar maleta
+  async deleteMaleta(id: string) {
+    console.log('🗑️ UserMaletaService: Deleting maleta with ID:', id);
 
     const { error } = await supabase
-      .from('user_lists')
+      .from('user_maletas')
       .delete()
       .eq('id', id);
 
     if (error) {
-      console.error('❌ UserListService: Error deleting list:', error);
+      console.error('❌ UserMaletaService: Error deleting maleta:', error);
       throw error;
     }
 
-    console.log('✅ UserListService: List deleted successfully');
+    console.log('✅ UserMaletaService: Maleta deleted successfully');
   },
 
-  // Obtener álbumes de una lista
-  async getListAlbums(listId: string) {
+  // Obtener álbumes de una maleta
+  async getMaletaAlbums(maletaId: string) {
     const { data, error } = await supabase
-      .from('list_albums')
+      .from('maleta_albums')
       .select(`
         *,
         albums (
@@ -997,42 +997,42 @@ export const UserListService = {
           )
         )
       `)
-      .eq('list_id', listId);
+      .eq('maleta_id', maletaId);
 
     if (error) throw error;
     return data;
   },
 
-  // Añadir álbum a lista
-  async addAlbumToList(listId: string, albumId: string) {
+  // Añadir álbum a maleta
+  async addAlbumToMaleta(maletaId: string, albumId: string) {
     const { error } = await supabase
-      .from('list_albums')
+      .from('maleta_albums')
       .insert([{
-        list_id: listId,
+        maleta_id: maletaId,
         album_id: albumId
       }]);
 
     if (error) throw error;
-    return { list_id: listId, album_id: albumId };
+    return { maleta_id: maletaId, album_id: albumId };
   },
 
-  // Remover álbum de lista
-  async removeAlbumFromList(listId: string, albumId: string) {
+  // Remover álbum de maleta
+  async removeAlbumFromMaleta(maletaId: string, albumId: string) {
     const { error } = await supabase
-      .from('list_albums')
+      .from('maleta_albums')
       .delete()
-      .eq('list_id', listId)
+      .eq('maleta_id', maletaId)
       .eq('album_id', albumId);
 
     if (error) throw error;
   },
 
-  // Verificar si álbum está en lista
-  async isAlbumInList(listId: string, albumId: string) {
+  // Verificar si álbum está en maleta
+  async isAlbumInMaleta(maletaId: string, albumId: string) {
     const { data, error } = await supabase
-      .from('list_albums')
-      .select('list_id, album_id')
-      .eq('list_id', listId)
+      .from('maleta_albums')
+      .select('maleta_id, album_id')
+      .eq('maleta_id', maletaId)
       .eq('album_id', albumId)
       .single();
 
@@ -1040,13 +1040,13 @@ export const UserListService = {
     return !!data;
   },
 
-  // Obtener listas públicas
-  async getPublicLists() {
+  // Obtener maletas públicas
+  async getPublicMaletas() {
     const { data, error } = await supabase
-      .from('user_lists')
+      .from('user_maletas')
       .select(`
         *,
-        users!user_lists_user_id_fkey (username)
+        users!user_maletas_user_id_fkey (username)
       `)
       .eq('is_public', true)
       .order('created_at', { ascending: false });

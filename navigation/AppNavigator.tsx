@@ -15,11 +15,11 @@ import DashboardScreen from '../screens/DashboardScreen';
 import DjStatsDashboard from '../screens/DjStatsDashboard';
 import { AdminScreen } from '../screens/AdminScreen';
 import GemsScreen from '../screens/GemsScreen';
-import ListsScreen from '../screens/ListsScreen';
-import CreateListScreen from '../screens/CreateListScreen';
-import ViewListScreen from '../screens/ViewListScreen';
-import AddAlbumToListScreen from '../screens/AddAlbumToListScreen';
-import EditListScreen from '../screens/EditListScreen';
+import MaletasScreen from '../screens/MaletasScreen';
+import CreateMaletaScreen from '../screens/CreateMaletaScreen';
+import ViewMaletaScreen from '../screens/ViewMaletaScreen';
+import AddAlbumToMaletaScreen from '../screens/AddAlbumToMaletaScreen';
+import EditMaletaScreen from '../screens/EditMaletaScreen';
 import { CustomHeader } from '../components/CustomHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
@@ -82,41 +82,41 @@ const GemsStack = () => (
   </Stack.Navigator>
 );
 
-const ListsStack = () => (
+const MaletasStack = () => (
   <Stack.Navigator>
     <Stack.Screen
-      name="Lists"
-      component={ListsScreen}
+      name="Maletas"
+      component={MaletasScreen}
       options={{
         header: () => <CustomHeader title="Bothside" />
       }}
     />
     <Stack.Screen
-      name="CreateList"
-      component={CreateListScreen}
+      name="CreateMaleta"
+      component={CreateMaletaScreen}
       options={{
-        header: () => <CustomHeader title="Crear Estantería" showAvatar={false} />
+        header: () => <CustomHeader title="Crear Maleta" showAvatar={false} />
       }}
     />
     <Stack.Screen
-      name="ViewList"
-      component={ViewListScreen}
+      name="ViewMaleta"
+      component={ViewMaletaScreen}
       options={{
-        header: () => <CustomHeader title="Ver Estantería" showAvatar={false} />
+        header: () => <CustomHeader title="Ver Maleta" showAvatar={false} />
       }}
     />
     <Stack.Screen
-      name="AddAlbumToList"
-      component={AddAlbumToListScreen}
+      name="AddAlbumToMaleta"
+      component={AddAlbumToMaletaScreen}
       options={{
         header: () => <CustomHeader title="Añadir a Maleta" showAvatar={false} />
       }}
     />
     <Stack.Screen
-      name="EditList"
-      component={EditListScreen}
+      name="EditMaleta"
+      component={EditMaletaScreen}
       options={{
-        header: () => <CustomHeader title="Editar Estantería" showAvatar={false} />
+        header: () => <CustomHeader title="Editar Maleta" showAvatar={false} />
       }}
     />
   </Stack.Navigator>
@@ -236,7 +236,7 @@ const TabNavigator = () => (
           iconName = focused ? 'stats-chart' : 'stats-chart-outline';
         } else if (route.name === 'AddDiscTab') {
           iconName = focused ? 'add' : 'add';
-        } else if (route.name === 'ListsTab') {
+        } else if (route.name === 'MaletasTab') {
           iconName = focused ? 'list' : 'list-outline';
         } else if (route.name === 'GemsTab') {
           iconName = focused ? 'diamond' : 'diamond-outline';
@@ -258,7 +258,7 @@ const TabNavigator = () => (
     <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: '' }} />
     <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ title: '' }} />
     <Tab.Screen name="AddDiscTab" component={AddDiscStack} options={{ title: '' }} />
-    <Tab.Screen name="ListsTab" component={ListsStack} options={{ title: '' }} />
+    <Tab.Screen name="MaletasTab" component={MaletasStack} options={{ title: '' }} />
     <Tab.Screen name="GemsTab" component={GemsStack} options={{ title: '' }} />
   </Tab.Navigator>
 );
@@ -277,7 +277,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
             SearchTab: 'search',
             DashboardTab: 'dashboard',
             AddDiscTab: 'add-disc',
-            ListsTab: 'lists',
+            MaletasTab: 'maletas',
             GemsTab: 'gems',
           },
         },

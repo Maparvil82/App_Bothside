@@ -11,106 +11,99 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { UserListService } from '../services/database';
+import { UserMaletaService } from '../services/database';
 
-interface EditListScreenProps {
+interface CreateListScreenProps {
   navigation: any;
-  route: any;
 }
 
-const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) => {
+const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
   const { user } = useAuth();
-  const { list } = route.params;
-  
-  const [title, setTitle] = useState(list.title || '');
-  const [description, setDescription] = useState(list.description || '');
-  const [isPublic, setIsPublic] = useState(list.is_public || false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSaveChanges = async () => {
+  const handleCreateList = async () => {
     if (!title.trim()) {
       Alert.alert('Error', 'El título es obligatorio');
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'Debes iniciar sesión para editar la lista');
+      Alert.alert('Error', 'Debes iniciar sesión para crear una lista');
       return;
     }
 
+    console.log('🔍 Debug - Usuario actual:', user);
+    console.log('🔍 Debug - Datos de la lista a crear:', {
+      title: title.trim(),
+      description: description.trim() || undefined,
+      is_public: isPublic,
+      user_id: user.id,
+    });
+
     try {
       setLoading(true);
-      await UserListService.updateList(list.id, {
+      const newList = await UserMaletaService.createMaleta({
         title: title.trim(),
         description: description.trim() || undefined,
         is_public: isPublic,
+        user_id: user.id,
       });
 
+      console.log('✅ Debug - Maleta creada exitosamente:', newList);
+
+      // Simplificar el flujo: solo ir a la pantalla de listas
+      console.log('✅ CreateListScreen: Maleta creada exitosamente:', newList);
+      
       Alert.alert(
-        'Lista Actualizada',
-        'Los cambios se han guardado correctamente',
+        'Lista Creada',
+        'Tu lista se ha creado correctamente',
         [
           {
-            text: 'Ver Lista',
-            onPress: () => navigation.navigate('ViewList', { 
-              listId: list.id, 
-              listTitle: title.trim() 
-            }),
+            text: 'Ver Maleta',
+            onPress: () => {
+              console.log('🔍 CreateListScreen: Navigating to ViewList');
+              try {
+                navigation.navigate('ViewMaleta', { 
+                  maletaId: newList.id, 
+                  listTitle: newList.title 
+                });
+              } catch (error) {
+                console.error('❌ CreateListScreen: Navigation error:', error);
+                // Fallback: ir a listas
+                navigation.goBack();
+              }
+            },
           },
           {
-            text: 'Continuar Editando',
-            onPress: () => {},
+            text: 'Volver a Listas',
+            onPress: () => {
+              console.log('🔍 CreateListScreen: Going back to ListsScreen');
+              navigation.goBack();
+            },
           },
         ]
       );
-    } catch (error) {
-      console.error('Error updating list:', error);
-      Alert.alert('Error', 'No se pudo actualizar la lista');
+    } catch (error: any) {
+      console.error('❌ Debug - Error creating list:', error);
+      console.error('❌ Debug - Error details:', {
+        message: error?.message,
+        code: error?.code,
+        details: error?.details,
+        hint: error?.hint
+      });
+      Alert.alert('Error', `No se pudo crear la lista: ${error?.message || 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteList = () => {
-    Alert.alert(
-      'Eliminar Lista',
-      `¿Estás seguro de que quieres eliminar "${list.title}"? Esta acción no se puede deshacer.`,
-      [
-        { text: 'Cancelar', style: 'cancel' },
-        {
-          text: 'Eliminar',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await UserListService.deleteList(list.id);
-              Alert.alert('Lista Eliminada', 'La lista se ha eliminado correctamente', [
-                {
-                  text: 'OK',
-                  onPress: () => navigation.navigate('Lists'),
-                },
-              ]);
-            } catch (error) {
-              console.error('Error deleting list:', error);
-              Alert.alert('Error', 'No se pudo eliminar la lista');
-            } finally {
-              setLoading(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const handleCancel = () => {
-    const hasChanges = 
-      title !== list.title ||
-      description !== list.description ||
-      isPublic !== list.is_public;
-
-    if (hasChanges) {
+    if (title.trim() || description.trim()) {
       Alert.alert(
-        'Cancelar Cambios',
+        'Cancelar',
         '¿Estás seguro de que quieres cancelar? Se perderán los cambios.',
         [
           { text: 'Continuar Editando', style: 'cancel' },
@@ -128,14 +121,14 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
         <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
           <Ionicons name="close" size={24} color="#666" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar Lista</Text>
+        <Text style={styles.headerTitle}>Crear Maleta</Text>
         <TouchableOpacity
-          onPress={handleSaveChanges}
+          onPress={handleCreateList}
           disabled={loading || !title.trim()}
-          style={[styles.saveButton, (!title.trim() || loading) && styles.saveButtonDisabled]}
+          style={[styles.createButton, (!title.trim() || loading) && styles.createButtonDisabled]}
         >
-          <Text style={[styles.saveButtonText, (!title.trim() || loading) && styles.saveButtonTextDisabled]}>
-            {loading ? 'Guardando...' : 'Guardar'}
+          <Text style={[styles.createButtonText, (!title.trim() || loading) && styles.createButtonTextDisabled]}>
+            Crear
           </Text>
         </TouchableOpacity>
       </View>
@@ -196,16 +189,13 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Acciones Peligrosas</Text>
-          
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={handleDeleteList}
-            disabled={loading}
-          >
-            <Ionicons name="trash-outline" size={20} color="white" />
-            <Text style={styles.deleteButtonText}>Eliminar Lista</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Información</Text>
+          <View style={styles.infoCard}>
+            <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
+            <Text style={styles.infoText}>
+              Puedes añadir álbumes a tu lista después de crearla. Las listas te ayudan a organizar tu colección de diferentes maneras.
+            </Text>
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -235,21 +225,21 @@ const styles = StyleSheet.create({
   cancelButton: {
     padding: 8,
   },
-  saveButton: {
+  createButton: {
     backgroundColor: '#007AFF',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
   },
-  saveButtonDisabled: {
+  createButtonDisabled: {
     backgroundColor: '#E5E5E5',
   },
-  saveButtonText: {
+  createButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
   },
-  saveButtonTextDisabled: {
+  createButtonTextDisabled: {
     color: '#999',
   },
   content: {
@@ -312,20 +302,20 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-  deleteButton: {
+  infoCard: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF3B30',
-    paddingVertical: 16,
+    backgroundColor: '#E8F4FD',
+    padding: 16,
     borderRadius: 8,
+    alignItems: 'flex-start',
   },
-  deleteButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
+  infoText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1A1A1A',
+    marginLeft: 12,
+    lineHeight: 20,
   },
 });
 
-export default EditListScreen; 
+export default CreateListScreen; 

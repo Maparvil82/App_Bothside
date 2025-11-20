@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { UserListService, UserCollectionService } from '../services/database';
+import { UserMaletaService, UserCollectionService } from '../services/database';
 
 interface AddAlbumToListScreenProps {
   navigation: any;
@@ -21,7 +21,7 @@ interface AddAlbumToListScreenProps {
 
 const AddAlbumToListScreen: React.FC<AddAlbumToListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
-  const { listId, listTitle } = route.params;
+  const { maletaId, listTitle } = route.params;
   
   const [collection, setCollection] = useState<any[]>([]);
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
@@ -89,7 +89,7 @@ const AddAlbumToListScreen: React.FC<AddAlbumToListScreenProps> = ({ navigation,
     try {
       setAdding(true);
       const promises = Array.from(selectedAlbums).map(albumId =>
-        UserListService.addAlbumToList(listId, albumId)
+        UserMaletaService.addAlbumToMaleta(maletaId, albumId)
       );
       await Promise.all(promises);
       
@@ -98,9 +98,9 @@ const AddAlbumToListScreen: React.FC<AddAlbumToListScreenProps> = ({ navigation,
         `Se añadieron ${selectedAlbums.size} álbum(es) a la lista`,
         [
           {
-            text: 'Ver Lista',
+            text: 'Ver Maleta',
             onPress: () => {
-              navigation.navigate('ViewList', { listId, listTitle });
+              navigation.navigate('ViewMaleta', { maletaId, listTitle });
             },
           },
           {

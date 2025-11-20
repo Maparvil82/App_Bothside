@@ -11,10 +11,10 @@ import {
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { UserListService } from '../services/database';
-import { UserList } from '../services/database';
-import { useHybridLists } from '../hooks/useHybridLists';
-import { ListCoverCollage } from '../components/ListCoverCollage';
+import { UserMaletaService } from '../services/database';
+import { UserMaleta } from '../services/database';
+import { useHybridMaletas } from '../hooks/useHybridMaletas';
+import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { useTheme } from '@react-navigation/native';
 
 interface ListsScreenProps {
@@ -24,9 +24,9 @@ interface ListsScreenProps {
 
 const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
-  const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridLists();
+  const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridMaletas();
   const { colors } = useTheme();
-  const [filteredLists, setFilteredLists] = useState<UserList[]>([]);
+  const [filteredLists, setFilteredLists] = useState<UserMaleta[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   console.log('🔍 ListsScreen: Initial showFilters state:', false);
@@ -56,21 +56,21 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   // Aplicar filtros cuando cambien las listas o el filtro
   useEffect(() => {
     let filtered = [...lists];
-    
+
     // Filtrar por privacidad
     if (filterByPrivacy === 'public') {
       filtered = filtered.filter(list => list.is_public);
     } else if (filterByPrivacy === 'private') {
       filtered = filtered.filter(list => !list.is_public);
     }
-    
+
     // Ordenar por fecha de creación (más recientes primero)
     filtered.sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
       return dateB - dateA;
     });
-    
+
     setFilteredLists(filtered);
   }, [lists, filterByPrivacy]);
 
@@ -93,22 +93,22 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   };
 
   const handleCreateList = () => {
-    navigation.navigate('CreateList');
+    navigation.navigate('CreateMaleta');
   };
 
-  const handleViewList = (list: UserList) => {
-    navigation.navigate('ViewList', { listId: list.id, listTitle: list.title });
+  const handleViewList = (list: UserMaleta) => {
+    navigation.navigate('ViewMaleta', { maletaId: list.id, listTitle: list.title });
   };
 
-  const handleEditList = (list: UserList) => {
-    navigation.navigate('EditList', { list });
+  const handleEditList = (list: UserMaleta) => {
+    navigation.navigate('EditMaleta', { list });
   };
 
-  const handleDeleteList = async (list: UserList) => {
+  const handleDeleteList = async (list: UserMaleta) => {
     console.log('🔍 ListsScreen: Attempting to delete list:', list);
-    
+
     Alert.alert(
-      'Eliminar Estantería',
+      'Eliminar Maleta',
       `¿Estás seguro de que quieres eliminar "${list.title}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -117,14 +117,14 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🗑️ ListsScreen: Calling deleteList service...');
-              await UserListService.deleteList(list.id);
+              console.log('🗑️ ListsScreen: Calling deleteMaleta service...');
+              await UserMaletaService.deleteMaleta(list.id);
               console.log('✅ ListsScreen: List deleted successfully');
-              
+
               // Eliminar la lista localmente inmediatamente
               console.log('🗑️ ListsScreen: Removing list locally');
               removeListLocally(list.id);
-              
+
               Alert.alert('Éxito', 'Lista eliminada correctamente');
             } catch (error: any) {
               console.error('❌ ListsScreen: Error deleting list:', error);
@@ -147,7 +147,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     if (!item) return;
 
     Alert.alert(
-      'Eliminar Estantería',
+      'Eliminar Maleta',
       `¿Estás seguro de que quieres eliminar "${item.title}"?`,
       [
         { text: 'Cancelar', style: 'cancel' },
@@ -156,7 +156,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await UserListService.deleteList(item.id);
+              await UserMaletaService.deleteMaleta(item.id);
               removeListLocally(item.id);
               Alert.alert('Éxito', 'Lista eliminada correctamente');
             } catch (error: any) {
@@ -188,7 +188,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         <Ionicons name="create-outline" size={18} color="white" />
         <Text style={styles.swipeActionText}>Editar</Text>
       </TouchableOpacity>
-      
+
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeDelete]}
         onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
@@ -200,16 +200,16 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     </View>
   );
 
-  const renderListItem = ({ item }: { item: UserList }) => (
+  const renderListItem = ({ item }: { item: UserMaleta }) => (
     <View style={styles.listItemContainer}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.listItem}
         onPress={() => handleViewList(item)}
         activeOpacity={0.7}
       >
-        <ListCoverCollage 
-          albums={item.albums || []} 
-          size={80} 
+        <MaletaCoverCollage
+          albums={item.albums || []}
+          size={80}
         />
         <View style={styles.listInfo}>
           <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
@@ -241,7 +241,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       </Text>
       <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
         <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.createButtonText}>Crear Estantería</Text>
+        <Text style={styles.createButtonText}>Crear Maleta</Text>
       </TouchableOpacity>
     </View>
   );
@@ -258,14 +258,14 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Estanterías</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>Maletas</Text>
           <Text style={[styles.listCount, { color: colors.text }]}>{filteredLists.length} estantería{filteredLists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.createListButton} onPress={handleCreateList}>
+          <TouchableOpacity style={styles.createMaletaButton} onPress={handleCreateList}>
             <Ionicons name="add" size={24} color={colors.primary} />
           </TouchableOpacity>
-          
+
           <TouchableOpacity
             style={[
               styles.filterButton,
@@ -277,10 +277,10 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
               console.log('🔍 ListsScreen: showFilters will be set to:', !showFilters);
             }}
           >
-            <Ionicons 
-              name="filter-outline" 
-              size={24} 
-              color={colors.text} 
+            <Ionicons
+              name="filter-outline"
+              size={24}
+              color={colors.text}
             />
           </TouchableOpacity>
         </View>
@@ -304,7 +304,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                   filterByPrivacy === 'all' && styles.filterChipTextActive
                 ]}>Todas</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   styles.filterChip,
@@ -317,7 +317,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                   filterByPrivacy === 'public' && styles.filterChipTextActive
                 ]}>Públicas</Text>
               </TouchableOpacity>
-              
+
               <TouchableOpacity
                 style={[
                   styles.filterChip,
@@ -342,14 +342,14 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       ) : filteredLists.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="list-outline" size={64} color={colors.text} />
-                <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
-      <Text style={styles.emptyStateSubtitle}>
-        Crea tu primera estantería para organizar tu colección
-      </Text>
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
-        <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.createButtonText}>Crear Estantería</Text>
-      </TouchableOpacity>
+          <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
+          <Text style={styles.emptyStateSubtitle}>
+            Crea tu primera estantería para organizar tu colección
+          </Text>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
+            <Ionicons name="add" size={20} color="white" />
+            <Text style={styles.createButtonText}>Crear Maleta</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <SwipeListView
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
   },
-  createListButton: {
+  createMaletaButton: {
     padding: 8,
   },
   filterButton: {
@@ -481,9 +481,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   listContainer: {
-   
+
   },
-    listItemContainer: {
+  listItemContainer: {
     backgroundColor: 'white',
   },
   listItem: {
@@ -501,7 +501,7 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 0,
     marginRight: 15,
-    
+
   },
   listThumbnailPlaceholder: {
     width: 80,
@@ -522,7 +522,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,
-    
+
   },
   listDescription: {
     fontSize: 14,

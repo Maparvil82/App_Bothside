@@ -1013,15 +1013,15 @@ export type Database = {
       list_albums: {
         Row: {
           album_id: string
-          list_id: string
+          maleta_id: string
         }
         Insert: {
           album_id: string
-          list_id: string
+          maleta_id: string
         }
         Update: {
           album_id?: string
-          list_id?: string
+          maleta_id?: string
         }
         Relationships: [
           {
@@ -1060,15 +1060,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "list_albums_list_id_fkey"
-            columns: ["list_id"]
+            foreignKeyName: "list_albums_maleta_id_fkey"
+            columns: ["maleta_id"]
             isOneToOne: false
             referencedRelation: "user_lists"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "list_albums_list_id_fkey"
-            columns: ["list_id"]
+            foreignKeyName: "list_albums_maleta_id_fkey"
+            columns: ["maleta_id"]
             isOneToOne: false
             referencedRelation: "user_lists_with_album_count"
             referencedColumns: ["id"]
@@ -1080,19 +1080,19 @@ export type Database = {
           added_at: string | null
           album_id: string | null
           id: string
-          list_id: string | null
+          maleta_id: string | null
         }
         Insert: {
           added_at?: string | null
           album_id?: string | null
           id?: string
-          list_id?: string | null
+          maleta_id?: string | null
         }
         Update: {
           added_at?: string | null
           album_id?: string | null
           id?: string
-          list_id?: string | null
+          maleta_id?: string | null
         }
         Relationships: [
           {
@@ -1131,15 +1131,15 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "list_items_list_id_fkey"
-            columns: ["list_id"]
+            foreignKeyName: "list_items_maleta_id_fkey"
+            columns: ["maleta_id"]
             isOneToOne: false
             referencedRelation: "user_lists"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "list_items_list_id_fkey"
-            columns: ["list_id"]
+            foreignKeyName: "list_items_maleta_id_fkey"
+            columns: ["maleta_id"]
             isOneToOne: false
             referencedRelation: "user_lists_with_album_count"
             referencedColumns: ["id"]
@@ -2399,7 +2399,7 @@ export type Database = {
         Returns: Json
       }
       increment_list_album_count: {
-        Args: { list_id: string }
+        Args: { maleta_id: string }
         Returns: undefined
       }
       insert_youtube_urls: {

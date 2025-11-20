@@ -306,7 +306,7 @@ Sin explicaciones adicionales.`;
       }
     });
 
-    // Crear listas detalladas de álbumes
+    // Crear maletas detalladas de álbumes
     const albumDetails: Array<{
       id: string; // user_collection_id
       title: string;

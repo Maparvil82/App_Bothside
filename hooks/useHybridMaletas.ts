@@ -1,28 +1,28 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
-import { UserList } from '../services/database';
-import { UserListService } from '../services/database';
+import { UserMaleta } from '../services/database';
+import { UserMaletaService } from '../services/database';
 
-export const useHybridLists = () => {
+export const useHybridMaletas = () => {
   const { user } = useAuth();
-  const [lists, setLists] = useState<UserList[]>([]);
+  const [lists, setLists] = useState<UserMaleta[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastManualRefresh, setLastManualRefresh] = useState<Date | null>(null);
 
   // Función para cargar listas manualmente
   const loadListsManually = useCallback(async () => {
     if (!user) return;
-    
+
     try {
-      console.log('🔄 useHybridLists: Manual load triggered');
+      console.log('🔄 useHybridMaletas: Manual load triggered');
       setLoading(true);
-      const userLists = await UserListService.getUserListsWithAlbums(user.id);
-      console.log('✅ useHybridLists: Manual load completed, lists:', userLists.length);
+      const userLists = await UserMaletaService.getUserMaletasWithAlbums(user.id);
+      console.log('✅ useHybridMaletas: Manual load completed, lists:', userLists.length);
       setLists(userLists || []);
       setLastManualRefresh(new Date());
     } catch (error) {
-      console.error('❌ useHybridLists: Manual load failed:', error);
+      console.error('❌ useHybridMaletas: Manual load failed:', error);
     } finally {
       setLoading(false);
     }
@@ -30,76 +30,76 @@ export const useHybridLists = () => {
 
   useEffect(() => {
     if (!user) {
-      console.log('🔍 useHybridLists: No user, clearing lists');
+      console.log('🔍 useHybridMaletas: No user, clearing lists');
       setLists([]);
       setLoading(false);
       return;
     }
 
-    console.log('🔍 useHybridLists: Setting up for user:', user.id);
+    console.log('🔍 useHybridMaletas: Setting up for user:', user.id);
 
     // Cargar listas iniciales
     loadListsManually();
 
-    // Suscripción en tiempo real para user_lists
+    // Suscripción en tiempo real para user_maletas
     const listsSubscription = supabase
-      .channel(`user_lists_${user.id}`)
+      .channel(`user_maletas_${user.id}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'user_lists',
+          table: 'user_maletas',
           filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
-          console.log('🔄 useHybridLists: Realtime change:', payload);
-          
+          console.log('🔄 useHybridMaletas: Realtime change:', payload);
+
           if (payload.eventType === 'INSERT') {
-            console.log('➕ useHybridLists: Adding new list:', payload.new);
+            console.log('➕ useHybridMaletas: Adding new list:', payload.new);
             // Verificar que la lista no esté ya en el estado
             setLists(prev => {
               const exists = prev.some(list => list.id === payload.new.id);
               if (exists) {
-                console.log('⚠️ useHybridLists: List already exists, skipping');
+                console.log('⚠️ useHybridMaletas: List already exists, skipping');
                 return prev;
               }
-              console.log('✅ useHybridLists: Adding new list to state');
-              return [payload.new as UserList, ...prev];
+              console.log('✅ useHybridMaletas: Adding new list to state');
+              return [payload.new as UserMaleta, ...prev];
             });
           } else if (payload.eventType === 'UPDATE') {
-            console.log('✏️ useHybridLists: Updating list:', payload.new);
-            setLists(prev => 
-              prev.map(list => 
-                list.id === payload.new.id ? payload.new as UserList : list
+            console.log('✏️ useHybridMaletas: Updating list:', payload.new);
+            setLists(prev =>
+              prev.map(list =>
+                list.id === payload.new.id ? payload.new as UserMaleta : list
               )
             );
           } else if (payload.eventType === 'DELETE') {
-            console.log('🗑️ useHybridLists: Deleting list:', payload.old);
-            setLists(prev => 
+            console.log('🗑️ useHybridMaletas: Deleting list:', payload.old);
+            setLists(prev =>
               prev.filter(list => list.id !== payload.old.id)
             );
           }
         }
       )
       .subscribe((status) => {
-        console.log('🔌 useHybridLists: Subscription status:', status);
+        console.log('🔌 useHybridMaletas: Subscription status:', status);
         if (status === 'SUBSCRIBED') {
-          console.log('✅ useHybridLists: Successfully subscribed to realtime');
+          console.log('✅ useHybridMaletas: Successfully subscribed to realtime');
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ useHybridLists: Channel error, will use manual refresh');
+          console.error('❌ useHybridMaletas: Channel error, will use manual refresh');
           // Si hay error en tiempo real, recargar manualmente después de un delay
           setTimeout(() => {
-            console.log('🔄 useHybridLists: Triggering manual refresh due to channel error');
+            console.log('🔄 useHybridMaletas: Triggering manual refresh due to channel error');
             loadListsManually();
           }, 2000);
         } else {
-          console.log('⚠️ useHybridLists: Unknown subscription status:', status);
+          console.log('⚠️ useHybridMaletas: Unknown subscription status:', status);
         }
       });
 
     return () => {
-      console.log('🔌 useHybridLists: Unsubscribing from channel');
+      console.log('🔌 useHybridMaletas: Unsubscribing from channel');
       listsSubscription.unsubscribe();
     };
   }, [user, loadListsManually]);
@@ -111,43 +111,43 @@ export const useHybridLists = () => {
 
   // Función para recargar después de cambios
   const refreshAfterChange = useCallback(async () => {
-    console.log('🔄 useHybridLists: Refreshing after change...');
+    console.log('🔄 useHybridMaletas: Refreshing after change...');
     setTimeout(async () => {
       await loadListsManually();
     }, 1000); // Esperar 1 segundo para que se complete la operación
   }, [loadListsManually]);
 
   // Función para añadir lista localmente (sin esperar tiempo real)
-  const addListLocally = useCallback((newList: UserList) => {
-    console.log('➕ useHybridLists: Adding list locally:', newList);
+  const addListLocally = useCallback((newList: UserMaleta) => {
+    console.log('➕ useHybridMaletas: Adding list locally:', newList);
     setLists(prev => {
       const exists = prev.some(list => list.id === newList.id);
       if (exists) {
-        console.log('⚠️ useHybridLists: List already exists locally, skipping');
+        console.log('⚠️ useHybridMaletas: List already exists locally, skipping');
         return prev;
       }
-      console.log('✅ useHybridLists: Adding new list to local state');
+      console.log('✅ useHybridMaletas: Adding new list to local state');
       return [newList, ...prev];
     });
   }, []);
 
   // Función para eliminar lista localmente (sin esperar tiempo real)
-  const removeListLocally = useCallback((listId: string) => {
-    console.log('🗑️ useHybridLists: Removing list locally:', listId);
+  const removeListLocally = useCallback((maletaId: string) => {
+    console.log('🗑️ useHybridMaletas: Removing list locally:', maletaId);
     setLists(prev => {
-      const filtered = prev.filter(list => list.id !== listId);
-      console.log('✅ useHybridLists: Removed list from local state');
+      const filtered = prev.filter(list => list.id !== maletaId);
+      console.log('✅ useHybridMaletas: Removed list from local state');
       return filtered;
     });
   }, []);
 
-  return { 
-    lists, 
-    loading, 
+  return {
+    lists,
+    loading,
     refreshLists,
     refreshAfterChange,
     addListLocally,
     removeListLocally,
-    lastManualRefresh 
+    lastManualRefresh
   };
 }; 
