@@ -1380,11 +1380,11 @@ export default function AlbumDetailScreen() {
                 </View>
               </View>
               <TouchableOpacity
-                style={[styles.playAudioButton, { backgroundColor: colors.border, borderColor: colors.border }]}
+                style={[styles.playAudioButton]}
                 onPress={() => handlePlayAudio(album.audio_note!)}
               >
                 <Ionicons name="play-circle" size={24} color={colors.primary} />
-                <Text style={[styles.playAudioButtonText, { color: colors.primary }]}>Reproducir nota de audio</Text>
+                <Text style={[styles.playAudioButtonText]}>Reproducir nota de audio</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -2035,11 +2035,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 14,
+    paddingVertical: 16,
     paddingHorizontal: 18,
     marginTop: 8,
-    borderRadius: 12,
-    borderWidth: 1.5,
+    borderRadius: 4,
+    backgroundColor: '#f1f1f1f1',
+
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -2685,7 +2686,7 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 16,
     marginTop: 16,
-    borderRadius: 12,
+    borderRadius: 4,
 
 
     shadowOffset: { width: 0, height: 2 },

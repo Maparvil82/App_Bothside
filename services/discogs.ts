@@ -1,6 +1,6 @@
 import { DiscogsRelease, DiscogsSearchResponse } from '../types';
-
 import { ENV } from '../config/env';
+import { discogsFetch } from '../utils/discogsFetch';
 
 const DISCOGS_API_URL = 'https://api.discogs.com';
 const DISCOGS_TOKEN = ENV.DISCOGS_TOKEN;
@@ -40,10 +40,11 @@ export class DiscogsService {
         return cached;
       }
 
-      const response = await fetch(`${DISCOGS_API_URL}${endpoint}`, {
+      // Use discogsFetch wrapper for all Discogs API calls
+      // This adds mandatory User-Agent header and enforces rate limiting
+      const response = await discogsFetch(`${DISCOGS_API_URL}${endpoint}`, {
         headers: {
           Authorization: `Discogs token=${DISCOGS_TOKEN}`,
-          'User-Agent': 'BothsideApp/1.0',
         },
       });
 
