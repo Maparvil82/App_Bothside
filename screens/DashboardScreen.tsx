@@ -1253,10 +1253,13 @@ const styles = StyleSheet.create({
     marginRight: 16, // Gap entre gráficas
   },
   paginationContainer: {
+    position: 'absolute',
+    bottom: 12,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 12,
     gap: 8,
   },
   paginationDot: {
@@ -1265,7 +1268,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   paginationDotActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#ffffffff',
     width: 24, // Alargado para indicar activo
   },
   paginationDotInactive: {

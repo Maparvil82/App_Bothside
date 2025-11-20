@@ -99,9 +99,10 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
     labelColor: (opacity = 1) => labelTextColor,
     style: {
       borderRadius: 16,
+
     },
     propsForDots: {
-      r: '6',
+      r: '5',
       strokeWidth: '2',
       stroke: '#FFFFFF',
       fill: chartColor,
@@ -141,6 +142,7 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
           data={chartData}
           width={chartWidth}
           height={250}
+          xLabelsOffset={5}
           yAxisLabel=""
           chartConfig={chartConfig}
           bezier={true}
@@ -157,7 +159,7 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
           horizontalLabelRotation={-30}
           verticalLabelRotation={0}
           fromZero={true}
-          segments={5}
+          segments={4}
         />
       </View>
     </View>
@@ -166,10 +168,11 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
 
 const styles = StyleSheet.create({
   container: {
+    position: 'relative',
     margin: 0,
     borderRadius: 8,
     padding: 16,
-    paddingBottom: 4,
+    paddingBottom: 24, // Espacio para los dots de paginación
     borderWidth: 1,
 
     // borderColor se sobreescribe en línea
