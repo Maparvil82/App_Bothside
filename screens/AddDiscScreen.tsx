@@ -42,7 +42,7 @@ export const AddDiscScreen: React.FC = () => {
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTimeout, setSearchTimeout] = useState<number | null>(null);
-  
+
   // Estados para la pestaña manual
   const [artistQuery, setArtistQuery] = useState('');
   const [albumQuery, setAlbumQuery] = useState('');
@@ -55,7 +55,7 @@ export const AddDiscScreen: React.FC = () => {
   const [cameraType, setCameraType] = useState<string>('back');
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
-  
+
   // Estados para OCR
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrResults, setOcrResults] = useState<any[]>([]);
@@ -66,7 +66,7 @@ export const AddDiscScreen: React.FC = () => {
       setAlbums([]);
       return;
     }
-    
+
     setLoading(true);
     try {
       const results = await AlbumService.searchAlbums(searchQuery);
@@ -81,23 +81,23 @@ export const AddDiscScreen: React.FC = () => {
 
   const handleSearchChange = useCallback((text: string) => {
     setQuery(text);
-    
+
     // Limpiar el timeout anterior si existe
     if (searchTimeout) {
       clearTimeout(searchTimeout);
     }
-    
+
     // Si el texto está vacío, limpiar resultados inmediatamente
     if (!text.trim()) {
       setAlbums([]);
       return;
     }
-    
+
     // Crear un nuevo timeout para la búsqueda
     const timeout = setTimeout(() => {
       searchAlbums(text);
     }, 300); // 300ms de delay
-    
+
     setSearchTimeout(timeout);
   }, [searchTimeout]);
 
@@ -120,13 +120,13 @@ export const AddDiscScreen: React.FC = () => {
   // Función para extraer artista del título
   const extractArtistFromTitle = (title: string): string | null => {
     if (!title) return null;
-    
+
     // Intentar extraer artista del título (formato: "Artista - Título")
     const titleParts = title.split(' - ');
     if (titleParts.length >= 2) {
       return titleParts[0].trim();
     }
-    
+
     // Si no hay separador, intentar con otros formatos comunes
     const otherSeparators = [' – ', ' / ', ' | ', ' • '];
     for (const separator of otherSeparators) {
@@ -135,20 +135,20 @@ export const AddDiscScreen: React.FC = () => {
         return parts[0].trim();
       }
     }
-    
+
     return null;
   };
 
   // Función para extraer solo el título del álbum
   const extractAlbumTitle = (title: string): string => {
     if (!title) return 'Sin título';
-    
+
     // Intentar extraer título del álbum (formato: "Artista - Título")
     const titleParts = title.split(' - ');
     if (titleParts.length >= 2) {
       return titleParts.slice(1).join(' - ').trim();
     }
-    
+
     // Si no hay separador, intentar con otros formatos comunes
     const otherSeparators = [' – ', ' / ', ' | ', ' • '];
     for (const separator of otherSeparators) {
@@ -157,7 +157,7 @@ export const AddDiscScreen: React.FC = () => {
         return parts.slice(1).join(separator).trim();
       }
     }
-    
+
     // Si no se puede extraer, devolver el título completo
     return title;
   };
@@ -182,11 +182,11 @@ export const AddDiscScreen: React.FC = () => {
 
       const searchTerm = `${artistQuery} ${albumQuery}`;
       console.log('🔍 Buscando en Discogs:', searchTerm);
-      
+
       const response = await DiscogsService.searchReleases(searchTerm);
       console.log('📦 Respuesta completa de Discogs:', response);
       console.log('📊 Total de resultados:', response?.results ? response.results.length : 0);
-      
+
       // Mostrar todos los formatos disponibles para debugging
       if (response?.results && response.results.length > 0) {
         console.log('🎵 Formatos disponibles:');
@@ -194,23 +194,23 @@ export const AddDiscScreen: React.FC = () => {
           console.log(`${index + 1}. "${release.title}" - Formato: "${release.format}" - Año: ${release.year}`);
         });
       }
-      
+
       // Filtrar solo versiones en vinilo y con artista y álbum exactos
       const vinylReleases = response?.results?.filter((release: any) => {
         // Extraer artista y álbum del título (formato: "Artista - Álbum")
         const titleParts = release.title?.split(' - ');
         const releaseArtist = titleParts?.[0]?.toLowerCase().trim();
         const releaseAlbum = titleParts?.[1]?.toLowerCase().trim();
-        
+
         const searchArtist = artistQuery.toLowerCase().trim();
         const searchAlbum = albumQuery.toLowerCase().trim();
-        
+
         // Verificar coincidencia del artista (más flexible)
         const artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
-        
+
         // Verificar coincidencia del álbum (más flexible)
         const albumMatches = releaseAlbum && releaseAlbum.includes(searchAlbum);
-        
+
         // Manejar diferentes tipos de format
         let format = '';
         if (typeof release.format === 'string') {
@@ -220,12 +220,12 @@ export const AddDiscScreen: React.FC = () => {
         } else if (release.format && typeof release.format === 'object') {
           format = JSON.stringify(release.format).toLowerCase();
         }
-        
+
         const isVinyl = format.includes('vinyl') || format.includes('lp') || format.includes('12"') || format.includes('7"') || format.includes('10"');
         console.log(`🎵 "${release.title}" - Artista extraído: "${releaseArtist || 'N/A'}" - Álbum extraído: "${releaseAlbum || 'N/A'}" - Coincide artista: ${artistMatches} - Coincide álbum: ${albumMatches} - Formato: "${release.format}" - Es vinilo: ${isVinyl}`);
         return artistMatches && albumMatches && isVinyl;
       }) || [];
-      
+
       console.log('💿 Versiones en vinilo encontradas:', vinylReleases.length);
       setManualSearchResults(vinylReleases);
     } catch (error) {
@@ -240,12 +240,12 @@ export const AddDiscScreen: React.FC = () => {
   // Función para añadir un release de Discogs a la colección
   const addDiscogsReleaseToCollection = async (release: any) => {
     if (!user) return;
-    
+
     setAddingDisc(true);
-    
+
     try {
       console.log('🎵 Llamando a Edge Function para guardar release:', release.id);
-      
+
       // Llamar a la Edge Function de Supabase
       const { data, error } = await supabase.functions.invoke('save-discogs-release', {
         body: {
@@ -253,7 +253,7 @@ export const AddDiscScreen: React.FC = () => {
           userId: user.id
         }
       });
-      
+
       if (error) {
         console.error('❌ Error llamando a Edge Function:', error);
         // Fallback: intentar añadir directamente si el álbum ya existe en la tabla global
@@ -270,7 +270,7 @@ export const AddDiscScreen: React.FC = () => {
             setArtistQuery('');
             setAlbumQuery('');
             setManualSearchResults([]);
-            
+
             // Mostrar opciones después de añadir el disco
             Alert.alert(
               'Disco añadido correctamente',
@@ -311,7 +311,7 @@ export const AddDiscScreen: React.FC = () => {
             } as any);
             if (newAlbum?.id) {
               // Obtener estadísticas en segundo plano y guardarlas
-              DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, release.id).catch(()=>{});
+              DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, release.id).catch(() => { });
               // Importar vídeos de YouTube desde Discogs y guardarlos
               try {
                 const fullRelease = await DiscogsService.getRelease(release.id);
@@ -343,12 +343,12 @@ export const AddDiscScreen: React.FC = () => {
                     await supabase.from('tracks').insert(tracksPayload);
                   }
                 }
-              } catch {}
+              } catch { }
               await UserCollectionService.addToCollection(user.id, newAlbum.id);
               setArtistQuery('');
               setAlbumQuery('');
               setManualSearchResults([]);
-              
+
               // Mostrar opciones después de añadir el disco
               Alert.alert(
                 'Disco añadido correctamente',
@@ -378,10 +378,10 @@ export const AddDiscScreen: React.FC = () => {
         }
         throw error;
       }
-      
+
       if (data?.success) {
         console.log('✅ Disco guardado exitosamente con ID:', data.albumId);
-        
+
         // Obtener estadísticas de Discogs en segundo plano (no bloquear la UI)
         if (data.albumId && release.id) {
           DiscogsStatsService.fetchAndSaveDiscogsStats(data.albumId, release.id)
@@ -396,12 +396,12 @@ export const AddDiscScreen: React.FC = () => {
               console.error('❌ Error obteniendo estadísticas de Discogs:', error);
             });
         }
-        
+
         // Limpiar búsqueda manual
         setArtistQuery('');
         setAlbumQuery('');
         setManualSearchResults([]);
-        
+
         // Mostrar opciones después de añadir el disco
         Alert.alert(
           'Disco añadido correctamente',
@@ -437,7 +437,7 @@ export const AddDiscScreen: React.FC = () => {
             setArtistQuery('');
             setAlbumQuery('');
             setManualSearchResults([]);
-            
+
             // Mostrar opciones después de añadir el disco
             Alert.alert(
               'Disco añadido correctamente',
@@ -461,7 +461,7 @@ export const AddDiscScreen: React.FC = () => {
             );
             return;
           }
-        } catch {}
+        } catch { }
         throw new Error(data?.error || 'Error desconocido');
       }
     } catch (error: any) {
@@ -483,7 +483,7 @@ export const AddDiscScreen: React.FC = () => {
       // Usar siempre el flujo local robusto para todos los usuarios
       if (album.discogs_id) {
         console.log('🎵 Procesando álbum con discogs_id:', album.discogs_id);
-        
+
         // Primero verificar si el álbum ya existe en el catálogo
         console.log('🔍 Buscando álbum existente por discogs_id...');
         const { data: albumRow, error: findErr } = await supabase
@@ -491,16 +491,16 @@ export const AddDiscScreen: React.FC = () => {
           .select('id')
           .eq('discogs_id', album.discogs_id)
           .maybeSingle();
-         
+
         if (findErr) throw findErr;
-        
+
         if (albumRow?.id) {
           // El álbum ya existe, solo añadirlo a la colección
           console.log('✅ Álbum encontrado en catálogo, añadiendo a colección...');
           await UserCollectionService.addToCollection(user.id, albumRow.id);
           setQuery('');
           setAlbums([]);
-          
+
           // Mostrar opciones después de añadir el disco
           Alert.alert(
             'Disco añadido correctamente',
@@ -536,11 +536,11 @@ export const AddDiscScreen: React.FC = () => {
             country: (album as any).country,
             discogs_id: album.discogs_id
           } as any);
-          
+
           if (newAlbum?.id) {
             // Obtener estadísticas en segundo plano
-            DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, album.discogs_id).catch(()=>{});
-            
+            DiscogsStatsService.fetchAndSaveDiscogsStats(newAlbum.id, album.discogs_id).catch(() => { });
+
             // Importar datos completos de Discogs
             console.log('📀 Importando datos completos de Discogs...');
             try {
@@ -549,16 +549,16 @@ export const AddDiscScreen: React.FC = () => {
                 console.warn('⚠️ No se pudo obtener release de Discogs');
                 throw new Error('Release no disponible');
               }
-              
+
               console.log('✅ Release obtenido:', fullRelease.title);
-              
+
               // Importar YouTube URLs
               const videos = (fullRelease as any)?.videos || [];
               console.log('🎬 Videos encontrados:', videos.length);
-              
+
               const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
               console.log('📺 Videos de YouTube filtrados:', youtubeVideos.length);
-              
+
               if (youtubeVideos.length > 0) {
                 const payload = youtubeVideos.map((v: any) => ({
                   album_id: newAlbum.id,
@@ -575,11 +575,11 @@ export const AddDiscScreen: React.FC = () => {
                   console.log('✅ URLs de YouTube insertadas:', payload.length);
                 }
               }
-              
+
               // Importar tracklist
               const tracklist = (fullRelease as any)?.tracklist || [];
               console.log('🎵 Tracks encontrados:', tracklist.length);
-              
+
               if (Array.isArray(tracklist) && tracklist.length > 0) {
                 const tracksPayload = tracklist
                   .filter((t: any) => t?.title)
@@ -598,19 +598,19 @@ export const AddDiscScreen: React.FC = () => {
                   }
                 }
               }
-              
+
               console.log('🎉 Importación completa de Discogs finalizada exitosamente');
-              
+
             } catch (importError) {
               console.error('❌ Error importando datos de Discogs:', importError);
               // No fallar toda la operación, el álbum básico ya está creado
             }
-            
+
             // Añadir a la colección del usuario
             await UserCollectionService.addToCollection(user.id, newAlbum.id);
             setQuery('');
             setAlbums([]);
-            
+
             // Mostrar opciones después de añadir el disco
             Alert.alert(
               'Disco añadido correctamente',
@@ -640,7 +640,7 @@ export const AddDiscScreen: React.FC = () => {
         await UserCollectionService.addToCollection(user.id, album.id);
         setQuery('');
         setAlbums([]);
-        
+
         // Mostrar opciones después de añadir el disco
         Alert.alert(
           'Disco añadido correctamente',
@@ -698,40 +698,40 @@ export const AddDiscScreen: React.FC = () => {
   // Función para realizar OCR en la imagen
   const performOCR = async (imageUri: string) => {
     if (!imageUri) return;
-    
+
     setOcrLoading(true);
     setExtractedText('');
     setOcrResults([]);
-    
+
     try {
       console.log('🔍 Iniciando OCR simulado en imagen:', imageUri);
-      
+
       // Simular procesamiento de OCR
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // Texto simulado extraído de una imagen de álbum
       const simulatedText = `The Dark Side of the Moon
 Pink Floyd
 1973
 Harvest Records
 Progressive Rock`;
-      
+
       setExtractedText(simulatedText);
       console.log('📝 Texto extraído (simulado):', simulatedText);
-      
+
       // Extraer artista y álbum del texto
       const { artist, album } = extractArtistAndAlbum(simulatedText);
-      
+
       if (artist && album) {
         console.log('🎵 Artista extraído:', artist);
         console.log('💿 Álbum extraído:', album);
-        
+
         // Buscar en Discogs API
         await searchDiscogsFromOCR(artist, album);
       } else {
         Alert.alert('OCR', 'No se pudo extraer artista y álbum del texto reconocido');
       }
-      
+
     } catch (error) {
       console.error('❌ Error en OCR:', error);
       Alert.alert('Error', 'No se pudo procesar la imagen con OCR');
@@ -743,11 +743,11 @@ Progressive Rock`;
   // Función para extraer artista y álbum del texto OCR
   const extractArtistAndAlbum = (text: string): { artist: string | null; album: string | null } => {
     const lines = text.split('\n').filter(line => line.trim().length > 0);
-    
+
     // Buscar patrones comunes en portadas de álbumes
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i].trim();
-      
+
       // Patrón: "Artista - Álbum"
       const dashPattern = line.match(/^(.+?)\s*-\s*(.+)$/);
       if (dashPattern) {
@@ -756,7 +756,7 @@ Progressive Rock`;
           album: dashPattern[2].trim()
         };
       }
-      
+
       // Patrón: "Artista" en una línea, "Álbum" en la siguiente
       if (i < lines.length - 1) {
         const nextLine = lines[i + 1].trim();
@@ -768,7 +768,7 @@ Progressive Rock`;
         }
       }
     }
-    
+
     // Si no encontramos patrones específicos, tomar las primeras dos líneas
     if (lines.length >= 2) {
       return {
@@ -776,7 +776,7 @@ Progressive Rock`;
         album: lines[1].trim()
       };
     }
-    
+
     return { artist: null, album: null };
   };
 
@@ -784,14 +784,14 @@ Progressive Rock`;
   const searchDiscogsFromOCR = async (artist: string, album: string) => {
     try {
       console.log('🔍 Buscando en Discogs:', artist, '-', album);
-      
+
       const results = await DiscogsService.searchReleases(`${artist} ${album}`);
-      
+
       if (results && results.results && results.results.length > 0) {
         // Filtrar solo versiones en vinilo
         const vinylResults = results.results.filter((release: any) => {
           const formats = release.format;
-          
+
           // Manejar diferentes tipos de formato
           let formatString = '';
           if (Array.isArray(formats)) {
@@ -801,13 +801,13 @@ Progressive Rock`;
           } else {
             formatString = '';
           }
-          
-          return formatString.includes('vinyl') || 
-                 formatString.includes('lp') ||
-                 formatString.includes('12"') ||
-                 formatString.includes('7"');
+
+          return formatString.includes('vinyl') ||
+            formatString.includes('lp') ||
+            formatString.includes('12"') ||
+            formatString.includes('7"');
         });
-        
+
         console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
         return vinylResults;
       } else {
@@ -816,7 +816,7 @@ Progressive Rock`;
       }
     } catch (error) {
       console.error('❌ Error buscando en Discogs:', error);
-      Alert.alert('Error', 'No se pudo buscar en Discogs');
+      Alert.alert('Error', 'No se pudo buscar el disco');
       return [];
     }
   };
@@ -996,7 +996,7 @@ Progressive Rock`;
             </TouchableOpacity>
           )}
         </View>
-        
+
         <View style={styles.manualInputContainer}>
           <Ionicons
             name="disc-outline"
@@ -1022,7 +1022,7 @@ Progressive Rock`;
             </TouchableOpacity>
           )}
         </View>
-        
+
         <View style={styles.manualButtonContainer}>
           <TouchableOpacity
             style={[
@@ -1035,10 +1035,10 @@ Progressive Rock`;
             {manualLoading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text style={styles.manualSearchButtonText}>Buscar en Discogs</Text>
+              <Text style={styles.manualSearchButtonText}>Buscar disco</Text>
             )}
           </TouchableOpacity>
-          
+
           {(artistQuery.length > 0 || albumQuery.length > 0) && (
             <TouchableOpacity
               style={styles.clearAllButton}
@@ -1070,7 +1070,7 @@ Progressive Rock`;
             <View style={styles.emptyContainer}>
               <Ionicons name="disc-outline" size={48} color="#ccc" />
               <Text style={styles.emptyText}>
-                {artistQuery && albumQuery 
+                {artistQuery && albumQuery
                   ? 'No se encontraron versiones en vinilo para esta búsqueda'
                   : 'Ingresa el artista y álbum para buscar versiones en vinilo'
                 }
@@ -1123,7 +1123,7 @@ Progressive Rock`;
         {capturedImage ? (
           <View style={styles.capturedImageContainer}>
             <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
-            
+
             {/* Botones de acción */}
             <View style={styles.capturedImageButtons}>
               <TouchableOpacity
