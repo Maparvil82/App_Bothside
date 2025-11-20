@@ -201,7 +201,5 @@ const styles = StyleSheet.create({
   chartContainer: {
     alignItems: 'center',
     margin: 10,
-    width: '100%',
-
   },
 }); 

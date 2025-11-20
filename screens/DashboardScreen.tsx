@@ -87,7 +87,8 @@ export default function DashboardScreen() {
   const [activeChartIndex, setActiveChartIndex] = useState(0);
 
   const handleScroll = (event: any) => {
-    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    // Usamos width - 16 porque es el tamaño del item (width - 32) + el gap (16)
+    const slideSize = width - 16;
     const index = event.nativeEvent.contentOffset.x / slideSize;
     const roundIndex = Math.round(index);
     setActiveChartIndex(roundIndex);
@@ -825,8 +826,8 @@ export default function DashboardScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chartsScrollContainer}
               decelerationRate="fast"
-              snapToInterval={width - 32}
-              pagingEnabled
+              snapToInterval={width - 16} // Ancho del item (width-32) + margen derecho (16)
+              pagingEnabled={false} // Desactivamos paging estricto para permitir gaps
               onScroll={handleScroll}
               scrollEventThrottle={16}
             >
@@ -1249,7 +1250,7 @@ const styles = StyleSheet.create({
   },
   chartItem: {
     width: width - 32, // Ancho total menos márgenes (16*2)
-    marginRight: 0, // Sin margen derecho porque usamos paging
+    marginRight: 16, // Gap entre gráficas
   },
   paginationContainer: {
     flexDirection: 'row',
