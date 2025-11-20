@@ -84,6 +84,14 @@ export default function DashboardScreen() {
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
 
   const [shelves, setShelves] = useState<Shelf[]>([]);
+  const [activeChartIndex, setActiveChartIndex] = useState(0);
+
+  const handleScroll = (event: any) => {
+    const slideSize = event.nativeEvent.layoutMeasurement.width;
+    const index = event.nativeEvent.contentOffset.x / slideSize;
+    const roundIndex = Math.round(index);
+    setActiveChartIndex(roundIndex);
+  };
 
   // Si la autenticación aún está cargando, mostrar loading
   if (authLoading) {
@@ -811,13 +819,16 @@ export default function DashboardScreen() {
 
         {/* Gráficas en scroll horizontal */}
         {(stats.topArtists.length > 0 || stats.topLabels.length > 0 || stats.topStyles.length > 0 || stats.albumsByDecade.length > 0) && (
-          <View>
+          <View style={styles.chartsSection}>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.chartsScrollContainer}
-              style={styles.chartsScrollView}
+              decelerationRate="fast"
+              snapToInterval={width - 32}
               pagingEnabled
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
             >
               {stats.topArtists.length > 0 && (
                 <View style={styles.chartItem}>
@@ -863,10 +874,18 @@ export default function DashboardScreen() {
                 </View>
               )}
             </ScrollView>
-            <View style={styles.scrollIndicator}>
-              <Ionicons name="chevron-back" size={16} color={colors.text} style={{ opacity: 0.5 }} />
-              <Text style={[styles.scrollHint, { color: colors.text }]}>Desliza para ver más</Text>
-              <Ionicons name="chevron-forward" size={16} color={colors.text} style={{ opacity: 0.5 }} />
+
+            {/* Pagination Dots */}
+            <View style={styles.paginationContainer}>
+              {[0, 1, 2, 3].map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    index === activeChartIndex ? styles.paginationDotActive : styles.paginationDotInactive,
+                  ]}
+                />
+              ))}
             </View>
           </View>
         )}
@@ -1220,29 +1239,36 @@ const styles = StyleSheet.create({
     color: '#6c757d',
     marginTop: 3,
   },
-  chartsScrollView: {
+  // Styles update:
+  chartsSection: {
     marginTop: 12,
-    marginBottom: 6,
+    marginBottom: 8,
   },
   chartsScrollContainer: {
-    paddingHorizontal: 8,
-    gap: 12,
+    paddingHorizontal: 16, // Margen lateral para alinear con el resto
   },
   chartItem: {
-    width: width - 32,
-    marginRight: 12,
+    width: width - 32, // Ancho total menos márgenes (16*2)
+    marginRight: 0, // Sin margen derecho porque usamos paging
   },
-  scrollIndicator: {
+  paginationContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 6,
-    marginBottom: 6,
-    gap: 6,
+    alignItems: 'center',
+    marginTop: 12,
+    gap: 8,
   },
-  scrollHint: {
-    fontSize: 11,
-    opacity: 0.6,
+  paginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  paginationDotActive: {
+    backgroundColor: '#007AFF',
+    width: 24, // Alargado para indicar activo
+  },
+  paginationDotInactive: {
+    backgroundColor: '#E5E5E5',
   },
   floatingAIButton: {
     position: 'absolute',

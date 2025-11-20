@@ -33,13 +33,13 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
   // Tomar solo los top 5 items
   const top5Data = data.slice(0, 5);
 
-  // Función para truncar labels largos
-  const truncateLabel = (label: string, maxLength: number = 10): string => {
+  // Función para truncar labels largos - Ajustado a 8 caracteres para evitar solapamiento
+  const truncateLabel = (label: string, maxLength: number = 8): string => {
     if (label.length <= maxLength) return label;
-    return label.substring(0, maxLength) + '...';
+    return label.substring(0, maxLength) + '..';
   };
 
-  // Asignar colores según el tipo de gráfica con gradientes más vibrantes
+  // Asignar colores según el tipo de gráfica
   const getChartColor = () => {
     switch (icon) {
       case 'people': // Artistas
@@ -71,71 +71,67 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
   };
 
   const chartColor = getChartColor();
-  const gradientColors = getGradientColors();
+
+  // Configuración para fondo de color sólido
+  const bgColor = chartColor;
+  const titleColor = '#FFFFFF';
+  const labelTextColor = 'rgba(255, 255, 255, 0.9)';
+  const gridColor = 'rgba(255, 255, 255, 0.2)';
 
   const chartData = {
-    labels: top5Data.map(item => truncateLabel(String(item[keyName]), 8)),
+    labels: top5Data.map(item => truncateLabel(String(item[keyName]))),
     datasets: [
       {
         data: top5Data.map(item => item.count),
-        color: (opacity = 1) => `${chartColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
-        strokeWidth: 4,
+        color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+        strokeWidth: 3,
       },
     ],
   };
 
-  const bgColor = colors.card || '#ffffff';
-  const titleColor = '#1F2937';
-  const labelTextColor = '#4B5563';
-
+  // Configuración ajustada para fondo de color
   const chartConfig = {
-    backgroundColor: bgColor,
-    backgroundGradientFrom: gradientColors.from,
-    backgroundGradientTo: gradientColors.to,
-    backgroundGradientFromOpacity: 0.05,
-    backgroundGradientToOpacity: 0.05,
+    backgroundColor: chartColor,
+    backgroundGradientFrom: chartColor,
+    backgroundGradientTo: chartColor,
     decimalPlaces: 0,
-    color: (opacity = 1) => `${chartColor}${Math.round(opacity * 255).toString(16).padStart(2, '0')}`,
-    labelColor: (opacity = 1) => {
-      return `rgba(75, 85, 99, ${opacity})`;
-    },
+    color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+    labelColor: (opacity = 1) => labelTextColor,
     style: {
       borderRadius: 16,
     },
     propsForDots: {
-      r: '7',
-      strokeWidth: '3',
-      stroke: chartColor,
-      fill: bgColor,
+      r: '6',
+      strokeWidth: '2',
+      stroke: '#FFFFFF',
+      fill: chartColor,
     },
     propsForBackgroundLines: {
       strokeDasharray: '',
-      stroke: '#E5E7EB',
+      stroke: gridColor,
       strokeWidth: 1,
     },
     propsForLabels: {
-      fontSize: 12,
-      fill: labelTextColor,
+      fontSize: 10,
       fontWeight: '600',
     },
-    propsForVerticalLabels: {
-      fontSize: 12,
-      fill: labelTextColor,
-      fontWeight: '600',
-    },
-    propsForHorizontalLabels: {
-      fontSize: 11,
-      fill: labelTextColor,
-      fontWeight: '600',
-      rotation: -45,
-    },
+    fillShadowGradient: '#FFFFFF',
+    fillShadowGradientOpacity: 0.3,
   };
 
+  // Calcular ancho disponible: 
+  // Pantalla (width)
+  // - Margen Dashboard (16 * 2 = 32) 
+  // - Padding Container (16 * 2 = 32) 
+  // - Margen ChartContainer (10 * 2 = 20)
+  // Total a restar: 84
+  const chartWidth = width - 84;
+
   return (
-    <View style={[styles.container, { backgroundColor: bgColor }]}>
-      <View style={[styles.header, { borderLeftColor: chartColor }]}>
-        <View style={[styles.iconContainer, { backgroundColor: `${chartColor}15` }]}>
-          <Ionicons name={icon as any} size={24} color={chartColor} />
+    <View style={[styles.container, { backgroundColor: bgColor, borderColor: bgColor }]}>
+      <View style={[styles.header, { borderBottomColor: 'rgba(255, 255, 255, 0.2)' }]}>
+        <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 255, 255, 0.2)' }]}>
+          <Ionicons name={icon as any} size={20} color="#FFFFFF" />
         </View>
         <Text style={[styles.title, { color: titleColor }]} numberOfLines={1}>{title}</Text>
       </View>
@@ -143,23 +139,22 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
       <View style={styles.chartContainer}>
         <LineChart
           data={chartData}
-          width={width - 56}
-          height={260}
+          width={chartWidth}
+          height={250}
           yAxisLabel=""
           chartConfig={chartConfig}
           bezier={true}
           style={{
-            marginVertical: 12,
             borderRadius: 16,
+            paddingRight: 24,
           }}
           withDots={true}
           withShadow={true}
-          withScrollableDot={false}
           withInnerLines={true}
-          withOuterLines={false}
+          withOuterLines={true}
           withVerticalLabels={true}
           withHorizontalLabels={true}
-          horizontalLabelRotation={-45}
+          horizontalLabelRotation={-30}
           verticalLabelRotation={0}
           fromZero={true}
           segments={5}
@@ -172,43 +167,41 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
 const styles = StyleSheet.create({
   container: {
     margin: 0,
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 3,
+    borderRadius: 8,
+    padding: 16,
+    paddingBottom: 4,
+    borderWidth: 1,
+
+    // borderColor se sobreescribe en línea
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 2,
-    borderBottomColor: '#F3F4F6',
-    borderLeftWidth: 4,
-    paddingLeft: 12,
+    marginBottom: 8,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    // borderBottomColor se sobreescribe en línea
+    // Eliminado borderLeftWidth para estilo más limpio en tarjeta de color
+    paddingLeft: 0,
   },
   iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 10,
   },
   title: {
-    fontSize: 19,
+    fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
-    letterSpacing: 0.3,
+    // color se sobreescribe en línea
+    letterSpacing: 0.2,
   },
   chartContainer: {
     alignItems: 'center',
-    marginBottom: 8,
+    margin: 10,
+    width: '100%',
+
   },
 }); 
