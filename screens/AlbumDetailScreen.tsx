@@ -1348,16 +1348,16 @@ export default function AlbumDetailScreen() {
               {/* Botón "Ver más" o "Ver menos" */}
               {editions.length > 3 && (
                 <TouchableOpacity
-                  style={[styles.seeMoreButton, { backgroundColor: colors.border, borderColor: colors.border }]}
+                  style={[styles.seeMoreButton]}
                   onPress={() => setShowAllEditions(!showAllEditions)}
                 >
-                  <Text style={[styles.seeMoreButtonText, { color: colors.primary }]}>
+                  <Text style={[styles.seeMoreButtonText]}>
                     {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
                   </Text>
                   <Ionicons
                     name={showAllEditions ? "chevron-up" : "chevron-down"}
                     size={16}
-                    color={colors.primary}
+                    color={colors.text}
                   />
                 </TouchableOpacity>
               )}
@@ -2035,33 +2035,43 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f1f1f1',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   playAudioButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
     marginLeft: 8,
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
+    letterSpacing: 0.2,
   },
   recordAudioButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f8fafc',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#dee2e6',
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   recordAudioButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
     marginLeft: 8,
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
+    letterSpacing: 0.2,
   },
   sellButton: {
     flexDirection: 'row',
@@ -2669,21 +2679,25 @@ const styles = StyleSheet.create({
   },
   seeMoreButton: {
     flexDirection: 'row',
+    backgroundColor: '#f1f1f1ff',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 12,
+    paddingVertical: 16,
     paddingHorizontal: 16,
-    marginTop: 8,
-    backgroundColor: '#436484ff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#f0f0f0ff',
+    marginTop: 16,
+    borderRadius: 12,
+
+
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
   seeMoreButtonText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#007AFF',
+    fontSize: 15,
+    fontWeight: '600',
     marginRight: 4,
+    letterSpacing: 0.2,
   },
   ratioCardIcon: {
     position: 'absolute',
@@ -3424,22 +3438,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     marginBottom: 16,
-  },
-  loadAudioButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FF0000',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 8,
-    marginBottom: 16,
-  },
-  loadAudioButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
   },
   loadingAudioContainer: {
     flexDirection: 'row',
