@@ -17,6 +17,7 @@ import { ProfileService, UserProfile } from '../services/database';
 import * as ImagePicker from 'expo-image-picker';
 import { GamificationService } from '../services/gamification';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { Ionicons } from '@expo/vector-icons';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -166,9 +167,11 @@ export const ProfileScreen: React.FC = () => {
           <Text style={[styles.displayName, { color: colors.text }]}>{getDisplayName()}</Text>
         </View>
 
-        {/* Configuración: solo modo claro/oscuro */}
+        {/* Configuración */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Configuración</Text>
+
+
+          {/* Modo oscuro */}
           <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
             <Text style={[styles.settingLabel, { color: colors.text }]}>Modo oscuro</Text>
             <Switch
@@ -176,7 +179,9 @@ export const ProfileScreen: React.FC = () => {
               onValueChange={toggleTheme}
             />
           </View>
-          <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
+
+          {/* Mostrar ganancias de sesiones */}
+          <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
             <Text style={[styles.settingLabel, { color: colors.text }]}>Mostrar ganancias de sesiones</Text>
             <Switch
               value={showSessionEarnings}
@@ -185,33 +190,48 @@ export const ProfileScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Producto */}
+        {/* Información */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Producto</Text>
+
+
+          {/* Feedback */}
           <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: colors.border }]}
             onPress={() => navigation.navigate('Feedback' as never)}
           >
             <Text style={[styles.menuItemText, { color: colors.text }]}>Feedback</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
+          </TouchableOpacity>
+
+          {/* Legal */}
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomWidth: 0 }]}
+            onPress={() => navigation.navigate('Legal' as never)}
+          >
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Información Legal</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
           </TouchableOpacity>
         </View>
 
         {/* Cuenta */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Cuenta</Text>
-          <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]} onPress={handleSignOut}>
-            <Text style={[styles.menuItemText, { color: '#ff3b30' }]}>Cerrar sesión</Text>
-          </TouchableOpacity>
-        </View>
 
-        {/* Legal */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Legal</Text>
+
+          {/* Cuenta */}
           <TouchableOpacity
             style={[styles.menuItem, { borderBottomColor: colors.border }]}
-            onPress={() => navigation.navigate('Legal' as never)}
+            onPress={() => navigation.navigate('Account' as never)}
           >
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Información Legal</Text>
+            <Text style={[styles.menuItemText, { color: colors.text }]}>Cuenta</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
+          </TouchableOpacity>
+
+          {/* Cerrar sesión */}
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomWidth: 0 }]}
+            onPress={handleSignOut}
+          >
+            <Text style={[styles.menuItemText, { color: '#ff3b30' }]}>Cerrar sesión</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -230,11 +250,15 @@ const styles = StyleSheet.create({
   displayName: { fontSize: 18, fontWeight: '600', color: '#333', marginBottom: 5 },
   section: { backgroundColor: 'white', marginTop: 20, paddingHorizontal: 20 },
   sectionTitle: { fontSize: 18, fontWeight: '600', color: '#333', marginVertical: 15 },
-  settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
+  settingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 18, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
   settingLabel: { fontSize: 16, color: '#333' },
-  menuItem: { paddingVertical: 15, borderBottomWidth: 1, borderBottomColor: '#f0f0f0' },
-  menuItemText: { fontSize: 16, color: '#ff3b30', fontWeight: '600' },
-  legalContent: { paddingVertical: 15 },
-  legalSectionTitle: { fontSize: 16, fontWeight: '600', marginBottom: 12 },
-  legalText: { fontSize: 14, lineHeight: 20, opacity: 0.8 },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0'
+  },
+  menuItemText: { fontSize: 16, fontWeight: '600' },
 }); 

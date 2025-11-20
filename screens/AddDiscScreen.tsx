@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useDebounce } from '../hooks/useDebounce';
 import {
   View,
   Text,
@@ -41,7 +42,7 @@ export const AddDiscScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchTimeout, setSearchTimeout] = useState<number | null>(null);
+  const debouncedQuery = useDebounce(query, 400);
 
   // Estados para la pestaña manual
   const [artistQuery, setArtistQuery] = useState('');
@@ -61,7 +62,7 @@ export const AddDiscScreen: React.FC = () => {
   const [ocrResults, setOcrResults] = useState<any[]>([]);
   const [extractedText, setExtractedText] = useState<string>('');
 
-  const searchAlbums = async (searchQuery: string) => {
+  const searchAlbums = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setAlbums([]);
       return;
@@ -77,38 +78,21 @@ export const AddDiscScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const handleSearchChange = useCallback((text: string) => {
     setQuery(text);
-
-    // Limpiar el timeout anterior si existe
-    if (searchTimeout) {
-      clearTimeout(searchTimeout);
-    }
-
-    // Si el texto está vacío, limpiar resultados inmediatamente
     if (!text.trim()) {
       setAlbums([]);
-      return;
     }
+  }, []);
 
-    // Crear un nuevo timeout para la búsqueda
-    const timeout = setTimeout(() => {
-      searchAlbums(text);
-    }, 300); // 300ms de delay
-
-    setSearchTimeout(timeout);
-  }, [searchTimeout]);
-
-  // Limpiar timeout cuando el componente se desmonte
+  // Efecto para buscar cuando cambia el query con debounce
   useEffect(() => {
-    return () => {
-      if (searchTimeout) {
-        clearTimeout(searchTimeout);
-      }
-    };
-  }, [searchTimeout]);
+    if (debouncedQuery.trim()) {
+      searchAlbums(debouncedQuery);
+    }
+  }, [debouncedQuery, searchAlbums]);
 
   // Solicitar permisos de cámara
   useEffect(() => {

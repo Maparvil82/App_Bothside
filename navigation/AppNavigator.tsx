@@ -38,6 +38,7 @@ import { PricingScreen } from '../screens/PricingScreen';
 import { FeedbackScreen } from '../screens/FeedbackScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import { LegalScreen } from '../screens/LegalScreen';
+import { AccountScreen } from '../screens/AccountScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -211,6 +212,15 @@ const ProfileStack = () => (
         headerBackTitle: 'Atrás'
       }}
     />
+    <Stack.Screen
+      name="Account"
+      component={AccountScreen}
+      options={{
+        title: 'Cuenta',
+        headerShown: true,
+        headerBackTitle: 'Atrás'
+      }}
+    />
   </Stack.Navigator>
 );
 
@@ -275,6 +285,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
         AIChat: 'ai-chat',
         Leaderboard: 'leaderboard',
         Profile: 'profile',
+        Account: 'account',
       },
     },
   };

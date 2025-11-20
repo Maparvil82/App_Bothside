@@ -8,7 +8,6 @@ import {
     TouchableOpacity,
     Modal,
     Alert,
-    Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -41,14 +40,7 @@ export const LegalScreen: React.FC = () => {
         setWebViewVisible(true);
     };
 
-    /**
-     * Abrir cliente de correo
-     */
-    const openEmail = () => {
-        const email = 'maparvil@gmail.com';
-        const subject = 'Contacto desde Bothside';
-        Linking.openURL(`mailto:${email}?subject=${encodeURIComponent(subject)}`);
-    };
+
 
     /**
      * Mostrar modal de eliminación de cuenta
@@ -60,6 +52,11 @@ export const LegalScreen: React.FC = () => {
     return (
         <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+                {/* Versión de la app */}
+                <View style={styles.versionContainer}>
+                    <Text style={[styles.versionText, { color: colors.text }]}>Bothside v1.0.0 (Beta)</Text>
+                </View>
 
                 {/* Sección: Documentos Legales */}
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -111,46 +108,8 @@ export const LegalScreen: React.FC = () => {
                     </View>
                 </View>
 
-                {/* Sección: Contacto */}
-                <View style={[styles.section, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Contacto</Text>
 
-                    <TouchableOpacity
-                        style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                        onPress={openEmail}
-                    >
-                        <View style={styles.menuItemContent}>
-                            <Ionicons name="mail-outline" size={22} color={colors.text} />
-                            <View style={styles.contactInfo}>
-                                <Text style={[styles.menuItemText, { color: colors.text }]}>Developer: Manuel Parra Villar</Text>
-                                <Text style={[styles.contactEmail, { color: colors.text }]}>maparvil@gmail.com</Text>
-                            </View>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
-                    </TouchableOpacity>
-                </View>
 
-                {/* Sección: Cuenta */}
-                <View style={[styles.section, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Gestión de Cuenta</Text>
-
-                    {/* Eliminar Cuenta */}
-                    <TouchableOpacity
-                        style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                        onPress={showDeleteAccountModal}
-                    >
-                        <View style={styles.menuItemContent}>
-                            <Ionicons name="trash-outline" size={22} color="#ff3b30" />
-                            <Text style={[styles.menuItemText, { color: '#ff3b30' }]}>Eliminar Cuenta</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={20} color="#ff3b30" opacity={0.5} />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Versión de la app */}
-                <View style={styles.versionContainer}>
-                    <Text style={[styles.versionText, { color: colors.text }]}>Bothside v1.0.0 (Beta)</Text>
-                </View>
             </ScrollView>
 
             {/* WebView Modal */}
@@ -244,14 +203,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
         marginLeft: 12,
     },
-    contactInfo: {
-        marginLeft: 12,
-    },
-    contactEmail: {
-        fontSize: 14,
-        opacity: 0.7,
-        marginTop: 2,
-    },
+
     attributionBlock: {
         paddingVertical: 12,
         paddingHorizontal: 4,
@@ -268,12 +220,13 @@ const styles = StyleSheet.create({
     },
     versionContainer: {
         alignItems: 'center',
-        marginTop: 30,
-        marginBottom: 20,
+        marginTop: 20,
+        marginBottom: 10,
     },
     versionText: {
-        fontSize: 12,
-        opacity: 0.5,
+        fontSize: 13,
+        opacity: 0.6,
+        fontWeight: '500',
     },
     // WebView Modal Styles
     webViewContainer: {
