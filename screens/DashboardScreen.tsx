@@ -84,7 +84,7 @@ export default function DashboardScreen() {
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
 
   const handleAudioScan = () => {
-    console.log("Scan pressed");
+    (navigation as any).navigate('AudioScan');
   };
 
   const [shelves, setShelves] = useState<Shelf[]>([]);

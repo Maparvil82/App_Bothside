@@ -39,6 +39,7 @@ import { FeedbackScreen } from '../screens/FeedbackScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import { LegalScreen } from '../screens/LegalScreen';
 import { AccountScreen } from '../screens/AccountScreen';
+import { AudioScanScreen } from '../screens/AudioScanScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 
 const Tab = createBottomTabNavigator();
@@ -286,6 +287,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
         Leaderboard: 'leaderboard',
         Profile: 'profile',
         Account: 'account',
+        AudioScan: 'audio-scan',
       },
     },
   };
@@ -353,6 +355,7 @@ const AppNavigator = () => {
                     header: () => <CustomHeader title="Calendario de sesiones" showBackButton={true} showCalendarIcon={false} />
                   }}
                 />
+                <Stack.Screen name="AudioScan" component={AudioScanScreen} />
               </>
             ) : (
               // Usuario no autenticado - Pantallas de autenticación
