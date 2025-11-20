@@ -43,7 +43,7 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         const row = dist.find(d => d.tier === rank.tier);
         if (mounted) setTierShare(row && row.total ? row.users / row.total : null);
         // Lanzar upsert en background para futuras lecturas
-        GamificationService.upsertUserRanking(user.id).catch(() => {});
+        GamificationService.upsertUserRanking(user.id).catch(() => { });
       } catch (e) {
         if (mounted) setTierShare(null);
       }
@@ -66,11 +66,11 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
   // Si ya se alcanzó el valor del nivel actual (no hay siguiente objetivo), mostrar 100%
   const albumProgress = rank.albumLevelIndex >= 5 ? 1 : rank.albumProgressToNext;
   const valueProgress = rank.valueLevelIndex >= 5 ? 1 : rank.valueProgressToNext;
-  
+
   // Verificar si ya se alcanzó el valor del nivel actual
   const hasReachedCurrentValueLevel = !hasNextValue && rank.valueLevelIndex < 5;
   const hasReachedCurrentAlbumLevel = !hasNextAlbums && rank.albumLevelIndex < 5;
-  
+
   const finalAlbumProgress = hasReachedCurrentAlbumLevel ? 1 : albumProgress;
   const finalValueProgress = hasReachedCurrentValueLevel ? 1 : valueProgress;
 
@@ -166,10 +166,13 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
 const styles = StyleSheet.create({
   card: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    margin: 16,
-    
+    marginHorizontal: 16,
+    marginBottom: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
   },
   headerRow: {
     flexDirection: 'row',
