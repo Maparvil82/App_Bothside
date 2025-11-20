@@ -940,14 +940,14 @@ export default function AlbumDetailScreen() {
       const isAlreadyInList = await UserMaletaService.isAlbumInMaleta(listId, album.albums.id);
 
       if (isAlreadyInList) {
-        Alert.alert('Ya en la lista', 'Este álbum ya está en esta lista');
+        Alert.alert('Ya en la maleta', 'Este álbum ya está en esta maleta');
         return;
       }
 
       // Añadir el álbum a la lista usando el servicio correcto
       await UserMaletaService.addAlbumToMaleta(listId, album.albums.id);
 
-      Alert.alert('¡Añadido!', 'El álbum se ha añadido a la lista');
+      Alert.alert('¡Añadido!', 'El álbum se ha añadido a la maleta');
       setShowListsModal(false);
       setSelectedListId(null);
 
@@ -956,8 +956,8 @@ export default function AlbumDetailScreen() {
       // Recargar el álbum para actualizar la información
       loadAlbumDetail();
     } catch (error) {
-      console.error('Error al añadir a lista:', error);
-      Alert.alert('Error', 'No se pudo añadir el álbum a la lista');
+      console.error('Error al añadir a maleta:', error);
+      Alert.alert('Error', 'No se pudo añadir el álbum a la maleta');
     }
   };
 
@@ -1194,7 +1194,7 @@ export default function AlbumDetailScreen() {
               onPress={() => setShowListsModal(true)}
             >
               <Ionicons name="list-outline" size={20} color={colors.text} />
-              <Text style={[styles.actionButtonText, { color: colors.text }]}>Añadir a Lista</Text>
+              <Text style={[styles.actionButtonText, { color: colors.text }]}>Añadir a Maleta</Text>
             </TouchableOpacity>
           </View>
 
@@ -1203,7 +1203,7 @@ export default function AlbumDetailScreen() {
         {/* Listas donde está guardado */}
         {album.user_list_items && album.user_list_items.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Guardado en estas listas</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Guardado en estas maletas</Text>
             {album.user_list_items.map((item, index) => (
               <TouchableOpacity
                 key={index}
@@ -1593,7 +1593,7 @@ export default function AlbumDetailScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Selecciona una Lista</Text>
+              <Text style={styles.modalTitle}>Selecciona una Maleta</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowListsModal(false)}
@@ -1625,7 +1625,7 @@ export default function AlbumDetailScreen() {
                 ))
               ) : (
                 <View style={styles.emptyListsContainer}>
-                  <Text style={styles.emptyListsText}>No tienes listas creadas</Text>
+                  <Text style={styles.emptyListsText}>No tienes maletas creadas</Text>
                 </View>
               )}
 
@@ -1634,7 +1634,7 @@ export default function AlbumDetailScreen() {
                 onPress={handleCreateNewList}
               >
                 <Ionicons name="add-circle" size={20} color="#fff" />
-                <Text style={styles.createListButtonText}>Crear Nueva Lista</Text>
+                <Text style={styles.createListButtonText}>Crear Nueva Maleta</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>

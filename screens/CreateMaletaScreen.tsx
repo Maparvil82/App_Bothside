@@ -31,7 +31,7 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
     }
 
     if (!user) {
-      Alert.alert('Error', 'Debes iniciar sesión para crear una lista');
+      Alert.alert('Error', 'Debes iniciar sesión para crear una maleta');
       return;
     }
 
@@ -58,8 +58,8 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
       console.log('✅ CreateListScreen: Maleta creada exitosamente:', newList);
       
       Alert.alert(
-        'Lista Creada',
-        'Tu lista se ha creado correctamente',
+        'Maleta Creada',
+        'Tu maleta se ha creado correctamente',
         [
           {
             text: 'Ver Maleta',
@@ -78,7 +78,7 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
             },
           },
           {
-            text: 'Volver a Listas',
+            text: 'Volver a Maletas',
             onPress: () => {
               console.log('🔍 CreateListScreen: Going back to ListsScreen');
               navigation.goBack();
@@ -94,7 +94,7 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
         details: error?.details,
         hint: error?.hint
       });
-      Alert.alert('Error', `No se pudo crear la lista: ${error?.message || 'Error desconocido'}`);
+      Alert.alert('Error', `No se pudo crear la maleta: ${error?.message || 'Error desconocido'}`);
     } finally {
       setLoading(false);
     }
@@ -143,7 +143,7 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
               style={styles.textInput}
               value={title}
               onChangeText={setTitle}
-              placeholder="Nombre de tu lista"
+              placeholder="Nombre de tu maleta"
               maxLength={100}
             />
           </View>
@@ -154,7 +154,7 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
               style={[styles.textInput, styles.textArea]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe tu lista (opcional)"
+              placeholder="Describe tu maleta (opcional)"
               multiline
               numberOfLines={4}
               maxLength={500}
@@ -170,12 +170,12 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
           <View style={styles.privacyRow}>
             <View style={styles.privacyInfo}>
               <Text style={styles.privacyTitle}>
-                {isPublic ? 'Lista Pública' : 'Lista Privada'}
+                {isPublic ? 'Maleta Pública' : 'Maleta Privada'}
               </Text>
               <Text style={styles.privacyDescription}>
                 {isPublic 
-                  ? 'Cualquier usuario puede ver esta lista'
-                  : 'Solo tú puedes ver esta lista'
+                  ? 'Cualquier usuario puede ver esta maleta'
+                  : 'Solo tú puedes ver esta maleta'
                 }
               </Text>
             </View>
@@ -193,7 +193,7 @@ const CreateListScreen: React.FC<CreateListScreenProps> = ({ navigation }) => {
           <View style={styles.infoCard}>
             <Ionicons name="information-circle-outline" size={20} color="#007AFF" />
             <Text style={styles.infoText}>
-              Puedes añadir álbumes a tu lista después de crearla. Las listas te ayudan a organizar tu colección de diferentes maneras.
+              Puedes añadir álbumes a tu maleta después de crearla. Las maletas te ayudan a organizar tu colección de diferentes maneras.
             </Text>
           </View>
         </View>

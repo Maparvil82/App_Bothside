@@ -235,9 +235,9 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="list-outline" size={64} color="#CCC" />
-      <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
+      <Text style={styles.emptyStateTitle}>No tienes maletas</Text>
       <Text style={styles.emptyStateSubtitle}>
-        Crea tu primera estantería para organizar tu colección
+        Crea tu primera maleta para organizar tu colección
       </Text>
       <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
         <Ionicons name="add" size={20} color="white" />
@@ -249,7 +249,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>Debes iniciar sesión para ver tus estanterías</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>Debes iniciar sesión para ver tus maletas</Text>
       </View>
     );
   }
@@ -259,7 +259,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>Maletas</Text>
-          <Text style={[styles.listCount, { color: colors.text }]}>{filteredLists.length} estantería{filteredLists.length !== 1 ? 's' : ''}</Text>
+          <Text style={[styles.listCount, { color: colors.text }]}>{filteredLists.length} maleta{filteredLists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.createMaletaButton} onPress={handleCreateList}>
@@ -337,14 +337,14 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando estanterías...</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando maletas...</Text>
         </View>
       ) : filteredLists.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="list-outline" size={64} color={colors.text} />
-          <Text style={styles.emptyStateTitle}>No tienes estanterías</Text>
+          <Text style={styles.emptyStateTitle}>No tienes maletas</Text>
           <Text style={styles.emptyStateSubtitle}>
-            Crea tu primera estantería para organizar tu colección
+            Crea tu primera maleta para organizar tu colección
           </Text>
           <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
             <Ionicons name="add" size={20} color="white" />
