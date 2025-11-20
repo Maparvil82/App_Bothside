@@ -83,6 +83,10 @@ export default function DashboardScreen() {
   const { colors } = useTheme();
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
 
+  const handleAudioScan = () => {
+    console.log("Scan pressed");
+  };
+
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [activeChartIndex, setActiveChartIndex] = useState(0);
 
@@ -925,6 +929,24 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        {/* Botón ¿Qué está sonando? */}
+        <View style={styles.audioScanContainer}>
+          <TouchableOpacity
+            style={styles.audioScanButton}
+            onPress={handleAudioScan}
+            activeOpacity={0.7}
+          >
+            <View style={styles.audioScanContent}>
+              <Ionicons name="musical-notes" size={24} color={colors.primary} style={{ marginRight: 12 }} />
+              <View>
+                <Text style={[styles.audioScanTitle, { color: colors.text }]}>¿Qué está sonando?</Text>
+                <Text style={styles.audioScanSubtitle}>Pulsa para detectar si la música que suena está en tu colección.</Text>
+              </View>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+          </TouchableOpacity>
+        </View>
+
         {/* Mensaje si no hay datos */}
         {stats.totalAlbums === 0 && (
           <View style={styles.emptyContainer}>
@@ -1286,5 +1308,33 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 5,
+  },
+  audioScanContainer: {
+    marginHorizontal: 16,
+    marginTop: 24,
+    marginBottom: 24,
+  },
+  audioScanButton: {
+    backgroundColor: '#F3F4F6', // Fondo suave
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  audioScanContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    paddingRight: 12,
+  },
+  audioScanTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  audioScanSubtitle: {
+    fontSize: 12,
+    color: '#6B7280',
   },
 }); 
