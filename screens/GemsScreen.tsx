@@ -84,6 +84,7 @@ export default function GemsScreen() {
       <TouchableOpacity
         style={styles.gemItem}
         activeOpacity={0.7}
+        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.id })}
       >
         <Image
           source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}

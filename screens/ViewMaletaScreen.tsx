@@ -93,7 +93,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       await UserMaletaService.updateMaleta(maletaId, data);
 
       // Update local state
-      setList(prev => ({ ...prev, ...data }));
+      setList((prev: any) => ({ ...prev, ...data }));
 
       Alert.alert('Éxito', 'Maleta actualizada correctamente');
       setIsEditModalVisible(false);
@@ -224,7 +224,11 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   const renderAlbumItem = ({ item }: { item: any }) => (
     <View style={styles.albumItemContainer}>
-      <View style={styles.albumItem}>
+      <TouchableOpacity
+        style={styles.albumItem}
+        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.album_id })}
+        activeOpacity={0.7}
+      >
         <Image
           source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
           style={styles.albumCover}
@@ -252,7 +256,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             </Text>
           </View>
         </View>
-      </View>
+      </TouchableOpacity>
     </View>
   );
 
@@ -314,7 +318,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.navigate('Maletas')} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#007AFF" />
+          <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
