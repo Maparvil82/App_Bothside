@@ -379,7 +379,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
             Crea tu primera maleta para organizar tu colección
           </Text>
           <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
-            <Ionicons name="add" size={20} color="white" />
+            <Ionicons name="cube-outline" size={20} color="white" />
             <Text style={styles.createButtonText}>Crear Maleta</Text>
           </TouchableOpacity>
         </View>

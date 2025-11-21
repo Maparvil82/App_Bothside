@@ -1188,7 +1188,7 @@ export default function AlbumDetailScreen() {
               style={[styles.actionButton, { backgroundColor: colors.border }]}
               onPress={() => setShowListsModal(true)}
             >
-              <Ionicons name="list-outline" size={20} color={colors.text} />
+              <Ionicons name="cube-outline" size={20} color={colors.text} />
               <Text style={[styles.actionButtonText, { color: colors.text }]}>Añadir a Maleta</Text>
             </TouchableOpacity>
           </View>
@@ -1632,7 +1632,7 @@ export default function AlbumDetailScreen() {
                 style={styles.createListButton}
                 onPress={handleCreateNewList}
               >
-                <Ionicons name="add-circle" size={20} color="#fff" />
+                <Ionicons name="cube-outline" size={20} color="#fff" />
                 <Text style={styles.createListButtonText}>Crear Nueva Maleta</Text>
               </TouchableOpacity>
             </View>
