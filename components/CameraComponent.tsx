@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, FlatList, Image, ActivityIndicator } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, FlatList, Image } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useNavigation } from '@react-navigation/native';
@@ -39,13 +40,13 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     setIsAIProcessing(true);
     setAiResult(''); // Limpiar resultado anterior
     console.log('🔄 Estado actualizado, isAIProcessing:', true);
-    
+
     try {
       console.log('🤖 Iniciando reconocimiento de álbum con IA...');
-      
+
       // OPTIMIZACIÓN: Usar base64 directamente si está disponible
       let base64Data = imageUri;
-      
+
       // Si es un URI, convertirlo a base64 (solo si es necesario)
       if (imageUri.startsWith('file://') || imageUri.startsWith('http')) {
         const conversionStart = Date.now();
@@ -63,14 +64,14 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         const conversionEnd = Date.now();
         console.log(`⏱️ Conversión URI a base64: ${conversionEnd - conversionStart}ms`);
       }
-      
+
       // Validar que tenemos datos base64 válidos
       if (!base64Data || base64Data.length < 100) {
         throw new Error('Imagen capturada no válida o muy pequeña');
       }
-      
+
       console.log('📏 Tamaño de imagen base64:', base64Data.length, 'caracteres');
-      
+
       // OPTIMIZACIÓN: Reducir tamaño si es muy grande (más de 500KB)
       if (base64Data.length > 500000) {
         console.log('⚠️ Imagen muy grande, considerando reducción...');
@@ -80,13 +81,13 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
       const geminiStart = Date.now();
       console.log('📤 Enviando imagen a Gemini Vision...');
-      
+
       // Usar Gemini Vision para reconocer el álbum
       const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
-      
+
       const geminiEnd = Date.now();
       console.log(`⏱️ Gemini Vision completado: ${geminiEnd - geminiStart}ms`);
-      
+
       console.log('🎵 Álbum reconocido por IA:', { artist, album });
       setAiResult(`🎵 ${album} - ${artist}`);
 
@@ -121,7 +122,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     } catch (error) {
       console.error('❌ Error en reconocimiento de IA:', error);
       setAiResult('❌ No se pudo reconocer el álbum');
-      
+
       Alert.alert(
         'Error en Reconocimiento',
         'No se pudo identificar el álbum. Intenta con otra foto o busca manualmente.',
@@ -144,15 +145,15 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
     try {
       console.log('🔍 Buscando en Discogs:', artist, '-', album);
-      
+
       // Buscar en Discogs API
       const results = await DiscogsService.searchReleases(`${artist} ${album}`);
-      
+
       if (results && results.results && results.results.length > 0) {
         // Filtrar solo versiones en vinilo
         const vinylResults = results.results.filter((release: any) => {
           const formats = release.format;
-          
+
           let formatString = '';
           if (Array.isArray(formats)) {
             formatString = formats.join(',').toLowerCase();
@@ -161,15 +162,15 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           } else {
             formatString = '';
           }
-          
-          return formatString.includes('vinyl') || 
-                 formatString.includes('lp') ||
-                 formatString.includes('12"') ||
-                 formatString.includes('7"');
+
+          return formatString.includes('vinyl') ||
+            formatString.includes('lp') ||
+            formatString.includes('12"') ||
+            formatString.includes('7"');
         });
-        
+
         console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
-        
+
         if (vinylResults.length > 0) {
           // Guardar resultados y mostrar modal
           setDiscogsResults(vinylResults);
@@ -189,12 +190,12 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   // Función para guardar un release específico de Discogs
   const saveDiscogsRelease = async (release: any) => {
     if (!user?.id) return;
-    
+
     setIsSaving(true); // Activar estado de guardado
-    
+
     try {
       console.log('🎵 Guardando release de Discogs:', release.id);
-      
+
       // Llamar a la Edge Function de Supabase
       const { data, error } = await supabase.functions.invoke('save-discogs-release', {
         body: {
@@ -202,15 +203,15 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           userId: user.id
         }
       });
-      
+
       if (error) {
         console.error('❌ Error llamando a Edge Function:', error);
         throw error;
       }
-      
+
       if (data?.success) {
         console.log('✅ Disco guardado exitosamente con ID:', data.albumId);
-        
+
         // Obtener estadísticas de Discogs en segundo plano
         if (data.albumId && release.id) {
           DiscogsStatsService.fetchAndSaveDiscogsStats(data.albumId, release.id)
@@ -218,11 +219,11 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
               console.error('❌ Error obteniendo estadísticas de Discogs:', error);
             });
         }
-        
+
         // Cerrar el modal y mostrar opciones mejoradas
         setShowEditionsModal(false);
         setDiscogsResults([]);
-        
+
         Alert.alert(
           '✅ Disco Guardado',
           `${release.title} se ha añadido correctamente a tu colección.`,
@@ -263,7 +264,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     // Extraer artista y título del álbum de manera más robusta
     let artistName = '';
     let albumTitle = item.title || '';
-    
+
     // Intentar diferentes formas de obtener el artista
     if (item.artists && Array.isArray(item.artists) && item.artists.length > 0) {
       artistName = item.artists[0].name;
@@ -277,7 +278,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         albumTitle = parts.slice(1).join(' - ').trim();
       }
     }
-    
+
     // Si aún no tenemos artista, intentar extraer del título
     if (!artistName && item.title) {
       // Buscar patrones comunes como "Artista - Álbum" o "Artista: Álbum"
@@ -286,7 +287,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         /^(.+?)\s*:\s*(.+)$/,      // Artista: Álbum
         /^(.+?)\s*by\s*(.+)$/i,    // Artista by Álbum
       ];
-      
+
       for (const pattern of patterns) {
         const match = item.title.match(pattern);
         if (match) {
@@ -296,12 +297,12 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         }
       }
     }
-    
+
     // Fallback: si no se pudo extraer, usar el título completo
     if (!artistName) {
       artistName = 'Artista Desconocido';
     }
-    
+
     return (
       <View style={styles.albumItem}>
         <Image
@@ -327,7 +328,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           disabled={isSaving}
         >
           {isSaving ? (
-            <ActivityIndicator size="small" color="white" />
+            <BothsideLoader size="small" fullscreen={false} />
           ) : (
             <Ionicons name="add" size={24} color="white" />
           )}
@@ -352,15 +353,15 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         exif: false,         // ← Sin metadatos EXIF para reducir tamaño
       });
       console.log('📸 Foto capturada en base64, tamaño:', photo.base64?.length || 0);
-      
+
       // PRIMERO: Realizar reconocimiento de álbum con IA
       await performAIAlbumRecognition(photo.base64 || '');
-      
+
       // DESPUÉS: Llamar al callback original solo si el análisis fue exitoso
       if (aiResult && !aiResult.includes('❌')) {
         onCapture(photo.uri);
       }
-      
+
     } catch (error) {
       console.error('Error taking picture:', error);
       Alert.alert('Error', 'No se pudo capturar la foto');
@@ -404,29 +405,29 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           <TouchableOpacity style={styles.closeButton} onPress={onClose}>
             <Ionicons name="close" size={24} color="white" />
           </TouchableOpacity>
-          
+
           {/* Barra inferior con botón de captura */}
           <View style={styles.bottomControls}>
             {/* Botón de captura principal */}
-            <TouchableOpacity 
-              style={[styles.captureButton, (isLoading || isAIProcessing) && styles.captureButtonDisabled]} 
+            <TouchableOpacity
+              style={[styles.captureButton, (isLoading || isAIProcessing) && styles.captureButtonDisabled]}
               onPress={handleCapture}
               disabled={isLoading || isAIProcessing}
             >
               <View style={styles.captureButtonInner}>
                 {isAIProcessing ? (
-                  <ActivityIndicator size="small" color="white" />
+                  <BothsideLoader size="small" fullscreen={false} />
                 ) : (
                   <View style={styles.captureButtonIcon} />
                 )}
               </View>
             </TouchableOpacity>
           </View>
-          
+
           {/* Indicador de estado de la cámara */}
           {(isLoading || isAIProcessing) && (
             <View style={styles.cameraStatusIndicator}>
-              <ActivityIndicator size="small" color="white" />
+              <BothsideLoader size="small" fullscreen={false} />
               <Text style={styles.cameraStatusText}>
                 {isLoading ? 'Preparando cámara...' : 'Analizando...'}
               </Text>
@@ -434,7 +435,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           )}
         </View>
       </CameraView>
-      
+
       {/* Indicador de procesamiento de IA */}
       {isAIProcessing && (
         <View style={styles.aiOverlay}>
@@ -447,7 +448,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           </View>
         </View>
       )}
-      
+
       {/* Mostrar resultado de IA si está disponible */}
       {aiResult && !isAIProcessing && (
         <View style={styles.aiResult}>
@@ -474,7 +475,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
                 <Ionicons name="close" size={24} color="#666" />
               </TouchableOpacity>
             </View>
-            
+
             <FlatList
               data={discogsResults}
               renderItem={renderDiscogsRelease}
@@ -482,12 +483,12 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalContent}
             />
-            
+
             {/* Overlay de carga cuando se está guardando */}
             {isSaving && (
               <View style={styles.savingOverlay}>
                 <View style={styles.savingContainer}>
-                  <ActivityIndicator size="large" color="#007AFF" />
+                  <BothsideLoader />
                   <Text style={styles.savingText}>Guardando disco...</Text>
                 </View>
               </View>

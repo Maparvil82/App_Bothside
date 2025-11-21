@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useLayoutEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
@@ -36,7 +37,7 @@ export default function ShelfViewScreen() {
         .select('id, name, shelf_rows, shelf_columns')
         .eq('id', shelfId)
         .single();
-      
+
       if (error) throw error;
       setShelf(data);
     } catch (error: any) {
@@ -52,11 +53,11 @@ export default function ShelfViewScreen() {
       fetchShelfDetails();
     }, [fetchShelfDetails])
   );
-  
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity 
+        <TouchableOpacity
           onPress={() => shelf && navigation.navigate('ShelfEdit', { shelf: shelf })}
           style={{ marginRight: 15 }}
           disabled={!shelf}
@@ -69,7 +70,7 @@ export default function ShelfViewScreen() {
 
 
   if (loading) {
-    return <ActivityIndicator style={styles.centered} size="large" />;
+    return <BothsideLoader />;
   }
 
   if (!shelf) {
@@ -78,7 +79,7 @@ export default function ShelfViewScreen() {
 
   return (
     <View style={styles.container}>
-      
+
       <View style={styles.gridWrapper}>
         <ShelfGrid rows={shelf.shelf_rows} columns={shelf.shelf_columns} />
       </View>

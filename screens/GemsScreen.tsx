@@ -5,12 +5,12 @@ import {
   StyleSheet,
   ScrollView,
   RefreshControl,
-  ActivityIndicator,
   Image,
   TouchableOpacity,
   Alert,
   FlatList,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,24 +28,24 @@ export default function GemsScreen() {
 
   const handleRemoveGem = async (item: any) => {
     if (!user) return;
-    
+
     try {
       console.log('🔍 GemsScreen: Removing gem for item:', {
         itemId: item.id,
         albumId: item.albums?.id,
         albumTitle: item.albums?.title
       });
-      
+
       await UserCollectionService.toggleGemStatus(user.id, item.albums.id);
-      
+
       // Actualizar el estado de gem en el contexto
       console.log('📢 GemsScreen: Updating gem status in context');
       updateGemStatus(item.albums.id, false);
-      
+
       // También remover del contexto inmediatamente
       console.log('📢 GemsScreen: Removing gem from context');
       removeGem(item.id);
-      
+
       Alert.alert(
         'Gem Removido',
         `"${item.albums?.title}" removido de tus Gems`
@@ -65,10 +65,10 @@ export default function GemsScreen() {
       `¿Estás seguro de que quieres remover "${item.albums?.title}" de tus Gems?`,
       [
         { text: 'Cancelar', style: 'cancel' },
-        { 
-          text: 'Remover', 
-          style: 'destructive', 
-          onPress: () => handleRemoveGem(item) 
+        {
+          text: 'Remover',
+          style: 'destructive',
+          onPress: () => handleRemoveGem(item)
         },
       ]
     );
@@ -76,17 +76,12 @@ export default function GemsScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Cargando tus Gems...</Text>
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
-    const renderGemItem = ({ item }: { item: any }) => (
+  const renderGemItem = ({ item }: { item: any }) => (
     <View style={[styles.gemItemContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.gemItem}
         activeOpacity={0.7}
       >

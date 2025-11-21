@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ShelfGridSelectable from '../components/ShelfGridSelectable';
 import { supabase } from '../lib/supabase';
@@ -14,13 +15,13 @@ interface Shelf {
 export default function SelectCellScreen() {
   const navigation = useNavigation();
   const route = useRoute();
-  const { user_collection_id, shelf, current_row, current_column } = route.params as { 
-    user_collection_id: string, 
+  const { user_collection_id, shelf, current_row, current_column } = route.params as {
+    user_collection_id: string,
     shelf: Shelf,
     current_row?: number,
     current_column?: number
   };
-  
+
   const [saving, setSaving] = useState(false);
 
   const handleSelectLocation = async (row: number, column: number) => {
@@ -47,12 +48,7 @@ export default function SelectCellScreen() {
   };
 
   if (saving) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-        <Text style={styles.savingText}>Guardando ubicación...</Text>
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   return (

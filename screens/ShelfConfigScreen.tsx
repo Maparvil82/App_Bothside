@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
@@ -58,7 +59,7 @@ export default function ShelfConfigScreen() {
 
     try {
       setSaving(true);
-      
+
       const { error } = await supabase.rpc('create_or_update_shelf', {
         user_id: user.id,
         shelf_rows: numRows,
@@ -81,18 +82,14 @@ export default function ShelfConfigScreen() {
   };
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Configurar Estantería</Text>
       <Text style={styles.subtitle}>Define la estructura de tu estantería física (ej. tipo Kallax).</Text>
-      
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Filas</Text>
         <TextInput
@@ -121,7 +118,7 @@ export default function ShelfConfigScreen() {
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <BothsideLoader size="small" fullscreen={false} />
         ) : (
           <Text style={styles.buttonText}>Guardar Configuración</Text>
         )}

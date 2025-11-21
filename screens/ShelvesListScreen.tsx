@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,7 +57,7 @@ export default function ShelvesListScreen() {
   );
 
   const renderItem = ({ item }: { item: Shelf }) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       style={styles.itemContainer}
       onPress={() => navigation.navigate('ShelfView', { shelfId: item.id, shelfName: item.name })}
     >
@@ -92,10 +93,10 @@ export default function ShelvesListScreen() {
                 .eq('user_id', user!.id);
 
               if (error) throw error;
-              
+
               // Actualizar la lista local
               setShelves(prevShelves => prevShelves.filter(shelf => shelf.id !== item.id));
-              
+
               Alert.alert('Éxito', 'Estantería eliminada correctamente.');
             } catch (error: any) {
               Alert.alert('Error', 'No se pudo eliminar la estantería.');
@@ -122,11 +123,7 @@ export default function ShelvesListScreen() {
   );
 
   if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   return (
@@ -147,7 +144,7 @@ export default function ShelvesListScreen() {
         }
         contentContainerStyle={{ flexGrow: 1 }}
       />
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.fab}
         onPress={() => navigation.navigate('ShelfEdit')}
       >

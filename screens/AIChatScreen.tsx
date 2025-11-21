@@ -6,12 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
@@ -364,7 +364,7 @@ export default function AIChatScreen() {
             <View style={[styles.messageContainer, styles.aiMessage]}>
               <View style={[styles.messageBubble, styles.aiBubble, { backgroundColor: colors.card }]}>
                 <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.text} />
+                  <BothsideLoader size="small" fullscreen={false} />
                   <Text style={[styles.loadingText, { color: colors.text }]}>Pensando...</Text>
                 </View>
               </View>

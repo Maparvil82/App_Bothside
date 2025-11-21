@@ -9,9 +9,9 @@ import {
   Image,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   SafeAreaView,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useCameraPermissions } from 'expo-camera';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -830,7 +830,7 @@ Progressive Rock`;
         disabled={addingDisc}
       >
         {addingDisc ? (
-          <ActivityIndicator size="small" color="white" />
+          <BothsideLoader size="small" fullscreen={false} />
         ) : (
           <Ionicons name="add" size={24} color="white" />
         )}
@@ -863,7 +863,7 @@ Progressive Rock`;
         disabled={addingDisc}
       >
         {addingDisc ? (
-          <ActivityIndicator size="small" color="white" />
+          <BothsideLoader size="small" fullscreen={false} />
         ) : (
           <Ionicons name="add" size={24} color="white" />
         )}
@@ -912,7 +912,7 @@ Progressive Rock`;
       {/* Results */}
       {loading && query.trim() ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#007AFF" />
+          <BothsideLoader size="small" fullscreen={false} />
           <Text style={styles.loadingText}>Buscando...</Text>
         </View>
       ) : (
@@ -945,14 +945,8 @@ Progressive Rock`;
   const renderManualTab = () => (
     <View style={styles.tabContent}>
       {/* Overlay de carga cuando se está añadiendo un disco */}
-      {addingDisc && (
-        <View style={styles.addingOverlay}>
-          <View style={styles.addingOverlayContent}>
-            <ActivityIndicator size="large" color="#007AFF" />
-            <Text style={styles.addingOverlayText}>Añadiendo disco a tu colección...</Text>
-          </View>
-        </View>
-      )}
+      {/* Overlay de carga cuando se está añadiendo un disco */}
+      {addingDisc && <BothsideLoader />}
       {/* Formulario de búsqueda manual */}
       <View style={styles.manualSearchContainer}>
         <View style={styles.manualInputContainer}>
@@ -1017,7 +1011,7 @@ Progressive Rock`;
             disabled={manualLoading || !artistQuery.trim() || !albumQuery.trim()}
           >
             {manualLoading ? (
-              <ActivityIndicator size="small" color="white" />
+              <BothsideLoader size="small" fullscreen={false} />
             ) : (
               <Text style={styles.manualSearchButtonText}>Buscar disco</Text>
             )}
@@ -1041,7 +1035,7 @@ Progressive Rock`;
       {/* Resultados de búsqueda */}
       {manualLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#007AFF" />
+          <BothsideLoader size="small" fullscreen={false} />
           <Text style={styles.loadingText}>Buscando versiones en vinilo...</Text>
         </View>
       ) : (
@@ -1144,7 +1138,7 @@ Progressive Rock`;
             {/* Resultados de búsqueda en Discogs */}
             {ocrLoading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#007AFF" />
+                <BothsideLoader size="small" fullscreen={false} />
                 <Text style={styles.loadingText}>Analizando imagen y buscando en Discogs...</Text>
               </View>
             ) : ocrResults.length > 0 ? (

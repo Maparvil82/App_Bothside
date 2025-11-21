@@ -4,8 +4,8 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  ActivityIndicator,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { LineChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { useStats } from '../contexts/StatsContext';
@@ -34,7 +34,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
           <Text style={styles.title}>Valor Total por Estilo</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#007AFF" />
+          <BothsideLoader size="small" fullscreen={false} />
           <Text style={styles.loadingText}>Cargando datos...</Text>
         </View>
       </View>

@@ -7,8 +7,8 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  ActivityIndicator,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
@@ -198,7 +198,7 @@ export default function TagSelector({
             {/* Lista de tags */}
             {loading ? (
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
+                <BothsideLoader size="small" fullscreen={false} />
               </View>
             ) : (
               <FlatList

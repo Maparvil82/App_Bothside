@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { analyzeAudio, AudioScanResult, AudioScanStatus } from '../modules/audioScan';
@@ -50,30 +51,10 @@ export const AudioScanScreen = () => {
     const renderContent = () => {
         switch (status) {
             case 'listening':
-                return (
-                    <>
-                        <Text style={[styles.title, { color: colors.text }]}>Escuchando...</Text>
-                        <View style={styles.loaderContainer}>
-                            <ActivityIndicator size="large" color={colors.primary} style={{ transform: [{ scale: 1.5 }] }} />
-                        </View>
-                        <Text style={[styles.description, { color: colors.text }]}>
-                            Coloca el móvil cerca de la música.
-                        </Text>
-                    </>
-                );
+                return <BothsideLoader />;
 
             case 'processing':
-                return (
-                    <>
-                        <Text style={[styles.title, { color: colors.text }]}>Procesando audio...</Text>
-                        <View style={styles.loaderContainer}>
-                            <ActivityIndicator size="large" color={colors.primary} style={{ transform: [{ scale: 1.5 }] }} />
-                        </View>
-                        <Text style={[styles.description, { color: colors.text }]}>
-                            Analizando si esta canción está en tu colección.
-                        </Text>
-                    </>
-                );
+                return <BothsideLoader />;
 
             case 'match':
                 return (

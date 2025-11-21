@@ -1,6 +1,7 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { View, ActivityIndicator, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert } from 'react-native';
+import { BothsideLoader } from './components/BothsideLoader';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GemsProvider } from './contexts/GemsContext';
 import { SessionNoteProvider, useSessionNoteModal } from './contexts/SessionNoteContext';
@@ -13,11 +14,7 @@ const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   return <AppNavigator />;

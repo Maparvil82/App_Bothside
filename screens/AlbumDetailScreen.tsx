@@ -9,13 +9,13 @@ import {
   Alert,
   Modal,
   SafeAreaView,
-  ActivityIndicator,
   Linking,
   Dimensions,
   TextInput,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useRoute, useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
@@ -998,12 +998,7 @@ export default function AlbumDetailScreen() {
   }, [user?.id, refreshGems]);
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
-        <Text style={styles.loadingText}>Cargando álbum...</Text>
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   if (error || !album) {
@@ -1281,7 +1276,7 @@ export default function AlbumDetailScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Ediciones en Vinilo</Text>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
-              <ActivityIndicator size="small" color={colors.primary} />
+              <BothsideLoader size="small" fullscreen={false} />
               <Text style={[styles.loadingText, { color: colors.text }]}>Cargando ediciones...</Text>
             </View>
           ) : editions.length > 0 ? (

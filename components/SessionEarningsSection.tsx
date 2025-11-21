@@ -3,12 +3,12 @@ import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
   Alert,
   DeviceEventEmitter,
   TouchableOpacity,
   Animated,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -243,7 +243,7 @@ export const SessionEarningsSection: React.FC = () => {
                 <Text style={styles.cardTitle}>{cardTitleText}</Text>
               </View>
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#1F8D59" />
+                <BothsideLoader size="small" fullscreen={false} />
                 <Text style={styles.loadingText}>Cargando ganancias...</Text>
               </View>
             </View>
@@ -278,9 +278,9 @@ export const SessionEarningsSection: React.FC = () => {
         >
           <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
             <View style={styles.innerGradientLayer}>
-             
+
               <View style={styles.emptyContainer}>
-                
+
                 <Text style={styles.emptyText}>No hay ganancias registradas</Text>
                 <Text style={styles.emptySubtext}>
                   Las ganancias de tus sesiones aparecerán aquí
@@ -327,7 +327,7 @@ export const SessionEarningsSection: React.FC = () => {
         <Animated.View style={[styles.card, { transform: [{ scale }] }]}>
           <View style={styles.innerGradientLayer}>
             <View style={styles.headerRow}>
-              
+
               <Text style={styles.cardTitle}>{cardTitleText}</Text>
             </View>
             <View style={styles.earningsContainer}>
@@ -344,9 +344,9 @@ export const SessionEarningsSection: React.FC = () => {
                 <Text style={styles.earningsLabel}>Estimado del mes</Text>
               </View>
             </View>
-            
-              <Text style={styles.statsButtonText}>Ver estadísticas</Text>
-           
+
+            <Text style={styles.statsButtonText}>Ver estadísticas</Text>
+
           </View>
         </Animated.View>
       </TouchableOpacity>

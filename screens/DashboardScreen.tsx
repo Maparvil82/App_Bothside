@@ -6,10 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
-  Alert,
   Dimensions,
   Image,
+  StatusBar,
   SafeAreaView,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
@@ -25,6 +24,7 @@ import { CollectorRankCard } from '../components/CollectorRankCard';
 import { SessionEarningsSection } from '../components/SessionEarningsSection';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
+import { BothsideLoader } from '../components/BothsideLoader';
 
 const { width } = Dimensions.get('window');
 
@@ -101,12 +101,7 @@ export default function DashboardScreen() {
 
   // Si la autenticación aún está cargando, mostrar loading
   if (authLoading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Cargando...</Text>
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   const fetchShelves = useCallback(async () => {
@@ -602,12 +597,7 @@ export default function DashboardScreen() {
   );
 
   if (loading) {
-    return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.text }]}>Cargando estadísticas...</Text>
-      </View>
-    );
+    return <BothsideLoader />;
   }
 
   if (!stats) {

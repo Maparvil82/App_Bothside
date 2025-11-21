@@ -6,9 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -117,7 +117,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
           <Text style={styles.title}>Notas de Audio</Text>
         </View>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="small" color="#007AFF" />
+          <BothsideLoader size="small" fullscreen={false} />
           <Text style={styles.loadingText}>Cargando notas de audio...</Text>
         </View>
       </View>
@@ -147,8 +147,8 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
         <Text style={styles.title}>Notas de Audio ({albumsWithAudio.length})</Text>
       </View>
 
-      <ScrollView 
-        horizontal 
+      <ScrollView
+        horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.scrollContainer}
       >
@@ -161,8 +161,8 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
           >
             <View style={styles.albumImageContainer}>
               {album.cover_url ? (
-                <Image 
-                  source={{ uri: album.cover_url }} 
+                <Image
+                  source={{ uri: album.cover_url }}
                   style={styles.albumImage}
                   resizeMode="cover"
                 />
@@ -175,7 +175,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
                 <Ionicons name="play" size={16} color="white" />
               </View>
             </View>
-            
+
             <View style={styles.albumInfo}>
               <Text style={styles.albumTitle} numberOfLines={1}>
                 {album.title}
@@ -208,8 +208,8 @@ const styles = StyleSheet.create({
     margin: 10,
     borderRadius: 8,
     padding: 16,
-   
-    
+
+
   },
   header: {
     flexDirection: 'row',

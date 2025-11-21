@@ -6,8 +6,8 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  ActivityIndicator,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
@@ -21,7 +21,7 @@ export const AdminScreen: React.FC = () => {
 
   const checkAlbumStats = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     try {
       // Obtener álbumes que tienen discogs_id pero no tienen estadísticas
@@ -36,23 +36,23 @@ export const AdminScreen: React.FC = () => {
           )
         `)
         .not('discogs_id', 'is', null);
-      
+
       if (error) {
         Alert.alert('Error', 'No se pudieron obtener los álbumes');
         return;
       }
-      
+
       // Filtrar álbumes que no tienen estadísticas
-      const albumsWithoutStats = albums.filter(album => 
+      const albumsWithoutStats = albums.filter(album =>
         !album.album_stats || album.album_stats.length === 0
       );
-      
+
       setStats({
         total: albums.length,
         withoutStats: albumsWithoutStats.length,
         withStats: albums.length - albumsWithoutStats.length
       });
-      
+
     } catch (error) {
       console.error('Error checking album stats:', error);
       Alert.alert('Error', 'No se pudo verificar las estadísticas');
@@ -63,7 +63,7 @@ export const AdminScreen: React.FC = () => {
 
   const updateAlbumStats = async () => {
     if (!user) return;
-    
+
     setUpdatingStats(true);
     try {
       // Obtener álbumes que tienen discogs_id pero no tienen estadísticas
@@ -78,22 +78,22 @@ export const AdminScreen: React.FC = () => {
           )
         `)
         .not('discogs_id', 'is', null);
-      
+
       if (error) {
         Alert.alert('Error', 'No se pudieron obtener los álbumes');
         return;
       }
-      
+
       // Filtrar álbumes que no tienen estadísticas
-      const albumsWithoutStats = albums.filter(album => 
+      const albumsWithoutStats = albums.filter(album =>
         !album.album_stats || album.album_stats.length === 0
       );
-      
+
       if (albumsWithoutStats.length === 0) {
         Alert.alert('Info', 'Todos los álbumes ya tienen estadísticas');
         return;
       }
-      
+
       Alert.alert(
         'Confirmar actualización',
         `¿Estás seguro de que quieres actualizar las estadísticas de ${albumsWithoutStats.length} álbumes? Esto puede tomar varios minutos.`,
@@ -102,7 +102,7 @@ export const AdminScreen: React.FC = () => {
           { text: 'Actualizar', onPress: () => performUpdate(albumsWithoutStats) }
         ]
       );
-      
+
     } catch (error) {
       console.error('Error preparing update:', error);
       Alert.alert('Error', 'No se pudo preparar la actualización');
@@ -115,17 +115,17 @@ export const AdminScreen: React.FC = () => {
     setUpdatingStats(true);
     let successCount = 0;
     let errorCount = 0;
-    
+
     try {
       for (let i = 0; i < albums.length; i++) {
         const album = albums[i];
-        
+
         try {
           console.log(`Actualizando estadísticas para: ${album.title} (${i + 1}/${albums.length})`);
-          
+
           // Obtener estadísticas de Discogs
           const discogsStats = await DiscogsService.getReleaseStats(album.discogs_id);
-          
+
           if (discogsStats && (discogsStats.lowest_price || discogsStats.avg_price || discogsStats.have || discogsStats.want)) {
             // Actualizar estadísticas en la base de datos
             await AlbumService.updateAlbumWithDiscogsStats(album.id, discogsStats);
@@ -135,22 +135,22 @@ export const AdminScreen: React.FC = () => {
             console.log(`⚠️ No se encontraron estadísticas para: ${album.title}`);
             errorCount++;
           }
-          
+
           // Esperar un poco entre requests para no sobrecargar la API
           await new Promise(resolve => setTimeout(resolve, 1000));
-          
+
         } catch (error) {
           console.error(`❌ Error procesando ${album.title}:`, error);
           errorCount++;
         }
       }
-      
+
       Alert.alert(
         'Actualización completada',
         `Éxitos: ${successCount}\nErrores: ${errorCount}`,
         [{ text: 'OK', onPress: () => checkAlbumStats() }]
       );
-      
+
     } catch (error) {
       console.error('Error durante la actualización:', error);
       Alert.alert('Error', 'Ocurrió un error durante la actualización');
@@ -162,22 +162,22 @@ export const AdminScreen: React.FC = () => {
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.title}>Panel de Administración</Text>
-      
+
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Estadísticas de Álbumes</Text>
-        
+
         <TouchableOpacity
           style={styles.button}
           onPress={checkAlbumStats}
           disabled={loading}
         >
           {loading ? (
-            <ActivityIndicator color="white" />
+            <BothsideLoader size="small" fullscreen={false} />
           ) : (
             <Text style={styles.buttonText}>Verificar Estadísticas</Text>
           )}
         </TouchableOpacity>
-        
+
         {stats && (
           <View style={styles.statsContainer}>
             <Text style={styles.statsText}>Total de álbumes: {stats.total}</Text>
@@ -185,19 +185,19 @@ export const AdminScreen: React.FC = () => {
             <Text style={styles.statsText}>Sin estadísticas: {stats.withoutStats}</Text>
           </View>
         )}
-        
+
         <TouchableOpacity
           style={[styles.button, styles.updateButton]}
           onPress={updateAlbumStats}
           disabled={updatingStats}
         >
           {updatingStats ? (
-            <ActivityIndicator color="white" />
+            <BothsideLoader size="small" fullscreen={false} />
           ) : (
             <Text style={styles.buttonText}>Actualizar Estadísticas</Text>
           )}
         </TouchableOpacity>
-        
+
         {updatingStats && (
           <Text style={styles.updatingText}>
             Actualizando estadísticas... Esto puede tomar varios minutos.

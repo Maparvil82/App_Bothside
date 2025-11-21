@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, ActivityIndicator, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated, DeviceEventEmitter } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated, DeviceEventEmitter } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,7 +51,7 @@ export default function CalendarScreen() {
   const { openSessionNoteModal } = useSessionNoteModal();
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
-  
+
   // Estado para la fecha actual (primer día del mes)
   const [currentDate, setCurrentDate] = useState(() => {
     const now = new Date();
@@ -107,21 +108,21 @@ export default function CalendarScreen() {
   // Sincronizar los Date objects con los strings de formulario (formStartTime / formEndTime)
   const updateTimeStates = (timeString: string, isStartTime: boolean) => {
     if (!timeString) return;
-    
+
     const parts = timeString.split(':');
     if (parts.length >= 2) {
       const hours = parseInt(parts[0], 10);
       const minutes = parseInt(parts[1], 10);
-      
+
       if (!isNaN(hours) && !isNaN(minutes)) {
         const d = new Date();
         d.setHours(hours, minutes, 0, 0);
-        
+
         if (isStartTime) {
           setStartHour(hours);
           setStartMinute(minutes);
           setStartDate(d);
-          
+
           // Si estamos editando una sesión existente, no actualizamos la hora de fin automáticamente
           if (!selectedSession) {
             // Para nuevas sesiones, establecer la hora de fin como 1 hora después
@@ -194,15 +195,15 @@ export default function CalendarScreen() {
   const getMonthRange = (date: Date): { startOfMonth: Date; endOfMonth: Date } => {
     const year = date.getFullYear();
     const month = date.getMonth();
-    
+
     // Primer día del mes (00:00:00)
     const startOfMonth = new Date(year, month, 1);
     startOfMonth.setHours(0, 0, 0, 0);
-    
+
     // Último día del mes (23:59:59)
     const endOfMonth = new Date(year, month + 1, 0);
     endOfMonth.setHours(23, 59, 59, 999);
-    
+
     return { startOfMonth, endOfMonth };
   };
 
@@ -227,7 +228,7 @@ export default function CalendarScreen() {
   const isDateInCurrentMonth = (dateString: string, currentMonth: Date): boolean => {
     const date = new Date(dateString);
     return date.getFullYear() === currentMonth.getFullYear() &&
-           date.getMonth() === currentMonth.getMonth();
+      date.getMonth() === currentMonth.getMonth();
   };
 
   // Función para formatear fecha a YYYY-MM-DD
@@ -322,14 +323,14 @@ export default function CalendarScreen() {
     if (!user?.id) return;
 
     setSelectedDay(day);
-    
+
     // Buscar si existe una sesión para este día
     const sessionDate = formatDateToString(
       currentDate.getFullYear(),
       currentDate.getMonth(),
       day
     );
-    
+
     const existingSession = sessions.find(session => {
       const sessionDay = getDayFromDate(session.date);
       return sessionDay === day && isDateInCurrentMonth(session.date, currentDate);
@@ -339,7 +340,7 @@ export default function CalendarScreen() {
       setSelectedSession(existingSession);
       // Rellenar el formulario con los datos de la sesión
       setFormName(existingSession.name || '');
-      
+
       // Establecer las horas de inicio y fin desde la sesión existente
       if (existingSession.start_time) {
         setFormStartTime(existingSession.start_time);
@@ -347,7 +348,7 @@ export default function CalendarScreen() {
         const now = new Date();
         setFormStartTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
       }
-      
+
       if (existingSession.end_time) {
         setFormEndTime(existingSession.end_time);
       } else {
@@ -355,7 +356,7 @@ export default function CalendarScreen() {
         now.setHours(now.getHours() + 1);
         setFormEndTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
       }
-      
+
       setFormQuickNote(existingSession.quick_note || '');
       setFormTag(existingSession.tag || '');
       setFormPaymentType(existingSession.payment_type || 'gratis');
@@ -387,18 +388,18 @@ export default function CalendarScreen() {
       setSelectedSession(null);
       // Limpiar el formulario
       setFormName('');
-      
+
       // Inicializar con la hora actual para inicio y 1 hora después para fin
       const now = new Date();
       const endTime = new Date(now);
       endTime.setHours(now.getHours() + 1);
-      
-      const formatTime = (date: Date) => 
+
+      const formatTime = (date: Date) =>
         `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-      
+
       setFormStartTime(formatTime(now));
       setFormEndTime(formatTime(endTime));
-      
+
       setFormQuickNote('');
       setFormTag('');
       setFormPaymentType('gratis');
@@ -608,7 +609,7 @@ export default function CalendarScreen() {
     try {
       // Obtener IDs de notificaciones previas desde AsyncStorage
       const prevNotificationIds = await getSessionNotificationIds(selectedSession.id);
-      
+
       // Cancelar notificaciones previas
       await cancelSessionNotifications({
         ...selectedSession,
@@ -731,7 +732,7 @@ export default function CalendarScreen() {
             try {
               // Obtener IDs de notificaciones desde AsyncStorage
               const notificationIds = await getSessionNotificationIds(selectedSession.id);
-              
+
               // Cancelar notificaciones
               await cancelSessionNotifications({
                 ...selectedSession,
@@ -774,7 +775,7 @@ export default function CalendarScreen() {
     setLoadingSessions(true);
     try {
       const { startOfMonth, endOfMonth } = getMonthRange(currentDate);
-      
+
       // Convertir fechas a formato ISO para Supabase
       const startISO = startOfMonth.toISOString();
       const endISO = endOfMonth.toISOString();
@@ -808,7 +809,7 @@ export default function CalendarScreen() {
 
     try {
       const { startOfMonth, endOfMonth } = getMonthRange(currentDate);
-      
+
       // Convertir fechas a formato ISO
       const startISO = startOfMonth.toISOString().split('T')[0];
       const endISO = endOfMonth.toISOString().split('T')[0];
@@ -922,18 +923,18 @@ export default function CalendarScreen() {
     const days: CalendarDay[] = [];
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
-    
+
     // Información del mes actual
     const daysInCurrentMonth = getDaysInMonth(currentDate);
     const firstDayOfWeek = getFirstDayOfWeek(currentDate);
-    
+
     // Información del mes anterior (para rellenar huecos al inicio)
     const previousMonth = new Date(year, month - 1, 1);
     const daysInPreviousMonth = getDaysInMonth(previousMonth);
-    
+
     // Información del mes siguiente (para rellenar huecos al final)
     const nextMonth = new Date(year, month + 1, 1);
-    
+
     // Rellenar días del mes anterior (huecos al inicio)
     const startOffset = firstDayOfWeek - 1; // Número de huecos antes del día 1
     for (let i = startOffset - 1; i >= 0; i--) {
@@ -943,7 +944,7 @@ export default function CalendarScreen() {
         isPreviousMonth: true,
       });
     }
-    
+
     // Añadir días del mes actual
     for (let i = 1; i <= daysInCurrentMonth; i++) {
       days.push({
@@ -951,7 +952,7 @@ export default function CalendarScreen() {
         isCurrentMonth: true,
       });
     }
-    
+
     // Rellenar días del mes siguiente (huecos al final hasta completar 42 días)
     const remainingDays = 42 - days.length;
     for (let i = 1; i <= remainingDays; i++) {
@@ -961,7 +962,7 @@ export default function CalendarScreen() {
         isNextMonth: true,
       });
     }
-    
+
     return days;
   };
 
@@ -980,11 +981,11 @@ export default function CalendarScreen() {
       useNativeDriver: true,
     }).start();
   }, [monthName]);
-  
+
   const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}edges={['top']}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
       {/* Toggle Vista Calendario / Lista */}
       <View style={styles.viewToggleContainer}>
         <TouchableOpacity
@@ -1036,7 +1037,7 @@ export default function CalendarScreen() {
 
       {/* Cabecera del mes */}
       <View style={styles.monthHeader}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.monthButton}
           onPress={goToPreviousMonth}
         >
@@ -1047,7 +1048,7 @@ export default function CalendarScreen() {
           {monthName}
         </Text>
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.monthButton}
           onPress={goToNextMonth}
         >
@@ -1057,107 +1058,107 @@ export default function CalendarScreen() {
 
       {/* Vista Calendario */}
       {viewMode === 'calendar' && (
-      <>
-      {/* Fila de días de la semana */}
-      <View style={styles.weekDaysRow}>
-        {weekDays.map((day, index) => (
-          <View key={index} style={[styles.weekDayCell, { width: CELL_WIDTH }]}>
-            <Text style={[styles.weekDayText, { color: '#A0A0A0' }]}>
-              {day}
-            </Text>
+        <>
+          {/* Fila de días de la semana */}
+          <View style={styles.weekDaysRow}>
+            {weekDays.map((day, index) => (
+              <View key={index} style={[styles.weekDayCell, { width: CELL_WIDTH }]}>
+                <Text style={[styles.weekDayText, { color: '#A0A0A0' }]}>
+                  {day}
+                </Text>
+              </View>
+            ))}
           </View>
-        ))}
-      </View>
 
-      {/* Cuadrícula del calendario */}
-      {loadingSessions ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-      <View style={[styles.calendarGrid]}>
-          {calendarDays.map((calendarDay, index) => {
-            // Obtener sesiones para este día (solo si es del mes actual)
-            const daySessions = calendarDay.isCurrentMonth 
-              ? sessions.filter(session => {
-                  const sessionDay = getDayFromDate(session.date);
-                  return sessionDay === calendarDay.day && 
-                         isDateInCurrentMonth(session.date, currentDate);
-                })
-              : [];
+          {/* Cuadrícula del calendario */}
+          {loadingSessions ? (
+            <View style={styles.loadingContainer}>
+              <BothsideLoader />
+            </View>
+          ) : (
+            <View style={[styles.calendarGrid]}>
+              {calendarDays.map((calendarDay, index) => {
+                // Obtener sesiones para este día (solo si es del mes actual)
+                const daySessions = calendarDay.isCurrentMonth
+                  ? sessions.filter(session => {
+                    const sessionDay = getDayFromDate(session.date);
+                    return sessionDay === calendarDay.day &&
+                      isDateInCurrentMonth(session.date, currentDate);
+                  })
+                  : [];
 
-            // Obtener el color del tag de la primera sesión (si existe)
-            const cellColor = daySessions.length > 0 
-              ? getColorForTag(daySessions[0].tag)
-              : undefined;
+                // Obtener el color del tag de la primera sesión (si existe)
+                const cellColor = daySessions.length > 0
+                  ? getColorForTag(daySessions[0].tag)
+                  : undefined;
 
-            const today = new Date();
-            const isToday =
-              calendarDay.isCurrentMonth &&
-              today.getFullYear() === currentDate.getFullYear() &&
-              today.getMonth() === currentDate.getMonth() &&
-              today.getDate() === calendarDay.day;
+                const today = new Date();
+                const isToday =
+                  calendarDay.isCurrentMonth &&
+                  today.getFullYear() === currentDate.getFullYear() &&
+                  today.getMonth() === currentDate.getMonth() &&
+                  today.getDate() === calendarDay.day;
 
-            return (
-              <TouchableOpacity
-                key={index}
-                style={[
-                  styles.dayCell,
-                  calendarDay.isCurrentMonth ? styles.dayCellCurrent : styles.dayCellOtherMonth,
-                  { width: CELL_WIDTH },
-                  cellColor && {
-                    backgroundColor: cellColor,
-                    borderColor: cellColor,
-                  },
-                ]}
-                onPress={() => {
-                  if (calendarDay.isCurrentMonth) {
-                    handleDayPress(calendarDay.day);
-                  }
-                }}
-                disabled={!calendarDay.isCurrentMonth}
-              >
-                {calendarDay.isCurrentMonth && (
-                  <>
-                    {/* Mostrar número del día */}
-                    {selectedDay === calendarDay.day ? (
-                      <View style={styles.selectedDayCircle}>
-                        <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
-                      </View>
-                    ) : isToday ? (
-                      <View style={styles.todayCircle}>
-                        <Text style={[styles.dayNumber, styles.dayNumberToday]}>{calendarDay.day}</Text>
-                      </View>
-                    ) : (
-                      <Text style={styles.dayNumber}>{calendarDay.day}</Text>
-                    )}
-
-                    {/* Si hay sesión, mostrar información de la sesión debajo del día */}
-                    {daySessions.length > 0 && (
-                      <View style={styles.sessionCellContent}>
-                        <Text style={styles.sessionName} numberOfLines={1}>
-                          {daySessions[0].name}
-                        </Text>
-                      </View>
-                    )}
-                  </>
-                )}
-                {!calendarDay.isCurrentMonth && (
-                  <Text 
+                return (
+                  <TouchableOpacity
+                    key={index}
                     style={[
-                      styles.dayNumber,
-                      styles.dayNumberOtherMonth,
+                      styles.dayCell,
+                      calendarDay.isCurrentMonth ? styles.dayCellCurrent : styles.dayCellOtherMonth,
+                      { width: CELL_WIDTH },
+                      cellColor && {
+                        backgroundColor: cellColor,
+                        borderColor: cellColor,
+                      },
                     ]}
+                    onPress={() => {
+                      if (calendarDay.isCurrentMonth) {
+                        handleDayPress(calendarDay.day);
+                      }
+                    }}
+                    disabled={!calendarDay.isCurrentMonth}
                   >
-                    {calendarDay.day}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            );
-          })}
-  </View>
-      )}
-      </>
+                    {calendarDay.isCurrentMonth && (
+                      <>
+                        {/* Mostrar número del día */}
+                        {selectedDay === calendarDay.day ? (
+                          <View style={styles.selectedDayCircle}>
+                            <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
+                          </View>
+                        ) : isToday ? (
+                          <View style={styles.todayCircle}>
+                            <Text style={[styles.dayNumber, styles.dayNumberToday]}>{calendarDay.day}</Text>
+                          </View>
+                        ) : (
+                          <Text style={styles.dayNumber}>{calendarDay.day}</Text>
+                        )}
+
+                        {/* Si hay sesión, mostrar información de la sesión debajo del día */}
+                        {daySessions.length > 0 && (
+                          <View style={styles.sessionCellContent}>
+                            <Text style={styles.sessionName} numberOfLines={1}>
+                              {daySessions[0].name}
+                            </Text>
+                          </View>
+                        )}
+                      </>
+                    )}
+                    {!calendarDay.isCurrentMonth && (
+                      <Text
+                        style={[
+                          styles.dayNumber,
+                          styles.dayNumberOtherMonth,
+                        ]}
+                      >
+                        {calendarDay.day}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
+        </>
       )}
 
       {/* Vista Lista */}
@@ -1420,7 +1421,7 @@ export default function CalendarScreen() {
                       disabled={isSaving || Object.keys(validationErrors).length > 0}
                     >
                       {isSaving ? (
-                        <ActivityIndicator color="#fff" size="small" />
+                        <BothsideLoader size="small" fullscreen={false} />
                       ) : (
                         <Text style={styles.buttonTextPrimaryNew}>Guardar cambios</Text>
                       )}
@@ -1446,7 +1447,7 @@ export default function CalendarScreen() {
                     disabled={isSaving || !formName.trim()}
                   >
                     {isSaving ? (
-                      <ActivityIndicator color="#fff" size="small" />
+                      <BothsideLoader size="small" fullscreen={false} />
                     ) : (
                       <Text style={styles.buttonTextPrimaryNew}>Crear sesión</Text>
                     )}
@@ -1699,7 +1700,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  
+
   // ========== NUEVOS ESTILOS DEL MODAL MEJORADO ==========
   modalHeaderNew: {
     flexDirection: 'row',

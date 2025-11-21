@@ -8,9 +8,9 @@ import {
     TouchableOpacity,
     TextInput,
     Alert,
-    ActivityIndicator,
     Modal,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
@@ -186,7 +186,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdateProfile}
                                     disabled={saving}
                                 >
-                                    {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveButtonText}>Guardar Cambios</Text>}
+                                    {saving ? <BothsideLoader size="small" fullscreen={false} /> : <Text style={styles.saveButtonText}>Guardar Cambios</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -211,7 +211,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdateEmail}
                                     disabled={saving}
                                 >
-                                    {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveButtonText}>Actualizar Correo</Text>}
+                                    {saving ? <BothsideLoader size="small" fullscreen={false} /> : <Text style={styles.saveButtonText}>Actualizar Correo</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -241,7 +241,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdatePassword}
                                     disabled={saving}
                                 >
-                                    {saving ? <ActivityIndicator color="white" /> : <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>}
+                                    {saving ? <BothsideLoader size="small" fullscreen={false} /> : <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -257,7 +257,7 @@ export const AccountScreen: React.FC = () => {
 
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 {loading ? (
-                    <ActivityIndicator size="large" color={colors.primary} style={{ marginTop: 50 }} />
+                    <BothsideLoader />
                 ) : (
                     <>
                         {/* Sección: Perfil */}

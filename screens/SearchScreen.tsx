@@ -15,8 +15,8 @@ import {
   Modal,
   RefreshControl,
   SafeAreaView,
-  ActivityIndicator,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
@@ -55,6 +55,7 @@ export const SearchScreen: React.FC = () => {
   const [filterByYear, setFilterByYear] = useState<string>('');
   const [filterByLabel, setFilterByLabel] = useState<string>('');
   const [filterByLocation, setFilterByLocation] = useState<string>('');
+  const [filterByAudioNotes, setFilterByAudioNotes] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
 
@@ -161,7 +162,7 @@ export const SearchScreen: React.FC = () => {
 
   useEffect(() => {
     sortCollection();
-  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByLocation, query]);
+  }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByLocation, filterByAudioNotes, query]);
 
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
@@ -259,11 +260,12 @@ export const SearchScreen: React.FC = () => {
     setFilterByYear('');
     setFilterByLabel('');
     setFilterByLocation('');
+    setFilterByAudioNotes(false);
     setQuery('');
   };
 
   // Verificar si hay algún filtro activo
-  const hasActiveFilters = filterByStyle || filterByYear || filterByLabel || filterByLocation || query.trim();
+  const hasActiveFilters = filterByStyle || filterByYear || filterByLabel || filterByLocation || filterByAudioNotes || query.trim();
 
   // Función para cargar las estanterías del usuario
   const loadUserMaletas = async () => {
@@ -569,12 +571,7 @@ export const SearchScreen: React.FC = () => {
 
   const renderEmptyState = () => {
     if (collectionLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando tu colección...</Text>
-        </View>
-      );
+      return <BothsideLoader />;
     }
 
     if (collection.length === 0) {
@@ -646,6 +643,11 @@ export const SearchScreen: React.FC = () => {
         }
         return item.shelf_name === filterByLocation;
       });
+    }
+
+    // Filtrar por notas de audio
+    if (filterByAudioNotes) {
+      filtered = filtered.filter(item => item.audio_note);
     }
 
     // Ordenar
@@ -1767,6 +1769,37 @@ export const SearchScreen: React.FC = () => {
             </ScrollView>
           </View>
 
+          {/* Filtro por Audio */}
+          <View style={styles.filterSection}>
+            <Text style={styles.filterSectionTitle}>Audio</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  !filterByAudioNotes && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByAudioNotes(false)}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  !filterByAudioNotes && styles.filterChipTextActive
+                ]}>Todos</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.filterChip,
+                  filterByAudioNotes && styles.filterChipActive
+                ]}
+                onPress={() => setFilterByAudioNotes(true)}
+              >
+                <Text style={[
+                  styles.filterChipText,
+                  filterByAudioNotes && styles.filterChipTextActive
+                ]}>Con notas de audio</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
           {/* Botón Limpiar filtros */}
           {hasActiveFilters && (
             <View style={styles.clearFiltersContainer}>
@@ -2274,45 +2307,7 @@ export const SearchScreen: React.FC = () => {
         animationType="fade"
         statusBarTranslucent={true}
       >
-        <View style={styles.loadingOverlay}>
-          <View style={[styles.loadingContainer, { backgroundColor: colors.card }]}>
-            <Animated.View
-              style={[
-                styles.loadingIconContainer,
-                { transform: [{ scale: pulseAnimation }] }
-              ]}
-            >
-              <ActivityIndicator size="large" color="#007AFF" />
-              <View style={styles.loadingIconBackground} />
-            </Animated.View>
-            <Text style={[styles.loadingText, { color: colors.text }]}>
-              🤖 Analizando portada con IA
-            </Text>
-            <Text style={[styles.loadingSubtext, { color: colors.text }]}>
-              Reconociendo artista y álbum...
-            </Text>
-            <View style={styles.loadingProgressContainer}>
-              <View style={styles.loadingProgressBar}>
-                <Animated.View
-                  style={[
-                    styles.loadingProgressFill,
-                    {
-                      transform: [{
-                        translateX: progressAnimation.interpolate({
-                          inputRange: [0, 1],
-                          outputRange: [-100, 100],
-                        })
-                      }]
-                    }
-                  ]}
-                />
-              </View>
-            </View>
-            <Text style={[styles.loadingTimeText, { color: colors.text }]}>
-              Esto puede tomar unos segundos
-            </Text>
-          </View>
-        </View>
+        <BothsideLoader />
       </Modal>
     </SafeAreaView>
   );

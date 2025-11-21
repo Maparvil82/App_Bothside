@@ -3,7 +3,7 @@ import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navi
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme, ActivityIndicator } from 'react-native';
+import { useColorScheme } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
@@ -42,6 +42,7 @@ import { AccountScreen } from '../screens/AccountScreen';
 import { AudioScanScreen } from '../screens/AudioScanScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
+import { BothsideLoader } from '../components/BothsideLoader';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -297,7 +298,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
     <NavigationContainer
       theme={theme}
       linking={linking}
-      fallback={<ActivityIndicator size="large" color="#007AFF" />}
+      fallback={<BothsideLoader />}
     >
       {children}
     </NavigationContainer>

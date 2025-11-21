@@ -4,9 +4,9 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { Audio } from 'expo-av';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -62,7 +62,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       // Crear el sonido con configuración más robusta
       const { sound: newSound } = await Audio.Sound.createAsync(
         { uri: audioUrl },
-        { 
+        {
           shouldPlay: false,
           progressUpdateIntervalMillis: 100,
           positionMillis: 0,
@@ -151,7 +151,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
             disabled={isLoading}
           >
             {isLoading ? (
-              <ActivityIndicator size="small" color="#fff" />
+              <BothsideLoader size="small" fullscreen={false} />
             ) : (
               <Ionicons
                 name={isPlaying ? "pause" : "play"}
@@ -163,11 +163,11 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
           <View style={styles.progressContainer}>
             <View style={styles.progressBar}>
-              <View 
+              <View
                 style={[
-                  styles.progressFill, 
+                  styles.progressFill,
                   { width: `${getProgressPercentage()}%` }
-                ]} 
+                ]}
               />
             </View>
             <View style={styles.timeContainer}>

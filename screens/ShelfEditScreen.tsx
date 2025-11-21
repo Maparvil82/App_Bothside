@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,7 +29,7 @@ export default function ShelfEditScreen() {
       setSaving(false);
       return;
     }
-    
+
     if (!name.trim()) {
       Alert.alert('Nombre requerido', 'Por favor, dale un nombre a tu estantería.');
       return;
@@ -112,7 +113,7 @@ export default function ShelfEditScreen() {
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <BothsideLoader size="small" fullscreen={false} />
         ) : (
           <Text style={styles.buttonText}>Guardar</Text>
         )}

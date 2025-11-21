@@ -6,9 +6,9 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -117,7 +117,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
               disabled={isSaving}
             >
               {isSaving ? (
-                <ActivityIndicator color="#fff" />
+                <BothsideLoader size="small" fullscreen={false} />
               ) : (
                 <Text style={styles.saveButtonText}>Guardar</Text>
               )}

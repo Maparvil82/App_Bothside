@@ -6,8 +6,8 @@ import {
     TouchableOpacity,
     StyleSheet,
     SafeAreaView,
-    ActivityIndicator,
 } from 'react-native';
+import { BothsideLoader } from './BothsideLoader';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
@@ -56,7 +56,7 @@ export const DiscogsWebViewModal: React.FC<DiscogsWebViewModalProps> = ({
                     <>
                         {loading && (
                             <View style={styles.loadingContainer}>
-                                <ActivityIndicator size="large" color={colors.primary} />
+                                <BothsideLoader />
                                 <Text style={[styles.loadingText, { color: colors.text }]}>
                                     Loading Discogs page...
                                 </Text>

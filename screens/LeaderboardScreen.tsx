@@ -6,9 +6,9 @@ import {
   FlatList,
   SafeAreaView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
@@ -113,7 +113,7 @@ export default function LeaderboardScreen() {
 
   const renderCollectorItem = ({ item }: { item: CollectorData }) => {
     const isCurrentUser = item.id === user?.id;
-    
+
     return (
       <View style={[
         styles.collectorItem,
@@ -127,7 +127,7 @@ export default function LeaderboardScreen() {
             {getRankIcon(item.position)}
           </Text>
         </View>
-        
+
         <View style={styles.collectorInfo}>
           <Text style={[
             styles.collectorName,
@@ -143,7 +143,7 @@ export default function LeaderboardScreen() {
             {item.rank_title}
           </Text>
         </View>
-        
+
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{item.total_albums}</Text>
@@ -161,30 +161,13 @@ export default function LeaderboardScreen() {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity 
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={24} color="#333" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Clasificación</Text>
-          <View style={styles.backButton} />
-        </View>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Cargando clasificación...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <BothsideLoader />;
   }
 
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
