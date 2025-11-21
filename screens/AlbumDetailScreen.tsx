@@ -31,6 +31,7 @@ import { needsDiscogsRefresh, hoursSinceCache } from '../utils/cache';
 import ShelfGrid from '../components/ShelfGrid';
 import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { DiscogsAttribution } from '../components/DiscogsAttribution';
+import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 
 const { width } = Dimensions.get('window');
 
@@ -88,6 +89,7 @@ export default function AlbumDetailScreen() {
   const { isGem, addGem, removeGem, refreshGems, updateGemStatus } = useGems();
   const { colors } = useTheme();
   const { mode } = useThemeMode();
+  const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -962,20 +964,18 @@ export default function AlbumDetailScreen() {
   };
 
   // Función para crear nueva lista
-  const handleCreateNewList = () => {
-    console.log('🔍 AlbumDetailScreen: Navigating to CreateList');
-    // Cerrar el modal primero
-    setShowListsModal(false);
-    // Pequeño delay para asegurar que el modal se cierre
-    setTimeout(() => {
-      // Navegar al tab de Maletas y luego a CreateMaleta
-      (navigation as any).navigate('Main', {
-        screen: 'MaletasTab',
-        params: {
-          screen: 'CreateMaleta'
-        }
-      });
-    }, 100);
+  const handleCreateNewList = async () => {
+    try {
+      setShowListsModal(false);
+      // Open global modal with album ID to auto-add album to new maleta
+      // Use album.albums.id (albums table ID) not album.id (user_collection ID)
+      // Pass loadAlbumDetail as callback to reload maleta lists after creation
+      if (album?.albums?.id) {
+        openCreateMaletaModal(album.albums.id, loadAlbumDetail);
+      }
+    } catch (error) {
+      console.error('Error opening create maleta modal:', error);
+    }
   };
 
   // ========== FIN FUNCIONES GEMS Y LISTAS ==========

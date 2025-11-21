@@ -1,9 +1,24 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 export const useRealtimeMaletaAlbums = (maletaId: string) => {
   const [albums, setAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Función para añadir álbum localmente (expuesta para uso externo)
+  const addAlbumLocally = useCallback((albumData: any) => {
+    setAlbums(prev => {
+      // Evitar duplicados
+      const exists = prev.some(a => a.album_id === albumData.album_id);
+      if (exists) return prev;
+      return [albumData, ...prev];
+    });
+  }, []);
+
+  // Función para eliminar álbum localmente (expuesta para uso externo)
+  const removeAlbumLocally = useCallback((albumId: string) => {
+    setAlbums(prev => prev.filter(album => album.album_id !== albumId));
+  }, []);
 
   useEffect(() => {
     if (!maletaId) {
@@ -50,50 +65,61 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
 
     loadInitialAlbums();
 
-    // Suscripción en tiempo real para maleta_albums
-    const albumsSubscription = supabase
-      .channel(`maleta_albums_${maletaId}`)
+    // Suscripción en tiempo real para maleta_albums con eventos específicos
+    const channel = supabase
+      .channel(`maleta-${maletaId}`)
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'maleta_albums',
           filter: `maleta_id=eq.${maletaId}`,
         },
         async (payload) => {
-          console.log('🔄 useRealtimeMaletaAlbums: Realtime change:', payload);
-
-          if (payload.eventType === 'INSERT') {
-            console.log('➕ useRealtimeMaletaAlbums: Adding new album to list');
-            // Obtener los datos completos del álbum
-            const { data: albumData, error } = await supabase
-              .from('maleta_albums')
-              .select(`
+          console.log('➕ useRealtimeMaletaAlbums: INSERT event:', payload);
+          // Obtener los datos completos del álbum
+          const { data: albumData, error } = await supabase
+            .from('maleta_albums')
+            .select(`
+              *,
+              albums (
                 *,
-                albums (
-                  *,
-                  album_styles (
-                    styles (*)
-                  )
+                album_styles (
+                  styles (*)
                 )
-              `)
-              .eq('maleta_id', maletaId)
-              .eq('album_id', payload.new.album_id)
-              .single();
+              )
+            `)
+            .eq('maleta_id', maletaId)
+            .eq('album_id', payload.new.album_id)
+            .single();
 
-            if (!error && albumData) {
-              console.log('✅ useRealtimeMaletaAlbums: Album data fetched:', albumData);
-              setAlbums(prev => [albumData, ...prev]);
-            } else {
-              console.error('❌ useRealtimeMaletaAlbums: Error fetching album data:', error);
-            }
-          } else if (payload.eventType === 'DELETE') {
-            console.log('🗑️ useRealtimeMaletaAlbums: Removing album from list');
-            setAlbums(prev =>
-              prev.filter(album => album.album_id !== payload.old.album_id)
-            );
+          if (!error && albumData) {
+            console.log('✅ useRealtimeMaletaAlbums: Album data fetched, adding to list');
+            setAlbums(prev => {
+              // Evitar duplicados
+              const exists = prev.some(a => a.album_id === albumData.album_id);
+              if (exists) return prev;
+              return [albumData, ...prev];
+            });
+          } else {
+            console.error('❌ useRealtimeMaletaAlbums: Error fetching album data:', error);
           }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'maleta_albums',
+          filter: `maleta_id=eq.${maletaId}`,
+        },
+        (payload) => {
+          console.log('🗑️ useRealtimeMaletaAlbums: DELETE event:', payload);
+          setAlbums(prev =>
+            prev.filter(album => album.album_id !== payload.old.album_id)
+          );
         }
       )
       .subscribe((status) => {
@@ -102,9 +128,9 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
 
     return () => {
       console.log('🔌 useRealtimeMaletaAlbums: Unsubscribing from channel');
-      albumsSubscription.unsubscribe();
+      channel.unsubscribe();
     };
   }, [maletaId]);
 
-  return { albums, loading };
-}; 
+  return { albums, loading, addAlbumLocally, removeAlbumLocally };
+};

@@ -16,6 +16,7 @@ import { UserMaleta } from '../services/database';
 import { useHybridMaletas } from '../hooks/useHybridMaletas';
 import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { useTheme } from '@react-navigation/native';
+import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 
 interface ListsScreenProps {
   navigation: any;
@@ -31,6 +32,9 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const [showFilters, setShowFilters] = useState<boolean>(false);
   console.log('🔍 ListsScreen: Initial showFilters state:', false);
   const [filterByPrivacy, setFilterByPrivacy] = useState<'all' | 'public' | 'private'>('all');
+
+  // Global modal context
+  const { setIsCreateMaletaVisible } = React.useContext(CreateMaletaModalContext);
 
   // Manejar nueva lista cuando se navega de vuelta desde CreateListScreen
   useEffect(() => {
@@ -92,8 +96,8 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     }
   };
 
-  const handleCreateList = () => {
-    navigation.navigate('CreateMaleta');
+  const handleOpenCreateModal = () => {
+    setIsCreateMaletaVisible(true);
   };
 
   const handleViewList = (list: UserMaleta) => {
@@ -239,7 +243,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       <Text style={styles.emptyStateSubtitle}>
         Crea tu primera maleta para organizar tu colección
       </Text>
-      <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
+      <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
         <Ionicons name="add" size={20} color="white" />
         <Text style={styles.createButtonText}>Crear Maleta</Text>
       </TouchableOpacity>
@@ -262,7 +266,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <Text style={[styles.listCount, { color: colors.text }]}>{filteredLists.length} maleta{filteredLists.length !== 1 ? 's' : ''}</Text>
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.createMaletaButton} onPress={handleCreateList}>
+          <TouchableOpacity style={styles.createMaletaButton} onPress={handleOpenCreateModal}>
             <Ionicons name="add" size={24} color={colors.primary} />
           </TouchableOpacity>
 
@@ -346,7 +350,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <Text style={styles.emptyStateSubtitle}>
             Crea tu primera maleta para organizar tu colección
           </Text>
-          <TouchableOpacity style={styles.createButton} onPress={handleCreateList}>
+          <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
             <Ionicons name="add" size={20} color="white" />
             <Text style={styles.createButtonText}>Crear Maleta</Text>
           </TouchableOpacity>
@@ -592,12 +596,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
   },
-  errorText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    marginTop: 100,
-  },
   headerActions: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -612,17 +610,26 @@ const styles = StyleSheet.create({
   },
   floatingAIButton: {
     position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: '#007AFF',
-    borderRadius: 50,
-    padding: 15,
+    bottom: 20,
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
     elevation: 5,
+  },
+  errorText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 100,
   },
 });
 
-export default ListsScreen; 
+export default ListsScreen;
