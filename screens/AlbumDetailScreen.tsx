@@ -1208,13 +1208,13 @@ export default function AlbumDetailScreen() {
                     listId: item.id,
                     listTitle: item.title
                   });
-                  // Navegar al tab de Lists y luego a ViewList
+                  // Navegar al tab de Maletas y luego a ViewMaleta
                   (navigation as any).navigate('Main', {
-                    screen: 'ListsTab',
+                    screen: 'MaletasTab',
                     params: {
-                      screen: 'ViewList',
+                      screen: 'ViewMaleta',
                       params: {
-                        listId: item.id,
+                        maletaId: item.id,
                         listTitle: item.title
                       }
                     }
