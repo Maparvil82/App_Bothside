@@ -100,7 +100,7 @@ const MaletasStack = () => (
       name="ViewMaleta"
       component={ViewMaletaScreen}
       options={{
-        header: () => <CustomHeader title="Ver Maleta" showAvatar={false} />
+        header: () => <CustomHeader title="Ver Maleta" showAvatar={false} showBackButton={true} showCalendarIcon={false} />
       }}
     />
     <Stack.Screen
@@ -431,6 +431,14 @@ const AppNavigator = () => {
                     component={AccountScreen}
                     options={{
                       header: () => <CustomHeader title="Cuenta" showAvatar={false} />
+                    }}
+                  />
+                  <Stack.Screen
+                    name="Calendar"
+                    component={CalendarScreen}
+                    options={{
+                      headerShown: true,
+                      header: () => <CustomHeader title="Calendario" showBackButton={true} showCalendarIcon={false} />
                     }}
                   />
                   {ENABLE_AUDIO_SCAN && (

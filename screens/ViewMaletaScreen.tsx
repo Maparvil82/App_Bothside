@@ -317,9 +317,6 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.navigate('Maletas')} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
         <View style={styles.headerInfo}>
           <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
           {list.is_public && (

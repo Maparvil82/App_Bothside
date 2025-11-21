@@ -736,28 +736,28 @@ export default function AlbumDetailScreen() {
     switch (level) {
       case 'Bajo':
         return {
-          title: 'Ratio Bajo (Menos de 2:1)',
+          title: 'Ratio Bajo (Menos de 2)',
           significado: 'La demanda es igual o apenas superior a la oferta registrada. Hay muchos discos en esta categoría.',
           probabilidad: 'Baja a media. La venta no es segura y puede tardar mucho tiempo.',
           estrategia: 'Para vender, tu copia debe tener un precio muy competitivo (probablemente en el rango bajo del historial de ventas) y/o estar en un estado impecable (Near Mint). La competencia es alta.'
         };
       case 'Medio':
         return {
-          title: 'Ratio Medio (Entre 2:1 y 8:1)',
+          title: 'Ratio Medio (Entre 2 y 8)',
           significado: 'Hay una demanda saludable y constante. El disco tiene un público y se vende con regularidad.',
           probabilidad: 'Media a alta. Si el precio es justo y el estado es bueno (VG+ o mejor), se venderá en un tiempo razonable (días o algunas semanas).',
           estrategia: 'Revisa el historial de ventas para poner un precio acorde al mercado. No necesitas ser el más barato, pero sí ser razonable.'
         };
       case 'Alto':
         return {
-          title: 'Ratio Alto (Entre 8:1 y 25:1)',
+          title: 'Ratio Alto (Entre 8 y 25)',
           significado: 'La demanda supera claramente a la oferta. Es un disco buscado y no es fácil de encontrar.',
           probabilidad: 'Muy alta. Una copia en buen estado y a un precio justo se venderá muy rápidamente, a menudo en cuestión de horas o pocos días.',
           estrategia: 'Tienes más poder de negociación. Puedes fijar un precio en el rango medio-alto del historial de ventas. Los compradores están activamente esperando que aparezca una copia.'
         };
       case 'Excepcional':
         return {
-          title: 'Ratio Excepcional o "Grial" (Más de 25:1)',
+          title: 'Ratio Excepcional o "Grial" (Más de 25)',
           significado: 'Demanda masiva para una oferta extremadamente escasa. Es lo que se considera un "santo grial" o una pieza de coleccionista muy codiciada.',
           probabilidad: 'Prácticamente garantizada e inmediata.',
           estrategia: 'La venta será casi instantánea. Es probable que recibas múltiples ofertas al poco tiempo de ponerlo a la venta. Puedes fijar un precio en el rango más alto del historial, ya que los compradores saben que las oportunidades son muy raras.'
@@ -2661,7 +2661,7 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   modalBody: {
-    padding: 4,
+    padding: 20,
   },
   ratioInfoSection: {
     marginBottom: 20,
