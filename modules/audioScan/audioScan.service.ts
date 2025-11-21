@@ -1,6 +1,9 @@
 import { Audio } from 'expo-av';
 import { AudioFingerprint, AudioScanResult } from './audioFingerprint.types';
 import { generateMockFingerprint, compareFingerprintWithCollection } from './audioFingerprint.mock';
+import { generateFingerprintFromFile } from './chromaprint';
+import { AUDIO_FINGERPRINT_ENDPOINT } from '../../config/api';
+import { supabase } from '../../lib/supabase';
 
 let recording: Audio.Recording | null = null;
 
@@ -57,22 +60,11 @@ export const stopRecording = async (): Promise<{ uri: string; durationMs: number
     }
 };
 
-export const generateFingerprintFromAudio = async (): Promise<AudioFingerprint> => {
-    console.log('Generating fingerprint...');
-    // Placeholder for native fingerprint generation
-    return generateMockFingerprint();
-};
-
-export const matchFingerprint = async (fingerprint: AudioFingerprint): Promise<AudioScanResult> => {
-    console.log('Matching fingerprint:', fingerprint);
-    // Placeholder for API call to match fingerprint
-    return compareFingerprintWithCollection(fingerprint);
-};
-
 export const analyzeAudio = async (): Promise<AudioScanResult> => {
     console.log('Starting full audio analysis...');
 
     try {
+        // 1. Grabar audio
         await startRecording();
 
         // Grabar durante 4-6 segundos
@@ -81,13 +73,58 @@ export const analyzeAudio = async (): Promise<AudioScanResult> => {
         const { uri } = await stopRecording();
         console.log('Audio recorded at:', uri);
 
-        // Aquí iría la lógica real de fingerprint con el archivo
-        // const fingerprint = await generateFingerprintFromAudioFile(uri);
+        // 2. Preparar subida
+        const formData = new FormData();
+        formData.append('file', {
+            uri,
+            name: 'audio.m4a',
+            type: 'audio/m4a',
+        } as any);
 
-        const fingerprint = await generateFingerprintFromAudio();
-        const result = await matchFingerprint(fingerprint);
+        // Obtener token de sesión
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
 
-        return result;
+        if (!token) {
+            console.warn('No auth token found, proceeding without auth header (might fail if backend requires it)');
+        }
+
+        try {
+            console.log('Uploading audio to:', AUDIO_FINGERPRINT_ENDPOINT);
+            const response = await fetch(AUDIO_FINGERPRINT_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                },
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Backend error (${response.status}): ${errorText}`);
+            }
+
+            const data = await response.json();
+            console.log('Backend response:', data);
+
+            // 4. Adaptar respuesta
+            return {
+                trackName: data.trackName || 'Unknown Track',
+                artist: data.artist || 'Unknown Artist',
+                inCollection: data.inCollection || false,
+                matchedRelease: data.matchedRelease || '',
+                confidence: data.confidence || 0,
+            };
+
+        } catch (uploadError) {
+            console.error('Upload failed, falling back to mock:', uploadError);
+            // Fallback a mock si falla la red o el backend
+            // Esto permite seguir probando la UI mientras no haya backend real
+            const fingerprint = await generateFingerprintFromFile(uri);
+            return compareFingerprintWithCollection(fingerprint);
+        }
+
     } catch (error) {
         console.error('Error during audio analysis:', error);
         // Asegurarse de limpiar si falla
