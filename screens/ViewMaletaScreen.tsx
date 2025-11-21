@@ -241,7 +241,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           <View style={styles.albumDetails}>
             <Text style={styles.albumDetail}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                ? `${item.albums.label} - ${item.albums.release_year}`
                 : item.albums?.label && item.albums.label !== ''
                   ? `Sello: ${item.albums.label}`
                   : item.albums?.release_year
@@ -249,11 +249,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                     : ''
               }
             </Text>
-            <Text style={styles.albumDetail}>
-              {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
-              }
-            </Text>
+
           </View>
         </View>
       </TouchableOpacity>
@@ -626,6 +622,7 @@ const styles = StyleSheet.create({
   },
   albumCover: {
     width: 80,
+    aspectRatio: 1,
     height: '100%',
     borderRadius: 4,
     marginRight: 10,
