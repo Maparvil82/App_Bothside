@@ -17,6 +17,7 @@ import { useHybridMaletas } from '../hooks/useHybridMaletas';
 import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { useTheme } from '@react-navigation/native';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
+import { CreateMaletaModal } from '../components/CreateMaletaModal';
 
 interface ListsScreenProps {
   navigation: any;
@@ -100,12 +101,39 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     setIsCreateMaletaVisible(true);
   };
 
+  // Edit Modal State
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [selectedMaletaForEdit, setSelectedMaletaForEdit] = useState<UserMaleta | null>(null);
+  const [updatingMaleta, setUpdatingMaleta] = useState(false);
+
   const handleViewList = (list: UserMaleta) => {
     navigation.navigate('ViewMaleta', { maletaId: list.id, listTitle: list.title });
   };
 
   const handleEditList = (list: UserMaleta) => {
-    navigation.navigate('EditMaleta', { list });
+    setSelectedMaletaForEdit(list);
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateMaleta = async (data: { title: string; description?: string; is_public: boolean }) => {
+    if (!selectedMaletaForEdit) return;
+
+    try {
+      setUpdatingMaleta(true);
+      await UserMaletaService.updateMaleta(selectedMaletaForEdit.id, data);
+
+      // Update list locally
+      refreshLists();
+
+      Alert.alert('Éxito', 'Maleta actualizada correctamente');
+      setIsEditModalVisible(false);
+      setSelectedMaletaForEdit(null);
+    } catch (error) {
+      console.error('Error updating maleta:', error);
+      Alert.alert('Error', 'No se pudo actualizar la maleta');
+    } finally {
+      setUpdatingMaleta(false);
+    }
   };
 
   const handleDeleteList = async (list: UserMaleta) => {
@@ -381,6 +409,22 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       >
         <Ionicons name="sparkles" size={24} color="#fff" />
       </TouchableOpacity>
+      {/* Edit Maleta Modal */}
+      <CreateMaletaModal
+        visible={isEditModalVisible}
+        onClose={() => {
+          setIsEditModalVisible(false);
+          setSelectedMaletaForEdit(null);
+        }}
+        onSubmit={handleUpdateMaleta}
+        loading={updatingMaleta}
+        initialValues={selectedMaletaForEdit ? {
+          title: selectedMaletaForEdit.title,
+          description: selectedMaletaForEdit.description || '',
+          is_public: selectedMaletaForEdit.is_public,
+        } : undefined}
+        isEditing={true}
+      />
     </View>
   );
 };

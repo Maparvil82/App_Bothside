@@ -18,6 +18,12 @@ interface CreateMaletaModalProps {
     onSubmit: (data: { title: string; description?: string; is_public: boolean }, initialAlbumId?: string) => void;
     loading?: boolean;
     initialAlbumId?: string;
+    initialValues?: {
+        title: string;
+        description?: string;
+        is_public: boolean;
+    };
+    isEditing?: boolean;
 }
 
 export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
@@ -26,16 +32,34 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
     onSubmit,
     loading = false,
     initialAlbumId,
+    initialValues,
+    isEditing = false,
 }) => {
-    const [title, setTitle] = useState('');
-    const [description, setDescription] = useState('');
-    const [isPublic, setIsPublic] = useState(false);
+    const [title, setTitle] = useState(initialValues?.title || '');
+    const [description, setDescription] = useState(initialValues?.description || '');
+    const [isPublic, setIsPublic] = useState(initialValues?.is_public || false);
     const [validationError, setValidationError] = useState<string | null>(null);
 
+    // Update state when visible or initialValues change
+    React.useEffect(() => {
+        if (visible && initialValues) {
+            setTitle(initialValues.title);
+            setDescription(initialValues.description || '');
+            setIsPublic(initialValues.is_public);
+        } else if (visible && !isEditing) {
+            // Reset for new creation
+            setTitle('');
+            setDescription('');
+            setIsPublic(false);
+        }
+    }, [visible, initialValues, isEditing]);
+
     const handleClose = () => {
-        setTitle('');
-        setDescription('');
-        setIsPublic(false);
+        if (!isEditing) {
+            setTitle('');
+            setDescription('');
+            setIsPublic(false);
+        }
         setValidationError(null);
         onClose();
     };
@@ -52,10 +76,12 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
             is_public: isPublic,
         }, initialAlbumId);
 
-        // Reset form
-        setTitle('');
-        setDescription('');
-        setIsPublic(false);
+        if (!isEditing) {
+            // Reset form only if not editing (or let parent handle close/reset)
+            setTitle('');
+            setDescription('');
+            setIsPublic(false);
+        }
         setValidationError(null);
     };
 
@@ -77,7 +103,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                     <View style={styles.modalContent}>
                         {/* Header */}
                         <View style={styles.modalHeaderNew}>
-                            <Text style={styles.modalTitleNew}>Nueva Maleta</Text>
+                            <Text style={styles.modalTitleNew}>{isEditing ? 'Editar Maleta' : 'Nueva Maleta'}</Text>
                             <TouchableOpacity onPress={handleClose} style={styles.modalCloseButtonNew}>
                                 <Ionicons name="close" size={28} color="#000" />
                             </TouchableOpacity>
@@ -186,15 +212,12 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                         {/* Botón */}
                         <View style={styles.modalButtonsNew}>
                             <TouchableOpacity
-                                style={[
-                                    styles.buttonPrimaryNew,
-                                    (loading || !title.trim()) && styles.buttonDisabledNew,
-                                ]}
+                                style={styles.createButtonNew}
                                 onPress={handleSubmit}
-                                disabled={loading || !title.trim()}
+                                disabled={loading}
                             >
-                                <Text style={styles.buttonTextPrimaryNew}>
-                                    {loading ? 'Creando...' : 'Crear Maleta'}
+                                <Text style={styles.createButtonTextNew}>
+                                    {loading ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Maleta')}
                                 </Text>
                             </TouchableOpacity>
                         </View>
@@ -321,13 +344,29 @@ const styles = StyleSheet.create({
         paddingTop: 12,
         paddingBottom: 8,
     },
+    createButtonNew: {
+        backgroundColor: '#000',
+        paddingVertical: 16,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    createButtonTextNew: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: '600',
+    },
     buttonPrimaryNew: {
         paddingVertical: 16,
         backgroundColor: '#000',
         borderRadius: 12,
         alignItems: 'center',
         justifyContent: 'center',
-        minHeight: 52,
     },
     buttonDisabledNew: {
         backgroundColor: '#ccc',

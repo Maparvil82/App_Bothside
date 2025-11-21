@@ -19,6 +19,7 @@ import { SwipeListView } from 'react-native-swipe-list-view';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
+import { CreateMaletaModal } from '../components/CreateMaletaModal';
 
 interface ViewListScreenProps {
   navigation: any;
@@ -79,9 +80,29 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     }
   }, [searchQuery, userCollection]);
 
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [updatingMaleta, setUpdatingMaleta] = useState(false);
+
   const handleEditList = () => {
-    console.log('🔍 ViewListScreen: Navigating to EditList with:', { list });
-    navigation.navigate('EditMaleta', { list });
+    setIsEditModalVisible(true);
+  };
+
+  const handleUpdateMaleta = async (data: { title: string; description?: string; is_public: boolean }) => {
+    try {
+      setUpdatingMaleta(true);
+      await UserMaletaService.updateMaleta(maletaId, data);
+
+      // Update local state
+      setList(prev => ({ ...prev, ...data }));
+
+      Alert.alert('Éxito', 'Maleta actualizada correctamente');
+      setIsEditModalVisible(false);
+    } catch (error) {
+      console.error('Error updating maleta:', error);
+      Alert.alert('Error', 'No se pudo actualizar la maleta');
+    } finally {
+      setUpdatingMaleta(false);
+    }
   };
 
   const handleAddAlbum = async () => {
@@ -460,6 +481,19 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           </KeyboardAvoidingView>
         </View>
       </Modal>
+      {/* Edit Maleta Modal */}
+      <CreateMaletaModal
+        visible={isEditModalVisible}
+        onClose={() => setIsEditModalVisible(false)}
+        onSubmit={handleUpdateMaleta}
+        loading={updatingMaleta}
+        initialValues={{
+          title: list?.title || '',
+          description: list?.description || '',
+          is_public: list?.is_public || false,
+        }}
+        isEditing={true}
+      />
     </View>
   );
 };
