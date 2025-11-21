@@ -1026,7 +1026,7 @@ export default function AlbumDetailScreen() {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.text }]}>{album.albums.title}</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{album.albums.title}</Text>
         <View style={styles.headerRight} />
       </View>
 
