@@ -1597,33 +1597,37 @@ export default function AlbumDetailScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
-              {userMaletas.length > 0 ? (
-                userMaletas.map((list: any) => (
-                  <TouchableOpacity
-                    key={list.id}
-                    style={styles.listOption}
-                    onPress={() => handleAddToList(list.id)}
-                  >
-                    <MaletaCoverCollage
-                      albums={list.albums || []}
-                      size={60}
-                    />
-                    <View style={styles.listOptionInfo}>
-                      <Text style={styles.listOptionTitle}>{list.title}</Text>
-                      {list.description && (
-                        <Text style={styles.listOptionDescription}>{list.description}</Text>
-                      )}
-                    </View>
-                    <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-                  </TouchableOpacity>
-                ))
-              ) : (
-                <View style={styles.emptyListsContainer}>
-                  <Text style={styles.emptyListsText}>No tienes maletas creadas</Text>
-                </View>
-              )}
+            <View style={{ flexShrink: 1 }}>
+              <ScrollView style={styles.modalBody}>
+                {userMaletas.length > 0 ? (
+                  userMaletas.map((list: any) => (
+                    <TouchableOpacity
+                      key={list.id}
+                      style={styles.listOption}
+                      onPress={() => handleAddToList(list.id)}
+                    >
+                      <MaletaCoverCollage
+                        albums={list.albums || []}
+                        size={60}
+                      />
+                      <View style={styles.listOptionInfo}>
+                        <Text style={styles.listOptionTitle}>{list.title}</Text>
+                        {list.description && (
+                          <Text style={styles.listOptionDescription}>{list.description}</Text>
+                        )}
+                      </View>
+                      <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+                    </TouchableOpacity>
+                  ))
+                ) : (
+                  <View style={styles.emptyListsContainer}>
+                    <Text style={styles.emptyListsText}>No tienes maletas creadas</Text>
+                  </View>
+                )}
+              </ScrollView>
+            </View>
 
+            <View style={styles.modalFooter}>
               <TouchableOpacity
                 style={styles.createListButton}
                 onPress={handleCreateNewList}
@@ -1631,7 +1635,7 @@ export default function AlbumDetailScreen() {
                 <Ionicons name="add-circle" size={20} color="#fff" />
                 <Text style={styles.createListButtonText}>Crear Nueva Maleta</Text>
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           </View>
         </View>
       </Modal>
@@ -3606,6 +3610,11 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     textAlign: 'center',
   },
+  modalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+  },
   createListButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -3614,9 +3623,6 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 8,
-    marginTop: 20,
-    marginHorizontal: 20,
-    marginBottom: 20,
   },
   createListButtonText: {
     marginLeft: 8,
