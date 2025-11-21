@@ -41,6 +41,7 @@ import { LegalScreen } from '../screens/LegalScreen';
 import { AccountScreen } from '../screens/AccountScreen';
 import { AudioScanScreen } from '../screens/AudioScanScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
+import { ENABLE_AUDIO_SCAN } from '../config/features';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -355,7 +356,9 @@ const AppNavigator = () => {
                     header: () => <CustomHeader title="Calendario de sesiones" showBackButton={true} showCalendarIcon={false} />
                   }}
                 />
-                <Stack.Screen name="AudioScan" component={AudioScanScreen} />
+                {ENABLE_AUDIO_SCAN && (
+                  <Stack.Screen name="AudioScan" component={AudioScanScreen} />
+                )}
               </>
             ) : (
               // Usuario no autenticado - Pantallas de autenticación

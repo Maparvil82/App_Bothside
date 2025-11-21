@@ -24,6 +24,7 @@ import ShelfGrid from '../components/ShelfGrid';
 import { CollectorRankCard } from '../components/CollectorRankCard';
 import { SessionEarningsSection } from '../components/SessionEarningsSection';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { ENABLE_AUDIO_SCAN } from '../config/features';
 
 const { width } = Dimensions.get('window');
 
@@ -930,22 +931,24 @@ export default function DashboardScreen() {
         )}
 
         {/* Botón ¿Qué está sonando? */}
-        <View style={styles.audioScanContainer}>
-          <TouchableOpacity
-            style={styles.audioScanButton}
-            onPress={handleAudioScan}
-            activeOpacity={0.7}
-          >
-            <View style={styles.audioScanContent}>
-              <Ionicons name="musical-notes" size={24} color={colors.primary} style={{ marginRight: 12 }} />
-              <View>
-                <Text style={[styles.audioScanTitle, { color: colors.text }]}>¿Qué está sonando?</Text>
-                <Text style={styles.audioScanSubtitle}>Pulsa para detectar si la música que suena está en tu colección.</Text>
+        {ENABLE_AUDIO_SCAN && (
+          <View style={styles.audioScanContainer}>
+            <TouchableOpacity
+              style={styles.audioScanButton}
+              onPress={handleAudioScan}
+              activeOpacity={0.7}
+            >
+              <View style={styles.audioScanContent}>
+                <Ionicons name="musical-notes" size={24} color={colors.primary} style={{ marginRight: 12 }} />
+                <View>
+                  <Text style={[styles.audioScanTitle, { color: colors.text }]}>¿Qué está sonando?</Text>
+                  <Text style={styles.audioScanSubtitle}>Pulsa para detectar si la música que suena está en tu colección.</Text>
+                </View>
               </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
-          </TouchableOpacity>
-        </View>
+              <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
+            </TouchableOpacity>
+          </View>
+        )}
 
         {/* Mensaje si no hay datos */}
         {stats.totalAlbums === 0 && (
