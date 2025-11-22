@@ -1046,56 +1046,62 @@ export default function AlbumDetailScreen() {
           )}
         </View>
 
-        {/* Discogs Attribution - Required by Discogs API Terms */}
-        {album.albums.discogs_id && (
-          <DiscogsAttribution releaseId={album.albums.discogs_id} />
-        )}
-        {/* Sección de Valor */}
-        {album.albums.album_stats?.avg_price && (
-          <View style={[styles.valueCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Text style={[styles.valueCardTitle, { color: colors.text }]}>Valor de mercado</Text>
-            <Text style={[styles.valueCardAmount, { color: colors.primary }]}>
-              ${album.albums.album_stats.avg_price.toFixed(2)}
-            </Text>
-            <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>Precio promedio en el mercado basado en Discogs</Text>
-          </View>
-        )}
+        {/* Sección Unificada: Valor de Mercado y Ratio de Venta */}
+        {(album.albums.album_stats?.avg_price || (album.albums.album_stats?.want && album.albums.album_stats?.have)) && (
+          <View style={[styles.unifiedMarketCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* Valor de Mercado */}
+            {album.albums.album_stats?.avg_price && (
+              <View style={styles.marketValueSection}>
+                <Text style={[styles.valueCardTitle, { color: colors.text }]}>Valor de mercado</Text>
+                <Text style={[styles.valueCardAmount, { color: colors.primary }]}>
+                  ${album.albums.album_stats.avg_price.toFixed(2)}
+                </Text>
+                <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>Precio promedio en el mercado basado en Discogs</Text>
+              </View>
+            )}
 
-        {/* Sección de Ratio de Venta */}
-        {album.albums.album_stats?.want && album.albums.album_stats?.have && (
-          (() => {
-            const { ratio, level, color } = calculateSalesRatio(
-              album.albums.album_stats.want,
-              album.albums.album_stats.have
-            );
-            return (
-              <TouchableOpacity
-                style={[styles.ratioCard, { backgroundColor: color }]}
-                onPress={() => {
-                  setCurrentRatioData({ ratio, level, color });
-                  setShowRatioModal(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <View style={styles.ratioCardHeader}>
-                  <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
-                  <View style={styles.ratioCardIcon}>
-                    <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
-                  </View>
-                </View>
-                <Text style={styles.ratioCardAmount}>
-                  {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
-                </Text>
-                <Text style={styles.ratioCardLevel}>{level}</Text>
-                <Text style={styles.ratioCardSubtitle}>
-                  {ratio > 0
-                    ? `${album.albums.album_stats.want.toLocaleString()} quieren / ${album.albums.album_stats.have.toLocaleString()} tienen`
-                    : 'Demanda vs. oferta en Discogs'
-                  }
-                </Text>
-              </TouchableOpacity>
-            );
-          })()
+            {/* Separador si ambos están presentes */}
+            {album.albums.album_stats?.avg_price && album.albums.album_stats?.want && album.albums.album_stats?.have && (
+              <View style={[styles.marketCardDivider, { backgroundColor: colors.border }]} />
+            )}
+
+            {/* Ratio de Venta */}
+            {album.albums.album_stats?.want && album.albums.album_stats?.have && (
+              (() => {
+                const { ratio, level, color } = calculateSalesRatio(
+                  album.albums.album_stats.want,
+                  album.albums.album_stats.have
+                );
+                return (
+                  <TouchableOpacity
+                    style={[styles.ratioSection, { backgroundColor: color }]}
+                    onPress={() => {
+                      setCurrentRatioData({ ratio, level, color });
+                      setShowRatioModal(true);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <View style={styles.ratioCardHeader}>
+                      <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
+                      <View style={styles.ratioCardIcon}>
+                        <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
+                      </View>
+                    </View>
+                    <Text style={styles.ratioCardAmount}>
+                      {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
+                    </Text>
+                    <Text style={styles.ratioCardLevel}>{level}</Text>
+                    <Text style={styles.ratioCardSubtitle}>
+                      {ratio > 0
+                        ? `${album.albums.album_stats.want.toLocaleString()} quieren / ${album.albums.album_stats.have.toLocaleString()} tienen`
+                        : 'Demanda vs. oferta en Discogs'
+                      }
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })()
+            )}
+          </View>
         )}
 
         {/* Información principal del álbum */}
@@ -1129,12 +1135,12 @@ export default function AlbumDetailScreen() {
           {(mergedGenres.length > 0 || mergedStyles.length > 0) && (
             <View style={styles.stylesContainer}>
               {mergedGenres.map((genre: string, index: number) => (
-                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: colors.border }]}>
+                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: '#f1f1f1ff' }]}>
                   <Text style={[styles.styleText, { color: colors.text }]}>{genre}</Text>
                 </View>
               ))}
               {mergedStyles.map((style: string, index: number) => (
-                <View key={`s-${index}`} style={[styles.styleTag, { backgroundColor: colors.border }]}>
+                <View key={`s-${index}`} style={[styles.styleTag, { backgroundColor: '#f1f1f1ff' }]}>
                   <Text style={[styles.styleText, { color: colors.text }]}>{style}</Text>
                 </View>
               ))}
@@ -1164,7 +1170,7 @@ export default function AlbumDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: colors.border },
+                { backgroundColor: '#f1f1f1ff' },
                 isGem(album.albums.id) && styles.actionButtonActive
               ]}
               onPress={handleToggleGem}
@@ -1185,7 +1191,7 @@ export default function AlbumDetailScreen() {
 
             {/* Botón Lista */}
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: colors.border }]}
+              style={[styles.actionButton, { backgroundColor: '#f1f1f1ff' }]}
               onPress={() => setShowListsModal(true)}
             >
               <Ionicons name="cube-outline" size={20} color={colors.text} />
@@ -1202,7 +1208,7 @@ export default function AlbumDetailScreen() {
             {album.user_list_items.map((item, index) => (
               <TouchableOpacity
                 key={index}
-                style={[styles.listItemContainer, { backgroundColor: colors.border, borderColor: colors.border }]}
+                style={[styles.listItemContainer, { backgroundColor: '#f1f1f1ff', borderColor: '#f1f1f1ff' }]}
                 onPress={() => {
                   console.log('🔍 AlbumDetailScreen: Navigating to ViewList with:', {
                     listId: item.id,
@@ -1467,7 +1473,7 @@ export default function AlbumDetailScreen() {
                   style={[
                     styles.typeFormQuestionItem,
                     hasAnswer && styles.typeFormQuestionItemAnswered,
-                    { backgroundColor: colors.border, borderColor: colors.border }
+                    { backgroundColor: '#f1f1f1ff', borderColor: '#f1f1f1ff' }
                   ]}
                   onPress={() => {
                     // Cargar respuesta existente si la hay
@@ -1557,6 +1563,11 @@ export default function AlbumDetailScreen() {
               ))}
             </ScrollView>
           </View>
+        )}
+
+        {/* Discogs Attribution - Required by Discogs API Terms */}
+        {album.albums.discogs_id && (
+          <DiscogsAttribution releaseId={album.albums.discogs_id} />
         )}
       </ScrollView>
 
@@ -3772,5 +3783,35 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
+  },
+  // Estilos para card unificado de mercado
+  unifiedMarketCard: {
+    backgroundColor: 'white',
+    marginHorizontal: 10,
+    marginTop: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  marketValueSection: {
+    padding: 20,
+  },
+  marketCardDivider: {
+    height: 1,
+    backgroundColor: '#e9ecef',
+    marginHorizontal: 20,
+  },
+  ratioSection: {
+    padding: 20,
+    borderRadius: 0,
   },
 }); 
