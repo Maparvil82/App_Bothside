@@ -90,6 +90,10 @@ export default function AlbumDetailScreen() {
   const { colors } = useTheme();
   const { mode } = useThemeMode();
   const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
+
+  // Color constante para botones y tags
+  const LIGHT_BG_COLOR = '#f1f1f1ff';
+
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1135,12 +1139,12 @@ export default function AlbumDetailScreen() {
           {(mergedGenres.length > 0 || mergedStyles.length > 0) && (
             <View style={styles.stylesContainer}>
               {mergedGenres.map((genre: string, index: number) => (
-                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: '#f1f1f1ff' }]}>
+                <View key={`g-${index}`} style={[styles.styleTag, { backgroundColor: LIGHT_BG_COLOR }]}>
                   <Text style={[styles.styleText, { color: colors.text }]}>{genre}</Text>
                 </View>
               ))}
               {mergedStyles.map((style: string, index: number) => (
-                <View key={`s-${index}`} style={[styles.styleTag, { backgroundColor: '#f1f1f1ff' }]}>
+                <View key={`s-${index}`} style={[styles.styleTag, { backgroundColor: LIGHT_BG_COLOR }]}>
                   <Text style={[styles.styleText, { color: colors.text }]}>{style}</Text>
                 </View>
               ))}
@@ -1169,7 +1173,7 @@ export default function AlbumDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: '#f1f1f1ff' },
+                { backgroundColor: LIGHT_BG_COLOR },
                 isGem(album.albums.id) && styles.actionButtonActive
               ]}
               onPress={handleToggleGem}
@@ -1190,7 +1194,7 @@ export default function AlbumDetailScreen() {
 
             {/* Botón Lista */}
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: '#f1f1f1ff' }]}
+              style={[styles.actionButton, { backgroundColor: LIGHT_BG_COLOR }]}
               onPress={() => setShowListsModal(true)}
             >
               <Ionicons name="cube-outline" size={20} color={colors.text} />
@@ -1207,7 +1211,7 @@ export default function AlbumDetailScreen() {
             {album.user_list_items.map((item, index) => (
               <TouchableOpacity
                 key={index}
-                style={[styles.listItemContainer, { backgroundColor: '#f1f1f1ff', borderColor: '#f1f1f1ff' }]}
+                style={[styles.listItemContainer, { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }]}
                 onPress={() => {
                   console.log('🔍 AlbumDetailScreen: Navigating to ViewList with:', {
                     listId: item.id,
@@ -1434,7 +1438,7 @@ export default function AlbumDetailScreen() {
                 key={shelf.id}
                 style={[
                   styles.shelfSelectItem,
-                  { backgroundColor: '#f1f1f1ff', borderColor: '#f1f1f1ff' }
+                  { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
                 ]}
                 onPress={() => (navigation as any).navigate('SelectCell', {
                   user_collection_id: album.id,
@@ -1472,7 +1476,7 @@ export default function AlbumDetailScreen() {
                   style={[
                     styles.typeFormQuestionItem,
                     hasAnswer && styles.typeFormQuestionItemAnswered,
-                    { backgroundColor: '#f1f1f1ff', borderColor: '#f1f1f1ff' }
+                    { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
                   ]}
                   onPress={() => {
                     // Cargar respuesta existente si la hay
@@ -2690,7 +2694,7 @@ const styles = StyleSheet.create({
   },
   seeMoreButton: {
     flexDirection: 'row',
-    backgroundColor: '#f1f1f1ff',
+    backgroundColor: '#f1f1f1f1',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 16,
