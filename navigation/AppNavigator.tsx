@@ -450,6 +450,14 @@ const AppNavigator = () => {
                       }}
                     />
                   )}
+                  <Stack.Screen
+                    name="SelectCell"
+                    component={SelectCellScreen}
+                    options={{
+                      headerShown: true,
+                      header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} showCalendarIcon={false} />
+                    }}
+                  />
                 </>
               ) : (
                 // Usuario no autenticado - Pantallas de autenticación

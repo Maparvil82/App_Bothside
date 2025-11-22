@@ -1148,7 +1148,7 @@ export default function AlbumDetailScreen() {
           )}
 
           {/* Tags de Gem y Audio Note */}
-          <View style={styles.tagsContainer}>
+          {/* <View style={styles.tagsContainer}>
             {album.is_gem && (
               <View style={[styles.gemTag, { backgroundColor: colors.border }]}>
                 <Ionicons name="diamond" size={16} color="#d97706" />
@@ -1161,8 +1161,7 @@ export default function AlbumDetailScreen() {
                 <Text style={[styles.audioTagText, { color: colors.text }]}>Audio</Text>
               </View>
             )}
-            {/* Sticker QR eliminado */}
-          </View>
+          </View>*/}
 
           {/* Botones de Acción */}
           <View style={styles.actionButtonsContainer}>
@@ -1435,7 +1434,7 @@ export default function AlbumDetailScreen() {
                 key={shelf.id}
                 style={[
                   styles.shelfSelectItem,
-                  { backgroundColor: colors.border, borderColor: colors.border }
+                  { backgroundColor: '#f1f1f1ff', borderColor: '#f1f1f1ff' }
                 ]}
                 onPress={() => (navigation as any).navigate('SelectCell', {
                   user_collection_id: album.id,
@@ -2049,7 +2048,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     marginTop: 8,
     borderRadius: 4,
-    backgroundColor: '#f1f1f1f1',
+    backgroundColor: '#f0f9ff',
 
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -2077,6 +2076,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
+    backgroundColor: '#f0f9ff',
   },
   recordAudioButtonText: {
     fontSize: 15,
