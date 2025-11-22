@@ -1093,13 +1093,13 @@ export default function AlbumDetailScreen() {
                     >
                       <View style={styles.ratioCardHeader}>
                         <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
-                        <View style={styles.ratioCardIcon}>
-                          <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
-                        </View>
                       </View>
-                      <Text style={styles.ratioCardAmount}>
-                        {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
-                      </Text>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                        <Text style={styles.ratioCardAmount}>
+                          {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
+                        </Text>
+                        <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" style={{ marginLeft: 6 }} />
+                      </View>
                       <Text style={styles.ratioCardLevel}>{level}</Text>
                     </TouchableOpacity>
                   );
