@@ -1402,11 +1402,11 @@ export default function AlbumDetailScreen() {
                 </View>
               </View>
               <TouchableOpacity
-                style={[styles.recordAudioButton, { backgroundColor: colors.border, borderColor: colors.border }]}
+                style={[styles.recordAudioButton]}
                 onPress={() => handleRecordAudio()}
               >
-                <Ionicons name="mic" size={24} color={colors.primary} />
-                <Text style={[styles.recordAudioButtonText, { color: colors.primary }]}>Grabar nota de audio</Text>
+                <Ionicons name="mic" size={24} />
+                <Text style={[styles.recordAudioButtonText]}>Grabar nota de audio</Text>
               </TouchableOpacity>
             </>
           )}
@@ -2075,13 +2075,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 18,
     marginTop: 8,
     borderRadius: 12,
-    borderWidth: 1.5,
+
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
-    backgroundColor: '#f0f9ff',
+    backgroundColor: '#f0efefff',
   },
   recordAudioButtonText: {
     fontSize: 15,
