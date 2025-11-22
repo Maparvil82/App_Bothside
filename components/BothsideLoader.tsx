@@ -1,116 +1,57 @@
-import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Image, Dimensions } from 'react-native';
+import React, { useEffect, useRef } from "react";
+import { View, Text, Animated, StyleSheet, Image } from "react-native";
 
-const { width, height } = Dimensions.get('window');
-
-interface BothsideLoaderProps {
-    size?: 'small' | 'large' | number;
-    fullscreen?: boolean;
-    backgroundColor?: string;
-}
-
-export const BothsideLoader = ({
-    size = 'large',
-    fullscreen = true,
-    backgroundColor = '#ffffffff'
-}: BothsideLoaderProps) => {
+export const BothsideLoader = () => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
-    const opacityAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        const pulse = Animated.loop(
+        Animated.loop(
             Animated.sequence([
-                Animated.parallel([
-                    Animated.timing(scaleAnim, {
-                        toValue: 0.6,
-                        duration: 1000,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(opacityAnim, {
-                        toValue: 0.6,
-                        duration: 1000,
-                        useNativeDriver: true,
-                    }),
-                ]),
-                Animated.parallel([
-                    Animated.timing(scaleAnim, {
-                        toValue: 0.4,
-                        duration: 1000,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(opacityAnim, {
-                        toValue: 0.4,
-                        duration: 1000,
-                        useNativeDriver: true,
-                    }),
-                ]),
+                Animated.timing(scaleAnim, {
+                    toValue: 1.15,
+                    duration: 600,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scaleAnim, {
+                    toValue: 1,
+                    duration: 600,
+                    useNativeDriver: true,
+                }),
             ])
-        );
-
-        pulse.start();
-
-        return () => pulse.stop();
-    }, [scaleAnim, opacityAnim]);
-
-    const getImageSize = () => {
-        if (typeof size === 'number') return size;
-        return size === 'small' ? 40 : 120;
-    };
-
-    const imageSize = getImageSize();
-
-    const containerStyle = fullscreen ? [
-        styles.fullscreenContainer,
-        { backgroundColor }
-    ] : [
-        styles.inlineContainer,
-        { backgroundColor: backgroundColor === '#fcfcfcff' ? 'transparent' : backgroundColor }
-    ];
+        ).start();
+    }, []);
 
     return (
-        <View style={containerStyle}>
-            <Animated.View
-                style={[
-                    styles.imageContainer,
-                    {
-                        width: imageSize,
-                        height: imageSize,
-                        transform: [{ scale: scaleAnim }],
-                        opacity: opacityAnim,
-                    },
-                ]}
-            >
+        <View style={styles.container}>
+            <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <Image
-                    source={require('../assets/logo-bothside.png')}
-                    style={styles.image}
+                    source={require("../assets/logo-bothside.png")} // ← tu logo negro
+                    style={styles.logo}
                     resizeMode="contain"
                 />
             </Animated.View>
+
+            <Text style={styles.loadingText}>Cargando datos...</Text>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    fullscreenContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: width,
-        height: height,
-        justifyContent: 'center',
-        alignItems: 'center',
-        zIndex: 9999,
+    container: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#fff", // fondo blanco limpio
     },
-    inlineContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
+    logo: {
+        width: 70,
+        height: 70,
+        tintColor: "#000", // asegura que es negro
     },
-    imageContainer: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    image: {
-        width: '100%',
-        height: '100%',
+    loadingText: {
+        marginTop: 16,
+        fontSize: 14,
+        color: "#000",
+        opacity: 0.7,
     },
 });

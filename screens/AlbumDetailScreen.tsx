@@ -1286,7 +1286,7 @@ export default function AlbumDetailScreen() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Ediciones en Vinilo</Text>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
-              <BothsideLoader size="small" fullscreen={false} />
+              <BothsideLoader />
               <Text style={[styles.loadingText, { color: colors.text }]}>Cargando ediciones...</Text>
             </View>
           ) : editions.length > 0 ? (
