@@ -321,9 +321,14 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             </View>
           )}
         </View>
-        <TouchableOpacity onPress={handleEditList} style={styles.editButton}>
-          <Ionicons name="create-outline" size={24} color="#007AFF" />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={handleAddAlbum} style={styles.addHeaderButton}>
+            <Ionicons name="add" size={24} color="#007AFF" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleEditList} style={styles.editButton}>
+            <Ionicons name="create-outline" size={24} color="#007AFF" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {list.description && (
@@ -332,13 +337,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         </View>
       )}
 
-      <View style={styles.albumsHeader}>
-        <Text style={styles.albumsTitle}>Álbumes en la Maleta</Text>
-        <TouchableOpacity onPress={handleAddAlbum} style={styles.addAlbumButton}>
-          <Ionicons name="add" size={20} color="#007AFF" />
-          <Text style={styles.addAlbumButtonText}>Añadir</Text>
-        </TouchableOpacity>
-      </View>
+
 
       <SwipeListView
         data={albums}
@@ -536,6 +535,14 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#2E7D32',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  addHeaderButton: {
+    padding: 8,
   },
   editButton: {
     padding: 8,
