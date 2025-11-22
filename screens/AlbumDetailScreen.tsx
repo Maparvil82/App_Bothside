@@ -1058,6 +1058,7 @@ export default function AlbumDetailScreen() {
         {/* Sección Unificada: Valor de Mercado y Ratio de Venta */}
         {(album.albums.album_stats?.avg_price || (album.albums.album_stats?.want && album.albums.album_stats?.have)) && (
           <View style={[styles.unifiedMarketCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+
             {/* Valor de Mercado */}
             {album.albums.album_stats?.avg_price && (
               <View style={styles.marketValueSection}>
@@ -2482,7 +2483,7 @@ const styles = StyleSheet.create({
     width: '100%',
     height: width * 1, // Altura proporcional al ancho de la pantalla
     backgroundColor: '#f8fafc',
-    marginBottom: 10,
+    marginBottom: 0,
     overflow: 'hidden',
   },
   fullCoverImage: {
@@ -3797,10 +3798,11 @@ const styles = StyleSheet.create({
   // Estilos para card unificado de mercado
   unifiedMarketCard: {
     backgroundColor: 'white',
-    marginHorizontal: 10,
-    marginTop: 10,
-    borderRadius: 12,
-    borderWidth: 1,
+    marginHorizontal: 0,
+    marginTop: 0,
+    borderRadius: 0,
+    borderWidth: 0,
+    borderBottomWidth: 1,
     borderColor: '#e9ecef',
     overflow: 'hidden',
     shadowColor: '#000',
@@ -3814,6 +3816,7 @@ const styles = StyleSheet.create({
   },
   marketValueSection: {
     padding: 20,
+    alignItems: 'center',
   },
   marketCardDivider: {
     height: 1,
@@ -3823,5 +3826,6 @@ const styles = StyleSheet.create({
   ratioSection: {
     padding: 20,
     borderRadius: 0,
+    alignItems: 'center',
   },
 }); 
