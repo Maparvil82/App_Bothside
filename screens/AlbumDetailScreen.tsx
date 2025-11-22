@@ -1058,59 +1058,54 @@ export default function AlbumDetailScreen() {
         {/* Sección Unificada: Valor de Mercado y Ratio de Venta */}
         {(album.albums.album_stats?.avg_price || (album.albums.album_stats?.want && album.albums.album_stats?.have)) && (
           <View style={[styles.unifiedMarketCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.marketRowContainer}>
+              {/* Valor de Mercado */}
+              {album.albums.album_stats?.avg_price && (
+                <View style={styles.marketValueSection}>
+                  <Text style={[styles.valueCardTitle, { color: colors.text }]}>Valor de mercado</Text>
+                  <Text style={[styles.valueCardAmount, { color: colors.primary }]}>
+                    ${album.albums.album_stats.avg_price.toFixed(2)}
+                  </Text>
+                  <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>Precio promedio</Text>
+                </View>
+              )}
 
-            {/* Valor de Mercado */}
-            {album.albums.album_stats?.avg_price && (
-              <View style={styles.marketValueSection}>
-                <Text style={[styles.valueCardTitle, { color: colors.text }]}>Valor de mercado</Text>
-                <Text style={[styles.valueCardAmount, { color: colors.primary }]}>
-                  ${album.albums.album_stats.avg_price.toFixed(2)}
-                </Text>
-                <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>Precio promedio en el mercado basado en Discogs</Text>
-              </View>
-            )}
+              {/* Divisor vertical si ambos están presentes */}
+              {album.albums.album_stats?.avg_price && album.albums.album_stats?.want && album.albums.album_stats?.have && (
+                <View style={[styles.marketCardVerticalDivider, { backgroundColor: colors.border }]} />
+              )}
 
-            {/* Separador si ambos están presentes */}
-            {album.albums.album_stats?.avg_price && album.albums.album_stats?.want && album.albums.album_stats?.have && (
-              <View style={[styles.marketCardDivider, { backgroundColor: colors.border }]} />
-            )}
-
-            {/* Ratio de Venta */}
-            {album.albums.album_stats?.want && album.albums.album_stats?.have && (
-              (() => {
-                const { ratio, level, color } = calculateSalesRatio(
-                  album.albums.album_stats.want,
-                  album.albums.album_stats.have
-                );
-                return (
-                  <TouchableOpacity
-                    style={[styles.ratioSection, { backgroundColor: color }]}
-                    onPress={() => {
-                      setCurrentRatioData({ ratio, level, color });
-                      setShowRatioModal(true);
-                    }}
-                    activeOpacity={0.8}
-                  >
-                    <View style={styles.ratioCardHeader}>
-                      <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
-                      <View style={styles.ratioCardIcon}>
-                        <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
+              {/* Ratio de Venta */}
+              {album.albums.album_stats?.want && album.albums.album_stats?.have && (
+                (() => {
+                  const { ratio, level, color } = calculateSalesRatio(
+                    album.albums.album_stats.want,
+                    album.albums.album_stats.have
+                  );
+                  return (
+                    <TouchableOpacity
+                      style={[styles.ratioSection, { backgroundColor: color }]}
+                      onPress={() => {
+                        setCurrentRatioData({ ratio, level, color });
+                        setShowRatioModal(true);
+                      }}
+                      activeOpacity={0.8}
+                    >
+                      <View style={styles.ratioCardHeader}>
+                        <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
+                        <View style={styles.ratioCardIcon}>
+                          <Ionicons name="information-circle" size={20} color="rgba(255, 255, 255, 0.8)" />
+                        </View>
                       </View>
-                    </View>
-                    <Text style={styles.ratioCardAmount}>
-                      {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
-                    </Text>
-                    <Text style={styles.ratioCardLevel}>{level}</Text>
-                    <Text style={styles.ratioCardSubtitle}>
-                      {ratio > 0
-                        ? `${album.albums.album_stats.want.toLocaleString()} quieren / ${album.albums.album_stats.have.toLocaleString()} tienen`
-                        : 'Demanda vs. oferta en Discogs'
-                      }
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })()
-            )}
+                      <Text style={styles.ratioCardAmount}>
+                        {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
+                      </Text>
+                      <Text style={styles.ratioCardLevel}>{level}</Text>
+                    </TouchableOpacity>
+                  );
+                })()
+              )}
+            </View>
           </View>
         )}
 
@@ -3814,9 +3809,19 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
+  marketRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'stretch',
+  },
   marketValueSection: {
+    flex: 1,
     padding: 20,
     alignItems: 'center',
+    justifyContent: 'center',
+  },
+  marketCardVerticalDivider: {
+    width: 1,
+    backgroundColor: '#e9ecef',
   },
   marketCardDivider: {
     height: 1,
