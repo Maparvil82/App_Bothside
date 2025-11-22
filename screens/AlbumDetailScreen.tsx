@@ -1194,12 +1194,60 @@ export default function AlbumDetailScreen() {
             </TouchableOpacity>
 
             {/* Botón Lista */}
+            {/* Botón Lista */}
             <TouchableOpacity
-              style={[styles.actionButton, { backgroundColor: LIGHT_BG_COLOR }]}
-              onPress={() => setShowListsModal(true)}
+              style={[
+                styles.actionButton,
+                { backgroundColor: (album.user_list_items && album.user_list_items.length > 0) ? '#e0f2fe' : LIGHT_BG_COLOR },
+                (album.user_list_items && album.user_list_items.length > 0) && { borderColor: '#0284c7', borderWidth: 1 }
+              ]}
+              onPress={async () => {
+                if (album.user_list_items && album.user_list_items.length > 0) {
+                  // Si ya está en listas, quitar de todas
+                  try {
+                    // Mostrar alerta de confirmación
+                    Alert.alert(
+                      "Quitar de Maleta",
+                      "¿Quieres eliminar este álbum de tus maletas?",
+                      [
+                        { text: "Cancelar", style: "cancel" },
+                        {
+                          text: "Eliminar",
+                          style: "destructive",
+                          onPress: async () => {
+                            // Eliminar de todas las listas
+                            if (album.user_list_items) {
+                              for (const item of album.user_list_items) {
+                                await UserMaletaService.removeAlbumFromMaleta(item.id, album.albums.id);
+                              }
+                              // Recargar datos
+                              loadAlbumDetail();
+                            }
+                          }
+                        }
+                      ]
+                    );
+                  } catch (error) {
+                    console.error("Error removing from maletas:", error);
+                    Alert.alert("Error", "No se pudo quitar el álbum de las maletas");
+                  }
+                } else {
+                  // Si no está, abrir modal
+                  setShowListsModal(true);
+                }
+              }}
             >
-              <Ionicons name="cube-outline" size={20} color={colors.text} />
-              <Text style={[styles.actionButtonText, { color: colors.text }]}>Añadir a Maleta</Text>
+              <Ionicons
+                name={(album.user_list_items && album.user_list_items.length > 0) ? "cube" : "cube-outline"}
+                size={20}
+                color={(album.user_list_items && album.user_list_items.length > 0) ? '#0284c7' : colors.text}
+              />
+              <Text style={[
+                styles.actionButtonText,
+                { color: (album.user_list_items && album.user_list_items.length > 0) ? '#0284c7' : colors.text }
+              ]}>
+                {(album.user_list_items && album.user_list_items.length > 0) ? 'En tu Maleta' : 'Añadir a Maleta'}
+              </Text>
             </TouchableOpacity>
           </View>
 
