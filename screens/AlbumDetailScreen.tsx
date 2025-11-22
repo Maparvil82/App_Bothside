@@ -1017,10 +1017,15 @@ export default function AlbumDetailScreen() {
     );
   }
 
-  const stylesList = album.albums.album_styles?.map(as => as.styles?.name).filter(Boolean) || [];
-  const genresList = (album as any)?.albums?.album_genres?.map((ag: any) => ag.genres?.name).filter(Boolean) || [];
-  const mergedGenres = genresList.length > 0 ? genresList : fallbackGenres;
-  const mergedStyles = stylesList.length > 0 ? stylesList : fallbackStyles;
+  const stylesList = (album.albums.album_styles?.map(as => as.styles?.name).filter(Boolean) || []) as string[];
+  const genresList = ((album as any)?.albums?.album_genres?.map((ag: any) => ag.genres?.name).filter(Boolean) || []) as string[];
+
+  // Eliminar duplicados usando Set
+  const uniqueGenres: string[] = [...new Set(genresList)];
+  const uniqueStyles: string[] = [...new Set(stylesList)];
+
+  const mergedGenres = uniqueGenres.length > 0 ? uniqueGenres : fallbackGenres;
+  const mergedStyles = uniqueStyles.length > 0 ? uniqueStyles : fallbackStyles;
 
   const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
 
@@ -1110,7 +1115,7 @@ export default function AlbumDetailScreen() {
 
         {/* Información principal del álbum */}
         <View style={[styles.albumInfoSection, { backgroundColor: colors.card }]}>
-          <Text style={[styles.albumTitle, { color: colors.text }]}>{album.albums.title}</Text>
+          <Text style={[styles.albumTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{album.albums.title}</Text>
           <Text style={[styles.artist, { color: colors.text }]}>{album.albums.artist}</Text>
           <View style={styles.labelYearContainer}>
             <Text style={[styles.label, { color: colors.text }]}>{album.albums.label}</Text>
@@ -2459,7 +2464,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginTop: 8,
+    marginTop: 12,
+    marginBottom: 12,
   },
   styleTag: {
     backgroundColor: '#f0f9ff',
