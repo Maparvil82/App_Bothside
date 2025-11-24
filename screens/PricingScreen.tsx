@@ -7,6 +7,7 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -112,9 +113,20 @@ export const PricingScreen: React.FC = () => {
     Alert.alert('Restaurar Compras', 'Buscando suscripciones activas...');
   };
 
+  const handleLogin = () => {
+    navigation.navigate('Login');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+
+        {/* Logo */}
+        <Image
+          source={require('../assets/logo-bothside.png')}
+          style={styles.logo}
+        />
+
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Empieza tu prueba gratuita de 7 días</Text>
@@ -193,6 +205,11 @@ export const PricingScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
 
+        {/* Login Link */}
+        <TouchableOpacity style={styles.loginLink} onPress={handleLogin}>
+          <Text style={styles.loginLinkText}>Ya tengo una cuenta</Text>
+        </TouchableOpacity>
+
         {/* Footer Links */}
         <View style={styles.footerLinks}>
           <TouchableOpacity onPress={handleRestore}>
@@ -222,10 +239,19 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingBottom: 40,
   },
+  logo: {
+    height: 40,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+    marginBottom: 20,
+    marginTop: 10,
+    tintColor: '#000',
+    backgroundColor: '#fff',
+  },
   header: {
     alignItems: 'center',
     marginBottom: 24,
-    marginTop: 10,
+    marginTop: 0,
   },
   title: {
     fontSize: 26,
@@ -394,6 +420,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '700',
+  },
+  loginLink: {
+    alignSelf: 'center',
+    paddingVertical: 12,
+    marginBottom: 20,
+  },
+  loginLinkText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '600',
   },
   footerLinks: {
     flexDirection: 'row',
