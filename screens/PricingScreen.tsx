@@ -7,7 +7,6 @@ import {
   SafeAreaView,
   ScrollView,
   Alert,
-  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -19,45 +18,43 @@ interface PricingPlan {
   period: string;
   originalPrice?: string;
   savings?: string;
-  features: string[];
   popular?: boolean;
-  productId: string; // StoreKit product identifier
+  productId: string;
 }
 
-const pricingPlans: PricingPlan[] = [
-  {
-    id: 'monthly',
-    title: 'Mensual',
-    price: '4.99',
-    period: 'mes',
-    productId: 'bothside_monthly_subscription',
-    features: [
-      'Acceso completo a tu colección',
-      'Organización física de discos',
-      'Análisis de estadísticas',
-      'IA personalizada',
-      'Funciones avanzadas por cámara y voz',
+const commonFeatures = [
+  'Escaneo inteligente de portadas con IA',
+  'Assistant musical y de colección',
+  'Panel profesional: sesiones, ganancias, estadísticas',
+  'Organización completa de tu colección de vinilos',
+  'IA por cámara y voz',
+  '500 créditos IA mensuales',
+  'Cancela cuando quieras',
+];
 
-    ],
-  },
+const pricingPlans: PricingPlan[] = [
   {
     id: 'annual',
     title: 'Anual',
     price: '39.99',
     period: 'año',
     originalPrice: '59.88',
-    savings: 'Ahorras 33%',
+    savings: 'Ahorra 33%',
     productId: 'bothside_annual_subscription',
-    features: [
-      'Todo lo del plan mensual pero con un ahorro',
-    ],
     popular: true,
+  },
+  {
+    id: 'monthly',
+    title: 'Mensual',
+    price: '7.99',
+    period: 'mes',
+    productId: 'bothside_monthly_subscription',
   },
 ];
 
 export const PricingScreen: React.FC = () => {
-  const [selectedPlan, setSelectedPlan] = useState<string>('annual');
-  const [includeTrial, setIncludeTrial] = useState<boolean>(false);
+  // Monthly selected by default
+  const [selectedPlan, setSelectedPlan] = useState<string>('monthly');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
 
@@ -66,14 +63,11 @@ export const PricingScreen: React.FC = () => {
     if (!plan) return;
 
     setIsLoading(true);
-    
+
     try {
-      const trialText = includeTrial ? ' con 7 días de prueba gratuita' : '';
-      
-      // Durante desarrollo, permitir continuar directamente
       Alert.alert(
         'Modo Desarrollo',
-        `Plan seleccionado: ${plan.title}${trialText}\n\nEn desarrollo: Continuar al registro\nEn producción: Redirigir a App Store`,
+        `Plan seleccionado: ${plan.title} con 7 días de prueba gratuita\n\nEn desarrollo: Continuar al registro\nEn producción: Redirigir a App Store`,
         [
           {
             text: 'Cancelar',
@@ -82,14 +76,12 @@ export const PricingScreen: React.FC = () => {
           {
             text: 'Continuar al registro',
             onPress: () => {
-              // En desarrollo: ir directamente al login con modo registro
               navigation.navigate('Login', { isSignUp: true });
             },
           },
           {
             text: 'Simular App Store',
             onPress: () => {
-              // Simular redirección a App Store
               Alert.alert(
                 'Redirección a App Store',
                 'En producción, aquí se abriría la App Store para descargar la versión completa.',
@@ -116,17 +108,29 @@ export const PricingScreen: React.FC = () => {
     }
   };
 
-  const handleSkip = () => {
-    navigation.navigate('Login');
+  const handleRestore = () => {
+    Alert.alert('Restaurar Compras', 'Buscando suscripciones activas...');
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          
-          
+          <Text style={styles.title}>Empieza tu prueba gratuita de 7 días</Text>
+          <Text style={styles.subtitle}>
+            Organiza tus sesiones como DJ y tu colección de vinilos como un profesional.
+          </Text>
+        </View>
+
+        {/* Features Block */}
+        <View style={styles.featuresBlock}>
+          {commonFeatures.map((feature, index) => (
+            <View key={index} style={styles.featureRow}>
+              <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+              <Text style={styles.featureText}>{feature}</Text>
+            </View>
+          ))}
         </View>
 
         {/* Plans */}
@@ -137,8 +141,10 @@ export const PricingScreen: React.FC = () => {
               style={[
                 styles.planCard,
                 selectedPlan === plan.id && styles.selectedPlan,
+                plan.popular && styles.popularPlanCard,
               ]}
               onPress={() => setSelectedPlan(plan.id)}
+              activeOpacity={0.9}
             >
               {plan.popular && (
                 <View style={styles.popularBadge}>
@@ -146,80 +152,62 @@ export const PricingScreen: React.FC = () => {
                 </View>
               )}
 
-              <View style={styles.planHeader}>
-                <Text style={styles.planTitle}>{plan.title}</Text>
-                <View style={styles.priceContainer}>
-                  <Text style={styles.currency}>€</Text>
-                  <Text style={styles.price}>{plan.price}</Text>
-                  <Text style={styles.period}>/{plan.period}</Text>
-                </View>
-                {plan.originalPrice && (
-                  <View style={styles.savingsContainer}>
-                    <Text style={styles.originalPrice}>€{plan.originalPrice}</Text>
-                    <Text style={styles.savings}>{plan.savings}</Text>
+              <View style={styles.cardContent}>
+                <View style={styles.cardLeft}>
+                  <View style={[styles.radioButton, selectedPlan === plan.id && styles.radioButtonSelected]}>
+                    {selectedPlan === plan.id && <View style={styles.radioButtonInner} />}
                   </View>
-                )}
-              </View>
-
-              <View style={styles.featuresContainer}>
-                {plan.features.map((feature, index) => (
-                  <View key={index} style={styles.featureRow}>
-                    <Ionicons name="checkmark-circle" size={20} color="#28a745" />
-                    <Text style={styles.featureText}>{feature}</Text>
+                  <View>
+                    <Text style={styles.planTitle}>{plan.title}</Text>
+                    <View style={styles.priceRow}>
+                      <Text style={styles.price}>{plan.price} €</Text>
+                      <Text style={styles.period}>/{plan.period}</Text>
+                    </View>
+                    {plan.savings && (
+                      <Text style={styles.savingsText}>{plan.savings}</Text>
+                    )}
                   </View>
-                ))}
-              </View>
-
-              {selectedPlan === plan.id && (
-                <View style={styles.selectedIndicator}>
-                  <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
                 </View>
-              )}
+              </View>
             </TouchableOpacity>
           ))}
         </View>
 
-        {/* Trial Toggle */}
-        <View style={styles.trialContainer}>
-          <TouchableOpacity
-            style={styles.trialToggle}
-            onPress={() => setIncludeTrial(!includeTrial)}
-          >
-            <View style={[styles.toggleSwitch, includeTrial && styles.toggleActive]}>
-              <View style={[styles.toggleThumb, includeTrial && styles.toggleThumbActive]} />
-            </View>
-            <View style={styles.trialTextContainer}>
-              <Text style={styles.trialTitle}>Prueba gratuita de 7 días</Text>
-              <Text style={styles.trialSubtitle}>
-                Prueba todas las funciones sin compromiso, cancela cuando quieras
-              </Text>
-            </View>
+        {/* Trial Active Block */}
+        <View style={styles.trialBlock}>
+          <Ionicons name="checkmark-circle" size={24} color="#28a745" />
+          <View style={styles.trialBlockText}>
+            <Text style={styles.trialBlockTitle}>Prueba gratuita de 7 días activa</Text>
+            <Text style={styles.trialBlockSubtitle}>No pagarás nada hoy. Cancela cuando quieras.</Text>
+          </View>
+        </View>
+
+        {/* CTA */}
+        <TouchableOpacity
+          style={[styles.subscribeButton, isLoading && styles.subscribeButtonDisabled]}
+          onPress={handleSubscribe}
+          disabled={isLoading}
+        >
+          <Text style={styles.subscribeButtonText}>
+            {isLoading ? 'Cargando...' : 'Empezar prueba gratuita de 7 días'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Footer Links */}
+        <View style={styles.footerLinks}>
+          <TouchableOpacity onPress={handleRestore}>
+            <Text style={styles.footerLinkText}>Restaurar compras</Text>
+          </TouchableOpacity>
+          <Text style={styles.footerSeparator}>•</Text>
+          <TouchableOpacity>
+            <Text style={styles.footerLinkText}>Términos de Servicio</Text>
+          </TouchableOpacity>
+          <Text style={styles.footerSeparator}>•</Text>
+          <TouchableOpacity>
+            <Text style={styles.footerLinkText}>Política de Privacidad</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Action Buttons */}
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={[styles.subscribeButton, isLoading && styles.subscribeButtonDisabled]} 
-            onPress={handleSubscribe}
-            disabled={isLoading}
-          >
-            <Text style={styles.subscribeButtonText}>
-              {isLoading ? 'Cargando...' : 'Continuar al registro'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
-            <Text style={styles.skipButtonText}>Ya tengo una cuenta</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Terms */}
-        <Text style={styles.termsText}>
-          Al suscribirte, aceptas nuestros{' '}
-          <Text style={styles.termsLink}>Términos de Servicio</Text> y{' '}
-          <Text style={styles.termsLink}>Política de Privacidad</Text>
-        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -228,198 +216,200 @@ export const PricingScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#fff',
   },
   scrollContent: {
-    padding: 20,
+    padding: 24,
+    paddingBottom: 40,
   },
   header: {
     alignItems: 'center',
-    marginBottom: 30,
+    marginBottom: 24,
+    marginTop: 10,
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    marginBottom: 12,
+    lineHeight: 32,
   },
   subtitle: {
     fontSize: 16,
     color: '#666',
-    textAlign: 'left',
+    textAlign: 'center',
     lineHeight: 24,
-    fontWeight: '600',
+    paddingHorizontal: 10,
+  },
+  featuresBlock: {
+    marginBottom: 30,
+    paddingHorizontal: 10,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  featureText: {
+    fontSize: 15,
+    color: '#333',
+    marginLeft: 10,
+    lineHeight: 20,
+    flex: 1,
   },
   plansContainer: {
-    marginBottom: 30,
+    marginBottom: 24,
   },
   planCard: {
     backgroundColor: '#fff',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
-    borderWidth: 2,
-    borderColor: '#e9ecef',
+    borderWidth: 1.5,
+    borderColor: '#e5e5e5',
     position: 'relative',
+    height: 100, // Fixed height for consistency
+    justifyContent: 'center',
   },
   selectedPlan: {
     borderColor: '#007AFF',
     backgroundColor: '#f8f9ff',
+    borderWidth: 2,
+  },
+  popularPlanCard: {
+    // Extra styling for popular if needed
   },
   popularBadge: {
     position: 'absolute',
     top: -12,
-    left: 20,
+    right: 20,
     backgroundColor: '#007AFF',
     paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    zIndex: 10,
   },
   popularText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
-  planHeader: {
-    marginBottom: 20,
-  },
-  planTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 8,
-  },
-  priceContainer: {
+  cardContent: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  currency: {
-    fontSize: 18,
-    color: '#333',
-    fontWeight: '600',
-  },
-  price: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  period: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 4,
-  },
-  savingsContainer: {
+  cardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  originalPrice: {
-    fontSize: 14,
-    color: '#999',
-    textDecorationLine: 'line-through',
-    marginRight: 8,
+  radioButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#ccc',
+    marginRight: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  savings: {
+  radioButtonSelected: {
+    borderColor: '#007AFF',
+  },
+  radioButtonInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#007AFF',
+  },
+  planTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  price: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#1a1a1a',
+  },
+  period: {
+    fontSize: 14,
+    color: '#666',
+    marginLeft: 2,
+  },
+  savingsText: {
     fontSize: 14,
     color: '#28a745',
     fontWeight: '600',
+    marginTop: 2,
   },
-  featuresContainer: {
-    marginBottom: 16,
-  },
-  featureRow: {
+  trialBlock: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  featureText: {
-    fontSize: 14,
-    color: '#333',
-    marginLeft: 8,
-    flex: 1,
-  },
-  selectedIndicator: {
-    position: 'absolute',
-    top: 20,
-    right: 20,
-  },
-  trialContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
+    backgroundColor: '#f0f9f4',
     padding: 16,
-    marginBottom: 30,
-  },
-  trialToggle: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  toggleSwitch: {
-    width: 44,
-    height: 24,
-    backgroundColor: '#e9ecef',
     borderRadius: 12,
-    padding: 2,
-    marginRight: 12,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#d1e7dd',
   },
-  toggleActive: {
-    backgroundColor: '#007AFF',
-  },
-  toggleThumb: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-  },
-  toggleThumbActive: {
-    transform: [{ translateX: 20 }],
-  },
-  trialTextContainer: {
+  trialBlockText: {
+    marginLeft: 12,
     flex: 1,
   },
-  trialTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+  trialBlockTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#155724',
     marginBottom: 2,
   },
-  trialSubtitle: {
-    fontSize: 14,
-    color: '#666',
-  },
-  actionsContainer: {
-    marginBottom: 20,
+  trialBlockSubtitle: {
+    fontSize: 13,
+    color: '#155724',
   },
   subscribeButton: {
     backgroundColor: '#007AFF',
-    borderRadius: 12,
-    paddingVertical: 16,
+    borderRadius: 14,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 20,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   subscribeButtonDisabled: {
     backgroundColor: '#ccc',
+    shadowOpacity: 0,
   },
   subscribeButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 17,
+    fontWeight: '700',
   },
-  skipButton: {
-    paddingVertical: 12,
+  footerLinks: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
+    flexWrap: 'wrap',
   },
-  skipButtonText: {
-    color: '#666',
-    fontSize: 16,
-  },
-  termsText: {
+  footerLinkText: {
     fontSize: 12,
-    color: '#999',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  termsLink: {
-    color: '#007AFF',
+    color: '#888',
     textDecorationLine: 'underline',
   },
-}); 
+  footerSeparator: {
+    fontSize: 12,
+    color: '#ccc',
+    marginHorizontal: 8,
+  },
+});
