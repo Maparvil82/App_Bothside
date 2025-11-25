@@ -43,9 +43,9 @@ const onboardingSteps = [
     image: require('../assets/Gemini_Generated_Image_8jxpae8jxpae8jxp.png'),
     color: '#f39c12',
   },
-  
-  
-  
+
+
+
 ];
 
 export const OnboardingScreen: React.FC = () => {
@@ -87,8 +87,14 @@ export const OnboardingScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-     
 
+      {/* Logo Header */}
+      <View style={styles.logoContainer}>
+        <Image
+          source={require('../assets/logo-onboarding.png')}
+          style={styles.logo}
+        />
+      </View>
       {/* Main content */}
       <ScrollView
         ref={scrollViewRef}
@@ -178,22 +184,23 @@ const styles = StyleSheet.create({
   },
   slide: {
     width,
-    height: height - 200,
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   illustrationContainer: {
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 30,
     paddingHorizontal: 20,
   },
 
   image: {
-    marginTop: 40,
+
     width: width - 40,
-    height: height - 500,
+    height: height * 0.4,
     resizeMode: 'cover',
     borderRadius: 12,
   },
@@ -273,5 +280,16 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#007AFF',
     fontWeight: '500',
+  },
+  logoContainer: {
+    width: '100%',
+    alignItems: 'center',
+    marginTop: 20,
+
+  },
+  logo: {
+    width: 100,
+    height: 50,
+    resizeMode: 'contain',
   },
 }); 
