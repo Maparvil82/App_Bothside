@@ -30,8 +30,7 @@ export const IaSubscriptionScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                {/* Bloque superior — TÍTULO */}
-                <Text style={styles.title}>IA y Suscripción</Text>
+
 
                 {/* Bloque 1 — Estado del plan actual */}
                 <View style={styles.card}>
@@ -90,11 +89,12 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 40,
         alignItems: 'center',
+        marginTop: 40,
     },
     title: {
         fontSize: 26,
         fontWeight: '600',
-        marginTop: 40,
+        marginTop: 20,
         marginBottom: 30,
         color: '#000000',
         textAlign: 'center',

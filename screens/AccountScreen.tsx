@@ -19,7 +19,7 @@ import { supabase } from '../lib/supabase';
 import { IaSubscriptionScreen } from './IaSubscriptionScreen';
 
 export const AccountScreen: React.FC = () => {
-    const navigation = useNavigation();
+    const navigation = useNavigation<any>();
     const { colors } = useTheme();
     const { user, signOut } = useAuth();
 
@@ -187,7 +187,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdateProfile}
                                     disabled={saving}
                                 >
-                                    {saving ? <BothsideLoader size="small" fullscreen={false} /> : <Text style={styles.saveButtonText}>Guardar Cambios</Text>}
+                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>Guardar Cambios</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -212,7 +212,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdateEmail}
                                     disabled={saving}
                                 >
-                                    {saving ? <BothsideLoader size="small" fullscreen={false} /> : <Text style={styles.saveButtonText}>Actualizar Correo</Text>}
+                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>Actualizar Correo</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -242,7 +242,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdatePassword}
                                     disabled={saving}
                                 >
-                                    {saving ? <BothsideLoader size="small" fullscreen={false} /> : <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>}
+                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -315,8 +315,15 @@ export const AccountScreen: React.FC = () => {
                         {/* Sección: Zona de Peligro */}
                         <View style={[styles.section, { backgroundColor: colors.card, marginTop: 40 }]}>
 
-                            <TouchableOpacity onPress={() => navigation.navigate("IaSubscriptionScreen")}>
-                                <Text>IA y Suscripción</Text>
+                            <TouchableOpacity
+                                style={[styles.menuItem, { borderBottomColor: colors.border }]}
+                                onPress={() => navigation.navigate("IaSubscriptionScreen")}
+                            >
+                                <View style={styles.menuItemContent}>
+                                    <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
+                                    <Text style={[styles.menuItemText, { color: colors.text, marginLeft: 12 }]}>IA y Suscripción</Text>
+                                </View>
+                                <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
                             </TouchableOpacity>
 
                             <TouchableOpacity
