@@ -43,6 +43,13 @@ const onboardingSteps = [
     image: require('../assets/Gemini_Generated_Image_8jxpae8jxpae8jxp.png'),
     color: '#f39c12',
   },
+  {
+    id: 5,
+    title: 'Tu asistente DJ personal',
+    subtitle: 'Organiza tus sesiones, controla tus ganancias, planifica eventos y mejora como DJ.',
+    image: require('../assets/images/dj-onboarding.png'),
+    color: '#9b59b6',
+  },
 
 
 
