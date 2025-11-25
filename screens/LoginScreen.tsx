@@ -9,10 +9,13 @@ import {
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
+  Image,
+  ScrollView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
+import { Ionicons } from '@expo/vector-icons';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -20,8 +23,11 @@ export const LoginScreen: React.FC = () => {
   const [username, setUsername] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
   const { signIn, signUp } = useAuth();
   const route = useRoute<any>();
+  const navigation = useNavigation<any>();
 
   // Verificar si venimos de pricing con modo registro
   useEffect(() => {
@@ -50,8 +56,6 @@ export const LoginScreen: React.FC = () => {
     return null;
   };
 
-  const navigation = useNavigation<any>();
-
   const handleAuth = async () => {
     if (!email || !password) {
       Alert.alert('Error', 'Por favor completa todos los campos');
@@ -78,7 +82,6 @@ export const LoginScreen: React.FC = () => {
       // Verificar si hay plan seleccionado para navegar a PrePurchase
       if (route.params?.selectedPlan) {
         // Obtener el usuario actual directamente de supabase ya que el contexto puede tardar en actualizarse
-        // o signIn/signUp no devuelven el usuario directamente en la implementación actual
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
         if (authUser) {
@@ -98,63 +101,97 @@ export const LoginScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
-        style={styles.content}
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        <Text style={styles.title}>Bothside</Text>
-        <Text style={styles.subtitle}>
-          {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
-        </Text>
-
-        {isSignUp && (
-          <TextInput
-            style={styles.input}
-            placeholder="Username"
-            value={username}
-            onChangeText={setUsername}
-            autoCapitalize="none"
-            autoCorrect={false}
-            maxLength={20}
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Logo */}
+          <Image
+            source={require('../assets/logo-onboarding.png')}
+            style={styles.logo}
           />
-        )}
 
-        <TextInput
-          style={styles.input}
-          placeholder="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-        />
-
-        <TextInput
-          style={styles.input}
-          placeholder="Contraseña"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoCapitalize="none"
-        />
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleAuth}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>
-            {loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+          <Text style={styles.title}>
+            {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={styles.switchButton}
-          onPress={() => setIsSignUp(!isSignUp)}
-        >
-          <Text style={styles.switchText}>
-            {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Crear cuenta'}
+          <Text style={styles.subtitle}>
+            {isSignUp
+              ? 'Introduce tus datos para crear tu cuenta.'
+              : 'Accede para sincronizar tu colección y sesiones.'}
           </Text>
-        </TouchableOpacity>
+
+          {isSignUp && (
+            <View style={styles.inputContainer}>
+              <TextInput
+                style={styles.input}
+                placeholder="Nombre de usuario"
+                placeholderTextColor="#B3B3B3"
+                value={username}
+                onChangeText={setUsername}
+                autoCapitalize="none"
+                autoCorrect={false}
+                maxLength={20}
+              />
+            </View>
+          )}
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={styles.input}
+              placeholder="Correo electrónico"
+              placeholderTextColor="#B3B3B3"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+          </View>
+
+          <View style={styles.inputContainer}>
+            <TextInput
+              style={[styles.input, { paddingRight: 50 }]}
+              placeholder="Contraseña"
+              placeholderTextColor="#B3B3B3"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              autoCapitalize="none"
+            />
+            <TouchableOpacity
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons
+                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                size={24}
+                color="#B3B3B3"
+              />
+            </TouchableOpacity>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleAuth}
+            disabled={loading}
+          >
+            <Text style={styles.buttonText}>
+              {loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.switchButton}
+            onPress={() => setIsSignUp(!isSignUp)}
+          >
+            <Text style={styles.switchText}>
+              {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Crear cuenta'}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -165,55 +202,84 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ffffff',
   },
-  content: {
-    flex: 1,
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+  logo: {
+    width: 120,
+    height: 40,
+    resizeMode: 'contain',
+    alignSelf: 'center',
+
+    marginBottom: 80,
+    tintColor: '#2f2f2fff',
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
+    fontSize: 28,
+    fontWeight: '600',
     textAlign: 'center',
-    marginBottom: 10,
-    color: '#333',
+    marginBottom: 8,
+    color: '#222',
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 16,
     textAlign: 'center',
-    marginBottom: 30,
+    marginBottom: 32,
     color: '#666',
+    fontWeight: '400',
+  },
+  inputContainer: {
+    marginBottom: 14,
+    position: 'relative',
   },
   input: {
-    backgroundColor: 'white',
-    paddingHorizontal: 15,
-    paddingVertical: 12,
-    borderRadius: 8,
-    marginBottom: 15,
+    backgroundColor: '#fff',
+    height: 50,
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: '#E3E3E3',
+    paddingHorizontal: 16,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
+    color: '#333',
+  },
+  eyeIcon: {
+    position: 'absolute',
+    right: 16,
+    top: 13,
   },
   button: {
     backgroundColor: '#007AFF',
-    paddingVertical: 15,
-    borderRadius: 8,
-    marginTop: 10,
+    height: 52,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 24,
+    shadowColor: '#007AFF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
+    shadowOpacity: 0,
   },
   buttonText: {
     color: 'white',
-    textAlign: 'center',
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '600',
   },
   switchButton: {
-    marginTop: 20,
+    marginTop: 18,
     paddingVertical: 10,
+    alignItems: 'center',
   },
   switchText: {
-    color: '#666',
-    fontSize: 14,
+    color: '#3A6BFF',
+    fontSize: 15,
+    fontWeight: '500',
   },
-}); 
+});
