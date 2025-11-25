@@ -9,7 +9,7 @@ import {
     Alert,
     Dimensions,
 } from 'react-native';
-import { CustomHeader } from '../components/CustomHeader';
+
 
 const { width } = Dimensions.get('window');
 

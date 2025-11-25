@@ -290,30 +290,7 @@ export default function AIChatScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.card }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color={colors.text} />
-        </TouchableOpacity>
-        <View style={styles.headerTextContainer}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Bothside IA</Text>
 
-        </View>
-        <View style={styles.rightButtonContainer}>
-          {messages.length > 0 ? (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={clearChat}
-            >
-              <Ionicons name="refresh-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.clearButton} />
-          )}
-        </View>
-      </View>
 
       <KeyboardAvoidingView
         style={styles.chatContainer}
@@ -364,7 +341,7 @@ export default function AIChatScreen() {
             <View style={[styles.messageContainer, styles.aiMessage]}>
               <View style={[styles.messageBubble, styles.aiBubble, { backgroundColor: colors.card }]}>
                 <View style={styles.loadingContainer}>
-                  <BothsideLoader size="small" fullscreen={false} />
+                  <BothsideLoader />
                   <Text style={[styles.loadingText, { color: colors.text }]}>Pensando...</Text>
                 </View>
               </View>

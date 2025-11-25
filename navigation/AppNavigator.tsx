@@ -101,16 +101,12 @@ const MaletasStack = () => (
     <Stack.Screen
       name="ViewMaleta"
       component={ViewMaletaScreen}
-      options={{
-        header: () => <CustomHeader title="Ver Maleta" showAvatar={false} showBackButton={true} showCalendarIcon={false} />
-      }}
+      options={{ title: 'Ver Maleta' }}
     />
     <Stack.Screen
       name="EditMaleta"
       component={EditMaletaScreen}
-      options={{
-        header: () => <CustomHeader title="Editar Maleta" showAvatar={false} />
-      }}
+      options={{ title: 'Editar Maleta' }}
     />
   </Stack.Navigator>
 );
@@ -127,33 +123,23 @@ const DashboardStack = () => (
     <Stack.Screen
       name="DjStatsDashboard"
       component={DjStatsDashboard}
-      options={{
-        headerShown: true,
-        header: () => <CustomHeader title="Panel DJ" showBackButton={true} />,
-      }}
+      options={{ title: 'Panel DJ' }}
     />
     <Stack.Screen
       name="ShelvesList"
       component={ShelvesListScreen}
-      options={{
-        title: 'Mis Estanterías',
-        header: () => <CustomHeader title="Mis Estanterías" showAvatar={false} />
-      }}
+      options={{ title: 'Mis Estanterías' }}
     />
     <Stack.Screen
       name="ShelfEdit"
       component={ShelfEditScreen}
-      options={{
-        // El título se establece dinámicamente en la pantalla
-        header: () => <CustomHeader title="" showAvatar={false} />
-      }}
+      options={{ title: 'Editar Estantería' }}
     />
     <Stack.Screen
       name="ShelfView"
       component={ShelfViewScreen}
       options={({ route }: any) => ({
-        title: route.params?.shelfName || 'Estantería',
-        header: () => <CustomHeader title={route.params?.shelfName || 'Estantería'} showBackButton={true} />
+        title: route.params?.shelfName || 'Estantería'
       })}
     />
   </Stack.Navigator>
@@ -398,42 +384,48 @@ const AppNavigator = () => {
                     name="AlbumDetail"
                     component={AlbumDetailScreen}
                     options={{
-                      header: () => <CustomHeader title="Detalle del Álbum" showAvatar={false} />
+                      headerShown: true,
+                      title: 'Detalle del Álbum'
                     }}
                   />
                   <Stack.Screen
                     name="AIChat"
                     component={AIChatScreen}
                     options={{
-                      header: () => <CustomHeader title="Chat IA" showAvatar={false} />
+                      headerShown: true,
+                      title: 'Chat IA'
                     }}
                   />
                   <Stack.Screen
                     name="Leaderboard"
                     component={LeaderboardScreen}
                     options={{
-                      header: () => <CustomHeader title="Ranking" showAvatar={false} />
+                      headerShown: true,
+                      title: 'Ranking'
                     }}
                   />
                   <Stack.Screen
                     name="ViewMaleta"
                     component={ViewMaletaScreen}
                     options={{
-                      header: () => <CustomHeader title="Ver Maleta" showAvatar={false} />
+                      headerShown: true,
+                      title: 'Ver Maleta'
                     }}
                   />
                   <Stack.Screen
                     name="EditMaleta"
                     component={EditMaletaScreen}
                     options={{
-                      header: () => <CustomHeader title="Editar Maleta" showAvatar={false} />
+                      headerShown: true,
+                      title: 'Editar Maleta'
                     }}
                   />
                   <Stack.Screen
                     name="Account"
                     component={AccountScreen}
                     options={{
-                      header: () => <CustomHeader title="Cuenta" showAvatar={false} />
+                      headerShown: true,
+                      title: 'Cuenta'
                     }}
                   />
                   <Stack.Screen
@@ -441,7 +433,7 @@ const AppNavigator = () => {
                     component={IaSubscriptionScreen}
                     options={{
                       headerShown: true,
-                      header: () => <CustomHeader title="IA y Suscripción" showAvatar={false} showBackButton={true} showCalendarIcon={false} />
+                      title: 'IA y Suscripción'
                     }}
                   />
                   <Stack.Screen
@@ -449,7 +441,7 @@ const AppNavigator = () => {
                     component={CalendarScreen}
                     options={{
                       headerShown: true,
-                      header: () => <CustomHeader title="Calendario" showBackButton={true} showCalendarIcon={false} />
+                      title: 'Calendario'
                     }}
                   />
                   {ENABLE_AUDIO_SCAN && (
@@ -457,7 +449,8 @@ const AppNavigator = () => {
                       name="AudioScan"
                       component={AudioScanScreen}
                       options={{
-                        header: () => <CustomHeader title="Escaneo de Audio" showAvatar={false} />
+                        headerShown: true,
+                        title: 'Escaneo de Audio'
                       }}
                     />
                   )}
@@ -466,22 +459,22 @@ const AppNavigator = () => {
                     component={SelectCellScreen}
                     options={{
                       headerShown: true,
-                      header: () => <CustomHeader title="Ubicar Vinilo" showBackButton={true} showCalendarIcon={false} />
+                      title: 'Ubicar Vinilo'
                     }}
                   />
                 </>
               ) : (
 
                 <>
-                  <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-                  <Stack.Screen name="Login" component={LoginScreen} />
-                  <Stack.Screen name="Pricing" component={PricingScreen} />
-                  <Stack.Screen name="Legal" component={LegalScreen} />
+                  <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
+                  <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal' }} />
                 </>
               )}
 
 
-              <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} />
+              <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
 
             {/* Modal Global - Fuera del Stack Navigator */}
