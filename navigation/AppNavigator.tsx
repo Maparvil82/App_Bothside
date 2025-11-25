@@ -38,6 +38,7 @@ import CalendarScreen from '../screens/CalendarScreen';
 import { LegalScreen } from '../screens/LegalScreen';
 import { AccountScreen } from '../screens/AccountScreen';
 import { AudioScanScreen } from '../screens/AudioScanScreen';
+import { IaSubscriptionScreen } from '../screens/IaSubscriptionScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
@@ -433,6 +434,13 @@ const AppNavigator = () => {
                     component={AccountScreen}
                     options={{
                       header: () => <CustomHeader title="Cuenta" showAvatar={false} />
+                    }}
+                  />
+                  <Stack.Screen
+                    name="IaSubscriptionScreen"
+                    component={IaSubscriptionScreen}
+                    options={{
+                      header: () => <CustomHeader title="Suscripción" showAvatar={false} />
                     }}
                   />
                   <Stack.Screen

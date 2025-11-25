@@ -16,6 +16,7 @@ import { useNavigation, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { supabase } from '../lib/supabase';
+import { IaSubscriptionScreen } from './IaSubscriptionScreen';
 
 export const AccountScreen: React.FC = () => {
     const navigation = useNavigation();
@@ -314,6 +315,9 @@ export const AccountScreen: React.FC = () => {
                         {/* Sección: Zona de Peligro */}
                         <View style={[styles.section, { backgroundColor: colors.card, marginTop: 40 }]}>
 
+                            <TouchableOpacity onPress={() => navigation.navigate("IaSubscriptionScreen")}>
+                                <Text>IA y Suscripción</Text>
+                            </TouchableOpacity>
 
                             <TouchableOpacity
                                 style={[styles.menuItem, { borderBottomWidth: 0 }]}
