@@ -214,7 +214,7 @@ const styles = StyleSheet.create({
     resizeMode: 'contain',
     alignSelf: 'center',
 
-    marginBottom: 80,
+    marginBottom: 40,
     tintColor: '#2f2f2fff',
   },
   title: {

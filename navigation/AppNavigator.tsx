@@ -388,10 +388,10 @@ const AppNavigator = () => {
           <GemsProvider>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
               {user ? (
-                // Usuario autenticado - Pantallas principales
+
                 <>
                   <Stack.Screen name="Main" component={MainAppWrapper} />
-// ... rest of auth screens ...
+
                   <Stack.Screen name="Profile" component={ProfileStack} />
                   <Stack.Screen
                     name="AlbumDetail"
@@ -462,7 +462,7 @@ const AppNavigator = () => {
                   />
                 </>
               ) : (
-                // Usuario no autenticado - Pantallas de autenticación
+
                 <>
                   <Stack.Screen name="Onboarding" component={OnboardingScreen} />
                   <Stack.Screen name="Login" component={LoginScreen} />
@@ -471,7 +471,7 @@ const AppNavigator = () => {
                 </>
               )}
 
-              {/* Common Screens - Moved to bottom to avoid being initial route */}
+
               <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} />
             </Stack.Navigator>
 
