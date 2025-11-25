@@ -44,6 +44,7 @@ import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService } from '../services/database';
+import { PrePurchaseScreen } from '../screens/PrePurchaseScreen';
 import { Alert } from 'react-native';
 
 const Tab = createBottomTabNavigator();
@@ -390,6 +391,7 @@ const AppNavigator = () => {
                 // Usuario autenticado - Pantallas principales
                 <>
                   <Stack.Screen name="Main" component={MainAppWrapper} />
+// ... rest of auth screens ...
                   <Stack.Screen name="Profile" component={ProfileStack} />
                   <Stack.Screen
                     name="AlbumDetail"
@@ -468,6 +470,9 @@ const AppNavigator = () => {
                   <Stack.Screen name="Legal" component={LegalScreen} />
                 </>
               )}
+
+              {/* Common Screens - Moved to bottom to avoid being initial route */}
+              <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} />
             </Stack.Navigator>
 
             {/* Modal Global - Fuera del Stack Navigator */}

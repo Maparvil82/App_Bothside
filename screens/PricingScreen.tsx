@@ -8,13 +8,9 @@ import {
   ScrollView,
   Alert,
   Image,
-  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-
-// 1. CONDICIÓN DE MODO DESARROLLO
-const IS_DEV_MODE = __DEV__;
 
 interface PricingPlan {
   id: string;
@@ -61,66 +57,18 @@ export const PricingScreen: React.FC = () => {
   // Monthly selected by default
   const [selectedPlan, setSelectedPlan] = useState<string>('monthly');
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [showDevModal, setShowDevModal] = useState<boolean>(false);
   const navigation = useNavigation<any>();
 
-  // 5. IMPLEMENTACIÓN SUGERIDA
   const handleSubscribe = async () => {
     const plan = pricingPlans.find(p => p.id === selectedPlan);
     if (!plan) return;
 
-    if (IS_DEV_MODE) {
-      setShowDevModal(true);
-    } else {
-      initiatePurchase(plan);
-    }
-  };
-
-  // 3. LÓGICA EN PRODUCCIÓN / 4. LÓGICA EN TESTFLIGHT
-  const initiatePurchase = async (plan: PricingPlan) => {
-    setIsLoading(true);
-    try {
-      // Aquí iría la lógica real de StoreKit / RevenueCat
-      // Por ahora simulamos un delay y un error o éxito según corresponda en producción real
-      console.log('Initiating purchase for:', plan.productId);
-
-      // TODO: Implement actual purchase logic here
-      // await Purchases.purchasePackage(package);
-
-      Alert.alert('Producción', 'Aquí se iniciaría la compra real con StoreKit.');
-
-    } catch (error) {
-      console.error('Purchase error:', error);
-      Alert.alert('Error', 'No se pudo completar la compra.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 6. MOCK DE COMPRA PARA DESARROLLO
-  const simulatePurchase = (action: 'register' | 'store') => {
-    setShowDevModal(false);
-    setIsLoading(true);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      if (action === 'register') {
-        // Continuar al registro (simulación interna)
-        navigation.navigate('Login', { isSignUp: true });
-      } else {
-        // Simular compra App Store
-        Alert.alert(
-          'Compra Exitosa (Simulada)',
-          'Has adquirido la suscripción correctamente en el entorno de prueba.',
-          [
-            {
-              text: 'OK',
-              onPress: () => navigation.navigate('Login'),
-            }
-          ]
-        );
-      }
-    }, 1000);
+    // Navegar a Login/Registro con el plan seleccionado
+    // El flujo es: Paywall -> Register/Login -> PrePurchaseScreen
+    navigation.navigate('Login', {
+      isSignUp: true,
+      selectedPlan: plan.id
+    });
   };
 
   const handleRestore = () => {
@@ -128,10 +76,16 @@ export const PricingScreen: React.FC = () => {
   };
 
   const handleLogin = () => {
-    navigation.navigate('Login');
+    // Si ya tiene cuenta, también pasamos el plan seleccionado por si acaso
+    // aunque el usuario dijo que "Ya tengo una cuenta" solo navega a Login.
+    // Pero si se loguea, debería ir a PrePurchaseScreen si venía de aquí?
+    // El usuario dijo: "RegisterScreen -> navegación a PrePurchaseScreen".
+    // Asumiremos que LoginScreen maneja esto si recibe selectedPlan.
+    navigation.navigate('Login', {
+      isSignUp: false,
+      selectedPlan: selectedPlan // Pasamos el plan seleccionado actual
+    });
   };
-
-  const selectedPlanDetails = pricingPlans.find(p => p.id === selectedPlan);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -146,6 +100,9 @@ export const PricingScreen: React.FC = () => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>Empieza tu prueba gratuita de 7 días</Text>
+          <Text style={styles.subtitle}>
+            Organiza tus sesiones como DJ y tu colección de vinilos como un profesional.
+          </Text>
         </View>
 
         {/* Features Block */}
@@ -239,47 +196,6 @@ export const PricingScreen: React.FC = () => {
         </View>
 
       </ScrollView>
-
-      {/* 2. MODAL DE PRUEBA (solo en desarrollo) */}
-      <Modal
-        visible={showDevModal}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowDevModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Modo Desarrollo</Text>
-            <Text style={styles.modalText}>
-              Plan seleccionado: <Text style={{ fontWeight: 'bold' }}>{selectedPlanDetails?.title}</Text> con 7 días de prueba gratuita
-            </Text>
-
-            <Text style={styles.modalSubtitle}>Elige acción:</Text>
-
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonPrimary]}
-              onPress={() => simulatePurchase('register')}
-            >
-              <Text style={styles.modalButtonText}>Continuar al registro (simulación interna)</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonSecondary]}
-              onPress={() => simulatePurchase('store')}
-            >
-              <Text style={styles.modalButtonTextSecondary}>Simular compra App Store</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.modalButton, styles.modalButtonCancel]}
-              onPress={() => setShowDevModal(false)}
-            >
-              <Text style={styles.modalButtonTextCancel}>Cancelar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
-
     </SafeAreaView>
   );
 };
@@ -501,83 +417,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ccc',
     marginHorizontal: 8,
-  },
-  // Modal Styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 20,
-    padding: 24,
-    width: '100%',
-    maxWidth: 340,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 12,
-    color: '#333',
-  },
-  modalText: {
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#666',
-    lineHeight: 22,
-  },
-  modalSubtitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 16,
-    color: '#333',
-    alignSelf: 'flex-start',
-    width: '100%',
-  },
-  modalButton: {
-    width: '100%',
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginBottom: 10,
-    alignItems: 'center',
-  },
-  modalButtonPrimary: {
-    backgroundColor: '#007AFF',
-  },
-  modalButtonSecondary: {
-    backgroundColor: '#f0f0f0',
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
-  },
-  modalButtonCancel: {
-    marginTop: 8,
-  },
-  modalButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalButtonTextSecondary: {
-    color: '#333',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  modalButtonTextCancel: {
-    color: '#FF3B30',
-    fontSize: 16,
-    fontWeight: '600',
   },
 });

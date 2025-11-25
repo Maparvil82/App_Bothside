@@ -11,7 +11,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
-import { useRoute } from '@react-navigation/native';
+import { useRoute, useNavigation } from '@react-navigation/native';
+import { supabase } from '../lib/supabase';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -33,21 +34,23 @@ export const LoginScreen: React.FC = () => {
     if (!username.trim()) {
       return 'Por favor ingresa un nombre de usuario';
     }
-    
+
     if (username.length < 3) {
       return 'El nombre de usuario debe tener al menos 3 caracteres';
     }
-    
+
     if (username.length > 20) {
       return 'El nombre de usuario no puede tener más de 20 caracteres';
     }
-    
+
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       return 'El nombre de usuario solo puede contener letras, números y guiones bajos';
     }
-    
+
     return null;
   };
+
+  const navigation = useNavigation<any>();
 
   const handleAuth = async () => {
     if (!email || !password) {
@@ -67,9 +70,23 @@ export const LoginScreen: React.FC = () => {
     try {
       if (isSignUp) {
         await signUp(email, password, username.trim());
-        Alert.alert('Éxito', 'Cuenta creada. Revisa tu email para confirmar.');
+        // Alert.alert('Éxito', 'Cuenta creada. Revisa tu email para confirmar.');
       } else {
         await signIn(email, password);
+      }
+
+      // Verificar si hay plan seleccionado para navegar a PrePurchase
+      if (route.params?.selectedPlan) {
+        // Obtener el usuario actual directamente de supabase ya que el contexto puede tardar en actualizarse
+        // o signIn/signUp no devuelven el usuario directamente en la implementación actual
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+
+        if (authUser) {
+          navigation.navigate('PrePurchase', {
+            user: authUser,
+            selectedPlan: route.params.selectedPlan
+          });
+        }
       }
     } catch (error: any) {
       Alert.alert('Error', error.message);
