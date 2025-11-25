@@ -441,7 +441,7 @@ const AppNavigator = () => {
                     component={IaSubscriptionScreen}
                     options={{
                       headerShown: true,
-                      header: () => <CustomHeader title="IA y Suscripción" showAvatar={false} showBackButton={true} />
+                      header: () => <CustomHeader title="IA y Suscripción" showAvatar={false} showBackButton={true} showCalendarIcon={false} />
                     }}
                   />
                   <Stack.Screen
