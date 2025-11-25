@@ -18,7 +18,7 @@ import GemsScreen from '../screens/GemsScreen';
 import MaletasScreen from '../screens/MaletasScreen';
 import ViewMaletaScreen from '../screens/ViewMaletaScreen';
 import EditMaletaScreen from '../screens/EditMaletaScreen';
-import { CustomHeader } from '../components/CustomHeader';
+import { HeaderAvatar, HeaderCalendar } from '../components/HeaderComponents';
 import { useAuth } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
 import { StatsProvider } from '../contexts/StatsContext';
@@ -66,36 +66,60 @@ const AppDarkTheme: Theme = {
 };
 
 const SearchStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerBackTitle: '',
+      headerTintColor: 'black',
+      headerShown: true,
+    }}
+  >
     <Stack.Screen
       name="Search"
       component={SearchScreen}
       options={{
-        header: () => <CustomHeader title="Bothside" />
+        title: 'Bothside',
+        headerLeft: () => <HeaderCalendar />,
+        headerRight: () => <HeaderAvatar />,
       }}
     />
   </Stack.Navigator>
 );
 
 const GemsStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerBackTitle: '',
+      headerTintColor: 'black',
+      headerShown: true,
+    }}
+  >
     <Stack.Screen
       name="Gems"
       component={GemsScreen}
       options={{
-        header: () => <CustomHeader title="Bothside" />
+        title: 'Bothside',
+        headerLeft: () => <HeaderCalendar />,
+        headerRight: () => <HeaderAvatar />,
       }}
     />
   </Stack.Navigator>
 );
 
 const MaletasStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerBackTitle: '',
+      headerTintColor: 'black',
+      headerShown: true,
+    }}
+  >
     <Stack.Screen
       name="Maletas"
       component={MaletasScreen}
       options={{
-        header: () => <CustomHeader title="Bothside" />
+        title: 'Bothside',
+        headerLeft: () => <HeaderCalendar />,
+        headerRight: () => <HeaderAvatar />,
       }}
     />
     <Stack.Screen
@@ -112,12 +136,20 @@ const MaletasStack = () => (
 );
 
 const DashboardStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerBackTitle: '',
+      headerTintColor: 'black',
+      headerShown: true,
+    }}
+  >
     <Stack.Screen
       name="Dashboard"
       component={DashboardScreen}
       options={{
-        header: () => <CustomHeader title="Bothside" />
+        title: 'Bothside',
+        headerLeft: () => <HeaderCalendar />,
+        headerRight: () => <HeaderAvatar />,
       }}
     />
     <Stack.Screen
@@ -146,12 +178,20 @@ const DashboardStack = () => (
 );
 
 const AddDiscStack = () => (
-  <Stack.Navigator>
+  <Stack.Navigator
+    screenOptions={{
+      headerBackTitle: '',
+      headerTintColor: 'black',
+      headerShown: true,
+    }}
+  >
     <Stack.Screen
       name="AddDisc"
       component={AddDiscScreen}
       options={{
-        header: () => <CustomHeader title="Bothside" showAvatar={false} />
+        title: 'Bothside',
+        headerLeft: () => <HeaderCalendar />,
+        // No avatar on AddDisc screen as per previous config (showAvatar={false})
       }}
     />
   </Stack.Navigator>
@@ -373,11 +413,17 @@ const AppNavigator = () => {
       <ThemeProvider>
         <ThemedNavigationContainer>
           <GemsProvider>
-            <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Navigator
+              screenOptions={{
+                headerBackTitle: '',
+                headerTintColor: 'black',
+                headerShown: true,
+              }}
+            >
               {user ? (
 
                 <>
-                  <Stack.Screen name="Main" component={MainAppWrapper} />
+                  <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
 
                   <Stack.Screen name="Profile" component={ProfileStack} />
                   <Stack.Screen
