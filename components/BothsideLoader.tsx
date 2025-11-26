@@ -1,7 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Animated, StyleSheet, Image } from "react-native";
 
-export const BothsideLoader = () => {
+interface BothsideLoaderProps {
+    size?: 'small' | 'medium' | 'large';
+    fullscreen?: boolean;
+}
+
+export const BothsideLoader = ({ size = 'large', fullscreen = true }: BothsideLoaderProps) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
@@ -21,32 +26,53 @@ export const BothsideLoader = () => {
         ).start();
     }, []);
 
+    const getLogoSize = () => {
+        switch (size) {
+            case 'small': return 24;
+            case 'medium': return 48;
+            default: return 70;
+        }
+    };
+
+    const logoSize = getLogoSize();
+
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            !fullscreen && styles.containerInline,
+            fullscreen && styles.containerFullscreen
+        ]}>
             <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
                 <Image
-                    source={require("../assets/logo-bothside.png")} // ← tu logo negro
-                    style={styles.logo}
+                    source={require("../assets/logo-bothside.png")}
+                    style={[
+                        styles.logo,
+                        { width: logoSize, height: logoSize },
+                        size === 'small' && { tintColor: '#fff' } // White for small loader (usually on buttons)
+                    ]}
                     resizeMode="contain"
                 />
             </Animated.View>
 
-            <Text style={styles.loadingText}>Cargando datos...</Text>
+            {size !== 'small' && <Text style={styles.loadingText}>Cargando datos...</Text>}
         </View>
     );
 };
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
         justifyContent: "center",
         alignItems: "center",
-        backgroundColor: "#fff", // fondo blanco limpio
+    },
+    containerFullscreen: {
+        flex: 1,
+        backgroundColor: "#fff",
+    },
+    containerInline: {
+        padding: 5,
     },
     logo: {
-        width: 70,
-        height: 70,
-        tintColor: "#000", // asegura que es negro
+        tintColor: "#000",
     },
     loadingText: {
         marginTop: 16,
