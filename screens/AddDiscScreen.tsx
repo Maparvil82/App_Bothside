@@ -230,6 +230,68 @@ export const AddDiscScreen: React.FC = () => {
     try {
       console.log('🎵 Llamando a Edge Function para guardar release:', release.id);
 
+      // ------------------------------------------------------
+      // 🔍 VERIFICACIÓN PREVIA (Antes de llamar a Edge Function)
+      // ------------------------------------------------------
+
+      // 1. Verificar si el álbum ya existe en la tabla global para comprobar duplicados exactos
+      const { data: existingAlbum } = await supabase
+        .from('albums')
+        .select('id')
+        .eq('discogs_id', release.id)
+        .maybeSingle();
+
+      if (existingAlbum) {
+        // Si existe el álbum, comprobar si el usuario ya lo tiene
+        const { data: existingExact } = await supabase
+          .from("user_collection")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("album_id", existingAlbum.id)
+          .maybeSingle();
+
+        if (existingExact) {
+          Alert.alert(
+            "Este disco ya está en tu colección",
+            "Ya habías añadido esta misma edición."
+          );
+          setAddingDisc(false);
+          return;
+        }
+      }
+
+      // 2. Comprobar si el usuario tiene OTRA edición
+      if (release.id) {
+        const { data: otherEditions } = await supabase
+          .from("user_collection")
+          .select(`
+            id,
+            albums ( title, artist, discogs_id )
+          `)
+          .eq("user_id", user.id);
+
+        const hasOtherEdition = otherEditions?.some(
+          (item) => {
+            const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+            return alb &&
+              alb.title?.toLowerCase() === (release.title || '').toLowerCase() &&
+              // Intentar coincidir artista (release.artist o release.artists[0].name)
+              (
+                alb.artist?.toLowerCase() === (release.artist || '').toLowerCase() ||
+                (release.artists && release.artists.length > 0 && alb.artist?.toLowerCase() === release.artists[0].name?.toLowerCase())
+              ) &&
+              alb.discogs_id !== release.id;
+          }
+        );
+
+        if (hasOtherEdition) {
+          Alert.alert(
+            "Tienes otra edición",
+            "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+          );
+        }
+      }
+
       // Llamar a la Edge Function de Supabase
       const { data, error } = await supabase.functions.invoke('save-discogs-release', {
         body: {
@@ -481,6 +543,56 @@ export const AddDiscScreen: React.FC = () => {
         if (albumRow?.id) {
           // El álbum ya existe, solo añadirlo a la colección
           console.log('✅ Álbum encontrado en catálogo, añadiendo a colección...');
+
+          // ------------------------------------------------------
+          // 🔍 1) Comprobar si ya existe EXACTAMENTE este album_id
+          // ------------------------------------------------------
+          const { data: existingExact } = await supabase
+            .from("user_collection")
+            .select("id")
+            .eq("user_id", user.id)
+            .eq("album_id", albumRow.id)
+            .maybeSingle();
+
+          if (existingExact) {
+            Alert.alert(
+              "Este disco ya está en tu colección",
+              "Ya habías añadido esta misma edición."
+            );
+            setAddingDisc(false);
+            return;
+          }
+
+          // 🔍 2) Comprobar si el usuario tiene OTRA edición
+          // Solo si el álbum tiene discogs_id
+          if (album.discogs_id) {
+            const { data: otherEditions } = await supabase
+              .from("user_collection")
+              .select(`
+                id,
+                albums ( title, artist, discogs_id )
+              `)
+              .eq("user_id", user.id);
+
+            const hasOtherEdition = otherEditions?.some(
+              (item) => {
+                const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+                return alb &&
+                  alb.title?.toLowerCase() === album.title?.toLowerCase() &&
+                  alb.artist?.toLowerCase() === album.artist?.toLowerCase() &&
+                  alb.discogs_id !== album.discogs_id;
+              }
+            );
+
+            if (hasOtherEdition) {
+              Alert.alert(
+                "Tienes otra edición",
+                "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+              );
+            }
+          }
+          // 🟢 3) Si pasa las verificaciones → continuar
+
           await UserCollectionService.addToCollection(user.id, albumRow.id);
           setQuery('');
           setAlbums([]);
@@ -591,6 +703,56 @@ export const AddDiscScreen: React.FC = () => {
             }
 
             // Añadir a la colección del usuario
+
+            // ------------------------------------------------------
+            // 🔍 1) Comprobar si ya existe EXACTAMENTE este album_id
+            // ------------------------------------------------------
+            const { data: existingExact } = await supabase
+              .from("user_collection")
+              .select("id")
+              .eq("user_id", user.id)
+              .eq("album_id", newAlbum.id)
+              .maybeSingle();
+
+            if (existingExact) {
+              Alert.alert(
+                "Este disco ya está en tu colección",
+                "Ya habías añadido esta misma edición."
+              );
+              setAddingDisc(false);
+              return;
+            }
+
+            // 🔍 2) Comprobar si el usuario tiene OTRA edición
+            // Solo si el álbum tiene discogs_id
+            if (album.discogs_id) {
+              const { data: otherEditions } = await supabase
+                .from("user_collection")
+                .select(`
+                  id,
+                  albums ( title, artist, discogs_id )
+                `)
+                .eq("user_id", user.id);
+
+              const hasOtherEdition = otherEditions?.some(
+                (item) => {
+                  const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+                  return alb &&
+                    alb.title?.toLowerCase() === album.title?.toLowerCase() &&
+                    alb.artist?.toLowerCase() === album.artist?.toLowerCase() &&
+                    alb.discogs_id !== album.discogs_id;
+                }
+              );
+
+              if (hasOtherEdition) {
+                Alert.alert(
+                  "Tienes otra edición",
+                  "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+                );
+              }
+            }
+            // 🟢 3) Si pasa las verificaciones → continuar
+
             await UserCollectionService.addToCollection(user.id, newAlbum.id);
             setQuery('');
             setAlbums([]);

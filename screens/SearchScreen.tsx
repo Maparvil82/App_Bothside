@@ -681,6 +681,55 @@ export const SearchScreen: React.FC = () => {
       };
 
       const album = await AlbumService.createAlbum(albumData);
+
+      // ------------------------------------------------------
+      // 🔍 1) Comprobar si ya existe EXACTAMENTE este album_id
+      // ------------------------------------------------------
+      const { data: existingExact } = await supabase
+        .from("user_collection")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("album_id", album.id)
+        .maybeSingle();
+
+      if (existingExact) {
+        Alert.alert(
+          "Este disco ya está en tu colección",
+          "Ya habías añadido esta misma edición."
+        );
+        return;
+      }
+
+      // 🔍 2) Comprobar si el usuario tiene OTRA edición
+      // Solo si el álbum tiene discogs_id
+      if (album.discogs_id) {
+        const { data: otherEditions } = await supabase
+          .from("user_collection")
+          .select(`
+            id,
+            albums ( title, artist, discogs_id )
+          `)
+          .eq("user_id", user.id);
+
+        const hasOtherEdition = otherEditions?.some(
+          (item) => {
+            const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+            return alb &&
+              alb.title?.toLowerCase() === album.title?.toLowerCase() &&
+              alb.artist?.toLowerCase() === album.artist?.toLowerCase() &&
+              alb.discogs_id !== album.discogs_id;
+          }
+        );
+
+        if (hasOtherEdition) {
+          Alert.alert(
+            "Tienes otra edición",
+            "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+          );
+        }
+      }
+      // 🟢 3) Si pasa las verificaciones → continuar
+
       await UserCollectionService.addToCollection(user.id, album.id);
 
       await loadCollection();
