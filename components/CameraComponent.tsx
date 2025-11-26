@@ -85,6 +85,18 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       // Usar Gemini Vision para reconocer el álbum
       const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
 
+      // 🔥 Consumir crédito por análisis de portada
+      if (user) {
+        try {
+          await supabase.rpc("consume_ai_credit", {
+            p_user_id: user.id,
+            p_amount: 5
+          });
+        } catch (err) {
+          console.error("Error consumiendo crédito IA (portada):", err);
+        }
+      }
+
       const geminiEnd = Date.now();
       console.log(`⏱️ Gemini Vision completado: ${geminiEnd - geminiStart}ms`);
 

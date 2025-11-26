@@ -1137,6 +1137,18 @@ export const SearchScreen: React.FC = () => {
       // Usar Gemini Vision para reconocer el álbum
       const { artist, album } = await GeminiService.analyzeAlbumImage(base64Data);
 
+      // 🔥 Consumir crédito por análisis de portada
+      if (user) {
+        try {
+          await supabase.rpc("consume_ai_credit", {
+            p_user_id: user.id,
+            p_amount: 5
+          });
+        } catch (err) {
+          console.error("Error consumiendo crédito IA (portada):", err);
+        }
+      }
+
       console.log('🎵 Álbum reconocido por IA:', { artist, album });
       setRecognizedAlbum(`${album} - ${artist}`);
 
