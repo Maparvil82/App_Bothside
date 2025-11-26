@@ -83,32 +83,60 @@ export default function AIChatScreen() {
     loadChatHistory();
   }, []);
 
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity onPress={clearChat} style={{ marginRight: 10 }}>
+          <Ionicons name="trash-outline" size={24} color={colors.text} />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, colors.text]);
+
 
   const loadChatHistory = async () => {
+    if (!user) return;
     try {
-      const savedMessages = await AsyncStorage.getItem(CHAT_STORAGE_KEY);
-      if (savedMessages) {
-        const parsedMessages = JSON.parse(savedMessages).map((msg: any) => ({
-          ...msg,
-          timestamp: new Date(msg.timestamp)
+      const { data, error } = await supabase
+        .from("ai_messages")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error('Error loading chat history:', error);
+        return;
+      }
+
+      if (data) {
+        const parsedMessages = data.map((msg: any) => ({
+          id: msg.id.toString(),
+          text: msg.message,
+          isUser: msg.role === 'user',
+          timestamp: new Date(msg.created_at),
+          // Map other fields if necessary, e.g. imageUri if stored
         }));
         setMessages(parsedMessages);
-      } else {
-        // Chat vacío si no hay historial
-        setMessages([]);
       }
     } catch (error) {
       console.error('Error loading chat history:', error);
-      // Chat vacío en caso de error
-      setMessages([]);
     }
   };
 
-  const saveChatHistory = async (messagesToSave: Message[]) => {
+  // Function to save message to Supabase (replaces saveChatHistory)
+  const saveMessageToSupabase = async (text: string, role: 'user' | 'assistant') => {
+    if (!user) return;
     try {
-      await AsyncStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messagesToSave));
+      const { error } = await supabase.from("ai_messages").insert({
+        user_id: user.id,
+        message: text,
+        role: role,
+        created_at: new Date().toISOString()
+      });
+
+      if (error) throw error;
     } catch (error) {
-      console.error('Error saving chat history:', error);
+      console.error('Error saving message to Supabase:', error);
     }
   };
 
@@ -125,8 +153,16 @@ export default function AIChatScreen() {
           text: 'Limpiar',
           style: 'destructive',
           onPress: async () => {
+            if (!user) return;
             setMessages([]);
-            await AsyncStorage.removeItem(CHAT_STORAGE_KEY);
+            try {
+              await supabase
+                .from('ai_messages')
+                .delete()
+                .eq('user_id', user.id);
+            } catch (error) {
+              console.error('Error clearing chat history:', error);
+            }
           },
         },
       ]
@@ -188,11 +224,31 @@ export default function AIChatScreen() {
   };
 
   const sendMessage = async () => {
-    if (!inputText.trim() || isLoading) return;
+    if (!inputText.trim() || isLoading || !user) return;
 
+    // 🧩 Verificar créditos antes de enviar
+    const { data: creditsCheck, error: creditsError } = await supabase
+      .from("ia_credits")
+      .select("credits_total, credits_used")
+      .eq("user_id", user.id)
+      .single();
+
+    if (creditsError) {
+      console.error("❌ Error leyendo créditos:", creditsError);
+    }
+
+    if (creditsCheck && creditsCheck.credits_used >= creditsCheck.credits_total) {
+      Alert.alert(
+        "Sin créditos disponibles",
+        "Has agotado tus créditos de IA. Renuévalos o espera al siguiente ciclo."
+      );
+      return;
+    }
+
+    const textToSend = inputText.trim();
     const userMessage: Message = {
       id: Date.now().toString(),
-      text: inputText.trim(),
+      text: textToSend,
       isUser: true,
       timestamp: new Date(),
     };
@@ -202,8 +258,8 @@ export default function AIChatScreen() {
     setInputText('');
     setIsLoading(true);
 
-    // Guardar inmediatamente el mensaje del usuario
-    await saveChatHistory(updatedMessages);
+    // Guardar mensaje del usuario en Supabase
+    await saveMessageToSupabase(textToSend, 'user');
 
     try {
       const collectionContext = GeminiService.formatCollectionContext(collectionData, albumStories);
@@ -223,8 +279,37 @@ export default function AIChatScreen() {
       const finalMessages = [...updatedMessages, aiMessage];
       setMessages(finalMessages);
 
-      // Guardar la conversación completa después de la respuesta de la IA
-      await saveChatHistory(finalMessages);
+      // Guardar respuesta de la IA en Supabase
+      await saveMessageToSupabase(response, 'assistant');
+
+      // 🧩 Consumir crédito IA
+      const isImage = false; // Detecta si el mensaje usa imagen
+      const { data: creditResult, error: creditError } = await supabase.rpc(
+        "consume_ai_credit",
+        {
+          p_user_id: user.id,
+          p_amount: isImage ? 5 : 1
+        }
+      );
+
+      if (creditError) {
+        console.error("❌ Error al descontar crédito:", creditError);
+        Alert.alert("Error", "No se pudo descontar el crédito IA.");
+      }
+
+      // 🧩 Refrescar créditos en la sesión (lectura directa)
+      const { data: creditsData, error: creditsLoadError } = await supabase
+        .from("ia_credits")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      if (creditsLoadError) {
+        console.error("❌ Error refrescando créditos:", creditsLoadError);
+      } else {
+        console.log("🔄 Créditos actualizados:", creditsData);
+      }
+
     } catch (error) {
       console.error('Error generating response:', error);
       const errorMessage: Message = {
@@ -237,8 +322,7 @@ export default function AIChatScreen() {
       const finalMessages = [...updatedMessages, errorMessage];
       setMessages(finalMessages);
 
-      // Guardar también en caso de error
-      await saveChatHistory(finalMessages);
+      // Opcional: guardar mensaje de error o no
     } finally {
       setIsLoading(false);
     }
@@ -295,6 +379,7 @@ export default function AIChatScreen() {
       <KeyboardAvoidingView
         style={styles.chatContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0}
       >
         <ScrollView
           ref={scrollViewRef}

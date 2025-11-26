@@ -1,36 +1,22 @@
-import React, { useEffect, useState } from 'react';
-import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
-    SafeAreaView,
-    Alert,
-    Dimensions,
-    ActivityIndicator,
-} from 'react-native';
-import { supabase } from '../lib/supabase';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIndicator, SafeAreaView } from 'react-native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
-const { width } = Dimensions.get('window');
-
-export const IaSubscriptionScreen: React.FC = () => {
+export const IaSubscriptionScreen = () => {
     const { user } = useAuth();
+    const navigation = useNavigation();
     const [subscription, setSubscription] = useState<any>(null);
     const [credits, setCredits] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadSubscriptionData();
-    }, []);
+    const loadSubscriptionData = useCallback(async () => {
+        if (!user) return;
 
-    const loadSubscriptionData = async () => {
-        if (!user) {
-            Alert.alert("Error", "No se encontró usuario activo");
-            setLoading(false);
-            return;
-        }
+        // No setear loading a true aquí para evitar parpadeos al volver a enfocar
+        // Solo la primera vez si es necesario, o manejarlo con otro estado si se quiere spinner
 
         try {
             // 1. Obtener suscripción
@@ -64,7 +50,13 @@ export const IaSubscriptionScreen: React.FC = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [user]);
+
+    useFocusEffect(
+        useCallback(() => {
+            loadSubscriptionData();
+        }, [loadSubscriptionData])
+    );
 
     const handleManageSubscription = () => {
         Alert.alert("Gestión disponible en producción");
