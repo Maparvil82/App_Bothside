@@ -34,6 +34,16 @@ interface Album {
   discogs_id?: number;
 }
 
+// Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
+const normalize = (str: string) =>
+  str
+    ?.toLowerCase()
+    ?.normalize("NFD")
+    ?.replace(/[\u0300-\u036f]/g, "") // quitar acentos
+    ?.replace(/\(.*?\)/g, "") // quitar info entre paréntesis tipo (Remastered), (2011)
+    ?.replace(/[^a-z0-9]/g, "") // quitar símbolos
+    ?.trim();
+
 export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
@@ -262,29 +272,33 @@ export const AddDiscScreen: React.FC = () => {
 
       // 2. Comprobar si el usuario tiene OTRA edición
       if (release.id) {
-        const { data: otherEditions } = await supabase
+        const normArtist = normalize(release.artist || (release.artists && release.artists[0]?.name) || '');
+        const normTitle = normalize(release.title);
+
+        const { data: userAlbums } = await supabase
           .from("user_collection")
           .select(`
             id,
-            albums ( title, artist, discogs_id )
+            albums (
+              title,
+              artist,
+              discogs_id
+            )
           `)
           .eq("user_id", user.id);
 
-        const hasOtherEdition = otherEditions?.some(
-          (item) => {
-            const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
-            return alb &&
-              alb.title?.toLowerCase() === (release.title || '').toLowerCase() &&
-              // Intentar coincidir artista (release.artist o release.artists[0].name)
-              (
-                alb.artist?.toLowerCase() === (release.artist || '').toLowerCase() ||
-                (release.artists && release.artists.length > 0 && alb.artist?.toLowerCase() === release.artists[0].name?.toLowerCase())
-              ) &&
-              alb.discogs_id !== release.id;
-          }
-        );
+        const otherEdition = userAlbums?.find((item) => {
+          const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+          if (!alb) return false;
 
-        if (hasOtherEdition) {
+          const sameArtist = normalize(alb.artist) === normArtist;
+          const sameTitle = normalize(alb.title) === normTitle;
+          const differentDiscogs = alb.discogs_id !== release.id;
+
+          return sameArtist && sameTitle && differentDiscogs;
+        });
+
+        if (otherEdition) {
           Alert.alert(
             "Tienes otra edición",
             "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
@@ -566,25 +580,33 @@ export const AddDiscScreen: React.FC = () => {
           // 🔍 2) Comprobar si el usuario tiene OTRA edición
           // Solo si el álbum tiene discogs_id
           if (album.discogs_id) {
-            const { data: otherEditions } = await supabase
+            const normArtist = normalize(album.artist);
+            const normTitle = normalize(album.title);
+
+            const { data: userAlbums } = await supabase
               .from("user_collection")
               .select(`
                 id,
-                albums ( title, artist, discogs_id )
+                albums (
+                  title,
+                  artist,
+                  discogs_id
+                )
               `)
               .eq("user_id", user.id);
 
-            const hasOtherEdition = otherEditions?.some(
-              (item) => {
-                const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
-                return alb &&
-                  alb.title?.toLowerCase() === album.title?.toLowerCase() &&
-                  alb.artist?.toLowerCase() === album.artist?.toLowerCase() &&
-                  alb.discogs_id !== album.discogs_id;
-              }
-            );
+            const otherEdition = userAlbums?.find((item) => {
+              const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+              if (!alb) return false;
 
-            if (hasOtherEdition) {
+              const sameArtist = normalize(alb.artist) === normArtist;
+              const sameTitle = normalize(alb.title) === normTitle;
+              const differentDiscogs = alb.discogs_id !== album.discogs_id;
+
+              return sameArtist && sameTitle && differentDiscogs;
+            });
+
+            if (otherEdition) {
               Alert.alert(
                 "Tienes otra edición",
                 "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
@@ -726,25 +748,33 @@ export const AddDiscScreen: React.FC = () => {
             // 🔍 2) Comprobar si el usuario tiene OTRA edición
             // Solo si el álbum tiene discogs_id
             if (album.discogs_id) {
-              const { data: otherEditions } = await supabase
+              const normArtist = normalize(album.artist);
+              const normTitle = normalize(album.title);
+
+              const { data: userAlbums } = await supabase
                 .from("user_collection")
                 .select(`
                   id,
-                  albums ( title, artist, discogs_id )
+                  albums (
+                    title,
+                    artist,
+                    discogs_id
+                  )
                 `)
                 .eq("user_id", user.id);
 
-              const hasOtherEdition = otherEditions?.some(
-                (item) => {
-                  const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
-                  return alb &&
-                    alb.title?.toLowerCase() === album.title?.toLowerCase() &&
-                    alb.artist?.toLowerCase() === album.artist?.toLowerCase() &&
-                    alb.discogs_id !== album.discogs_id;
-                }
-              );
+              const otherEdition = userAlbums?.find((item) => {
+                const alb = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+                if (!alb) return false;
 
-              if (hasOtherEdition) {
+                const sameArtist = normalize(alb.artist) === normArtist;
+                const sameTitle = normalize(alb.title) === normTitle;
+                const differentDiscogs = alb.discogs_id !== album.discogs_id;
+
+                return sameArtist && sameTitle && differentDiscogs;
+              });
+
+              if (otherEdition) {
                 Alert.alert(
                   "Tienes otra edición",
                   "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
