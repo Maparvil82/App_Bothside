@@ -704,14 +704,15 @@ export const SearchScreen: React.FC = () => {
 
       if (existingExact) {
         Alert.alert(
-          "Este disco ya está en tu colección",
-          "Ya habías añadido esta misma edición."
+          "Ya tienes este disco",
+          "Este disco ya está en tu colección."
         );
         return;
       }
 
+      // ------------------------------------------------------
       // 🔍 2) Comprobar si el usuario tiene OTRA edición
-      // Solo si el álbum tiene discogs_id
+      // ------------------------------------------------------
       if (album.discogs_id) {
         const normArtist = normalize(album.artist);
         const normTitle = normalize(album.title);
@@ -742,7 +743,7 @@ export const SearchScreen: React.FC = () => {
         if (otherEdition) {
           Alert.alert(
             "Tienes otra edición",
-            "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+            "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
           );
         }
       }

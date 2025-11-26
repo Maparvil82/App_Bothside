@@ -245,6 +245,8 @@ export const AddDiscScreen: React.FC = () => {
       // ------------------------------------------------------
 
       // 1. Verificar si el álbum ya existe en la tabla global para comprobar duplicados exactos
+      // Usamos !inner en el join para filtrar por discogs_id en la tabla relacionada si fuera necesario,
+      // pero aquí buscamos primero el álbum localmente para obtener su ID.
       const { data: existingAlbum } = await supabase
         .from('albums')
         .select('id')
@@ -262,8 +264,8 @@ export const AddDiscScreen: React.FC = () => {
 
         if (existingExact) {
           Alert.alert(
-            "Este disco ya está en tu colección",
-            "Ya habías añadido esta misma edición."
+            "Ya tienes este disco",
+            "Este disco ya está en tu colección."
           );
           setAddingDisc(false);
           return;
@@ -301,7 +303,7 @@ export const AddDiscScreen: React.FC = () => {
         if (otherEdition) {
           Alert.alert(
             "Tienes otra edición",
-            "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+            "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
           );
         }
       }
@@ -570,15 +572,16 @@ export const AddDiscScreen: React.FC = () => {
 
           if (existingExact) {
             Alert.alert(
-              "Este disco ya está en tu colección",
-              "Ya habías añadido esta misma edición."
+              "Ya tienes este disco",
+              "Este disco ya está en tu colección."
             );
             setAddingDisc(false);
             return;
           }
 
+          // ------------------------------------------------------
           // 🔍 2) Comprobar si el usuario tiene OTRA edición
-          // Solo si el álbum tiene discogs_id
+          // ------------------------------------------------------
           if (album.discogs_id) {
             const normArtist = normalize(album.artist);
             const normTitle = normalize(album.title);
@@ -609,7 +612,7 @@ export const AddDiscScreen: React.FC = () => {
             if (otherEdition) {
               Alert.alert(
                 "Tienes otra edición",
-                "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+                "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
               );
             }
           }
@@ -738,15 +741,16 @@ export const AddDiscScreen: React.FC = () => {
 
             if (existingExact) {
               Alert.alert(
-                "Este disco ya está en tu colección",
-                "Ya habías añadido esta misma edición."
+                "Ya tienes este disco",
+                "Este disco ya está en tu colección."
               );
               setAddingDisc(false);
               return;
             }
 
+            // ------------------------------------------------------
             // 🔍 2) Comprobar si el usuario tiene OTRA edición
-            // Solo si el álbum tiene discogs_id
+            // ------------------------------------------------------
             if (album.discogs_id) {
               const normArtist = normalize(album.artist);
               const normTitle = normalize(album.title);
@@ -777,7 +781,7 @@ export const AddDiscScreen: React.FC = () => {
               if (otherEdition) {
                 Alert.alert(
                   "Tienes otra edición",
-                  "Ya tienes otra edición de este álbum, pero puedes añadir esta también."
+                  "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
                 );
               }
             }
