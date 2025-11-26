@@ -11,6 +11,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 
 interface PricingPlan {
   id: string;
@@ -58,17 +60,47 @@ export const PricingScreen: React.FC = () => {
   const [selectedPlan, setSelectedPlan] = useState<string>('monthly');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
+  const { user, setUser } = useAuth();
+
+  // Función preparada para leer suscripción (no se llama automáticamente aún)
+  const fetchSubscriptionAndCredits = async (userId: string) => {
+    try {
+      const { data: subscription } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      const { data: credits } = await supabase
+        .from('ia_credits')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      return { subscription, credits };
+    } catch (error) {
+      console.error('Error fetching subscription data:', error);
+      return null;
+    }
+  };
 
   const handleSubscribe = async () => {
-    const plan = pricingPlans.find(p => p.id === selectedPlan);
-    if (!plan) return;
+    // Enviar siempre "trial" como plan seleccionado
+    const TRIAL_PLAN = 'trial';
 
-    // Navegar a Login/Registro con el plan seleccionado
-    // El flujo es: Paywall -> Register/Login -> PrePurchaseScreen
-    navigation.navigate('Login', {
-      isSignUp: true,
-      selectedPlan: plan.id
-    });
+    if (user) {
+      // Si ya está logueado, vamos a PrePurchase para activar
+      navigation.navigate('PrePurchase', {
+        user: user,
+        selectedPlan: TRIAL_PLAN
+      });
+    } else {
+      // Si no está logueado, vamos a Login/Signup
+      navigation.navigate('Login', {
+        isSignUp: true,
+        selectedPlan: TRIAL_PLAN
+      });
+    }
   };
 
   const handleRestore = () => {

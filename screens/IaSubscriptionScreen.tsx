@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     View,
     Text,
@@ -8,29 +8,99 @@ import {
     SafeAreaView,
     Alert,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
-
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 const { width } = Dimensions.get('window');
 
 export const IaSubscriptionScreen: React.FC = () => {
-    // Mock data for UI
-    const planName = "Prueba gratuita (7 días)";
-    const totalCredits = 50;
-    const usedCredits = 15; // Example usage
-    const remainingCredits = 35;
-    const renewalDate = "28 de febrero";
+    const { user } = useAuth();
+    const [subscription, setSubscription] = useState<any>(null);
+    const [credits, setCredits] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
 
-    const progressPercentage = (remainingCredits / totalCredits) * 100;
+    useEffect(() => {
+        loadSubscriptionData();
+    }, []);
+
+    const loadSubscriptionData = async () => {
+        if (!user) {
+            Alert.alert("Error", "No se encontró usuario activo");
+            setLoading(false);
+            return;
+        }
+
+        try {
+            // 1. Obtener suscripción
+            const { data: subData, error: subError } = await supabase
+                .from("user_subscriptions")
+                .select("plan_type, status, trial_end_at, current_period_end, provider")
+                .eq("user_id", user.id)
+                .single();
+
+            if (subError && subError.code !== 'PGRST116') { // PGRST116 is 'Row not found' which is acceptable
+                console.error("Error fetching subscription:", subError);
+            }
+
+            // 2. Obtener créditos
+            const { data: creditData, error: creditError } = await supabase
+                .from("ia_credits")
+                .select("credits_total, credits_used, period_end")
+                .eq("user_id", user.id)
+                .single();
+
+            if (creditError && creditError.code !== 'PGRST116') {
+                console.error("Error fetching credits:", creditError);
+            }
+
+            setSubscription(subData);
+            setCredits(creditData);
+
+        } catch (error) {
+            console.error("Error loading subscription data:", error);
+            Alert.alert("Error", "No se pudo cargar la suscripción");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleManageSubscription = () => {
         Alert.alert("Gestión disponible en producción");
     };
 
+    if (loading) {
+        return (
+            <SafeAreaView style={styles.container}>
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#007AFF" />
+                    <Text style={styles.loadingText}>Cargando suscripción...</Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
+
+    // Mapeo de nombre del plan
+    let planName = "Sin plan activo";
+    if (subscription?.plan_type === 'trial') planName = "Prueba gratuita (7 días)";
+    else if (subscription?.plan_type === 'monthly') planName = "Mensual";
+    else if (subscription?.plan_type === 'annual') planName = "Anual";
+
+    // Cálculos de créditos
+    const totalCredits = credits?.credits_total || 0;
+    const usedCredits = credits?.credits_used || 0;
+    const remainingCredits = totalCredits - usedCredits;
+    const progressPercentage = totalCredits > 0 ? (remainingCredits / totalCredits) * 100 : 0;
+
+    // Fecha de renovación
+    const renewalDate = subscription?.current_period_end
+        ? new Date(subscription.current_period_end).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })
+        : '---';
+
     return (
         <SafeAreaView style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-
 
                 {/* Bloque 1 — Estado del plan actual */}
                 <View style={styles.card}>
@@ -84,6 +154,16 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#FFFFFF',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: 10,
+        color: '#666',
+        fontSize: 16,
     },
     scrollContent: {
         paddingHorizontal: 20,
