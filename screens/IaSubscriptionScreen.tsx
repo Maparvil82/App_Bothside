@@ -4,10 +4,12 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const IaSubscriptionScreen = () => {
     const { user } = useAuth();
     const navigation = useNavigation();
+    const { t } = useTranslation();
     const [subscription, setSubscription] = useState<any>(null);
     const [credits, setCredits] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export const IaSubscriptionScreen = () => {
 
         } catch (error) {
             console.error("Error loading subscription data:", error);
-            Alert.alert("Error", "No se pudo cargar la suscripción");
+            Alert.alert(t('common_error'), t('ia_sub_error_loading'));
         } finally {
             setLoading(false);
         }
@@ -59,7 +61,7 @@ export const IaSubscriptionScreen = () => {
     );
 
     const handleManageSubscription = () => {
-        Alert.alert("Gestión disponible en producción");
+        Alert.alert(t('ia_sub_alert_management_production'));
     };
 
     if (loading) {
@@ -67,17 +69,17 @@ export const IaSubscriptionScreen = () => {
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={styles.loadingText}>Cargando suscripción...</Text>
+                    <Text style={styles.loadingText}>{t('ia_sub_loading')}</Text>
                 </View>
             </SafeAreaView>
         );
     }
 
     // Mapeo de nombre del plan
-    let planName = "Sin plan activo";
-    if (subscription?.plan_type === 'trial') planName = "Prueba gratuita (7 días)";
-    else if (subscription?.plan_type === 'monthly') planName = "Mensual";
-    else if (subscription?.plan_type === 'annual') planName = "Anual";
+    let planName = t('ia_sub_plan_none');
+    if (subscription?.plan_type === 'trial') planName = t('ia_sub_plan_trial');
+    else if (subscription?.plan_type === 'monthly') planName = t('pricing_plan_monthly_title');
+    else if (subscription?.plan_type === 'annual') planName = t('pricing_plan_annual_title');
 
     // Cálculos de créditos
     const totalCredits = credits?.credits_total || 0;
@@ -96,19 +98,19 @@ export const IaSubscriptionScreen = () => {
 
                 {/* Bloque 1 — Estado del plan actual */}
                 <View style={styles.card}>
-                    <Text style={styles.cardLabel}>Plan actual:</Text>
+                    <Text style={styles.cardLabel}>{t('ia_sub_label_current_plan')}</Text>
                     <Text style={styles.cardValue}>{planName}</Text>
 
                     <View style={styles.separator} />
 
-                    <Text style={styles.cardLabel}>Créditos disponibles:</Text>
-                    <Text style={styles.cardValue}>{totalCredits} créditos en total</Text>
+                    <Text style={styles.cardLabel}>{t('ia_sub_label_available_credits')}</Text>
+                    <Text style={styles.cardValue}>{totalCredits} {t('ia_sub_credits_total')}</Text>
                 </View>
 
                 {/* Bloque 2 — Créditos IA restantes (barra de progreso) */}
                 <View style={styles.card}>
                     <View style={styles.creditsHeader}>
-                        <Text style={styles.cardLabel}>Créditos restantes:</Text>
+                        <Text style={styles.cardLabel}>{t('ia_sub_label_remaining_credits')}</Text>
                         <Text style={styles.creditsValue}>{remainingCredits} / {totalCredits}</Text>
                     </View>
 
@@ -117,25 +119,25 @@ export const IaSubscriptionScreen = () => {
                     </View>
 
                     <Text style={styles.renewalText}>
-                        Se renovarán automáticamente el {renewalDate}.
+                        {t('ia_sub_renewal_text')} {renewalDate}.
                     </Text>
                 </View>
 
                 {/* Bloque 3 — Descripción del sistema IA */}
                 <Text style={styles.descriptionText}>
-                    Cada acción basada en IA consume créditos.{'\n'}
-                    Las imágenes consumen más créditos que las consultas de texto.{'\n'}
-                    Tus créditos se renuevan automáticamente en cada ciclo de facturación.
+                    {t('ia_sub_description_1')}{'\n'}
+                    {t('ia_sub_description_2')}{'\n'}
+                    {t('ia_sub_description_3')}
                 </Text>
 
                 {/* Bloque 4 — Botón para ver gestión de suscripción */}
                 <TouchableOpacity style={styles.button} onPress={handleManageSubscription}>
-                    <Text style={styles.buttonText}>Gestionar mi suscripción</Text>
+                    <Text style={styles.buttonText}>{t('ia_sub_button_manage')}</Text>
                 </TouchableOpacity>
 
                 {/* Bloque 5 — (Opcional pero recomendado) */}
                 <Text style={styles.footerText}>
-                    Pronto podrás comprar paquetes extra de créditos IA.
+                    {t('ia_sub_footer_extra_credits')}
                 </Text>
             </ScrollView>
         </SafeAreaView>

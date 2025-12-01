@@ -18,6 +18,7 @@ import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { useTheme } from '@react-navigation/native';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface ListsScreenProps {
   navigation: any;
@@ -28,6 +29,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
   const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridMaletas();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [filteredLists, setFilteredLists] = useState<UserMaleta[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
@@ -125,12 +127,12 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       // Update list locally
       refreshLists();
 
-      Alert.alert('Éxito', 'Maleta actualizada correctamente');
+      Alert.alert(t('common_success'), t('maletas_success_updated'));
       setIsEditModalVisible(false);
       setSelectedMaletaForEdit(null);
     } catch (error) {
       console.error('Error updating maleta:', error);
-      Alert.alert('Error', 'No se pudo actualizar la maleta');
+      Alert.alert(t('common_error'), t('maletas_error_updating'));
     } finally {
       setUpdatingMaleta(false);
     }
@@ -140,12 +142,12 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     console.log('🔍 ListsScreen: Attempting to delete list:', list);
 
     Alert.alert(
-      'Eliminar Maleta',
-      `¿Estás seguro de que quieres eliminar "${list.title}"?`,
+      t('maletas_alert_delete_title'),
+      t('maletas_alert_delete_message').replace('{0}', list.title),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('common_delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -157,7 +159,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
               console.log('🗑️ ListsScreen: Removing list locally');
               removeListLocally(list.id);
 
-              Alert.alert('Éxito', 'Lista eliminada correctamente');
+              Alert.alert(t('common_success'), t('maletas_success_deleted'));
             } catch (error: any) {
               console.error('❌ ListsScreen: Error deleting list:', error);
               console.error('❌ ListsScreen: Error details:', {
@@ -166,7 +168,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 details: error?.details,
                 hint: error?.hint
               });
-              Alert.alert('Error', `No se pudo eliminar la lista: ${error?.message || 'Error desconocido'}`);
+              Alert.alert(t('common_error'), t('maletas_error_deleting').replace('{0}', error?.message || 'Error desconocido'));
             }
           },
         },
@@ -179,21 +181,21 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     if (!item) return;
 
     Alert.alert(
-      'Eliminar Maleta',
-      `¿Estás seguro de que quieres eliminar "${item.title}"?`,
+      t('maletas_alert_delete_title'),
+      t('maletas_alert_delete_message').replace('{0}', item.title),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('common_delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               await UserMaletaService.deleteMaleta(item.id);
               removeListLocally(item.id);
-              Alert.alert('Éxito', 'Lista eliminada correctamente');
+              Alert.alert(t('common_success'), t('maletas_success_deleted'));
             } catch (error: any) {
               console.error('❌ ListsScreen: Error deleting list:', error);
-              Alert.alert('Error', `No se pudo eliminar la lista: ${error?.message || 'Error desconocido'}`);
+              Alert.alert(t('common_error'), t('maletas_error_deleting').replace('{0}', error?.message || 'Error desconocido'));
             }
           },
         },
@@ -218,7 +220,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         activeOpacity={0.8}
       >
         <Ionicons name="create-outline" size={18} color="white" />
-        <Text style={styles.swipeActionText}>Editar</Text>
+        <Text style={styles.swipeActionText}>{t('common_edit')}</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -227,7 +229,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         activeOpacity={0.8}
       >
         <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>Eliminar</Text>
+        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -255,7 +257,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <View style={styles.listMeta}>
             <View style={[styles.publicBadge, item.is_public ? styles.publicBadgePublic : styles.publicBadgePrivate]}>
               <Text style={styles.publicBadgeText}>
-                {item.is_public ? 'Público' : 'Privado'}
+                {item.is_public ? t('common_public') : t('common_private')}
               </Text>
             </View>
           </View>
@@ -267,13 +269,13 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="list-outline" size={64} color="#CCC" />
-      <Text style={styles.emptyStateTitle}>No tienes maletas</Text>
+      <Text style={styles.emptyStateTitle}>{t('maletas_empty_title')}</Text>
       <Text style={styles.emptyStateSubtitle}>
-        Crea tu primera maleta para organizar tu colección
+        {t('maletas_empty_subtitle')}
       </Text>
       <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
         <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.createButtonText}>Crear Maleta</Text>
+        <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -281,7 +283,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   if (!user) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>Debes iniciar sesión para ver tus maletas</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>{t('maletas_login_required')}</Text>
       </View>
     );
   }
@@ -290,8 +292,8 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.headerLeft}>
-          <Text style={[styles.headerTitle, { color: colors.text }]}>Maletas</Text>
-          <Text style={[styles.listCount, { color: colors.text }]}>{filteredLists.length} maleta{filteredLists.length !== 1 ? 's' : ''}</Text>
+          <Text style={[styles.headerTitle, { color: colors.text }]}>{t('maletas_title')}</Text>
+          <Text style={[styles.listCount, { color: colors.text }]}>{t('maletas_count_text').replace('{0}', filteredLists.length.toString())}</Text>
         </View>
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.createMaletaButton} onPress={handleOpenCreateModal}>
@@ -322,7 +324,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       {showFilters && (
         <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
           <View style={styles.filterSection}>
-            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Privacidad</Text>
+            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>{t('maletas_filter_privacy')}</Text>
             <View style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -334,7 +336,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 <Text style={[
                   styles.filterChipText,
                   filterByPrivacy === 'all' && styles.filterChipTextActive
-                ]}>Todas</Text>
+                ]}>{t('maletas_filter_all')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -347,7 +349,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 <Text style={[
                   styles.filterChipText,
                   filterByPrivacy === 'public' && styles.filterChipTextActive
-                ]}>Públicas</Text>
+                ]}>{t('maletas_filter_public')}</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -360,7 +362,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 <Text style={[
                   styles.filterChipText,
                   filterByPrivacy === 'private' && styles.filterChipTextActive
-                ]}>Privadas</Text>
+                ]}>{t('maletas_filter_private')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -369,18 +371,18 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text style={[styles.loadingText, { color: colors.text }]}>Cargando maletas...</Text>
+          <Text style={[styles.loadingText, { color: colors.text }]}>{t('maletas_loading')}</Text>
         </View>
       ) : filteredLists.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="list-outline" size={64} color={colors.text} />
-          <Text style={styles.emptyStateTitle}>No tienes maletas</Text>
+          <Text style={styles.emptyStateTitle}>{t('maletas_empty_title')}</Text>
           <Text style={styles.emptyStateSubtitle}>
-            Crea tu primera maleta para organizar tu colección
+            {t('maletas_empty_subtitle')}
           </Text>
           <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
             <Ionicons name="cube-outline" size={20} color="white" />
-            <Text style={styles.createButtonText}>Crear Maleta</Text>
+            <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
           </TouchableOpacity>
         </View>
       ) : (

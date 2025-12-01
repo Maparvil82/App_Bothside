@@ -17,11 +17,13 @@ import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { supabase } from '../lib/supabase';
 import { IaSubscriptionScreen } from './IaSubscriptionScreen';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const AccountScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const { colors } = useTheme();
     const { user, signOut } = useAuth();
+    const { t } = useTranslation();
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -73,10 +75,10 @@ export const AccountScreen: React.FC = () => {
 
             setProfile(prev => prev ? { ...prev, full_name: fullName, username: username } : null);
             setEditField(null);
-            Alert.alert('Éxito', 'Perfil actualizado correctamente');
+            Alert.alert(t('common_success'), t('account_success_profile_updated'));
         } catch (error) {
             console.error('Error updating profile:', error);
-            Alert.alert('Error', 'No se pudo actualizar el perfil');
+            Alert.alert(t('common_error'), t('account_error_profile_update'));
         } finally {
             setSaving(false);
         }
@@ -94,11 +96,13 @@ export const AccountScreen: React.FC = () => {
             const { error } = await supabase.auth.updateUser({ email: email });
             if (error) throw error;
 
-            Alert.alert('Verificación enviada', 'Por favor revisa tu nuevo correo electrónico para confirmar el cambio.');
+            if (error) throw error;
+
+            Alert.alert(t('account_alert_verification_sent_title'), t('account_alert_verification_sent_message'));
             setEditField(null);
         } catch (error: any) {
             console.error('Error updating email:', error);
-            Alert.alert('Error', error.message || 'No se pudo actualizar el correo');
+            Alert.alert(t('common_error'), error.message || t('account_error_email_update'));
         } finally {
             setSaving(false);
         }
@@ -106,17 +110,17 @@ export const AccountScreen: React.FC = () => {
 
     const handleUpdatePassword = async () => {
         if (!newPassword || !confirmPassword) {
-            Alert.alert('Error', 'Por favor completa todos los campos');
+            Alert.alert(t('common_error'), t('account_error_fill_all_fields'));
             return;
         }
 
         if (newPassword !== confirmPassword) {
-            Alert.alert('Error', 'Las contraseñas no coinciden');
+            Alert.alert(t('common_error'), t('account_error_passwords_mismatch'));
             return;
         }
 
         if (newPassword.length < 6) {
-            Alert.alert('Error', 'La contraseña debe tener al menos 6 caracteres');
+            Alert.alert(t('common_error'), t('account_error_password_length'));
             return;
         }
 
@@ -125,13 +129,15 @@ export const AccountScreen: React.FC = () => {
             const { error } = await supabase.auth.updateUser({ password: newPassword });
             if (error) throw error;
 
-            Alert.alert('Éxito', 'Contraseña actualizada correctamente');
+            if (error) throw error;
+
+            Alert.alert(t('common_success'), t('account_success_password_updated'));
             setEditField(null);
             setNewPassword('');
             setConfirmPassword('');
         } catch (error: any) {
             console.error('Error updating password:', error);
-            Alert.alert('Error', error.message || 'No se pudo actualizar la contraseña');
+            Alert.alert(t('common_error'), error.message || t('account_error_password_update'));
         } finally {
             setSaving(false);
         }
@@ -155,8 +161,8 @@ export const AccountScreen: React.FC = () => {
                     <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
                         <View style={styles.modalHeader}>
                             <Text style={[styles.modalTitle, { color: colors.text }]}>
-                                {editField === 'name' ? 'Editar Perfil' :
-                                    editField === 'email' ? 'Cambiar Correo' : 'Cambiar Contraseña'}
+                                {editField === 'name' ? t('account_modal_edit_profile') :
+                                    editField === 'email' ? t('account_modal_change_email') : t('account_modal_change_password')}
                             </Text>
                             <TouchableOpacity onPress={() => setEditField(null)}>
                                 <Ionicons name="close" size={24} color={colors.text} />
@@ -165,20 +171,20 @@ export const AccountScreen: React.FC = () => {
 
                         {editField === 'name' && (
                             <>
-                                <Text style={[styles.label, { color: colors.text }]}>Nombre completo</Text>
+                                <Text style={[styles.label, { color: colors.text }]}>{t('account_label_full_name')}</Text>
                                 <TextInput
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                                     value={fullName}
                                     onChangeText={setFullName}
-                                    placeholder="Tu nombre"
+                                    placeholder={t('account_placeholder_name')}
                                     placeholderTextColor={colors.text + '80'}
                                 />
-                                <Text style={[styles.label, { color: colors.text, marginTop: 15 }]}>Nombre de usuario</Text>
+                                <Text style={[styles.label, { color: colors.text, marginTop: 15 }]}>{t('account_label_username')}</Text>
                                 <TextInput
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                                     value={username}
                                     onChangeText={setUsername}
-                                    placeholder="username"
+                                    placeholder={t('account_default_username')}
                                     placeholderTextColor={colors.text + '80'}
                                     autoCapitalize="none"
                                 />
@@ -187,17 +193,17 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdateProfile}
                                     disabled={saving}
                                 >
-                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>Guardar Cambios</Text>}
+                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>{t('account_button_save_changes')}</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
 
                         {editField === 'email' && (
                             <>
-                                <Text style={[styles.label, { color: colors.text }]}>Correo electrónico actual</Text>
+                                <Text style={[styles.label, { color: colors.text }]}>{t('account_label_current_email')}</Text>
                                 <Text style={[styles.valueText, { color: colors.text, marginBottom: 15 }]}>{user?.email}</Text>
 
-                                <Text style={[styles.label, { color: colors.text }]}>Nuevo correo electrónico</Text>
+                                <Text style={[styles.label, { color: colors.text }]}>{t('account_label_new_email')}</Text>
                                 <TextInput
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                                     value={email}
@@ -212,28 +218,28 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdateEmail}
                                     disabled={saving}
                                 >
-                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>Actualizar Correo</Text>}
+                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>{t('account_button_update_email')}</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
 
                         {editField === 'password' && (
                             <>
-                                <Text style={[styles.label, { color: colors.text }]}>Nueva contraseña</Text>
+                                <Text style={[styles.label, { color: colors.text }]}>{t('account_label_new_password')}</Text>
                                 <TextInput
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                                     value={newPassword}
                                     onChangeText={setNewPassword}
-                                    placeholder="Mínimo 6 caracteres"
+                                    placeholder={t('account_placeholder_password')}
                                     placeholderTextColor={colors.text + '80'}
                                     secureTextEntry
                                 />
-                                <Text style={[styles.label, { color: colors.text, marginTop: 15 }]}>Confirmar contraseña</Text>
+                                <Text style={[styles.label, { color: colors.text, marginTop: 15 }]}>{t('account_label_confirm_password')}</Text>
                                 <TextInput
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                                     value={confirmPassword}
                                     onChangeText={setConfirmPassword}
-                                    placeholder="Repite la contraseña"
+                                    placeholder={t('account_placeholder_confirm_password')}
                                     placeholderTextColor={colors.text + '80'}
                                     secureTextEntry
                                 />
@@ -242,7 +248,7 @@ export const AccountScreen: React.FC = () => {
                                     onPress={handleUpdatePassword}
                                     disabled={saving}
                                 >
-                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>Actualizar Contraseña</Text>}
+                                    {saving ? <BothsideLoader /> : <Text style={styles.saveButtonText}>{t('account_button_update_password')}</Text>}
                                 </TouchableOpacity>
                             </>
                         )}
@@ -271,9 +277,9 @@ export const AccountScreen: React.FC = () => {
                             >
                                 <View style={styles.menuItemContent}>
                                     <View>
-                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>Nombre y Usuario</Text>
+                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>{t('account_section_name_username')}</Text>
                                         <Text style={[styles.menuItemValue, { color: colors.text, opacity: 0.6 }]}>
-                                            {profile?.full_name || 'Sin nombre'} • @{profile?.username || 'usuario'}
+                                            {profile?.full_name || t('account_default_no_name')} • @{profile?.username || t('account_default_username')}
                                         </Text>
                                     </View>
                                 </View>
@@ -291,7 +297,7 @@ export const AccountScreen: React.FC = () => {
                             >
                                 <View style={styles.menuItemContent}>
                                     <View>
-                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>Correo electrónico</Text>
+                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>{t('account_section_email')}</Text>
                                         <Text style={[styles.menuItemValue, { color: colors.text, opacity: 0.6 }]}>{user?.email}</Text>
                                     </View>
                                 </View>
@@ -304,7 +310,7 @@ export const AccountScreen: React.FC = () => {
                             >
                                 <View style={styles.menuItemContent}>
                                     <View>
-                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>Contraseña</Text>
+                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>{t('account_section_password')}</Text>
                                         <Text style={[styles.menuItemValue, { color: colors.text, opacity: 0.6 }]}>••••••••</Text>
                                     </View>
                                 </View>
@@ -321,7 +327,7 @@ export const AccountScreen: React.FC = () => {
                             >
                                 <View style={styles.menuItemContent}>
                                     <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
-                                    <Text style={[styles.menuItemText, { color: colors.text, marginLeft: 12 }]}>IA y Suscripción</Text>
+                                    <Text style={[styles.menuItemText, { color: colors.text, marginLeft: 12 }]}>{t('account_section_ai_subscription')}</Text>
                                 </View>
                                 <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
                             </TouchableOpacity>
@@ -332,7 +338,7 @@ export const AccountScreen: React.FC = () => {
                             >
                                 <View style={styles.menuItemContent}>
                                     <Ionicons name="trash-outline" size={22} color="#ff3b30" />
-                                    <Text style={[styles.menuItemText, { color: '#ff3b30', marginLeft: 12 }]}>Eliminar Cuenta</Text>
+                                    <Text style={[styles.menuItemText, { color: '#ff3b30', marginLeft: 12 }]}>{t('account_section_delete_account')}</Text>
                                 </View>
                                 <Ionicons name="chevron-forward" size={20} color="#ff3b30" opacity={0.5} />
                             </TouchableOpacity>
@@ -353,9 +359,9 @@ export const AccountScreen: React.FC = () => {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
                         <Ionicons name="information-circle-outline" size={48} color={colors.primary} />
-                        <Text style={[styles.modalTitle, { color: colors.text }]}>Eliminación de Cuenta</Text>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>{t('account_modal_delete_title')}</Text>
                         <Text style={[styles.modalText, { color: colors.text }]}>
-                            La eliminación de cuenta estará disponible próximamente. Mientras tanto, puedes solicitarlo escribiendo a:
+                            {t('account_modal_delete_message')}
                         </Text>
                         <Text style={[styles.modalEmail, { color: colors.primary }]}>maparvil@gmail.com</Text>
 
@@ -363,7 +369,7 @@ export const AccountScreen: React.FC = () => {
                             style={[styles.modalButton, { backgroundColor: colors.primary }]}
                             onPress={() => setDeleteAccountModalVisible(false)}
                         >
-                            <Text style={styles.modalButtonText}>Entendido</Text>
+                            <Text style={styles.modalButtonText}>{t('common_understood')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

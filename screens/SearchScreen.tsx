@@ -36,6 +36,7 @@ import { Audio } from 'expo-av';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import { GeminiService } from '../services/gemini';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -53,6 +54,7 @@ export const SearchScreen: React.FC = () => {
   const { refreshStats } = useStats();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const searchInputRef = useRef<TextInput>(null);
   const cameraRef = useRef<CameraView>(null);
   const [query, setQuery] = useState('');
@@ -284,8 +286,9 @@ export const SearchScreen: React.FC = () => {
       const lists = await UserMaletaService.getUserMaletasWithAlbums(user.id);
       setUserMaletas(lists || []);
     } catch (error) {
+
       console.error('Error loading user lists:', error);
-      Alert.alert('Error', 'No se pudieron cargar las estanterías');
+      Alert.alert(t('common_error'), t('search_error_loading_shelves'));
     }
   };
 
@@ -298,12 +301,12 @@ export const SearchScreen: React.FC = () => {
       const isAlreadyInList = await UserMaletaService.isAlbumInMaleta(maletaId, selectedAlbum.albums.id);
 
       if (isAlreadyInList) {
-        Alert.alert('Aviso', 'Este álbum ya está en esta estantería');
+        Alert.alert(t('common_warning'), t('search_alert_album_in_shelf'));
         return;
       }
 
       await UserMaletaService.addAlbumToMaleta(maletaId, selectedAlbum.albums.id);
-      Alert.alert('Éxito', 'Álbum añadido a la estantería');
+      Alert.alert(t('common_success'), t('search_success_added_to_shelf'));
       setShowAddToShelfModal(false);
       setSelectedAlbum(null);
 
@@ -311,7 +314,7 @@ export const SearchScreen: React.FC = () => {
       navigation.navigate('MaletasTab');
     } catch (error) {
       console.error('Error adding album to list:', error);
-      Alert.alert('Error', 'No se pudo añadir el álbum a la estantería');
+      Alert.alert(t('common_error'), t('search_error_adding_to_shelf'));
     }
   };
 
@@ -330,7 +333,7 @@ export const SearchScreen: React.FC = () => {
       // Añadir el álbum a la nueva estantería
       await UserMaletaService.addAlbumToMaleta(newList.id, selectedAlbum.albums.id);
 
-      Alert.alert('Éxito', 'Maleta creada y álbum añadido');
+      Alert.alert(t('common_success'), t('search_success_shelf_created'));
       setShowAddToShelfModal(false);
       setShowCreateShelfForm(false);
       setSelectedAlbum(null);
@@ -342,7 +345,7 @@ export const SearchScreen: React.FC = () => {
       navigation.navigate('MaletasTab');
     } catch (error) {
       console.error('Error creating list:', error);
-      Alert.alert('Error', 'No se pudo crear la estantería');
+      Alert.alert(t('common_error'), t('search_error_creating_shelf'));
     }
   };
 
@@ -361,7 +364,7 @@ export const SearchScreen: React.FC = () => {
       setPhysicalShelves(shelvesData || []);
     } catch (error) {
       console.error('Error loading physical shelves:', error);
-      Alert.alert('Error', 'No se pudieron cargar las ubicaciones físicas');
+      Alert.alert(t('common_error'), t('search_error_loading_locations'));
     }
   };
 
@@ -369,11 +372,11 @@ export const SearchScreen: React.FC = () => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: ['Cancelar', 'Eliminar'],
+          options: [t('common_cancel'), t('common_delete')],
           destructiveButtonIndex: 1,
           cancelButtonIndex: 0,
-          title: item.albums?.title || 'Álbum',
-          message: '¿Qué quieres hacer con este álbum?',
+          title: item.albums?.title || t('common_album'),
+          message: t('search_action_sheet_title'),
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
@@ -383,11 +386,11 @@ export const SearchScreen: React.FC = () => {
       );
     } else {
       Alert.alert(
-        item.albums?.title || 'Álbum',
-        '¿Qué quieres hacer con este álbum?',
+        item.albums?.title || t('common_album'),
+        t('search_action_sheet_title'),
         [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Eliminar', style: 'destructive', onPress: () => handleDeleteItem(item) },
+          { text: t('common_cancel'), style: 'cancel' },
+          { text: t('common_delete'), style: 'destructive', onPress: () => handleDeleteItem(item) },
         ]
       );
     }
@@ -398,10 +401,12 @@ export const SearchScreen: React.FC = () => {
     try {
       await UserCollectionService.removeFromCollection(user.id, item.albums.id);
       await loadCollection();
-      Alert.alert('Éxito', 'Disco eliminado de tu colección');
+      await UserCollectionService.removeFromCollection(user.id, item.albums.id);
+      await loadCollection();
+      Alert.alert(t('common_success'), t('search_success_deleted'));
     } catch (error) {
       console.error('Error deleting item:', error);
-      Alert.alert('Error', 'No se pudo eliminar el disco');
+      Alert.alert(t('common_error'), t('search_error_deleting'));
     }
   };
 
@@ -457,14 +462,14 @@ export const SearchScreen: React.FC = () => {
       }
 
       Alert.alert(
-        'Gem Status',
+        t('search_gem_status_title'),
         newStatus
-          ? `"${item.albums?.title}" añadido a tus Gems 💎`
-          : `"${item.albums?.title}" removido de tus Gems`
+          ? `"${item.albums?.title}" ${t('search_gem_added')}`
+          : `"${item.albums?.title}" ${t('search_gem_removed')}`
       );
     } catch (error) {
       console.error('❌ handleToggleGem: Error toggling gem status:', error);
-      Alert.alert('Error', 'No se pudo cambiar el estado del Gem');
+      Alert.alert(t('common_error'), t('search_error_toggling_gem'));
 
       // Revertir el cambio local si hay error
       console.log('🔄 handleToggleGem: Reverting local change due to error');
@@ -483,7 +488,7 @@ export const SearchScreen: React.FC = () => {
     if (item) {
       // Usar el contexto para determinar si es gem
       const isItemGem = isGem(item.albums?.id);
-      const gemAction = isItemGem ? 'Remover de Gems' : 'Añadir a Gems';
+      const gemAction = isItemGem ? t('search_action_remove_gem') : t('search_action_add_gem');
 
       console.log('🔍 handleSwipeOptions: Item gem status:', {
         itemId: item.id,
@@ -494,13 +499,13 @@ export const SearchScreen: React.FC = () => {
       });
 
       // Preparar opciones dinámicas
-      const options = ['Cancelar', 'Asignar Ubicación', 'Añadir a Maleta', gemAction, 'Cambiar versión'];
+      const options = [t('common_cancel'), t('search_action_assign_location'), t('search_action_add_to_shelf'), gemAction, t('search_action_change_version')];
 
       // Añadir opciones de audio
       if (item.audio_note) {
-        options.push('Reproducir audio', 'Eliminar audio');
+        options.push(t('search_action_play_audio'), t('search_action_delete_audio'));
       } else {
-        options.push('Grabar nota de audio');
+        options.push(t('search_action_record_audio'));
       }
 
       if (Platform.OS === 'ios') {
@@ -508,8 +513,9 @@ export const SearchScreen: React.FC = () => {
           {
             options: options,
             cancelButtonIndex: 0,
-            title: item.albums?.title || 'Álbum',
-            message: '¿Qué quieres hacer con este álbum?',
+
+            title: item.albums?.title || t('common_album'),
+            message: t('search_action_sheet_title'),
           },
           (buttonIndex) => {
             switch (buttonIndex) {
@@ -546,31 +552,31 @@ export const SearchScreen: React.FC = () => {
         );
       } else {
         Alert.alert(
-          item.albums?.title || 'Álbum',
-          '¿Qué quieres hacer con este álbum?',
+          item.albums?.title || t('common_album'),
+          t('search_action_sheet_title'),
           [
-            { text: 'Cancelar', style: 'cancel' },
+            { text: t('common_cancel'), style: 'cancel' },
             {
-              text: 'Asignar Ubicación', onPress: () => {
+              text: t('search_action_assign_location'), onPress: () => {
                 setSelectedAlbumForLocation(item);
                 loadPhysicalShelves();
                 setShowLocationModal(true);
               }
             },
             {
-              text: 'Añadir a Maleta', onPress: () => {
+              text: t('search_action_add_to_shelf'), onPress: () => {
                 setSelectedAlbum(item);
                 loadUserMaletas();
                 setShowAddToShelfModal(true);
               }
             },
             { text: gemAction, onPress: () => handleToggleGem(item) },
-            { text: 'Cambiar versión', onPress: () => handleEditAlbum(item) },
+            { text: t('search_action_change_version'), onPress: () => handleEditAlbum(item) },
             ...(item.audio_note ? [
-              { text: 'Reproducir audio', onPress: () => handlePlayAudio(item) },
-              { text: 'Eliminar audio', onPress: () => handleDeleteAudioNote(item) }
+              { text: t('search_action_play_audio'), onPress: () => handlePlayAudio(item) },
+              { text: t('search_action_delete_audio'), onPress: () => handleDeleteAudioNote(item) }
             ] : [
-              { text: 'Grabar nota de audio', onPress: () => handleRecordAudio(item) }
+              { text: t('search_action_record_audio'), onPress: () => handleRecordAudio(item) }
             ])
           ]
         );
@@ -588,13 +594,13 @@ export const SearchScreen: React.FC = () => {
       return (
         <View style={styles.emptyState}>
           <Ionicons name="disc-outline" size={64} color={colors.text} />
-          <Text style={[styles.emptyStateTitle, { color: colors.text }]}>No tienes discos</Text>
+          <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('search_empty_title')}</Text>
           <Text style={[styles.emptyStateSubtitle, { color: colors.text }]}>
-            Añade tu primer disco para empezar tu colección
+            {t('search_empty_subtitle')}
           </Text>
           <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
             <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.createButtonText}>Añadir Disco</Text>
+            <Text style={styles.createButtonText}>{t('search_empty_button')}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -602,7 +608,7 @@ export const SearchScreen: React.FC = () => {
 
     return (
       <View style={styles.emptyContainer}>
-        <Text style={[styles.emptyText, { color: colors.text }]}>No se encontraron resultados</Text>
+        <Text style={[styles.emptyText, { color: colors.text }]}>{t('search_no_results')}</Text>
       </View>
     );
   };
@@ -648,7 +654,7 @@ export const SearchScreen: React.FC = () => {
     // Filtrar por ubicación
     if (filterByLocation) {
       filtered = filtered.filter(item => {
-        if (filterByLocation === 'Sin ubicación') {
+        if (filterByLocation === t('search_filter_no_location')) {
           return !item.shelf_name;
         }
         return item.shelf_name === filterByLocation;
@@ -683,7 +689,7 @@ export const SearchScreen: React.FC = () => {
     try {
       const albumData = {
         title: release.title,
-        artist: release.artists?.[0]?.name || 'Unknown Artist',
+        artist: release.artists?.[0]?.name || t('common_unknown_artist'),
         release_year: release.year?.toString() || '',
         label: release.labels?.[0]?.name || '',
         cover_url: release.cover_image || release.thumb,
@@ -704,8 +710,8 @@ export const SearchScreen: React.FC = () => {
 
       if (existingExact) {
         Alert.alert(
-          "Ya tienes este disco",
-          "Este disco ya está en tu colección."
+          t('search_alert_duplicate_title'),
+          t('search_alert_duplicate_message')
         );
         return;
       }
@@ -742,8 +748,8 @@ export const SearchScreen: React.FC = () => {
 
         if (otherEdition) {
           Alert.alert(
-            "Tienes otra edición",
-            "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
+            t('search_alert_other_edition_title'),
+            t('search_alert_other_edition_message')
           );
         }
       }
@@ -755,18 +761,18 @@ export const SearchScreen: React.FC = () => {
 
       // Mostrar opciones después de añadir el disco
       Alert.alert(
-        'Disco añadido correctamente',
-        '¿Qué quieres hacer ahora?',
+        t('search_success_added_title'),
+        t('search_success_added_message'),
         [
           {
-            text: 'Añadir más discos',
+            text: t('search_action_add_more'),
             style: 'default',
             onPress: () => {
               // Mantener en la página actual
             }
           },
           {
-            text: 'Ir a colección',
+            text: t('search_action_go_to_collection'),
             style: 'default',
             onPress: () => {
               navigation.navigate('SearchTab');
@@ -776,7 +782,7 @@ export const SearchScreen: React.FC = () => {
       );
     } catch (error) {
       console.error('Error adding to collection:', error);
-      Alert.alert('Error', 'No se pudo añadir el disco a la colección');
+      Alert.alert(t('common_error'), t('search_error_adding_to_collection'));
     }
   };
 
@@ -858,7 +864,7 @@ export const SearchScreen: React.FC = () => {
     // Añadir "Sin ubicación" si hay álbumes sin ubicación
     const hasUnlocatedAlbums = collection.some(item => !item.shelf_name);
     if (hasUnlocatedAlbums) {
-      locations.add('Sin ubicación');
+      locations.add(t('search_filter_no_location'));
     }
     return Array.from(locations).sort();
   };
@@ -916,7 +922,7 @@ export const SearchScreen: React.FC = () => {
         .map((release: any) => {
           // Extraer artista del título si no está disponible directamente
           let extractedArtist = release.artist;
-          let extractedTitle = release.title || 'Sin título';
+          let extractedTitle = release.title || t('common_untitled');
 
           if (!extractedArtist && release.title) {
             // Intentar extraer artista del título (formato: "Artista - Título")
@@ -951,15 +957,15 @@ export const SearchScreen: React.FC = () => {
 
       if (formattedEditions.length === 0) {
         Alert.alert(
-          'Sin resultados',
-          `No se encontraron ediciones para "${albumTitle}" de "${artist}". Intenta con una búsqueda más específica.`
+          t('search_alert_no_results_title'),
+          t('search_alert_no_editions_message').replace('{0}', albumTitle).replace('{1}', artist)
         );
       }
     } catch (error) {
       console.error('❌ Error searching editions:', error);
       Alert.alert(
-        'Error de conexión',
-        'No se pudieron cargar las ediciones. Verifica tu conexión a internet y el token de Discogs.'
+        t('common_connection_error'),
+        t('search_error_loading_editions')
       );
     } finally {
       setEditionsLoading(false);
@@ -983,12 +989,12 @@ export const SearchScreen: React.FC = () => {
 
       // Mostrar confirmación antes de reemplazar
       Alert.alert(
-        'Confirmar reemplazo',
-        `¿Estás seguro de que quieres reemplazar "${selectedAlbumForEdit.albums.title}" con "${newEdition.title}"?`,
+        t('search_alert_replace_title'),
+        t('search_alert_replace_message').replace('{0}', selectedAlbumForEdit.albums.title).replace('{1}', newEdition.title),
         [
-          { text: 'Cancelar', style: 'cancel' },
+          { text: t('common_cancel'), style: 'cancel' },
           {
-            text: 'Reemplazar',
+            text: t('search_action_replace'),
             style: 'destructive',
             onPress: async () => {
               try {
@@ -1017,10 +1023,10 @@ export const SearchScreen: React.FC = () => {
                 // Recargar la colección
                 await loadCollection();
 
-                Alert.alert('✅ Éxito', 'Edición reemplazada correctamente');
+                Alert.alert(t('common_success'), t('search_success_replaced'));
               } catch (error) {
                 console.error('❌ Error replacing edition:', error);
-                Alert.alert('❌ Error', 'No se pudo reemplazar la edición. Inténtalo de nuevo.');
+                Alert.alert(t('common_error'), t('search_error_replacing'));
               }
             }
           }
@@ -1028,7 +1034,7 @@ export const SearchScreen: React.FC = () => {
       );
     } catch (error) {
       console.error('❌ Error in handleReplaceEdition:', error);
-      Alert.alert('❌ Error', 'No se pudo procesar la solicitud. Inténtalo de nuevo.');
+      Alert.alert(t('common_error'), t('search_error_processing'));
     }
   };
 
@@ -1047,7 +1053,7 @@ export const SearchScreen: React.FC = () => {
 
     // Configurar el reproductor flotante
     setFloatingAudioUri(item.audio_note);
-    setFloatingAlbumTitle(item.albums?.title || 'Álbum');
+    setFloatingAlbumTitle(item.albums?.title || t('common_album'));
     setShowFloatingPlayer(true);
 
     console.log('🔍 Floating player should now be visible');
@@ -1082,7 +1088,7 @@ export const SearchScreen: React.FC = () => {
       setSelectedAlbumForAudio(null);
     } catch (error) {
       console.error('❌ Error saving audio note:', error);
-      Alert.alert('Error', 'No se pudo guardar la nota de audio');
+      Alert.alert(t('common_error'), t('search_error_saving_audio'));
     }
   };
 
@@ -1103,10 +1109,10 @@ export const SearchScreen: React.FC = () => {
       // Recargar la colección
       await loadCollection();
 
-      Alert.alert('Éxito', 'Nota de audio eliminada correctamente');
+      Alert.alert(t('common_success'), t('search_success_audio_deleted'));
     } catch (error) {
       console.error('❌ Error deleting audio note:', error);
-      Alert.alert('Error', 'No se pudo eliminar la nota de audio');
+      Alert.alert(t('common_error'), t('search_error_deleting_audio'));
     }
   };
 
@@ -1124,14 +1130,14 @@ export const SearchScreen: React.FC = () => {
       if (!permission?.granted) {
         const result = await requestPermission();
         if (!result.granted) {
-          Alert.alert('Permisos', 'Se necesitan permisos de cámara para esta función');
+          Alert.alert(t('common_permissions'), t('search_permission_camera'));
           return;
         }
       }
       setShowCamera(true);
     } catch (error) {
       console.error('Error opening camera:', error);
-      Alert.alert('Error', 'No se pudo abrir la cámara');
+      Alert.alert(t('common_error'), t('search_error_opening_camera'));
     }
   };
 
@@ -1139,7 +1145,7 @@ export const SearchScreen: React.FC = () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permisos', 'Se necesitan permisos de galería para esta función');
+        Alert.alert(t('common_permissions'), t('search_permission_gallery'));
         return;
       }
 
@@ -1156,7 +1162,7 @@ export const SearchScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error picking image:', error);
-      Alert.alert('Error', 'No se pudo seleccionar la imagen');
+      Alert.alert(t('common_error'), t('search_error_picking_image'));
     }
   };
 
@@ -1173,7 +1179,7 @@ export const SearchScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('Error taking picture:', error);
-      Alert.alert('Error', 'No se pudo tomar la foto');
+      Alert.alert(t('common_error'), t('search_error_taking_photo'));
     }
   };
 
@@ -1224,11 +1230,11 @@ export const SearchScreen: React.FC = () => {
       if (artist && album) {
         await searchInUserCollection(`${artist} ${album}`);
       } else {
-        Alert.alert('Sin resultados', 'No se pudo reconocer el álbum en la imagen');
+        Alert.alert(t('search_alert_no_results_title'), t('search_error_recognizing_album'));
       }
     } catch (error) {
       console.error('Error processing image with AI:', error);
-      Alert.alert('Error', 'Error al procesar la imagen con IA');
+      Alert.alert(t('common_error'), t('search_error_processing_ai'));
     } finally {
       setAiLoading(false);
     }
@@ -1489,15 +1495,15 @@ export const SearchScreen: React.FC = () => {
         }
       } else {
         Alert.alert(
-          'No encontrado',
-          'No se encontró este disco en tu colección. ¿Quieres buscarlo en Discogs para añadirlo?',
+          t('search_alert_not_found_title'),
+          t('search_alert_not_found_message'),
           [
             {
-              text: 'No',
+              text: t('common_no'),
               style: 'cancel'
             },
             {
-              text: 'Buscar en Discogs',
+              text: t('search_action_search_discogs'),
               onPress: () => {
                 setQuery(searchText);
                 setShowSearch(true);
@@ -1609,7 +1615,7 @@ export const SearchScreen: React.FC = () => {
         activeOpacity={0.8}
       >
         <Ionicons name="ellipsis-horizontal" size={18} color="white" />
-        <Text style={styles.swipeActionText}>Opciones</Text>
+        <Text style={styles.swipeActionText}>{t('common_options')}</Text>
       </TouchableOpacity>
       <TouchableOpacity
         style={[styles.swipeAction, styles.swipeDelete]}
@@ -1617,7 +1623,7 @@ export const SearchScreen: React.FC = () => {
         activeOpacity={0.8}
       >
         <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>Eliminar</Text>
+        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -1629,10 +1635,10 @@ export const SearchScreen: React.FC = () => {
         {/* Contador de discos y porcentaje ubicados a la izquierda */}
         <Text style={[styles.collectionStats, { color: colors.text }]}>
           <Text style={[styles.collectionCount, { color: colors.text }]}>
-            {filteredCollection.length} discos
+            {filteredCollection.length} {t('search_stats_discs')}
           </Text>
           <Text style={[styles.locatedPercentage, { color: colors.text }]}>
-            {' • '}{getLocatedPercentage()}% Ubicados
+            {' • '}{getLocatedPercentage()}% {t('search_stats_located')}
           </Text>
         </Text>
 
@@ -1692,7 +1698,7 @@ export const SearchScreen: React.FC = () => {
             <TextInput
               ref={searchInputRef}
               style={[styles.searchInput, { color: colors.text, backgroundColor: colors.background }]}
-              placeholder="Buscar por artista, sello o álbum..."
+              placeholder={t('search_placeholder')}
               value={query}
               onChangeText={setQuery}
               placeholderTextColor={colors.text}
@@ -1715,7 +1721,7 @@ export const SearchScreen: React.FC = () => {
         <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
           {/* Filtro por Estilo */}
           <View style={styles.filterSection}>
-            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>Estilo</Text>
+            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>{t('search_filter_style')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -1727,7 +1733,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={[
                   styles.filterChipText,
                   !filterByStyle && styles.filterChipTextActive
-                ]}>Todos</Text>
+                ]}>{t('search_filter_all')}</Text>
               </TouchableOpacity>
               {getUniqueStyles().map((style) => (
                 <TouchableOpacity
@@ -1749,7 +1755,7 @@ export const SearchScreen: React.FC = () => {
 
           {/* Filtro por Año */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Año</Text>
+            <Text style={styles.filterSectionTitle}>{t('search_filter_year')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -1761,7 +1767,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={[
                   styles.filterChipText,
                   !filterByYear && styles.filterChipTextActive
-                ]}>Todos</Text>
+                ]}>{t('search_filter_all')}</Text>
               </TouchableOpacity>
               {getUniqueYears().map((year) => (
                 <TouchableOpacity
@@ -1783,7 +1789,7 @@ export const SearchScreen: React.FC = () => {
 
           {/* Filtro por Sello */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Sello</Text>
+            <Text style={styles.filterSectionTitle}>{t('search_filter_label')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -1795,7 +1801,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={[
                   styles.filterChipText,
                   !filterByLabel && styles.filterChipTextActive
-                ]}>Todos</Text>
+                ]}>{t('search_filter_all')}</Text>
               </TouchableOpacity>
               {getUniqueLabels().map((label) => (
                 <TouchableOpacity
@@ -1817,7 +1823,7 @@ export const SearchScreen: React.FC = () => {
 
           {/* Filtro por Ubicación */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Ubicación</Text>
+            <Text style={styles.filterSectionTitle}>{t('search_filter_location')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -1829,7 +1835,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={[
                   styles.filterChipText,
                   !filterByLocation && styles.filterChipTextActive
-                ]}>Todas</Text>
+                ]}>{t('search_filter_all_locations')}</Text>
               </TouchableOpacity>
               {getUniqueLocations().map((location) => (
                 <TouchableOpacity
@@ -1851,7 +1857,7 @@ export const SearchScreen: React.FC = () => {
 
           {/* Filtro por Audio */}
           <View style={styles.filterSection}>
-            <Text style={styles.filterSectionTitle}>Audio</Text>
+            <Text style={styles.filterSectionTitle}>{t('search_filter_audio')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
                 style={[
@@ -1863,7 +1869,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={[
                   styles.filterChipText,
                   !filterByAudioNotes && styles.filterChipTextActive
-                ]}>Todos</Text>
+                ]}>{t('search_filter_all')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[
@@ -1875,7 +1881,7 @@ export const SearchScreen: React.FC = () => {
                 <Text style={[
                   styles.filterChipText,
                   filterByAudioNotes && styles.filterChipTextActive
-                ]}>Con notas de audio</Text>
+                ]}>{t('search_filter_with_audio')}</Text>
               </TouchableOpacity>
             </ScrollView>
           </View>
@@ -1889,7 +1895,7 @@ export const SearchScreen: React.FC = () => {
                 activeOpacity={0.7}
               >
                 <Ionicons name="close-circle-outline" size={16} color="#888" style={{ marginRight: 4 }} />
-                <Text style={styles.clearFiltersText}>Limpiar filtros</Text>
+                <Text style={styles.clearFiltersText}>{t('search_action_clear_filters')}</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -1916,7 +1922,7 @@ export const SearchScreen: React.FC = () => {
           ListFooterComponent={
             releases.length > 0 ? (
               <View style={styles.footerContainer}>
-                <Text style={[styles.footerText, { color: colors.text }]}>Resultados de búsqueda en Discogs</Text>
+                <Text style={[styles.footerText, { color: colors.text }]}>{t('search_results_discogs')}</Text>
                 <FlatList
                   data={releases}
                   renderItem={renderRelease}
@@ -1938,7 +1944,7 @@ export const SearchScreen: React.FC = () => {
           ListEmptyComponent={
             loading ? (
               <View style={styles.emptyContainer}>
-                <Text style={[styles.emptyText, { color: colors.text }]}>Cargando...</Text>
+                <Text style={[styles.emptyText, { color: colors.text }]}>{t('common_loading')}</Text>
               </View>
             ) : (
               <View style={styles.emptyContainer}>
@@ -1960,7 +1966,7 @@ export const SearchScreen: React.FC = () => {
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Añadir "{selectedAlbum?.albums?.title}" a una estantería
+                {t('search_modal_add_to_shelf_title').replace('{0}', selectedAlbum?.albums?.title || '')}
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -1982,13 +1988,13 @@ export const SearchScreen: React.FC = () => {
                   onPress={() => setShowCreateShelfForm(true)}
                 >
                   <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
-                  <Text style={styles.createNewShelfText}>Crear nueva estantería</Text>
+                  <Text style={styles.createNewShelfText}>{t('search_action_create_shelf')}</Text>
                 </TouchableOpacity>
 
-                <Text style={styles.shelfListTitle}>Maletas existentes:</Text>
+                <Text style={styles.shelfListTitle}>{t('search_subtitle_existing_shelves')}</Text>
 
                 {userLists.length === 0 ? (
-                  <Text style={styles.noShelvesText}>No tienes estanterías creadas</Text>
+                  <Text style={styles.noShelvesText}>{t('search_empty_shelves')}</Text>
                 ) : (
                   userLists.map((list) => (
                     <TouchableOpacity
@@ -2006,7 +2012,7 @@ export const SearchScreen: React.FC = () => {
                         )}
                         <View style={styles.shelfItemMeta}>
                           <Text style={styles.shelfItemMetaText}>
-                            {list.is_public ? 'Pública' : 'Privada'}
+                            {list.is_public ? t('common_public') : t('common_private')}
                           </Text>
                         </View>
                       </View>
@@ -2018,26 +2024,26 @@ export const SearchScreen: React.FC = () => {
             ) : (
               // Formulario para crear nueva estantería
               <ScrollView style={styles.modalBody}>
-                <Text style={styles.formTitle}>Crear nueva estantería</Text>
+                <Text style={styles.formTitle}>{t('search_modal_create_shelf_title')}</Text>
 
                 <View style={styles.formField}>
-                  <Text style={styles.formLabel}>Título *</Text>
+                  <Text style={styles.formLabel}>{t('common_title_required')}</Text>
                   <TextInput
                     style={styles.formInput}
                     value={newShelfTitle}
                     onChangeText={setNewShelfTitle}
-                    placeholder="Nombre de la estantería"
+                    placeholder={t('search_placeholder_shelf_name')}
                     autoFocus={true}
                   />
                 </View>
 
                 <View style={styles.formField}>
-                  <Text style={styles.formLabel}>Descripción</Text>
+                  <Text style={styles.formLabel}>{t('common_description')}</Text>
                   <TextInput
                     style={[styles.formInput, styles.formTextArea]}
                     value={newShelfDescription}
                     onChangeText={setNewShelfDescription}
-                    placeholder="Descripción opcional"
+                    placeholder={t('common_description_optional')}
                     multiline={true}
                     numberOfLines={3}
                   />
@@ -2045,7 +2051,7 @@ export const SearchScreen: React.FC = () => {
 
                 <View style={styles.formField}>
                   <View style={styles.publicToggleContainer}>
-                    <Text style={styles.formLabel}>Maleta pública</Text>
+                    <Text style={styles.formLabel}>{t('search_label_public_shelf')}</Text>
                     <TouchableOpacity
                       style={styles.toggleButton}
                       onPress={() => setNewShelfIsPublic(!newShelfIsPublic)}
@@ -2062,7 +2068,7 @@ export const SearchScreen: React.FC = () => {
                     </TouchableOpacity>
                   </View>
                   <Text style={styles.toggleDescription}>
-                    Las estanterías públicas pueden ser vistas por otros usuarios
+                    {t('search_help_public_shelf')}
                   </Text>
                 </View>
 
@@ -2076,7 +2082,7 @@ export const SearchScreen: React.FC = () => {
                       setNewShelfIsPublic(false);
                     }}
                   >
-                    <Text style={styles.cancelButtonText}>Cancelar</Text>
+                    <Text style={styles.cancelButtonText}>{t('common_cancel')}</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
@@ -2087,7 +2093,7 @@ export const SearchScreen: React.FC = () => {
                     onPress={createNewShelf}
                     disabled={!newShelfTitle.trim()}
                   >
-                    <Text style={styles.formCreateButtonText}>Crear y añadir álbum</Text>
+                    <Text style={styles.formCreateButtonText}>{t('search_action_create_and_add')}</Text>
                   </TouchableOpacity>
                 </View>
               </ScrollView>
@@ -2107,7 +2113,7 @@ export const SearchScreen: React.FC = () => {
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Asignar Ubicación para "{selectedAlbumForLocation?.albums?.title}"
+                {t('search_modal_assign_location_title').replace('{0}', selectedAlbumForLocation?.albums?.title || '')}
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -2120,14 +2126,14 @@ export const SearchScreen: React.FC = () => {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              <Text style={styles.selectShelfTitle}>Selecciona una ubicación física:</Text>
+              <Text style={styles.selectShelfTitle}>{t('search_subtitle_select_location')}</Text>
 
               {physicalShelves.length === 0 ? (
                 <View style={styles.emptyShelvesContainer}>
                   <Ionicons name="grid-outline" size={48} color="#ccc" />
-                  <Text style={styles.emptyShelvesTitle}>Sin ubicaciones físicas</Text>
+                  <Text style={styles.emptyShelvesTitle}>{t('search_empty_locations')}</Text>
                   <Text style={styles.emptyShelvesSubtitle}>
-                    Crea ubicaciones físicas para organizar tu colección
+                    {t('search_empty_locations_subtitle')}
                   </Text>
                   <TouchableOpacity
                     style={styles.createShelfButton}
@@ -2136,7 +2142,7 @@ export const SearchScreen: React.FC = () => {
                       navigation.navigate('ShelvesList');
                     }}
                   >
-                    <Text style={styles.createShelfButtonText}>Crear ubicación física</Text>
+                    <Text style={styles.createShelfButtonText}>{t('search_action_create_location')}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
@@ -2180,7 +2186,7 @@ export const SearchScreen: React.FC = () => {
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Cambiar versión de "{selectedAlbumForEdit?.albums?.title}"
+                {t('search_modal_change_version_title').replace('{0}', selectedAlbumForEdit?.albums?.title || '')}
               </Text>
               <TouchableOpacity
                 onPress={() => {
@@ -2196,27 +2202,27 @@ export const SearchScreen: React.FC = () => {
 
             <ScrollView style={styles.modalBody}>
               <Text style={styles.formTitle}>
-                Ediciones disponibles ({editions.length} encontradas):
+                {t('search_subtitle_editions_found').replace('{0}', editions.length.toString())}
               </Text>
 
               {editionsLoading ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="search" size={48} color="#ccc" />
-                  <Text style={styles.emptyText}>Buscando ediciones...</Text>
-                  <Text style={styles.emptySubtext}>Esto puede tomar unos segundos</Text>
+                  <Text style={styles.emptyText}>{t('search_status_searching_editions')}</Text>
+                  <Text style={styles.emptySubtext}>{t('common_wait_seconds')}</Text>
                 </View>
               ) : editions.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <Ionicons name="alert-circle" size={48} color="#ccc" />
-                  <Text style={styles.emptyText}>No se encontraron ediciones</Text>
+                  <Text style={styles.emptyText}>{t('search_empty_editions')}</Text>
                   <Text style={styles.emptySubtext}>
-                    Intenta con una búsqueda más específica o verifica el nombre del álbum
+                    {t('search_empty_editions_subtitle')}
                   </Text>
                 </View>
               ) : (
                 <>
                   <Text style={styles.editionsSubtitle}>
-                    Selecciona una edición para reemplazar la actual:
+                    {t('search_subtitle_select_edition')}
                   </Text>
                   {editions.map((edition, index) => (
                     <TouchableOpacity
@@ -2232,9 +2238,9 @@ export const SearchScreen: React.FC = () => {
                         <Text style={styles.editionTitle}>{edition.title}</Text>
                         <Text style={styles.editionArtist}>{edition.artist}</Text>
                         <Text style={styles.editionDetail}>
-                          {edition.year && `Año: ${edition.year}`}
-                          {edition.genres && edition.genres.length > 0 && ` | Género: ${edition.genres.join(', ')}`}
-                          {edition.styles && edition.styles.length > 0 && ` | Estilo: ${edition.styles.join(', ')}`}
+                          {edition.year && t('common_year_format').replace('{0}', edition.year.toString())}
+                          {edition.genres && edition.genres.length > 0 && t('common_genre_format').replace('{0}', edition.genres.join(', '))}
+                          {edition.styles && edition.styles.length > 0 && t('common_style_format').replace('{0}', edition.styles.join(', '))}
                         </Text>
                       </View>
                       <Ionicons name="chevron-forward" size={20} color="#666" />
@@ -2319,7 +2325,7 @@ export const SearchScreen: React.FC = () => {
           <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
-                Discos Encontrados
+                {t('search_modal_ai_results_title')}
               </Text>
               <TouchableOpacity
                 style={styles.closeButton}
@@ -2333,7 +2339,7 @@ export const SearchScreen: React.FC = () => {
               {recognizedAlbum && (
                 <View style={styles.extractedTextContainer}>
                   <Text style={[styles.extractedTextLabel, { color: colors.text }]}>
-                    Álbum reconocido:
+                    {t('search_label_recognized_album')}
                   </Text>
                   <Text style={[styles.extractedText, { color: colors.text }]}>
                     {recognizedAlbum}
@@ -2342,7 +2348,7 @@ export const SearchScreen: React.FC = () => {
               )}
 
               <Text style={[styles.resultsTitle, { color: colors.text }]}>
-                Resultados en tu colección:
+                {t('search_subtitle_collection_results')}
               </Text>
 
               {aiResults.map((item, index) => (

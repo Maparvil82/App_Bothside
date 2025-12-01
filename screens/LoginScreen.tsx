@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -26,6 +27,7 @@ export const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { signIn, signUp } = useAuth();
+  const { t } = useTranslation();
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
 
@@ -38,19 +40,19 @@ export const LoginScreen: React.FC = () => {
 
   const validateUsername = (username: string): string | null => {
     if (!username.trim()) {
-      return 'Por favor ingresa un nombre de usuario';
+      return t('auth_validation_username_required');
     }
 
     if (username.length < 3) {
-      return 'El nombre de usuario debe tener al menos 3 caracteres';
+      return t('auth_validation_username_min_length');
     }
 
     if (username.length > 20) {
-      return 'El nombre de usuario no puede tener más de 20 caracteres';
+      return t('auth_validation_username_max_length');
     }
 
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return 'El nombre de usuario solo puede contener letras, números y guiones bajos';
+      return t('auth_validation_username_format');
     }
 
     return null;
@@ -58,14 +60,14 @@ export const LoginScreen: React.FC = () => {
 
   const handleAuth = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Por favor completa todos los campos');
+      Alert.alert(t('common_error'), t('auth_validation_all_fields_required'));
       return;
     }
 
     if (isSignUp) {
       const usernameError = validateUsername(username);
       if (usernameError) {
-        Alert.alert('Error', usernameError);
+        Alert.alert(t('common_error'), usernameError);
         return;
       }
     }
@@ -92,7 +94,7 @@ export const LoginScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      Alert.alert('Error', error.message);
+      Alert.alert(t('common_error'), error.message);
     } finally {
       setLoading(false);
     }
@@ -115,19 +117,19 @@ export const LoginScreen: React.FC = () => {
           />
 
           <Text style={styles.title}>
-            {isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+            {isSignUp ? t('auth_create_account') : t('auth_login')}
           </Text>
           <Text style={styles.subtitle}>
             {isSignUp
-              ? 'Introduce tus datos para crear tu cuenta.'
-              : 'Accede para sincronizar tu colección y sesiones.'}
+              ? t('auth_signup_subtitle')
+              : t('auth_login_subtitle')}
           </Text>
 
           {isSignUp && (
             <View style={styles.inputContainer}>
               <TextInput
                 style={styles.input}
-                placeholder="Nombre de usuario"
+                placeholder={t('auth_placeholder_username')}
                 placeholderTextColor="#B3B3B3"
                 value={username}
                 onChangeText={setUsername}
@@ -141,7 +143,7 @@ export const LoginScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <TextInput
               style={styles.input}
-              placeholder="Correo electrónico"
+              placeholder={t('auth_placeholder_email')}
               placeholderTextColor="#B3B3B3"
               value={email}
               onChangeText={setEmail}
@@ -154,7 +156,7 @@ export const LoginScreen: React.FC = () => {
           <View style={styles.inputContainer}>
             <TextInput
               style={[styles.input, { paddingRight: 50 }]}
-              placeholder="Contraseña"
+              placeholder={t('auth_placeholder_password')}
               placeholderTextColor="#B3B3B3"
               value={password}
               onChangeText={setPassword}
@@ -179,7 +181,7 @@ export const LoginScreen: React.FC = () => {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? 'Cargando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
+              {loading ? t('common_loading') : isSignUp ? t('auth_create_account') : t('auth_login')}
             </Text>
           </TouchableOpacity>
 
@@ -188,7 +190,7 @@ export const LoginScreen: React.FC = () => {
             onPress={() => setIsSignUp(!isSignUp)}
           >
             <Text style={styles.switchText}>
-              {isSignUp ? '¿Ya tienes cuenta? Inicia sesión' : '¿No tienes cuenta? Crear cuenta'}
+              {isSignUp ? t('auth_switch_to_login') : t('auth_switch_to_signup')}
             </Text>
           </TouchableOpacity>
         </ScrollView>

@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface PricingPlan {
   id: string;
@@ -25,35 +26,7 @@ interface PricingPlan {
   productId: string;
 }
 
-const commonFeatures = [
-  'Escaneo inteligente de portadas con IA',
-  'Assistant musical y de colección',
-  'Panel profesional: sesiones, ganancias, estadísticas',
-  'Organización completa de tu colección de vinilos',
-  'IA por cámara y voz',
-  '500 créditos IA mensuales',
-  'Cancela cuando quieras',
-];
-
-const pricingPlans: PricingPlan[] = [
-  {
-    id: 'annual',
-    title: 'Anual',
-    price: '39.99',
-    period: 'año',
-    originalPrice: '59.88',
-    savings: 'Ahorra 33%',
-    productId: 'bothside_annual_subscription',
-    popular: true,
-  },
-  {
-    id: 'monthly',
-    title: 'Mensual',
-    price: '7.99',
-    period: 'mes',
-    productId: 'bothside_monthly_subscription',
-  },
-];
+// Moved inside component for translation
 
 export const PricingScreen: React.FC = () => {
   // Monthly selected by default
@@ -61,6 +34,37 @@ export const PricingScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const navigation = useNavigation<any>();
   const { user, setUser } = useAuth();
+  const { t } = useTranslation();
+
+  const commonFeatures = [
+    t('pricing_feature_scan'),
+    t('pricing_feature_assistant'),
+    t('pricing_feature_dashboard'),
+    t('pricing_feature_organization'),
+    t('pricing_feature_ai'),
+    t('pricing_feature_credits'),
+    t('pricing_feature_cancel'),
+  ];
+
+  const pricingPlans: PricingPlan[] = [
+    {
+      id: 'annual',
+      title: t('pricing_plan_annual_title'),
+      price: '39.99',
+      period: t('pricing_plan_year'),
+      originalPrice: '59.88',
+      savings: t('pricing_plan_annual_savings'),
+      productId: 'bothside_annual_subscription',
+      popular: true,
+    },
+    {
+      id: 'monthly',
+      title: t('pricing_plan_monthly_title'),
+      price: '7.99',
+      period: t('pricing_plan_month'),
+      productId: 'bothside_monthly_subscription',
+    },
+  ];
 
   // Función preparada para leer suscripción (no se llama automáticamente aún)
   const fetchSubscriptionAndCredits = async (userId: string) => {
@@ -104,7 +108,7 @@ export const PricingScreen: React.FC = () => {
   };
 
   const handleRestore = () => {
-    Alert.alert('Restaurar Compras', 'Buscando suscripciones activas...');
+    Alert.alert(t('pricing_restore_title'), t('pricing_restore_message'));
   };
 
   const handleLogin = () => {
@@ -131,9 +135,9 @@ export const PricingScreen: React.FC = () => {
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Empieza tu prueba gratuita de 7 días</Text>
+          <Text style={styles.title}>{t('pricing_title')}</Text>
           <Text style={styles.subtitle}>
-            Organiza tus sesiones como DJ y tu colección de vinilos como un profesional.
+            {t('pricing_subtitle')}
           </Text>
         </View>
 
@@ -162,7 +166,7 @@ export const PricingScreen: React.FC = () => {
             >
               {plan.popular && (
                 <View style={styles.popularBadge}>
-                  <Text style={styles.popularText}>Más Popular</Text>
+                  <Text style={styles.popularText}>{t('pricing_popular')}</Text>
                 </View>
               )}
 
@@ -191,8 +195,8 @@ export const PricingScreen: React.FC = () => {
         <View style={styles.trialBlock}>
           <Ionicons name="checkmark-circle" size={24} color="#28a745" />
           <View style={styles.trialBlockText}>
-            <Text style={styles.trialBlockTitle}>Prueba gratuita de 7 días activa</Text>
-            <Text style={styles.trialBlockSubtitle}>No pagarás nada hoy. Cancela cuando quieras.</Text>
+            <Text style={styles.trialBlockTitle}>{t('pricing_trial_active_title')}</Text>
+            <Text style={styles.trialBlockSubtitle}>{t('pricing_trial_active_subtitle')}</Text>
           </View>
         </View>
 
@@ -203,27 +207,27 @@ export const PricingScreen: React.FC = () => {
           disabled={isLoading}
         >
           <Text style={styles.subscribeButtonText}>
-            {isLoading ? 'Cargando...' : 'Empezar prueba gratuita de 7 días'}
+            {isLoading ? t('common_loading') : t('pricing_button_start_trial')}
           </Text>
         </TouchableOpacity>
 
         {/* Login Link */}
         <TouchableOpacity style={styles.loginLink} onPress={handleLogin}>
-          <Text style={styles.loginLinkText}>Ya tengo una cuenta</Text>
+          <Text style={styles.loginLinkText}>{t('pricing_link_login')}</Text>
         </TouchableOpacity>
 
         {/* Footer Links */}
         <View style={styles.footerLinks}>
           <TouchableOpacity onPress={handleRestore}>
-            <Text style={styles.footerLinkText}>Restaurar compras</Text>
+            <Text style={styles.footerLinkText}>{t('pricing_footer_restore')}</Text>
           </TouchableOpacity>
           <Text style={styles.footerSeparator}>•</Text>
           <TouchableOpacity>
-            <Text style={styles.footerLinkText}>Términos de Servicio</Text>
+            <Text style={styles.footerLinkText}>{t('pricing_footer_terms')}</Text>
           </TouchableOpacity>
           <Text style={styles.footerSeparator}>•</Text>
           <TouchableOpacity>
-            <Text style={styles.footerLinkText}>Política de Privacidad</Text>
+            <Text style={styles.footerLinkText}>{t('pricing_footer_privacy')}</Text>
           </TouchableOpacity>
         </View>
 

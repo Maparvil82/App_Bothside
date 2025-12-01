@@ -11,54 +11,53 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 const { width, height } = Dimensions.get('window');
 
-const onboardingSteps = [
-  {
-    id: 1,
-    title: 'IA que entiende tu música',
-    subtitle: 'Pregunta a nuestra IA sobre tu colección y descubre recomendaciones personalizadas',
-    image: require('../assets/Gemini_Generated_Image_x5lylox5lylox5ly.png'),
-    color: '#9b59b6',
-  },
-  {
-    id: 2,
-    title: 'Organiza tu música físicamente',
-    subtitle: 'Crea ubicaciones físicas para encontrar tus discos rápidamente en tus estanterías',
-    image: require('../assets/image.png'),
-    color: '#28a745',
-  },
-  {
-    id: 3,
-    title: 'Tu colección te conoce mejor que nadie',
-    subtitle: 'Descubre insights únicos sobre tu música y encuentra joyas olvidadas en tu colección',
-    image: require('../assets/videoframe_8000.png'),
-    color: '#007AFF',
-  },
-  {
-    id: 4,
-    title: 'Analiza tu colección',
-    subtitle: 'Conoce en detalle tus discos, artistas, géneros y el valor de tu colección en el mercado',
-    image: require('../assets/Gemini_Generated_Image_8jxpae8jxpae8jxp.png'),
-    color: '#f39c12',
-  },
-  {
-    id: 5,
-    title: 'Tu asistente DJ personal',
-    subtitle: 'Organiza tus sesiones, controla tus ganancias, planifica eventos y mejora como DJ.',
-    image: require('../assets/images/dj-onboarding.png'),
-    color: '#9b59b6',
-  },
-
-
-
-];
-
 export const OnboardingScreen: React.FC = () => {
+  const { t } = useTranslation();
   const [currentStep, setCurrentStep] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<any>();
+
+  const onboardingSteps = [
+    {
+      id: 1,
+      title: t('onboarding_step1_title'),
+      subtitle: t('onboarding_step1_subtitle'),
+      image: require('../assets/Gemini_Generated_Image_x5lylox5lylox5ly.png'),
+      color: '#9b59b6',
+    },
+    {
+      id: 2,
+      title: t('onboarding_step2_title'),
+      subtitle: t('onboarding_step2_subtitle'),
+      image: require('../assets/image.png'),
+      color: '#28a745',
+    },
+    {
+      id: 3,
+      title: t('onboarding_step3_title'),
+      subtitle: t('onboarding_step3_subtitle'),
+      image: require('../assets/videoframe_8000.png'),
+      color: '#007AFF',
+    },
+    {
+      id: 4,
+      title: t('onboarding_step4_title'),
+      subtitle: t('onboarding_step4_subtitle'),
+      image: require('../assets/Gemini_Generated_Image_8jxpae8jxpae8jxp.png'),
+      color: '#f39c12',
+    },
+    {
+      id: 5,
+      title: t('onboarding_step5_title'),
+      subtitle: t('onboarding_step5_subtitle'),
+      image: require('../assets/images/dj-onboarding.png'),
+      color: '#9b59b6',
+    },
+  ];
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -160,9 +159,9 @@ export const OnboardingScreen: React.FC = () => {
 
       {/* Account section */}
       <View style={styles.accountSection}>
-        <Text style={styles.accountText}>¿Tiene una cuenta en Bothside?</Text>
+        <Text style={styles.accountText}>{t('onboarding_has_account')}</Text>
         <TouchableOpacity onPress={handleLogin}>
-          <Text style={styles.loginLink}>Iniciar sesión</Text>
+          <Text style={styles.loginLink}>{t('auth_login')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -18,12 +18,14 @@ import * as ImagePicker from 'expo-image-picker';
 import { GamificationService } from '../services/gamification';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation();
   const { mode, setMode } = useThemeMode();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -84,14 +86,14 @@ export const ProfileScreen: React.FC = () => {
     if (profile?.full_name && profile.full_name.trim() !== '') return profile.full_name.trim();
     if (profile?.username && profile.username.trim() !== '') return profile.username.trim();
     if (user?.email) return user.email.split('@')[0];
-    return 'Usuario';
+    return t('common_user');
   };
 
   const handleChangeAvatar = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permisos requeridos', 'Necesitamos acceso a tu galería para cambiar la foto de perfil.');
+        Alert.alert(t('common_permissions_required'), t('profile_avatar_permission_message'));
         return;
       }
 
@@ -111,21 +113,21 @@ export const ProfileScreen: React.FC = () => {
           : await ProfileService.uploadAvatarFromUri(user!.id, file.uri);
         await ProfileService.updateUserProfile(user!.id, { avatar_url: avatarUrl, updated_at: new Date().toISOString() });
         await loadProfile();
-        Alert.alert('Éxito', 'Foto de perfil actualizada correctamente');
+        Alert.alert(t('common_success'), t('profile_avatar_updated'));
       }
     } catch (error) {
       console.error('Error changing avatar:', error);
-      Alert.alert('Error', 'No se pudo cambiar la foto de perfil');
+      Alert.alert(t('common_error'), t('profile_error_avatar'));
     }
   };
 
   const handleSignOut = () => {
     Alert.alert(
-      'Cerrar sesión',
-      '¿Estás seguro de que quieres cerrar sesión?',
+      t('profile_signout'),
+      t('profile_signout_confirmation'),
       [
-        { text: 'Cancelar', style: 'cancel' },
-        { text: 'Cerrar sesión', style: 'destructive', onPress: async () => { try { await signOut(); } catch { Alert.alert('Error', 'No se pudo cerrar sesión'); } } },
+        { text: t('common_cancel'), style: 'cancel' },
+        { text: t('profile_signout'), style: 'destructive', onPress: async () => { try { await signOut(); } catch { Alert.alert(t('common_error'), t('profile_error_signout')); } } },
       ]
     );
   };
@@ -163,7 +165,7 @@ export const ProfileScreen: React.FC = () => {
               </View>
             )}
           </TouchableOpacity>
-          <Text style={[styles.changeAvatarText, { color: colors.primary }]}>Toca para cambiar foto</Text>
+          <Text style={[styles.changeAvatarText, { color: colors.primary }]}>{t('profile_change_avatar')}</Text>
           <Text style={[styles.displayName, { color: colors.text }]}>{getDisplayName()}</Text>
         </View>
 
@@ -173,7 +175,7 @@ export const ProfileScreen: React.FC = () => {
 
           {/* Modo oscuro */}
           <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>Modo oscuro</Text>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>{t('profile_dark_mode')}</Text>
             <Switch
               value={isDarkMode}
               onValueChange={toggleTheme}
@@ -182,7 +184,7 @@ export const ProfileScreen: React.FC = () => {
 
           {/* Mostrar ganancias de sesiones */}
           <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
-            <Text style={[styles.settingLabel, { color: colors.text }]}>Mostrar ganancias de sesiones</Text>
+            <Text style={[styles.settingLabel, { color: colors.text }]}>{t('profile_show_earnings')}</Text>
             <Switch
               value={showSessionEarnings}
               onValueChange={toggleSessionEarnings}
@@ -199,7 +201,7 @@ export const ProfileScreen: React.FC = () => {
             style={[styles.menuItem, { borderBottomColor: colors.border }]}
             onPress={() => navigation.navigate('Feedback' as never)}
           >
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Feedback</Text>
+            <Text style={[styles.menuItemText, { color: colors.text }]}>{t('profile_feedback')}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
           </TouchableOpacity>
 
@@ -208,7 +210,7 @@ export const ProfileScreen: React.FC = () => {
             style={[styles.menuItem, { borderBottomWidth: 0 }]}
             onPress={() => navigation.navigate('Legal' as never)}
           >
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Información Legal</Text>
+            <Text style={[styles.menuItemText, { color: colors.text }]}>{t('profile_legal')}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
           </TouchableOpacity>
         </View>
@@ -222,7 +224,7 @@ export const ProfileScreen: React.FC = () => {
             style={[styles.menuItem, { borderBottomColor: colors.border }]}
             onPress={() => navigation.navigate('Account' as never)}
           >
-            <Text style={[styles.menuItemText, { color: colors.text }]}>Cuenta</Text>
+            <Text style={[styles.menuItemText, { color: colors.text }]}>{t('profile_account')}</Text>
             <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
           </TouchableOpacity>
 
@@ -231,7 +233,7 @@ export const ProfileScreen: React.FC = () => {
             style={[styles.menuItem, { borderBottomWidth: 0 }]}
             onPress={handleSignOut}
           >
-            <Text style={[styles.menuItemText, { color: '#ff3b30' }]}>Cerrar sesión</Text>
+            <Text style={[styles.menuItemText, { color: '#ff3b30' }]}>{t('profile_signout')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

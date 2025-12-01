@@ -25,6 +25,7 @@ import { SessionEarningsSection } from '../components/SessionEarningsSection';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 const { width } = Dimensions.get('window');
 
@@ -83,6 +84,7 @@ export default function DashboardScreen() {
   const navigation = useNavigation();
   const { colors } = useTheme();
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
+  const { t } = useTranslation();
 
   const handleAudioScan = () => {
     (navigation as any).navigate('AudioScan');
@@ -315,9 +317,9 @@ export default function DashboardScreen() {
 
           return {
             id: item.album_id, // Assuming album_id is the ID for navigation
-            title: album.title || 'Sin título',
-            artist: album.artist || 'Artista desconocido',
-            year: album.release_year || 'Año desconocido',
+            title: album.title || t('common_untitled'),
+            artist: album.artist || t('common_unknown_artist'),
+            year: album.release_year || t('common_unknown_year'),
             imageUrl: album.cover_url,
             addedAt: new Date(item.added_at).toLocaleDateString('es-ES', {
               day: '2-digit',
@@ -337,8 +339,8 @@ export default function DashboardScreen() {
 
           return {
             id: item.album_id, // Assuming album_id is the ID for navigation
-            title: album.title || 'Sin título',
-            artist: album.artist || 'Artista desconocido',
+            title: album.title || t('common_untitled'),
+            artist: album.artist || t('common_unknown_artist'),
             price: stats.avg_price,
             imageUrl: album.cover_url,
           };
@@ -363,20 +365,20 @@ export default function DashboardScreen() {
       // Función para calcular el ratio de venta
       const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
         if (!want || !have || have === 0) {
-          return { ratio: 0, level: 'Sin datos', color: '#6c757d' };
+          return { ratio: 0, level: t('dashboard_ratio_level_no_data'), color: '#6c757d' };
         }
 
         const ratio = want / have;
 
         // Ratio alto = más demanda que disponibilidad = MEJOR
         if (ratio >= 25) {
-          return { ratio, level: 'Excepcional', color: '#6f42c1' };
+          return { ratio, level: t('dashboard_ratio_level_exceptional'), color: '#6f42c1' };
         } else if (ratio >= 8 && ratio < 25) {
-          return { ratio, level: 'Alto', color: '#28a745' };
+          return { ratio, level: t('dashboard_ratio_level_high'), color: '#28a745' };
         } else if (ratio >= 2 && ratio < 8) {
-          return { ratio, level: 'Medio', color: '#ffc107' };
+          return { ratio, level: t('dashboard_ratio_level_medium'), color: '#ffc107' };
         } else {
-          return { ratio, level: 'Bajo', color: '#dc3545' };
+          return { ratio, level: t('dashboard_ratio_level_low'), color: '#dc3545' };
         }
       };
 
@@ -393,8 +395,8 @@ export default function DashboardScreen() {
 
           return {
             id: item.album_id,
-            title: album.title || 'Sin título',
-            artist: album.artist || 'Artista desconocido',
+            title: album.title || t('common_untitled'),
+            artist: album.artist || t('common_unknown_artist'),
             ratio,
             level,
             color,
@@ -463,8 +465,8 @@ export default function DashboardScreen() {
 
       const albumsData: AudioNoteAlbum[] = (collection || []).map((item: any) => ({
         id: item.id,
-        title: item.albums?.title || 'Sin título',
-        artist: item.albums?.artist || 'Artista desconocido',
+        title: item.albums?.title || t('common_untitled'),
+        artist: item.albums?.artist || t('common_unknown_artist'),
         cover_url: item.albums?.cover_url,
         audio_note: item.audio_note,
         added_at: item.added_at,
@@ -603,7 +605,7 @@ export default function DashboardScreen() {
   if (!stats) {
     return (
       <View style={[styles.errorContainer, { backgroundColor: colors.background }]}>
-        <Text style={[styles.errorText, { color: colors.text }]}>Error al cargar las estadísticas</Text>
+        <Text style={[styles.errorText, { color: colors.text }]}>{t('dashboard_error_loading_stats')}</Text>
       </View>
     );
   }
@@ -642,24 +644,24 @@ export default function DashboardScreen() {
         {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
           <View style={styles.valueCard}>
-            <Text style={styles.valueCardTitle}>Valor de tu Colección</Text>
+            <Text style={styles.valueCardTitle}>{t('dashboard_collection_value_title')}</Text>
             <Text style={styles.valueCardAmount}>
               {stats.collectionValue.toFixed(2)} €
             </Text>
             <Text style={styles.valueCardSubtitle}>
-              Basado en precios medios de Discogs
+              {t('dashboard_collection_value_subtitle')}
             </Text>
           </View>
         )}
 
         {/* Estadísticas Básicas */}
         <View style={styles.statsGrid}>
-          <StatCard title="Total Álbumes" value={stats.totalAlbums} />
-          <StatCard title="Artistas Únicos" value={stats.totalArtists} />
-          <StatCard title="Sellos Únicos" value={stats.totalLabels} />
-          <StatCard title="Estilos Únicos" value={stats.totalStyles} />
-          <StatCard title="Álbum Más Antiguo" value={stats.oldestAlbum} />
-          <StatCard title="Álbum Más Nuevo" value={stats.newestAlbum} />
+          <StatCard title={t('dashboard_stat_total_albums')} value={stats.totalAlbums} />
+          <StatCard title={t('dashboard_stat_unique_artists')} value={stats.totalArtists} />
+          <StatCard title={t('dashboard_stat_unique_labels')} value={stats.totalLabels} />
+          <StatCard title={t('dashboard_stat_unique_styles')} value={stats.totalStyles} />
+          <StatCard title={t('dashboard_stat_oldest_album')} value={stats.oldestAlbum} />
+          <StatCard title={t('dashboard_stat_newest_album')} value={stats.newestAlbum} />
         </View>
 
         {/* Rango de Coleccionista */}
@@ -672,10 +674,10 @@ export default function DashboardScreen() {
 
         {/* Sección de Ubicaciones */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ubicaciones</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard_shelves_title')}</Text>
           <View style={styles.shelfStatContainer}>
             <Text style={[styles.shelfStatNumber, { color: colors.primary }]}>{shelves.length}</Text>
-            <Text style={[styles.shelfStatText, { color: colors.text }]}>Ubicaciones Creadas</Text>
+            <Text style={[styles.shelfStatText, { color: colors.text }]}>{t('dashboard_shelves_created')}</Text>
           </View>
           <TouchableOpacity
             style={styles.configButton}
@@ -683,7 +685,7 @@ export default function DashboardScreen() {
           >
             <Ionicons name="grid-outline" size={20} color="#fff" />
             <Text style={styles.configButtonText}>
-              Gestionar Ubicaciones
+              {t('dashboard_shelves_manage')}
             </Text>
           </TouchableOpacity>
         </View>
@@ -691,7 +693,7 @@ export default function DashboardScreen() {
         {/* Álbumes más caros */}
         {stats.mostExpensiveAlbums.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Álbumes Más Caros</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard_most_expensive_title')}</Text>
             {stats.mostExpensiveAlbums.map((album, index) => (
               <TouchableOpacity
                 key={index}
@@ -707,7 +709,7 @@ export default function DashboardScreen() {
                     />
                   ) : (
                     <View style={styles.albumImagePlaceholder}>
-                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                      <Text style={styles.albumImagePlaceholderText}>{t('common_no_image')}</Text>
                     </View>
                   )}
                 </View>
@@ -715,7 +717,7 @@ export default function DashboardScreen() {
                   <Text style={styles.albumTitle}>{album.title}</Text>
                   <Text style={styles.albumArtist}>{album.artist}</Text>
                   <Text style={styles.albumPrice}>
-                    {album.price ? `${album.price.toFixed(2)} €` : 'Precio no disponible'}
+                    {album.price ? `${album.price.toFixed(2)} €` : t('dashboard_price_unavailable')}
                   </Text>
                 </View>
                 <View style={styles.albumRank}>
@@ -729,9 +731,9 @@ export default function DashboardScreen() {
         {/* Álbumes con mayor ratio de venta */}
         {stats.highestRatioAlbums.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Discos con Mayor Ratio de Venta</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard_highest_ratio_title')}</Text>
             <Text style={[styles.sectionSubtitle, { color: colors.text }]}>
-              Discos más cotizados: mayor demanda que disponibilidad en Discogs. Ratio alto = más valioso.
+              {t('dashboard_highest_ratio_subtitle')}
             </Text>
             {stats.highestRatioAlbums.map((album, index) => (
               <TouchableOpacity
@@ -748,7 +750,7 @@ export default function DashboardScreen() {
                     />
                   ) : (
                     <View style={styles.albumImagePlaceholder}>
-                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                      <Text style={styles.albumImagePlaceholderText}>{t('common_no_image')}</Text>
                     </View>
                   )}
                 </View>
@@ -760,11 +762,11 @@ export default function DashboardScreen() {
                       <Text style={styles.ratioLevelText}>{album.level}</Text>
                     </View>
                     <Text style={styles.ratioText}>
-                      Ratio: {album.ratio.toFixed(1)}
+                      {t('dashboard_ratio_label')} {album.ratio.toFixed(1)}
                     </Text>
                   </View>
                   <Text style={styles.ratioStats}>
-                    Want: {album.want} • Have: {album.have}
+                    {t('dashboard_ratio_want')} {album.want} • {t('dashboard_ratio_have')} {album.have}
                   </Text>
                 </View>
                 <View style={styles.albumRank}>
@@ -778,7 +780,7 @@ export default function DashboardScreen() {
         {/* Sección de Notas de Audio */}
         {albumsWithAudio.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Últimas Notas de Audio</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard_audio_notes_title')}</Text>
             {albumsWithAudio.slice(0, 5).map((album, index) => (
               <TouchableOpacity
                 key={album.id}
@@ -794,7 +796,7 @@ export default function DashboardScreen() {
                     />
                   ) : (
                     <View style={styles.albumImagePlaceholder}>
-                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                      <Text style={styles.albumImagePlaceholderText}>{t('common_no_image')}</Text>
                     </View>
                   )}
                 </View>
@@ -830,7 +832,7 @@ export default function DashboardScreen() {
                 <View style={styles.chartItem}>
                   <TopItemsLineChart
                     data={stats.topArtists}
-                    title="Top 5 Artistas"
+                    title={t('dashboard_chart_top_artists')}
                     keyName="artist"
                     icon="people"
                   />
@@ -841,7 +843,7 @@ export default function DashboardScreen() {
                 <View style={styles.chartItem}>
                   <TopItemsLineChart
                     data={stats.topLabels}
-                    title="Top 5 Sellos"
+                    title={t('dashboard_chart_top_labels')}
                     keyName="label"
                     icon="business"
                   />
@@ -852,7 +854,7 @@ export default function DashboardScreen() {
                 <View style={styles.chartItem}>
                   <TopItemsLineChart
                     data={stats.topStyles}
-                    title="Top 5 Estilos"
+                    title={t('dashboard_chart_top_styles')}
                     keyName="style"
                     icon="musical-notes"
                   />
@@ -863,7 +865,7 @@ export default function DashboardScreen() {
                 <View style={styles.chartItem}>
                   <TopItemsLineChart
                     data={stats.albumsByDecade}
-                    title="Álbumes por Década"
+                    title={t('dashboard_chart_albums_by_decade')}
                     keyName="decade"
                     icon="calendar"
                   />
@@ -889,7 +891,7 @@ export default function DashboardScreen() {
         {/* Últimos Álbumes Añadidos */}
         {stats.latestAlbums.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Últimos 5 Álbumes Añadidos</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard_latest_albums_title')}</Text>
             {stats.latestAlbums.map((album, index) => (
               <TouchableOpacity
                 key={index}
@@ -905,7 +907,7 @@ export default function DashboardScreen() {
                     />
                   ) : (
                     <View style={styles.albumImagePlaceholder}>
-                      <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                      <Text style={styles.albumImagePlaceholderText}>{t('common_no_image')}</Text>
                     </View>
                   )}
                 </View>
@@ -931,8 +933,8 @@ export default function DashboardScreen() {
               <View style={styles.audioScanContent}>
                 <Ionicons name="musical-notes" size={24} color={colors.primary} style={{ marginRight: 12 }} />
                 <View>
-                  <Text style={[styles.audioScanTitle, { color: colors.text }]}>¿Qué está sonando?</Text>
-                  <Text style={styles.audioScanSubtitle}>Pulsa para detectar si la música que suena está en tu colección.</Text>
+                  <Text style={[styles.audioScanTitle, { color: colors.text }]}>{t('dashboard_audio_scan_title')}</Text>
+                  <Text style={styles.audioScanSubtitle}>{t('dashboard_audio_scan_subtitle')}</Text>
                 </View>
               </View>
               <Ionicons name="chevron-forward" size={20} color="#9CA3AF" />
@@ -943,8 +945,8 @@ export default function DashboardScreen() {
         {/* Mensaje si no hay datos */}
         {stats.totalAlbums === 0 && (
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No tienes álbumes en tu colección</Text>
-            <Text style={styles.emptySubtext}>Añade algunos álbumes para ver estadísticas</Text>
+            <Text style={styles.emptyText}>{t('dashboard_empty_title')}</Text>
+            <Text style={styles.emptySubtext}>{t('dashboard_empty_subtitle')}</Text>
           </View>
         )}
 

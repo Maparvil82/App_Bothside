@@ -18,6 +18,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { GeminiService } from '../services/gemini';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface Message {
   id: string;
@@ -33,50 +34,55 @@ interface Message {
 
 const CHAT_STORAGE_KEY = 'ai_chat_messages';
 
-const PREDEFINED_QUESTIONS = [
-  {
-    id: 1,
-    title: "Álbumes más valiosos",
-    question: "¿Cuáles son mis álbumes más valiosos y cuánto valen?",
-    icon: "diamond-outline"
-  },
-  {
-    id: 2,
-    title: "Géneros favoritos",
-    question: "¿Qué géneros musicales predominan en mi colección?",
-    icon: "musical-notes-outline"
-  },
-  {
-    id: 3,
-    title: "Artistas frecuentes",
-    question: "¿Qué artistas tengo más representados en mi colección?",
-    icon: "person-outline"
-  },
-  {
-    id: 4,
-    title: "Décadas populares",
-    question: "¿De qué décadas son la mayoría de mis discos?",
-    icon: "time-outline"
-  },
-  {
-    id: 5,
-    title: "Estadísticas generales",
-    question: "Dame un resumen completo de las estadísticas de mi colección",
-    icon: "stats-chart-outline"
-  },
-];
+
 
 export default function AIChatScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
+
   const { colors, dark } = useTheme();
+  const { t } = useTranslation();
   const isLightMode = !dark;
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [collectionData, setCollectionData] = useState<any[]>([]);
   const [albumStories, setAlbumStories] = useState<any[]>([]);
+
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const PREDEFINED_QUESTIONS = [
+    {
+      id: 1,
+      title: t('ai_question_valuable_albums'),
+      question: t('ai_question_valuable_albums_query'),
+      icon: "diamond-outline"
+    },
+    {
+      id: 2,
+      title: t('ai_question_favorite_genres'),
+      question: t('ai_question_favorite_genres_query'),
+      icon: "musical-notes-outline"
+    },
+    {
+      id: 3,
+      title: t('ai_question_frequent_artists'),
+      question: t('ai_question_frequent_artists_query'),
+      icon: "person-outline"
+    },
+    {
+      id: 4,
+      title: t('ai_question_popular_decades'),
+      question: t('ai_question_popular_decades_query'),
+      icon: "time-outline"
+    },
+    {
+      id: 5,
+      title: t('ai_question_general_stats'),
+      question: t('ai_question_general_stats_query'),
+      icon: "stats-chart-outline"
+    },
+  ];
 
   useEffect(() => {
     loadCollectionData();
@@ -142,15 +148,15 @@ export default function AIChatScreen() {
 
   const clearChat = () => {
     Alert.alert(
-      'Limpiar conversación',
-      '¿Estás seguro de que quieres limpiar toda la conversación?',
+      t('ai_alert_clear_title'),
+      t('ai_alert_clear_message'),
       [
         {
-          text: 'Cancelar',
+          text: t('common_cancel'),
           style: 'cancel',
         },
         {
-          text: 'Limpiar',
+          text: t('common_clear'),
           style: 'destructive',
           onPress: async () => {
             if (!user) return;
@@ -239,8 +245,8 @@ export default function AIChatScreen() {
 
     if (creditsCheck && creditsCheck.credits_used >= creditsCheck.credits_total) {
       Alert.alert(
-        "Sin créditos disponibles",
-        "Has agotado tus créditos de IA. Renuévalos o espera al siguiente ciclo."
+        t('ai_alert_no_credits_title'),
+        t('ai_alert_no_credits_message')
       );
       return;
     }
@@ -294,7 +300,7 @@ export default function AIChatScreen() {
 
       if (creditError) {
         console.error("❌ Error al descontar crédito:", creditError);
-        Alert.alert("Error", "No se pudo descontar el crédito IA.");
+        Alert.alert(t('common_error'), t('ai_error_credits'));
       }
 
       // 🧩 Refrescar créditos en la sesión (lectura directa)
@@ -314,7 +320,7 @@ export default function AIChatScreen() {
       console.error('Error generating response:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: 'Lo siento, no pude procesar tu pregunta. Inténtalo de nuevo.',
+        text: t('ai_error_processing'),
         isUser: false,
         timestamp: new Date(),
       };
@@ -427,7 +433,7 @@ export default function AIChatScreen() {
               <View style={[styles.messageBubble, styles.aiBubble, { backgroundColor: colors.card }]}>
                 <View style={styles.loadingContainer}>
                   <BothsideLoader />
-                  <Text style={[styles.loadingText, { color: colors.text }]}>Pensando...</Text>
+                  <Text style={[styles.loadingText, { color: colors.text }]}>{t('ai_status_thinking')}</Text>
                 </View>
               </View>
             </View>
@@ -439,10 +445,10 @@ export default function AIChatScreen() {
           <View style={styles.emptyStateContainer}>
             <View style={styles.emptyStateTextContainer}>
               <Text style={[styles.emptyStateTitle, { color: colors.text }]}>
-                Tu colección te conoce bien
+                {t('ai_empty_title')}
               </Text>
               <Text style={[styles.emptyStateSubtitle, { color: colors.text + 'CC' }]}>
-                He memorizado cada disco de tu estantería, es maravillosa, llena de datos sorprendentes.
+                {t('ai_empty_subtitle')}
               </Text>
             </View>
           </View>
@@ -490,7 +496,7 @@ export default function AIChatScreen() {
             ]}
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Pregunta sobre tu colección..."
+            placeholder={t('ai_placeholder_input')}
             placeholderTextColor={colors.text + '80'}
             multiline
             maxLength={500}

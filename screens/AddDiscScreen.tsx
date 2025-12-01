@@ -21,6 +21,7 @@ import { AlbumService, UserCollectionService, StyleService } from '../services/d
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface Album {
   id: string;
@@ -48,6 +49,7 @@ export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'search' | 'manual' | 'camera'>('search');
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -135,7 +137,7 @@ export const AddDiscScreen: React.FC = () => {
 
   // Función para extraer solo el título del álbum
   const extractAlbumTitle = (title: string): string => {
-    if (!title) return 'Sin título';
+    if (!title) return t('common_untitled');
 
     // Intentar extraer título del álbum (formato: "Artista - Título")
     const titleParts = title.split(' - ');
@@ -159,7 +161,7 @@ export const AddDiscScreen: React.FC = () => {
   // Función para buscar en Discogs manualmente
   const searchDiscogsManual = async () => {
     if (!artistQuery.trim() || !albumQuery.trim()) {
-      Alert.alert('Error', 'Por favor ingresa tanto el artista como el álbum');
+      Alert.alert(t('common_error'), t('add_disc_error_manual_input'));
       return;
     }
 
@@ -169,7 +171,7 @@ export const AddDiscScreen: React.FC = () => {
       console.log('🧪 Probando conexión con Discogs antes de buscar...');
       const connectionTest = await DiscogsService.testConnection();
       if (!connectionTest) {
-        Alert.alert('Error de Conexión', 'No se pudo conectar con Discogs. Verifica tu token de API.');
+        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
         setManualLoading(false);
         return;
       }
@@ -224,7 +226,7 @@ export const AddDiscScreen: React.FC = () => {
       setManualSearchResults(vinylReleases);
     } catch (error) {
       console.error('❌ Error searching Discogs:', error);
-      Alert.alert('Error', 'No se pudo realizar la búsqueda. Verifica tu conexión a internet y el token de Discogs.');
+      Alert.alert(t('common_error'), t('add_disc_error_search'));
       setManualSearchResults([]);
     } finally {
       setManualLoading(false);
@@ -264,8 +266,8 @@ export const AddDiscScreen: React.FC = () => {
 
         if (existingExact) {
           Alert.alert(
-            "Ya tienes este disco",
-            "Este disco ya está en tu colección."
+            t('add_disc_alert_duplicate_title'),
+            t('add_disc_alert_duplicate_message')
           );
           setAddingDisc(false);
           return;
@@ -302,8 +304,8 @@ export const AddDiscScreen: React.FC = () => {
 
         if (otherEdition) {
           Alert.alert(
-            "Tienes otra edición",
-            "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
+            t('add_disc_alert_other_edition_title'),
+            t('add_disc_alert_other_edition_message')
           );
         }
       }
@@ -413,18 +415,18 @@ export const AddDiscScreen: React.FC = () => {
 
               // Mostrar opciones después de añadir el disco
               Alert.alert(
-                'Disco añadido correctamente',
-                '¿Qué quieres hacer ahora?',
+                t('add_disc_success_title'),
+                t('add_disc_success_message'),
                 [
                   {
-                    text: 'Añadir más discos',
+                    text: t('add_disc_action_add_more'),
                     style: 'default',
                     onPress: () => {
                       // Mantener en la página actual
                     }
                   },
                   {
-                    text: 'Ir a colección',
+                    text: t('add_disc_action_go_collection'),
                     style: 'default',
                     onPress: () => {
                       navigation.navigate('SearchTab');
@@ -528,7 +530,7 @@ export const AddDiscScreen: React.FC = () => {
       }
     } catch (error: any) {
       console.error('❌ Error adding Discogs release to collection:', error?.message || error);
-      Alert.alert('Error', error?.message || 'No se pudo añadir el disco a la colección');
+      Alert.alert(t('common_error'), error?.message || t('add_disc_error_adding'));
     } finally {
       setAddingDisc(false);
     }
@@ -572,8 +574,8 @@ export const AddDiscScreen: React.FC = () => {
 
           if (existingExact) {
             Alert.alert(
-              "Ya tienes este disco",
-              "Este disco ya está en tu colección."
+              t('add_disc_alert_duplicate_title'),
+              t('add_disc_alert_duplicate_message')
             );
             setAddingDisc(false);
             return;
@@ -611,8 +613,8 @@ export const AddDiscScreen: React.FC = () => {
 
             if (otherEdition) {
               Alert.alert(
-                "Tienes otra edición",
-                "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
+                t('add_disc_alert_other_edition_title'),
+                t('add_disc_alert_other_edition_message')
               );
             }
           }
@@ -624,18 +626,18 @@ export const AddDiscScreen: React.FC = () => {
 
           // Mostrar opciones después de añadir el disco
           Alert.alert(
-            'Disco añadido correctamente',
-            '¿Qué quieres hacer ahora?',
+            t('add_disc_success_title'),
+            t('add_disc_success_message'),
             [
               {
-                text: 'Añadir más discos',
+                text: t('add_disc_action_add_more'),
                 style: 'default',
                 onPress: () => {
                   // Mantener en la página actual
                 }
               },
               {
-                text: 'Ir a colección',
+                text: t('add_disc_action_go_collection'),
                 style: 'default',
                 onPress: () => {
                   navigation.navigate('SearchTab');
@@ -741,8 +743,8 @@ export const AddDiscScreen: React.FC = () => {
 
             if (existingExact) {
               Alert.alert(
-                "Ya tienes este disco",
-                "Este disco ya está en tu colección."
+                t('add_disc_alert_duplicate_title'),
+                t('add_disc_alert_duplicate_message')
               );
               setAddingDisc(false);
               return;
@@ -780,8 +782,8 @@ export const AddDiscScreen: React.FC = () => {
 
               if (otherEdition) {
                 Alert.alert(
-                  "Tienes otra edición",
-                  "Ya tienes otra edición de este álbum, pero puedes añadir esta nueva también."
+                  t('add_disc_alert_other_edition_title'),
+                  t('add_disc_alert_other_edition_message')
                 );
               }
             }
@@ -845,7 +847,7 @@ export const AddDiscScreen: React.FC = () => {
       }
     } catch (error) {
       console.error('❌ Error adding to collection:', error);
-      Alert.alert('Error', 'No se pudo añadir el disco a la colección');
+      Alert.alert(t('common_error'), t('add_disc_error_adding'));
     } finally {
       setAddingDisc(false);
     }
@@ -870,7 +872,7 @@ export const AddDiscScreen: React.FC = () => {
         console.log('📸 Foto capturada:', photo.uri);
       } catch (error) {
         console.error('Error taking picture:', error);
-        Alert.alert('Error', 'No se pudo capturar la foto');
+        Alert.alert(t('common_error'), t('add_disc_error_camera_capture'));
       }
     }
   };
@@ -909,12 +911,12 @@ Progressive Rock`;
         // Buscar en Discogs API
         await searchDiscogsFromOCR(artist, album);
       } else {
-        Alert.alert('OCR', 'No se pudo extraer artista y álbum del texto reconocido');
+        Alert.alert('OCR', t('add_disc_error_ocr_extraction'));
       }
 
     } catch (error) {
       console.error('❌ Error en OCR:', error);
-      Alert.alert('Error', 'No se pudo procesar la imagen con OCR');
+      Alert.alert(t('common_error'), t('add_disc_error_ocr_processing'));
     } finally {
       setOcrLoading(false);
     }
@@ -991,12 +993,12 @@ Progressive Rock`;
         console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
         return vinylResults;
       } else {
-        Alert.alert('Búsqueda', 'No se encontraron resultados en Discogs');
+        Alert.alert(t('common_search'), t('add_disc_error_no_results_discogs'));
         return [];
       }
     } catch (error) {
       console.error('❌ Error buscando en Discogs:', error);
-      Alert.alert('Error', 'No se pudo buscar el disco');
+      Alert.alert(t('common_error'), t('add_disc_error_search_generic'));
       return [];
     }
   };
@@ -1080,7 +1082,7 @@ Progressive Rock`;
           />
           <TextInput
             style={styles.searchInput}
-            placeholder="Buscar en toda la base de datos..."
+            placeholder={t('add_disc_placeholder_search')}
             value={query}
             onChangeText={handleSearchChange}
             returnKeyType="search"
@@ -1109,7 +1111,7 @@ Progressive Rock`;
       {loading && query.trim() ? (
         <View style={styles.loadingContainer}>
           <BothsideLoader size="small" fullscreen={false} />
-          <Text style={styles.loadingText}>Buscando...</Text>
+          <Text style={styles.loadingText}>{t('common_searching')}</Text>
         </View>
       ) : (
         <FlatList
@@ -1121,15 +1123,15 @@ Progressive Rock`;
             <View style={styles.emptyContainer}>
               <Ionicons name="search-outline" size={48} color="#ccc" />
               <Text style={styles.emptyText}>
-                {query ? `No se encontraron resultados para "${query}"` : 'Escribe para buscar discos en toda la base de datos'}
+                {query ? `${t('add_disc_empty_search_query')} "${query}"` : t('add_disc_empty_search_default')}
               </Text>
               {query && (
                 <Text style={styles.emptySubtext}>
-                  Prueba con otros términos o verifica la ortografía
+                  {t('add_disc_empty_search_hint')}
                 </Text>
               )}
               <Text style={styles.debugText}>
-                {albums.length > 0 ? `${albums.length} resultados encontrados` : 'No se encontraron resultados'}
+                {albums.length > 0 ? `${albums.length} ${t('add_disc_results_found')}` : t('add_disc_no_results')}
               </Text>
             </View>
           }
@@ -1154,7 +1156,7 @@ Progressive Rock`;
           />
           <TextInput
             style={styles.manualInput}
-            placeholder="Nombre del artista..."
+            placeholder={t('add_disc_placeholder_artist')}
             value={artistQuery}
             onChangeText={setArtistQuery}
             placeholderTextColor="#999"
@@ -1180,7 +1182,7 @@ Progressive Rock`;
           />
           <TextInput
             style={styles.manualInput}
-            placeholder="Nombre del álbum..."
+            placeholder={t('add_disc_placeholder_album')}
             value={albumQuery}
             onChangeText={setAlbumQuery}
             placeholderTextColor="#999"
@@ -1209,7 +1211,7 @@ Progressive Rock`;
             {manualLoading ? (
               <BothsideLoader size="small" fullscreen={false} />
             ) : (
-              <Text style={styles.manualSearchButtonText}>Buscar disco</Text>
+              <Text style={styles.manualSearchButtonText}>{t('add_disc_button_search_manual')}</Text>
             )}
           </TouchableOpacity>
 
@@ -1222,7 +1224,7 @@ Progressive Rock`;
                 setManualSearchResults([]);
               }}
             >
-              <Text style={styles.clearAllButtonText}>Limpiar</Text>
+              <Text style={styles.clearAllButtonText}>{t('common_clear')}</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -1232,7 +1234,7 @@ Progressive Rock`;
       {manualLoading ? (
         <View style={styles.loadingContainer}>
           <BothsideLoader size="small" fullscreen={false} />
-          <Text style={styles.loadingText}>Buscando versiones en vinilo...</Text>
+          <Text style={styles.loadingText}>{t('add_disc_searching_vinyl')}</Text>
         </View>
       ) : (
         <FlatList
@@ -1245,13 +1247,13 @@ Progressive Rock`;
               <Ionicons name="disc-outline" size={48} color="#ccc" />
               <Text style={styles.emptyText}>
                 {artistQuery && albumQuery
-                  ? 'No se encontraron versiones en vinilo para esta búsqueda'
-                  : 'Ingresa el artista y álbum para buscar versiones en vinilo'
+                  ? t('add_disc_empty_manual_query')
+                  : t('add_disc_empty_manual_default')
                 }
               </Text>
               {artistQuery && albumQuery && (
                 <Text style={styles.emptySubtext}>
-                  Solo se muestran versiones en formato vinilo (LP, 12", 7", etc.)
+                  {t('add_disc_empty_manual_hint')}
                 </Text>
               )}
             </View>
@@ -1280,7 +1282,7 @@ Progressive Rock`;
                   setOcrResults(results || []);
                 } catch (error) {
                   console.error('Error searching Discogs from OCR:', error);
-                  Alert.alert('Error', 'No se pudieron buscar resultados en Discogs');
+                  Alert.alert(t('common_error'), t('add_disc_error_ocr_search'));
                   setOcrResults([]);
                 } finally {
                   setOcrLoading(false);
@@ -1309,7 +1311,7 @@ Progressive Rock`;
                 }}
               >
                 <Ionicons name="refresh" size={20} color="#007AFF" />
-                <Text style={styles.capturedImageButtonText}>Nueva foto</Text>
+                <Text style={styles.capturedImageButtonText}>{t('add_disc_button_new_photo')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.capturedImageButton, ocrLoading && styles.capturedImageButtonDisabled]}
@@ -1318,7 +1320,7 @@ Progressive Rock`;
               >
                 <Ionicons name="text" size={20} color={ocrLoading ? "#ccc" : "#007AFF"} />
                 <Text style={[styles.capturedImageButtonText, ocrLoading && styles.capturedImageButtonTextDisabled]}>
-                  {ocrLoading ? 'Analizando...' : 'Analizar texto'}
+                  {ocrLoading ? t('add_disc_button_analyzing') : t('add_disc_button_analyze_text')}
                 </Text>
               </TouchableOpacity>
             </View>
@@ -1326,7 +1328,7 @@ Progressive Rock`;
             {/* Texto extraído por OCR */}
             {extractedText && (
               <View style={styles.extractedTextContainer}>
-                <Text style={styles.extractedTextTitle}>Texto reconocido:</Text>
+                <Text style={styles.extractedTextTitle}>{t('add_disc_text_recognized')}</Text>
                 <Text style={styles.extractedText}>{extractedText}</Text>
               </View>
             )}
@@ -1335,11 +1337,11 @@ Progressive Rock`;
             {ocrLoading ? (
               <View style={styles.loadingContainer}>
                 <BothsideLoader size="small" fullscreen={false} />
-                <Text style={styles.loadingText}>Analizando imagen y buscando en Discogs...</Text>
+                <Text style={styles.loadingText}>{t('add_disc_analyzing_image')}</Text>
               </View>
             ) : ocrResults.length > 0 ? (
               <View style={styles.ocrResultsContainer}>
-                <Text style={styles.ocrResultsTitle}>Resultados encontrados:</Text>
+                <Text style={styles.ocrResultsTitle}>{t('add_disc_results_title')}</Text>
                 <FlatList
                   data={ocrResults}
                   renderItem={renderDiscogsRelease}
@@ -1353,14 +1355,14 @@ Progressive Rock`;
           <View style={styles.emptyContainer}>
             <Ionicons name="camera-outline" size={48} color="#ccc" />
             <Text style={styles.emptyText}>
-              Escanear con cámara
+              {t('add_disc_camera_title')}
             </Text>
             <Text style={styles.emptySubtext}>
-              Toma una foto de la portada del álbum para analizar automáticamente
+              {t('add_disc_camera_subtitle')}
             </Text>
             {permission?.status !== 'granted' && (
               <Text style={styles.permissionText}>
-                Se requiere permiso de cámara para usar esta función
+                {t('add_disc_camera_permission')}
               </Text>
             )}
             <TouchableOpacity
@@ -1369,7 +1371,7 @@ Progressive Rock`;
               disabled={permission?.status !== 'granted'}
             >
               <Ionicons name="camera" size={24} color="white" />
-              <Text style={styles.cameraOpenButtonText}>Abrir cámara</Text>
+              <Text style={styles.cameraOpenButtonText}>{t('add_disc_button_open_camera')}</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -1391,7 +1393,7 @@ Progressive Rock`;
             color={activeTab === 'search' ? colors.primary : colors.text}
           />
           <Text style={[styles.tabText, { color: activeTab === 'search' ? colors.primary : colors.text }]}>
-            Buscar
+            {t('add_disc_tab_search')}
           </Text>
         </TouchableOpacity>
 
@@ -1405,7 +1407,7 @@ Progressive Rock`;
             color={activeTab === 'manual' ? colors.primary : colors.text}
           />
           <Text style={[styles.tabText, { color: activeTab === 'manual' ? colors.primary : colors.text }]}>
-            Manual
+            {t('add_disc_tab_manual')}
           </Text>
         </TouchableOpacity>
 
@@ -1419,7 +1421,7 @@ Progressive Rock`;
             color={activeTab === 'camera' ? colors.primary : colors.text}
           />
           <Text style={[styles.tabText, { color: activeTab === 'camera' ? colors.primary : colors.text }]}>
-            Cámara
+            {t('add_disc_tab_camera')}
           </Text>
         </TouchableOpacity>
       </View>

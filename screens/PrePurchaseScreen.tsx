@@ -4,12 +4,14 @@ import { useRoute, useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase'; // Ajusta la ruta según tu proyecto
 
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const PrePurchaseScreen: React.FC = () => {
     const route = useRoute<any>();
     const navigation = useNavigation<any>();
     const { user, selectedPlan } = route.params || {};
     const { loadUserSubscriptionAndCredits } = useAuth();
+    const { t } = useTranslation();
 
     useEffect(() => {
         console.log("Llega a PrePurchaseScreen", user, selectedPlan);
@@ -18,7 +20,7 @@ export const PrePurchaseScreen: React.FC = () => {
 
     const iniciarProceso = async () => {
         if (!user?.id) {
-            Alert.alert("Error", "No se encontró el usuario.");
+            Alert.alert(t('common_error'), t('pre_purchase_error_user_not_found'));
             navigation.goBack();
             return;
         }
@@ -37,7 +39,7 @@ export const PrePurchaseScreen: React.FC = () => {
 
                 if (error) {
                     console.log("Error RPC:", error);
-                    Alert.alert("Error", "No se pudo activar la prueba gratuita.");
+                    Alert.alert(t('common_error'), t('pre_purchase_error_trial_activation'));
                     navigation.goBack();
                     return;
                 }
@@ -56,15 +58,15 @@ export const PrePurchaseScreen: React.FC = () => {
                 return;
             } catch (err) {
                 console.log("Excepción:", err);
-                Alert.alert("Error", "No se pudo activar la prueba gratuita.");
+                Alert.alert(t('common_error'), t('pre_purchase_error_trial_activation'));
                 navigation.goBack();
             }
         }
 
         // 👉 3. Si es compra real → todavía no implementado
         Alert.alert(
-            "Modo desarrollo",
-            "Las compras reales se activarán en producción."
+            t('pre_purchase_alert_dev_mode_title'),
+            t('pre_purchase_alert_dev_mode_message')
         );
         navigation.goBack();
     };
@@ -73,13 +75,13 @@ export const PrePurchaseScreen: React.FC = () => {
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
                 <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
-                <Text style={styles.title}>Preparando compra...</Text>
+                <Text style={styles.title}>{t('pre_purchase_status_preparing')}</Text>
                 <Text style={styles.subtitle}>
-                    Plan seleccionado: {selectedPlan === 'annual'
-                        ? 'Anual'
+                    {t('pre_purchase_label_selected_plan')} {selectedPlan === 'annual'
+                        ? t('pricing_plan_annual_title')
                         : selectedPlan === 'trial'
-                            ? 'Prueba gratuita'
-                            : 'Mensual'}
+                            ? t('pre_purchase_plan_trial')
+                            : t('pricing_plan_monthly_title')}
                 </Text>
             </View>
         </SafeAreaView>

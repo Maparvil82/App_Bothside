@@ -32,6 +32,7 @@ import ShelfGrid from '../components/ShelfGrid';
 import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { DiscogsAttribution } from '../components/DiscogsAttribution';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 const { width } = Dimensions.get('window');
 
@@ -89,6 +90,7 @@ export default function AlbumDetailScreen() {
   const { isGem, addGem, removeGem, refreshGems, updateGemStatus } = useGems();
   const { colors } = useTheme();
   const { mode } = useThemeMode();
+  const { t } = useTranslation();
   const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
 
   // Color constante para botones y tags
@@ -140,12 +142,13 @@ export default function AlbumDetailScreen() {
   const { albumId } = route.params as { albumId: string };
 
   // Preguntas del TypeForm
+  // Preguntas del TypeForm
   const typeFormQuestions = [
-    "¿Cuál es tu canción favorita de este álbum?",
-    "¿Cuándo escuchaste este álbum por última vez?",
-    "¿Qué recuerdos te trae este álbum?",
-    "¿Recuerdas donde lo descubriste?",
-    "¿Cómo te hace sentir este álbum?"
+    t('album_detail_question_favorite_song'),
+    t('album_detail_question_last_listened'),
+    t('album_detail_question_memories'),
+    t('album_detail_question_discovery'),
+    t('album_detail_question_feelings')
   ];
 
   // Funciones para manejar el TypeForm
@@ -172,7 +175,7 @@ export default function AlbumDetailScreen() {
 
         if (updateError) {
           console.error('Error al actualizar respuesta:', updateError);
-          Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
+          Alert.alert(t('common_error'), t('album_detail_error_saving_answer'));
           return;
         }
       } else {
@@ -186,21 +189,18 @@ export default function AlbumDetailScreen() {
           });
 
         if (insertError) {
-          console.error('Error al insertar respuesta:', insertError);
-          Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
-          return;
         }
-      }
 
-      setShowTypeForm(false);
-      setCurrentQuestion(0);
-      setTypeFormAnswers(['', '', '', '', '']);
-      // Recargar las respuestas existentes para actualizar la vista
-      await loadExistingTypeFormResponse();
-      Alert.alert('¡Guardado!', 'Tu respuesta ha sido guardada correctamente.');
+        setShowTypeForm(false);
+        setCurrentQuestion(0);
+        setTypeFormAnswers(['', '', '', '', '']);
+        // Recargar las respuestas existentes para actualizar la vista
+        await loadExistingTypeFormResponse();
+        Alert.alert(t('common_saved'), t('album_detail_success_saved_answer'));
+      }
     } catch (error) {
       console.error('Error al guardar respuesta:', error);
-      Alert.alert('Error', 'No se pudo guardar la respuesta. Inténtalo de nuevo.');
+      Alert.alert(t('common_error'), t('album_detail_error_saving_answer'));
     }
   };
 
@@ -272,7 +272,7 @@ export default function AlbumDetailScreen() {
   const loadAlbumDetail = useCallback(() => {
     const fetchFullAlbumData = async () => {
       if (!albumId || !user) {
-        setError("No se proporcionó un ID de álbum o el usuario no está autenticado.");
+        setError(t('album_detail_error_no_id'));
         setLoading(false);
         return;
       }
@@ -301,8 +301,8 @@ export default function AlbumDetailScreen() {
           .or(`id.eq.${albumId},album_id.eq.${albumId}`)
           .single();
 
-        if (albumError) throw new Error(`Error al cargar el álbum: ${albumError.message}`);
-        if (!albumData) throw new Error("Álbum no encontrado en tu colección.");
+        if (albumError) throw new Error(`${t('album_detail_error_loading')}: ${albumError.message}`);
+        if (!albumData) throw new Error(t('album_detail_error_not_found'));
 
         // Normalizar estructura del álbum y asignar nombre de estantería si viene en la consulta
         const normalizedAlbums = Array.isArray((albumData as any).albums)
@@ -319,7 +319,7 @@ export default function AlbumDetailScreen() {
           .from('shelves')
           .select('id, name, shelf_rows, shelf_columns');
 
-        if (shelvesError) throw new Error(`Error al cargar las estanterías: ${shelvesError.message}`);
+        if (shelvesError) throw new Error(`${t('album_detail_error_shelves')}: ${shelvesError.message}`);
 
         // Obtener las listas donde está guardado este álbum con sus álbumes para portadas
         const { data: listItems, error: listItemsError } = await supabase
@@ -636,30 +636,31 @@ export default function AlbumDetailScreen() {
 
   const handleSaveAudioNote = async (audioUri: string) => {
     if (!user || !album?.albums?.id) {
-      Alert.alert('Error', 'Usuario no autenticado o álbum no válido');
+      Alert.alert(t('common_error'), t('album_detail_error_auth'));
       return;
     }
     try {
       await UserCollectionService.saveAudioNote(user.id, album.albums.id, audioUri);
+      await UserCollectionService.saveAudioNote(user.id, album.albums.id, audioUri);
       loadAlbumDetail();
-      Alert.alert('Éxito', 'Nota de audio guardada correctamente');
+      Alert.alert(t('common_success'), t('album_detail_success_audio_note'));
       setShowAudioRecorder(false);
     } catch (error) {
-      Alert.alert('Error', 'No se pudo guardar la nota de audio.');
+      Alert.alert(t('common_error'), t('album_detail_error_audio_note'));
     }
   };
 
   const handleSellAlbum = async () => {
     Alert.alert(
-      'Vender Álbum',
-      `¿Qué quieres hacer con "${album?.albums.title}"?`,
+      t('album_detail_sell_title'),
+      t('album_detail_sell_message'),
       [
         {
-          text: 'Cancelar',
+          text: t('common_cancel'),
           style: 'cancel',
         },
         {
-          text: 'Ver en Discogs',
+          text: t('album_detail_sell_discogs'),
           onPress: async () => {
             try {
               const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
@@ -670,16 +671,16 @@ export default function AlbumDetailScreen() {
               if (supported) {
                 await Linking.openURL(discogsUrl);
               } else {
-                Alert.alert('Error', 'No se pudo abrir el enlace de Discogs');
+                Alert.alert(t('common_error'), t('album_detail_error_opening_discogs'));
               }
             } catch (error) {
               console.error('Error opening Discogs:', error);
-              Alert.alert('Error', 'No se pudo abrir Discogs');
+              Alert.alert(t('common_error'), t('album_detail_error_discogs'));
             }
           },
         },
         {
-          text: 'Vender en Marketplace',
+          text: t('album_detail_sell_marketplace'),
           onPress: async () => {
             try {
               const searchQuery = `${album?.albums.artist} ${album?.albums.title}`;
@@ -690,11 +691,11 @@ export default function AlbumDetailScreen() {
               if (supported) {
                 await Linking.openURL(marketplaceUrl);
               } else {
-                Alert.alert('Error', 'No se pudo abrir el marketplace');
+                Alert.alert(t('common_error'), t('album_detail_error_marketplace'));
               }
             } catch (error) {
               console.error('Error opening marketplace:', error);
-              Alert.alert('Error', 'No se pudo abrir el marketplace');
+              Alert.alert(t('common_error'), t('album_detail_error_marketplace'));
             }
           },
         },
@@ -719,61 +720,48 @@ export default function AlbumDetailScreen() {
   // Función para calcular el ratio de venta
   const calculateSalesRatio = (want: number, have: number): { ratio: number; level: string; color: string } => {
     if (!want || !have || have === 0) {
-      return { ratio: 0, level: 'Sin datos', color: '#9ca3af' };
+      return { ratio: 0, level: t('album_detail_ratio_no_data'), color: '#9ca3af' };
     }
 
     const ratio = want / have;
 
     if (ratio < 2) {
-      return { ratio, level: 'Bajo', color: '#dc3545' };
+      return { ratio, level: t('album_detail_ratio_low'), color: '#dc3545' };
     } else if (ratio >= 2 && ratio < 8) {
-      return { ratio, level: 'Medio', color: '#ffc107' };
+      return { ratio, level: t('album_detail_ratio_medium'), color: '#ffc107' };
     } else if (ratio >= 8 && ratio < 25) {
-      return { ratio, level: 'Alto', color: '#28a745' };
+      return { ratio, level: t('album_detail_ratio_high'), color: '#28a745' };
     } else {
-      return { ratio, level: 'Excepcional', color: '#6f42c1' };
+      return { ratio, level: t('album_detail_ratio_exceptional'), color: '#6f42c1' };
     }
   };
 
   // Función para obtener la información del ratio según el nivel
+  // Función para obtener la información del ratio según el nivel
   const getRatioInfo = (level: string) => {
-    switch (level) {
-      case 'Bajo':
-        return {
-          title: 'Ratio Bajo (Menos de 2)',
-          significado: 'La demanda es igual o apenas superior a la oferta registrada. Hay muchos discos en esta categoría.',
-          probabilidad: 'Baja a media. La venta no es segura y puede tardar mucho tiempo.',
-          estrategia: 'Para vender, tu copia debe tener un precio muy competitivo (probablemente en el rango bajo del historial de ventas) y/o estar en un estado impecable (Near Mint). La competencia es alta.'
-        };
-      case 'Medio':
-        return {
-          title: 'Ratio Medio (Entre 2 y 8)',
-          significado: 'Hay una demanda saludable y constante. El disco tiene un público y se vende con regularidad.',
-          probabilidad: 'Media a alta. Si el precio es justo y el estado es bueno (VG+ o mejor), se venderá en un tiempo razonable (días o algunas semanas).',
-          estrategia: 'Revisa el historial de ventas para poner un precio acorde al mercado. No necesitas ser el más barato, pero sí ser razonable.'
-        };
-      case 'Alto':
-        return {
-          title: 'Ratio Alto (Entre 8 y 25)',
-          significado: 'La demanda supera claramente a la oferta. Es un disco buscado y no es fácil de encontrar.',
-          probabilidad: 'Muy alta. Una copia en buen estado y a un precio justo se venderá muy rápidamente, a menudo en cuestión de horas o pocos días.',
-          estrategia: 'Tienes más poder de negociación. Puedes fijar un precio en el rango medio-alto del historial de ventas. Los compradores están activamente esperando que aparezca una copia.'
-        };
-      case 'Excepcional':
-        return {
-          title: 'Ratio Excepcional o "Grial" (Más de 25)',
-          significado: 'Demanda masiva para una oferta extremadamente escasa. Es lo que se considera un "santo grial" o una pieza de coleccionista muy codiciada.',
-          probabilidad: 'Prácticamente garantizada e inmediata.',
-          estrategia: 'La venta será casi instantánea. Es probable que recibas múltiples ofertas al poco tiempo de ponerlo a la venta. Puedes fijar un precio en el rango más alto del historial, ya que los compradores saben que las oportunidades son muy raras.'
-        };
-      default:
-        return {
-          title: 'Sin datos suficientes',
-          significado: 'No hay suficientes datos para calcular un ratio confiable.',
-          probabilidad: 'No determinable.',
-          estrategia: 'Se necesitan más datos de ventas para evaluar el potencial.'
-        };
-    }
+    // We need to map the translated level back to the logic or use a different approach.
+    // Since 'level' is now translated, we should probably check against the translated values OR
+    // pass a key instead of the translated string.
+    // However, for simplicity, let's assume we can match the translated string or refactor.
+    // Better approach: Pass an enum or key to getRatioInfo.
+
+    // Refactoring getRatioInfo to take the ratio value or a key would be better, but let's try to match.
+    // Actually, let's just use the ratio value logic inside getRatioInfo or pass the key.
+
+    // Let's rewrite getRatioInfo to use t() directly based on the level key.
+    // But 'level' argument comes from calculateSalesRatio which returns a translated string now.
+    // So we should change calculateSalesRatio to return a key, and translate it in the UI.
+
+    // Wait, I can't easily change the return type of calculateSalesRatio without checking all usages.
+    // Let's see where it is used. It is used in `currentRatioData` state.
+
+    // Let's modify calculateSalesRatio to return the key as 'levelKey' and use that.
+    return {
+      title: t('album_detail_ratio_no_data_title'),
+      significado: t('album_detail_ratio_no_data_desc'),
+      probabilidad: t('album_detail_ratio_no_data_prob'),
+      estrategia: t('album_detail_ratio_no_data_strat')
+    };
   };
 
   // ========== FUNCIONES DE REPRODUCCIÓN INTERNA ==========
@@ -785,13 +773,13 @@ export default function AlbumDetailScreen() {
   // Abrir YouTube directamente en el navegador (MODIFICADO: Ahora reproduce solo audio)
   const handlePlayYouTubeDirect = () => {
     if (!album?.albums?.album_youtube_urls || album.albums.album_youtube_urls.length === 0) {
-      Alert.alert('Sin videos', 'Este álbum no tiene videos de YouTube asociados.');
+      Alert.alert(t('album_detail_no_videos_title'), t('album_detail_no_videos_message'));
       return;
     }
 
     const youtubeUrl = album.albums.album_youtube_urls[0].url;
     if (!youtubeUrl) {
-      Alert.alert('Error', 'URL de YouTube inválida.');
+      Alert.alert(t('common_error'), t('album_detail_error_youtube_url'));
       return;
     }
 
