@@ -19,6 +19,8 @@ import {
   scheduleSnoozeNotification,
 } from '../services/notifications';
 import { getColorForTag } from '../src/utils/getColorForTag';
+import { useTranslation } from '../src/i18n/useTranslation';
+import { activeLocale as currentLanguage } from '../src/i18n';
 
 const { width } = Dimensions.get('window');
 const CELL_WIDTH = width / 7;
@@ -45,12 +47,19 @@ interface Session {
 }
 
 export default function CalendarScreen() {
+  const { t } = useTranslation();
   const { colors } = useTheme();
   const { user } = useAuth();
   const navigation = useNavigation();
   const { openSessionNoteModal } = useSessionNoteModal();
   const notificationListener = useRef<Notifications.Subscription | null>(null);
   const responseListener = useRef<Notifications.Subscription | null>(null);
+
+  useEffect(() => {
+    navigation.setOptions({
+      title: t("header_dj_planner"),
+    });
+  }, [navigation, t]);
 
   // Estado para la fecha actual (primer día del mes)
   const [currentDate, setCurrentDate] = useState(() => {
@@ -175,7 +184,8 @@ export default function CalendarScreen() {
 
   // Función para obtener el nombre del mes en español
   const getMonthName = (date: Date): string => {
-    const monthName = date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+    const locale = currentLanguage === 'en' ? 'en-US' : 'es-ES';
+    const monthName = date.toLocaleDateString(locale, { month: 'long', year: 'numeric' });
     // Capitalizar la primera letra
     return monthName.charAt(0).toUpperCase() + monthName.slice(1);
   };
@@ -456,7 +466,7 @@ export default function CalendarScreen() {
 
     // Validar nombre
     if (!formName.trim()) {
-      errors.name = 'El nombre es obligatorio';
+      errors.name = t('planner_validation_name_required');
     }
 
     // Validar horario usando duración real sobre la fecha de la sesión
@@ -470,7 +480,7 @@ export default function CalendarScreen() {
       const durationHours = getDurationHours(baseDate, formStartTime, formEndTime);
 
       if (!durationHours || durationHours <= 0) {
-        errors.time = 'La duración debe ser mayor que 0';
+        errors.time = t('planner_validation_duration');
       }
     }
 
@@ -478,7 +488,7 @@ export default function CalendarScreen() {
     if (formPaymentType === 'cerrado' || formPaymentType === 'hora') {
       const amount = parseFloat(formPaymentAmount);
       if (!formPaymentAmount || isNaN(amount) || amount <= 0) {
-        errors.amount = 'Introduce una cantidad válida';
+        errors.amount = t('planner_validation_amount');
       }
     }
 
@@ -546,7 +556,7 @@ export default function CalendarScreen() {
           const durationHours = getDurationHours(baseDate, startTime, endTime);
 
           if (!durationHours || durationHours <= 0) {
-            Alert.alert('Error', 'La duración debe ser mayor que 0');
+            Alert.alert(t('common_error'), t('planner_validation_duration'));
             setIsSaving(false);
             return;
           }
@@ -565,7 +575,7 @@ export default function CalendarScreen() {
 
       if (error) {
         console.error('Error al crear sesión:', error);
-        Alert.alert('Error', 'No se pudo crear la sesión');
+        Alert.alert(t('common_error'), t('planner_error_create'));
       } else {
         // Notificar globalmente que las sesiones han cambiado (para refrescar cards de ganancias, etc.)
         DeviceEventEmitter.emit('sessionsUpdated');
@@ -583,14 +593,14 @@ export default function CalendarScreen() {
 
         // Mostrar feedback y cerrar modal
         if (Platform.OS === 'android') {
-          ToastAndroid.show('Sesión creada', ToastAndroid.SHORT);
+          ToastAndroid.show(t('planner_success_created'), ToastAndroid.SHORT);
         }
         handleCloseModal();
         await loadSessions();
       }
     } catch (error) {
       console.error('Error al crear sesión:', error);
-      Alert.alert('Error', 'No se pudo crear la sesión');
+      Alert.alert(t('common_error'), t('planner_error_create'));
     } finally {
       setIsSaving(false);
     }
@@ -660,7 +670,7 @@ export default function CalendarScreen() {
           const durationHours = getDurationHours(baseDate, startTime, endTime);
 
           if (!durationHours || durationHours <= 0) {
-            Alert.alert('Error', 'La duración debe ser mayor que 0');
+            Alert.alert(t('common_error'), t('planner_validation_duration'));
             setIsSaving(false);
             return;
           }
@@ -684,7 +694,7 @@ export default function CalendarScreen() {
 
       if (error) {
         console.error('Error al actualizar sesión:', error);
-        Alert.alert('Error', 'No se pudo actualizar la sesión');
+        Alert.alert(t('common_error'), t('planner_error_update'));
       } else {
         // Notificar globalmente que las sesiones han cambiado (para refrescar cards de ganancias, etc.)
         DeviceEventEmitter.emit('sessionsUpdated');
@@ -702,14 +712,14 @@ export default function CalendarScreen() {
 
         // Mostrar feedback y cerrar modal
         if (Platform.OS === 'android') {
-          ToastAndroid.show('Cambios guardados', ToastAndroid.SHORT);
+          ToastAndroid.show(t('planner_success_updated'), ToastAndroid.SHORT);
         }
         handleCloseModal();
         await loadSessions();
       }
     } catch (error) {
       console.error('Error al actualizar sesión:', error);
-      Alert.alert('Error', 'No se pudo actualizar la sesión');
+      Alert.alert(t('common_error'), t('planner_error_update'));
     } finally {
       setIsSaving(false);
     }
@@ -720,12 +730,12 @@ export default function CalendarScreen() {
     if (!selectedSession) return;
 
     Alert.alert(
-      'Confirmar eliminación',
-      '¿Estás seguro de que quieres eliminar esta sesión?',
+      t('planner_alert_delete_title'),
+      t('planner_alert_delete_message'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('common_delete'),
           style: 'destructive',
           onPress: async () => {
             setIsSaving(true);
@@ -747,18 +757,18 @@ export default function CalendarScreen() {
 
               if (error) {
                 console.error('Error al eliminar sesión:', error);
-                Alert.alert('Error', 'No se pudo eliminar la sesión');
+                Alert.alert(t('common_error'), t('planner_error_delete'));
               } else {
                 // Mostrar feedback y cerrar modal
                 if (Platform.OS === 'android') {
-                  ToastAndroid.show('Sesión eliminada', ToastAndroid.SHORT);
+                  ToastAndroid.show(t('planner_success_deleted'), ToastAndroid.SHORT);
                 }
                 handleCloseModal();
                 await loadSessions();
               }
             } catch (error) {
               console.error('Error al eliminar sesión:', error);
-              Alert.alert('Error', 'No se pudo eliminar la sesión');
+              Alert.alert(t('common_error'), t('planner_error_delete'));
             } finally {
               setIsSaving(false);
             }
@@ -982,7 +992,9 @@ export default function CalendarScreen() {
     }).start();
   }, [monthName]);
 
-  const weekDays = ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
+  const weekDays = currentLanguage === 'en'
+    ? ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+    : ['L', 'M', 'X', 'J', 'V', 'S', 'D'];
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
@@ -1007,7 +1019,7 @@ export default function CalendarScreen() {
               viewMode === 'calendar' && styles.viewToggleButtonTextActive,
             ]}
           >
-            Calendario
+            {t('planner_view_calendar')}
           </Text>
         </TouchableOpacity>
 
@@ -1030,7 +1042,7 @@ export default function CalendarScreen() {
               viewMode === 'list' && styles.viewToggleButtonTextActive,
             ]}
           >
-            Lista
+            {t('planner_view_list')}
           </Text>
         </TouchableOpacity>
       </View>
@@ -1198,7 +1210,7 @@ export default function CalendarScreen() {
               <View style={styles.modalHeaderNew}>
                 <View style={styles.modalTitleContainer}>
                   <Text style={styles.modalTitleNew}>
-                    {selectedSession ? 'Editar sesión' : 'Nueva sesión'}
+                    {selectedSession ? t('planner_modal_title_edit') : t('planner_modal_title_new')}
                   </Text>
                   {(() => {
                     // Obtener la fecha: de la sesión existente o del día seleccionado
@@ -1241,7 +1253,7 @@ export default function CalendarScreen() {
               >
                 {/* Nombre */}
                 <View style={styles.formGroupNew}>
-                  <Text style={styles.labelNew}>Nombre <Text style={styles.requiredAsterisk}>*</Text></Text>
+                  <Text style={styles.labelNew}>{t('planner_label_name')} <Text style={styles.requiredAsterisk}>*</Text></Text>
                   <TextInput
                     style={[
                       styles.inputNew,
@@ -1254,7 +1266,7 @@ export default function CalendarScreen() {
                         setValidationErrors({ ...validationErrors, name: undefined });
                       }
                     }}
-                    placeholder="Nombre de la sesión"
+                    placeholder={t('planner_placeholder_name')}
                     placeholderTextColor="#999"
                   />
                   {validationErrors.name && (
@@ -1266,7 +1278,7 @@ export default function CalendarScreen() {
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 }}>
                   <View style={{ flex: 1, marginRight: 12 }}>
                     <TimePicker
-                      label="Hora inicio"
+                      label={t('planner_label_start_time')}
                       hour={startHour}
                       minute={startMinute}
                       onChange={(h, m, f) => {
@@ -1281,7 +1293,7 @@ export default function CalendarScreen() {
 
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <TimePicker
-                      label="Hora fin"
+                      label={t('planner_label_end_time')}
                       hour={endHour}
                       minute={endMinute}
                       onChange={(h, m, f) => {
@@ -1302,12 +1314,12 @@ export default function CalendarScreen() {
 
                 {/* Nota rápida */}
                 <View style={styles.formGroupNew}>
-                  <Text style={styles.labelNew}>Nota rápida</Text>
+                  <Text style={styles.labelNew}>{t('planner_label_quick_note')}</Text>
                   <TextInput
                     style={[styles.inputNew, styles.textAreaNew]}
                     value={formQuickNote}
                     onChangeText={setFormQuickNote}
-                    placeholder="Notas adicionales..."
+                    placeholder={t('planner_placeholder_quick_note')}
                     placeholderTextColor="#999"
                     multiline
                     numberOfLines={3}
@@ -1317,12 +1329,12 @@ export default function CalendarScreen() {
 
                 {/* Tag */}
                 <View style={styles.formGroupNew}>
-                  <Text style={styles.labelNew}>Tag</Text>
+                  <Text style={styles.labelNew}>{t('planner_label_tag')}</Text>
                   <TextInput
                     style={styles.inputNew}
                     value={formTag}
                     onChangeText={handleTagInputChange}
-                    placeholder="Etiqueta"
+                    placeholder={t('planner_placeholder_tag')}
                     placeholderTextColor="#999"
                     autoCapitalize="none"
                     autoCorrect={false}
@@ -1352,7 +1364,7 @@ export default function CalendarScreen() {
 
                 {/* Tipo de pago */}
                 <View style={styles.formGroupNew}>
-                  <Text style={styles.labelNew}>Tipo de pago</Text>
+                  <Text style={styles.labelNew}>{t('planner_label_payment_type')}</Text>
                   <View style={styles.paymentPickerNew}>
                     {(['gratis', 'cerrado', 'hora'] as const).map((type) => (
                       <TouchableOpacity
@@ -1369,7 +1381,9 @@ export default function CalendarScreen() {
                             formPaymentType === type && styles.paymentOptionTextSelectedNew,
                           ]}
                         >
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
+                          {type === 'gratis' ? t('planner_payment_free') :
+                            type === 'cerrado' ? t('planner_payment_fixed') :
+                              t('planner_payment_hourly')}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -1379,7 +1393,7 @@ export default function CalendarScreen() {
                 {/* Cantidad (solo si no es gratis) */}
                 {(formPaymentType === 'cerrado' || formPaymentType === 'hora') && (
                   <View style={styles.formGroupNew}>
-                    <Text style={styles.labelNew}>Cantidad</Text>
+                    <Text style={styles.labelNew}>{t('planner_label_amount')}</Text>
                     <TextInput
                       style={[
                         styles.inputNew,
@@ -1423,7 +1437,7 @@ export default function CalendarScreen() {
                       {isSaving ? (
                         <BothsideLoader size="small" fullscreen={false} />
                       ) : (
-                        <Text style={styles.buttonTextPrimaryNew}>Guardar cambios</Text>
+                        <Text style={styles.buttonTextPrimaryNew}>{t('planner_button_save')}</Text>
                       )}
                     </TouchableOpacity>
 
@@ -1432,7 +1446,7 @@ export default function CalendarScreen() {
                       onPress={handleDeleteSession}
                       disabled={isSaving}
                     >
-                      <Text style={styles.buttonTextSecondaryNew}>Eliminar sesión</Text>
+                      <Text style={styles.buttonTextSecondaryNew}>{t('planner_button_delete')}</Text>
                     </TouchableOpacity>
                   </>
                 ) : (
@@ -1449,7 +1463,7 @@ export default function CalendarScreen() {
                     {isSaving ? (
                       <BothsideLoader size="small" fullscreen={false} />
                     ) : (
-                      <Text style={styles.buttonTextPrimaryNew}>Crear sesión</Text>
+                      <Text style={styles.buttonTextPrimaryNew}>{t('planner_button_create')}</Text>
                     )}
                   </TouchableOpacity>
                 )}

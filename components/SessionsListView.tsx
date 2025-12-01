@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getColorForTag } from '../src/utils/getColorForTag';
+import { activeLocale as currentLanguage } from '../src/i18n';
 
 interface Session {
   id: string;
@@ -32,9 +33,13 @@ export default function SessionsListView({ sessions, onSessionPress }: SessionsL
   // Formatear fecha a "Jueves, 29 nov"
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
-    const dayName = date.toLocaleDateString('es-ES', { weekday: 'long' });
-    const dayMonth = date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-    return `${dayName.charAt(0).toUpperCase() + dayName.slice(1)}, ${dayMonth}`;
+    const locale = currentLanguage === "en" ? "en-US" : "es-ES";
+
+    return date.toLocaleDateString(locale, {
+      weekday: "long",
+      day: "2-digit",
+      month: "short",
+    });
   };
 
   // Formatear hora a "19:00 – 22:00"
