@@ -16,6 +16,7 @@ import { useTheme, useNavigation } from '@react-navigation/native';
 import { formatCurrencyES } from '../src/utils/formatCurrency';
 import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useDjStats } from '../hooks/useDjStats';
 
 interface Session {
   id: string;
@@ -42,6 +43,7 @@ export const SessionEarningsSection: React.FC = () => {
   const { user } = useAuth();
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
+  const { summary, loading } = useDjStats();
   const [earningsData, setEarningsData] = useState<EarningsData>({
     realEarnings: 0,
     estimatedMonthEarnings: 0,
@@ -49,7 +51,22 @@ export const SessionEarningsSection: React.FC = () => {
     averagePerSession: 0,
     lastPaidSession: null,
   });
-  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (summary) {
+      setEarningsData({
+        realEarnings: summary.monthEarnings,
+        estimatedMonthEarnings: summary.monthEstimated,
+        sessionsCount: summary.monthSessionsDone,
+        averagePerSession: summary.avgPerSession,
+        lastPaidSession: summary.bestSession ? {
+          name: summary.bestSession.name,
+          date: '', // Not available in summary directly, but not critical for this view
+          amountEarned: summary.bestSession.amount
+        } : null
+      });
+    }
+  }, [summary]);
   const isFocused = useIsFocused();
   const scale = useRef(new Animated.Value(1)).current;
   const monthLabel = React.useMemo(() => {
@@ -64,156 +81,9 @@ export const SessionEarningsSection: React.FC = () => {
     navigation.navigate('DjStatsDashboard');
   };
 
-  const loadSessionEarnings = async () => {
-    if (!user?.id) return;
 
-    try {
-      setLoading(true);
 
-      // Obtener todas las sesiones con payment_amount, incluyendo fecha y nombre
-      const { data: sessions, error } = await supabase
-        .from('sessions')
-        .select('id, date, name, payment_amount, payment_type')
-        .eq('user_id', user.id)
-        .not('payment_amount', 'is', null)
-        .order('date', { ascending: false });
 
-      if (error) {
-        console.error('Error loading session earnings:', error);
-        Alert.alert(t('common_error'), t('session_earnings_error_load'));
-        return;
-      }
-
-      if (!sessions || sessions.length === 0) {
-        setEarningsData({
-          realEarnings: 0,
-          estimatedMonthEarnings: 0,
-          sessionsCount: 0,
-          averagePerSession: 0,
-          lastPaidSession: null,
-        });
-        return;
-      }
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const currentMonth = today.getMonth();
-      const currentYear = today.getFullYear();
-
-      // Función auxiliar para verificar si una sesión es del mes actual
-      const isCurrentMonth = (dateString: string): boolean => {
-        const sessionDate = new Date(dateString);
-        return (
-          sessionDate.getMonth() === currentMonth &&
-          sessionDate.getFullYear() === currentYear
-        );
-      };
-
-      // Filtrar sesiones válidas (con payment_type válido y payment_amount)
-      const validSessions = sessions.filter((session) => {
-        return (
-          session.payment_type &&
-          session.payment_type !== 'gratis' &&
-          session.payment_amount &&
-          session.payment_amount > 0
-        );
-      });
-
-      // Filtrar solo sesiones pasadas (fecha < hoy)
-      const pastSessions = validSessions.filter((session) => {
-        const sessionDate = new Date(session.date);
-        sessionDate.setHours(0, 0, 0, 0);
-        return sessionDate < today;
-      });
-
-      // Calcular ganancias reales (solo sesiones pasadas)
-      let realEarnings = 0;
-      pastSessions.forEach((session) => {
-        if (session.payment_amount) {
-          realEarnings += session.payment_amount;
-        }
-      });
-
-      // Filtrar sesiones del mes actual (pasadas + futuras dentro del mismo mes)
-      const currentMonthSessions = validSessions.filter((session) => {
-        return isCurrentMonth(session.date);
-      });
-
-      // Calcular ganancias estimadas del mes actual (pasadas + futuras)
-      let estimatedMonthEarnings = 0;
-      currentMonthSessions.forEach((session) => {
-        if (session.payment_amount) {
-          estimatedMonthEarnings += session.payment_amount;
-        }
-      });
-
-      // Contar sesiones con pago (solo pasadas)
-      const sessionsCount = pastSessions.length;
-
-      // Calcular promedio por sesión (basado en sesiones pasadas)
-      const averagePerSession =
-        sessionsCount > 0 ? realEarnings / sessionsCount : 0;
-
-      // Encontrar la última sesión pagada
-      let lastPaidSession: {
-        name: string;
-        date: string;
-        amountEarned: number;
-      } | null = null;
-
-      const paidSessions = pastSessions.filter(
-        (s) => s.payment_amount && s.payment_amount > 0
-      );
-      if (paidSessions.length > 0) {
-        const lastSession = paidSessions[0]; // Ya están ordenadas por fecha descendente
-        lastPaidSession = {
-          name: lastSession.name,
-          date: lastSession.date,
-          amountEarned: lastSession.payment_amount || 0,
-        };
-      }
-
-      setEarningsData({
-        realEarnings,
-        estimatedMonthEarnings,
-        sessionsCount,
-        averagePerSession,
-        lastPaidSession,
-      });
-    } catch (error) {
-      console.error('Error processing session earnings:', error);
-      Alert.alert(t('common_error'), t('session_earnings_error_process'));
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Cargar una vez cuando haya usuario
-  useEffect(() => {
-    if (user) {
-      loadSessionEarnings();
-    }
-  }, [user]);
-
-  // Recargar cada vez que la pantalla está en foco
-  useEffect(() => {
-    if (isFocused && user) {
-      loadSessionEarnings();
-    }
-  }, [isFocused, user]);
-
-  // Escuchar eventos globales de actualización de sesiones
-  useEffect(() => {
-    const sub = DeviceEventEmitter.addListener('sessionsUpdated', () => {
-      if (user) {
-        loadSessionEarnings();
-      }
-    });
-
-    return () => {
-      sub.remove();
-    };
-  }, [user]);
 
   if (loading) {
     return (
@@ -255,7 +125,7 @@ export const SessionEarningsSection: React.FC = () => {
     );
   }
 
-  if (earningsData.sessionsCount === 0) {
+  if (earningsData.realEarnings === 0 && earningsData.estimatedMonthEarnings === 0) {
     return (
       <View style={styles.outerContainer}>
         <TouchableOpacity
