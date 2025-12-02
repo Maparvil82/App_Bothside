@@ -159,29 +159,70 @@ export const useDjStats = () => {
             );
         });
 
-        const pastSessionsCurrentMonth = validSessions.filter((s) => {
-            const d = new Date(s.date);
-            d.setHours(0, 0, 0, 0);
-            return d < today && isCurrentMonth(s.date);
-        });
+        let monthEarnings = 0;
+        let monthEstimated = 0;
 
-        const monthEarnings = pastSessionsCurrentMonth.reduce(
-            (sum, s) => sum + (s.payment_amount || 0),
-            0,
-        );
+        const now = new Date();
+
+        validSessions.forEach((s) => {
+            if (!isCurrentMonth(s.date)) return;
+
+            // monthEstimated always includes the session if it's in the current month
+            monthEstimated += (s.payment_amount || 0);
+
+            // Construct endDateTime to compare with now for monthEarnings
+            const sessionDate = new Date(s.date);
+            // We use the helper function but we need to handle the case where times might be null
+            // If times are null, we fallback to date comparison
+            if (s.start_time && s.end_time) {
+                const startDt = buildDateTimeFromParts(sessionDate, s.start_time);
+                let endDt = buildDateTimeFromParts(sessionDate, s.end_time);
+
+                if (startDt && endDt) {
+                    if (endDt <= startDt) {
+                        endDt.setDate(endDt.getDate() + 1); // Overnight session
+                    }
+
+                    if (endDt <= now) {
+                        monthEarnings += (s.payment_amount || 0);
+                    }
+                }
+            } else {
+                // Fallback: compare dates only
+                const sDate = new Date(s.date);
+                sDate.setHours(0, 0, 0, 0);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                if (sDate < today) {
+                    monthEarnings += (s.payment_amount || 0);
+                }
+            }
+        });
 
         const currentMonthSessions = validSessions.filter((s) => isCurrentMonth(s.date));
 
-        const monthEstimated = currentMonthSessions.reduce(
-            (sum, s) => sum + (s.payment_amount || 0),
-            0,
-        );
-
         const sessionsInCurrentMonth = sessions.filter((s) => isCurrentMonth(s.date));
 
+        // For session counts/hours, we can keep using the date-based logic or align it?
+        // The user only specified earnings.
+        // But to be consistent, "monthSessionsDone" should probably match "Ganado".
+        // Let's align "monthSessionsDone" to be count of sessions that are "Ganado".
+
         const pastSessionsAllCurrentMonth = sessionsInCurrentMonth.filter((s) => {
+            if (s.start_time && s.end_time) {
+                const sessionDate = new Date(s.date);
+                const startDt = buildDateTimeFromParts(sessionDate, s.start_time);
+                let endDt = buildDateTimeFromParts(sessionDate, s.end_time);
+                if (startDt && endDt) {
+                    if (endDt <= startDt) endDt.setDate(endDt.getDate() + 1);
+                    return endDt <= now;
+                }
+            }
             const d = new Date(s.date);
             d.setHours(0, 0, 0, 0);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
             return d < today;
         });
 
