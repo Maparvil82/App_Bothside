@@ -337,18 +337,18 @@ export const AddDiscScreen: React.FC = () => {
 
             // Mostrar opciones después de añadir el disco
             Alert.alert(
-              'Disco añadido correctamente',
-              '¿Qué quieres hacer ahora?',
+              t('add_disc_success_title'),
+              t('add_disc_success_message'),
               [
                 {
-                  text: 'Añadir más discos',
+                  text: t('add_disc_action_add_more'),
                   style: 'default',
                   onPress: () => {
                     // Mantener en la página actual
                   }
                 },
                 {
-                  text: 'Ir a colección',
+                  text: t('add_disc_action_go_collection'),
                   style: 'default',
                   onPress: () => {
                     navigation.navigate('SearchTab');
@@ -468,18 +468,18 @@ export const AddDiscScreen: React.FC = () => {
 
         // Mostrar opciones después de añadir el disco
         Alert.alert(
-          'Disco añadido correctamente',
-          '¿Qué quieres hacer ahora?',
+          t('add_disc_success_title'),
+          t('add_disc_success_message'),
           [
             {
-              text: 'Añadir más discos',
+              text: t('add_disc_action_add_more'),
               style: 'default',
               onPress: () => {
                 // Mantener en la página actual
               }
             },
             {
-              text: 'Ir a colección',
+              text: t('add_disc_action_go_collection'),
               style: 'default',
               onPress: () => {
                 navigation.navigate('SearchTab');
@@ -504,18 +504,18 @@ export const AddDiscScreen: React.FC = () => {
 
             // Mostrar opciones después de añadir el disco
             Alert.alert(
-              'Disco añadido correctamente',
-              '¿Qué quieres hacer ahora?',
+              t('add_disc_success_title'),
+              t('add_disc_success_message'),
               [
                 {
-                  text: 'Añadir más discos',
+                  text: t('add_disc_action_add_more'),
                   style: 'default',
                   onPress: () => {
                     // Mantener en la página actual
                   }
                 },
                 {
-                  text: 'Ir a colección',
+                  text: t('add_disc_action_go_collection'),
                   style: 'default',
                   onPress: () => {
                     navigation.navigate('SearchTab');
@@ -795,18 +795,18 @@ export const AddDiscScreen: React.FC = () => {
 
             // Mostrar opciones después de añadir el disco
             Alert.alert(
-              'Disco añadido correctamente',
-              '¿Qué quieres hacer ahora?',
+              t('add_disc_success_title'),
+              t('add_disc_success_message'),
               [
                 {
-                  text: 'Añadir más discos',
+                  text: t('add_disc_action_add_more'),
                   style: 'default',
                   onPress: () => {
                     // Mantener en la página actual
                   }
                 },
                 {
-                  text: 'Ir a colección',
+                  text: t('add_disc_action_go_collection'),
                   style: 'default',
                   onPress: () => {
                     navigation.navigate('SearchTab');
@@ -825,18 +825,18 @@ export const AddDiscScreen: React.FC = () => {
 
         // Mostrar opciones después de añadir el disco
         Alert.alert(
-          'Disco añadido correctamente',
-          '¿Qué quieres hacer ahora?',
+          t('add_disc_success_title'),
+          t('add_disc_success_message'),
           [
             {
-              text: 'Añadir más discos',
+              text: t('add_disc_action_add_more'),
               style: 'default',
               onPress: () => {
                 // Mantener en la página actual
               }
             },
             {
-              text: 'Ir a colección',
+              text: t('add_disc_action_go_collection'),
               style: 'default',
               onPress: () => {
                 navigation.navigate('SearchTab');

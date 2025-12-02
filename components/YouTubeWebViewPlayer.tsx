@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface YouTubeWebViewPlayerProps {
   visible: boolean;
@@ -27,6 +28,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
   title,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
@@ -51,7 +53,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
   };
 
   const videoId = extractVideoId(youtubeUrl);
-  
+
   // Crear diferentes URLs para probar
   const getEmbedUrls = (videoId: string) => {
     return [
@@ -63,7 +65,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
       `https://www.youtube.com/embed/${videoId}?controls=1&rel=0&modestbranding=1&playsinline=1`
     ];
   };
-  
+
   const embedUrls = videoId ? getEmbedUrls(videoId) : [];
   const embedUrl = embedUrls[currentUrlIndex] || null;
 
@@ -76,7 +78,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
     try {
       const data = JSON.parse(event.nativeEvent.data);
       if (data.type === 'error' && data.message.includes('login')) {
-        setError('Este video requiere iniciar sesión en YouTube');
+        setError(t('youtube_player_login_required'));
       }
     } catch (e) {
       // Ignorar errores de parsing
@@ -86,7 +88,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
   const handleWebViewError = (syntheticEvent: any) => {
     const { nativeEvent } = syntheticEvent;
     console.error('WebView error:', nativeEvent);
-    setError('Error al cargar el video en la app');
+    setError(t('youtube_player_load_error'));
     setIsLoading(false);
   };
 
@@ -112,7 +114,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
   const handleOpenInBrowser = () => {
     Linking.openURL(youtubeUrl).catch(err => {
       console.error('Error opening URL:', err);
-      Alert.alert('Error', 'No se pudo abrir el enlace');
+      Alert.alert(t('common_error'), t('youtube_player_open_error'));
     });
   };
 
@@ -155,7 +157,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
           {error ? (
             <View style={styles.errorContainer}>
               <Ionicons name="warning" size={48} color="#dc3545" />
-              <Text style={styles.errorTitle}>Error al cargar el video</Text>
+              <Text style={styles.errorTitle}>{t('youtube_player_error_title')}</Text>
               <Text style={styles.errorMessage}>{error}</Text>
               <View style={styles.errorButtons}>
                 <TouchableOpacity
@@ -163,7 +165,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
                   onPress={handleOpenInBrowser}
                 >
                   <Ionicons name="open-outline" size={20} color="#fff" />
-                  <Text style={styles.retryButtonText}>Abrir en Navegador</Text>
+                  <Text style={styles.retryButtonText}>{t('youtube_player_open_browser')}</Text>
                 </TouchableOpacity>
                 {currentUrlIndex < embedUrls.length - 1 && (
                   <TouchableOpacity
@@ -171,7 +173,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
                     onPress={handleTryNextUrl}
                   >
                     <Ionicons name="arrow-forward" size={20} color="#fff" />
-                    <Text style={styles.retryButtonText}>Probar Otra URL</Text>
+                    <Text style={styles.retryButtonText}>{t('youtube_player_try_next')}</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
@@ -179,7 +181,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
                   onPress={handleRetry}
                 >
                   <Ionicons name="refresh" size={20} color="#fff" />
-                  <Text style={styles.retryButtonText}>Reintentar</Text>
+                  <Text style={styles.retryButtonText}>{t('youtube_player_retry')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -188,10 +190,10 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
               {isLoading && (
                 <View style={styles.loadingContainer}>
                   <Ionicons name="musical-notes" size={48} color="#007AFF" />
-                  <Text style={styles.loadingText}>Cargando video...</Text>
+                  <Text style={styles.loadingText}>{t('youtube_player_loading')}</Text>
                 </View>
               )}
-              
+
               <WebView
                 ref={webViewRef}
                 source={{ uri: embedUrl }}
@@ -226,10 +228,10 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
         {/* Footer Info */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Reproduciendo desde YouTube
+            {t('youtube_player_footer_text')}
           </Text>
           <Text style={styles.footerSubtext}>
-            Usa los controles del video para pausar/reproducir
+            {t('youtube_player_footer_subtext')}
           </Text>
         </View>
       </View>

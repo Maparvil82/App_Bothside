@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService } from '../services/database';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface EditListScreenProps {
   navigation: any;
@@ -20,6 +21,7 @@ interface EditListScreenProps {
 
 const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { list } = route.params;
 
   const [title, setTitle] = useState(list.title || '');
@@ -29,12 +31,12 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
 
   const handleSaveChanges = async () => {
     if (!title.trim()) {
-      Alert.alert('Error', 'El título es obligatorio');
+      Alert.alert(t('common_error'), t('edit_maleta_error_title_required'));
       return;
     }
 
     if (!user) {
-      Alert.alert('Error', 'Debes iniciar sesión para editar la lista');
+      Alert.alert(t('common_error'), t('edit_maleta_error_login_required'));
       return;
     }
 
@@ -47,25 +49,25 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
       });
 
       Alert.alert(
-        'Lista Actualizada',
-        'Los cambios se han guardado correctamente',
+        t('edit_maleta_success_update_title'),
+        t('edit_maleta_success_update_message'),
         [
           {
-            text: 'Ver Maleta',
+            text: t('edit_maleta_action_view'),
             onPress: () => navigation.navigate('ViewMaleta', {
               maletaId: list.id,
               listTitle: title.trim()
             }),
           },
           {
-            text: 'Continuar Editando',
+            text: t('edit_maleta_action_continue'),
             onPress: () => { },
           },
         ]
       );
     } catch (error) {
       console.error('Error updating list:', error);
-      Alert.alert('Error', 'No se pudo actualizar la lista');
+      Alert.alert(t('common_error'), t('edit_maleta_error_update'));
     } finally {
       setLoading(false);
     }
@@ -73,18 +75,18 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
 
   const handleDeleteList = () => {
     Alert.alert(
-      'Eliminar Maleta',
-      `¿Estás seguro de que quieres eliminar "${list.title}"? Esta acción no se puede deshacer.`,
+      t('edit_maleta_delete_title'),
+      `${t('edit_maleta_delete_confirm_message')} "${list.title}"?`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('common_delete'),
           style: 'destructive',
           onPress: async () => {
             try {
               setLoading(true);
               await UserMaletaService.deleteMaleta(list.id);
-              Alert.alert('Lista Eliminada', 'La lista se ha eliminado correctamente', [
+              Alert.alert(t('edit_maleta_success_delete_title'), t('edit_maleta_success_delete_message'), [
                 {
                   text: 'OK',
                   onPress: () => navigation.navigate('Maletas'),
@@ -92,7 +94,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
               ]);
             } catch (error) {
               console.error('Error deleting list:', error);
-              Alert.alert('Error', 'No se pudo eliminar la lista');
+              Alert.alert(t('common_error'), t('edit_maleta_error_delete'));
             } finally {
               setLoading(false);
             }
@@ -110,11 +112,11 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
 
     if (hasChanges) {
       Alert.alert(
-        'Cancelar Cambios',
-        '¿Estás seguro de que quieres cancelar? Se perderán los cambios.',
+        t('edit_maleta_cancel_changes_title'),
+        t('edit_maleta_cancel_changes_message'),
         [
-          { text: 'Continuar Editando', style: 'cancel' },
-          { text: 'Cancelar', style: 'destructive', onPress: () => navigation.goBack() },
+          { text: t('edit_maleta_action_continue'), style: 'cancel' },
+          { text: t('common_cancel'), style: 'destructive', onPress: () => navigation.goBack() },
         ]
       );
     } else {
@@ -128,40 +130,40 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
         <TouchableOpacity onPress={handleCancel} style={styles.cancelButton}>
           <Ionicons name="close" size={24} color="#666" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Editar Maleta</Text>
+        <Text style={styles.headerTitle}>{t('edit_maleta_header')}</Text>
         <TouchableOpacity
           onPress={handleSaveChanges}
           disabled={loading || !title.trim()}
           style={[styles.saveButton, (!title.trim() || loading) && styles.saveButtonDisabled]}
         >
           <Text style={[styles.saveButtonText, (!title.trim() || loading) && styles.saveButtonTextDisabled]}>
-            {loading ? 'Guardando...' : 'Guardar'}
+            {loading ? t('common_saving') : t('common_save')}
           </Text>
         </TouchableOpacity>
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Información Básica</Text>
+          <Text style={styles.sectionTitle}>{t('edit_maleta_section_basic')}</Text>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Título *</Text>
+            <Text style={styles.inputLabel}>{t('edit_maleta_label_title')}</Text>
             <TextInput
               style={styles.textInput}
               value={title}
               onChangeText={setTitle}
-              placeholder="Nombre de tu lista"
+              placeholder={t('edit_maleta_placeholder_title')}
               maxLength={100}
             />
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Descripción</Text>
+            <Text style={styles.inputLabel}>{t('edit_maleta_label_description')}</Text>
             <TextInput
               style={[styles.textInput, styles.textArea]}
               value={description}
               onChangeText={setDescription}
-              placeholder="Describe tu lista (opcional)"
+              placeholder={t('edit_maleta_placeholder_description')}
               multiline
               numberOfLines={4}
               maxLength={500}
@@ -172,17 +174,17 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
 
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacidad</Text>
+          <Text style={styles.sectionTitle}>{t('edit_maleta_section_privacy')}</Text>
 
           <View style={styles.privacyRow}>
             <View style={styles.privacyInfo}>
               <Text style={styles.privacyTitle}>
-                {isPublic ? 'Lista Pública' : 'Lista Privada'}
+                {isPublic ? t('edit_maleta_privacy_public') : t('edit_maleta_privacy_private')}
               </Text>
               <Text style={styles.privacyDescription}>
                 {isPublic
-                  ? 'Cualquier usuario puede ver esta lista'
-                  : 'Solo tú puedes ver esta lista'
+                  ? t('edit_maleta_privacy_public_desc')
+                  : t('edit_maleta_privacy_private_desc')
                 }
               </Text>
             </View>
@@ -196,7 +198,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Acciones Peligrosas</Text>
+          <Text style={styles.sectionTitle}>{t('edit_maleta_section_danger')}</Text>
 
           <TouchableOpacity
             style={styles.deleteButton}
@@ -204,7 +206,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
             disabled={loading}
           >
             <Ionicons name="trash-outline" size={20} color="white" />
-            <Text style={styles.deleteButtonText}>Eliminar Maleta</Text>
+            <Text style={styles.deleteButtonText}>{t('edit_maleta_delete_title')}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

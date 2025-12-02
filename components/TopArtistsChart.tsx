@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface TopArtist {
   artist: string;
@@ -15,6 +16,7 @@ interface TopArtistsChartProps {
 const { width } = Dimensions.get('window');
 
 export const TopArtistsChart: React.FC<TopArtistsChartProps> = ({ data }) => {
+  const { t } = useTranslation();
   if (!data || data.length === 0) {
     return null;
   }
@@ -57,9 +59,9 @@ export const TopArtistsChart: React.FC<TopArtistsChartProps> = ({ data }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="people" size={20} color="#007AFF" />
-        <Text style={styles.title}>Top 5 Artistas</Text>
+        <Text style={styles.title}>{t('top_artists_title')}</Text>
       </View>
-      
+
       <View style={styles.chartContainer}>
         <LineChart
           data={chartData}
@@ -88,7 +90,7 @@ export const TopArtistsChart: React.FC<TopArtistsChartProps> = ({ data }) => {
           <View key={index} style={styles.legendItem}>
             <View style={[styles.legendColor, { backgroundColor: `rgba(0, 122, 255, ${0.8 - index * 0.1})` }]} />
             <Text style={styles.legendText}>
-              {item.artist} ({item.count} álbumes)
+              {item.artist} ({t('top_artists_albums_count').replace('{0}', item.count.toString())})
             </Text>
           </View>
         ))}

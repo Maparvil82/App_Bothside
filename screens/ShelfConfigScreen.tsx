@@ -4,10 +4,12 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export default function ShelfConfigScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
+  const { t } = useTranslation();
   const [rows, setRows] = useState('');
   const [columns, setColumns] = useState('');
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export default function ShelfConfigScreen() {
       }
     } catch (error) {
       console.error('Error fetching shelf config:', error);
-      Alert.alert('Error', 'No se pudo cargar la configuración de la estantería.');
+      Alert.alert(t('common_error'), t('shelf_config_error_load'));
     } finally {
       setLoading(false);
     }
@@ -53,7 +55,7 @@ export default function ShelfConfigScreen() {
     const numCols = parseInt(columns, 10);
 
     if (isNaN(numRows) || isNaN(numCols) || numRows <= 0 || numCols <= 0) {
-      Alert.alert('Valores inválidos', 'Por favor, introduce un número válido de filas y columnas.');
+      Alert.alert(t('common_invalid_values'), t('shelf_config_error_invalid_dimensions'));
       return;
     }
 
@@ -70,12 +72,12 @@ export default function ShelfConfigScreen() {
         throw error;
       }
 
-      Alert.alert('Guardado', 'La configuración de tu estantería se ha guardado correctamente.');
+      Alert.alert(t('common_saved'), t('shelf_config_success_save'));
       navigation.goBack();
     } catch (error: any) {
       console.error('Error detallado al guardar config de estantería:', JSON.stringify(error, null, 2));
       const errorMessage = error.message || 'Ocurrió un error desconocido.';
-      Alert.alert('Error', `No se pudo guardar la configuración: ${errorMessage}`);
+      Alert.alert(t('common_error'), t('shelf_config_error_save').replace('{0}', errorMessage));
     } finally {
       setSaving(false);
     }
@@ -87,28 +89,28 @@ export default function ShelfConfigScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Configurar Estantería</Text>
-      <Text style={styles.subtitle}>Define la estructura de tu estantería física (ej. tipo Kallax).</Text>
+      <Text style={styles.title}>{t('shelf_config_title')}</Text>
+      <Text style={styles.subtitle}>{t('shelf_config_subtitle')}</Text>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Filas</Text>
+        <Text style={styles.label}>{t('common_rows')}</Text>
         <TextInput
           style={styles.input}
           value={rows}
           onChangeText={setRows}
           keyboardType="number-pad"
-          placeholder="Ej: 4"
+          placeholder={t('shelf_config_placeholder_dimension')}
         />
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.label}>Columnas</Text>
+        <Text style={styles.label}>{t('common_columns')}</Text>
         <TextInput
           style={styles.input}
           value={columns}
           onChangeText={setColumns}
           keyboardType="number-pad"
-          placeholder="Ej: 4"
+          placeholder={t('shelf_config_placeholder_dimension')}
         />
       </View>
 
@@ -120,7 +122,7 @@ export default function ShelfConfigScreen() {
         {saving ? (
           <BothsideLoader size="small" fullscreen={false} />
         ) : (
-          <Text style={styles.buttonText}>Guardar Configuración</Text>
+          <Text style={styles.buttonText}>{t('shelf_config_button_save')}</Text>
         )}
       </TouchableOpacity>
     </View>

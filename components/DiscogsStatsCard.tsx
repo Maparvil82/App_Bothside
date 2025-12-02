@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { DiscogsStatsService } from '../services/discogs-stats';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface DiscogsStatsCardProps {
   album: {
@@ -17,13 +18,14 @@ interface DiscogsStatsCardProps {
 }
 
 export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => {
+  const { t } = useTranslation();
   // Verificar si hay datos de Discogs
   const stats = album.album_stats;
   const hasDiscogsData = stats && (
-    stats.avg_price || 
-    stats.have || 
-    stats.want || 
-    stats.low_price || 
+    stats.avg_price ||
+    stats.have ||
+    stats.want ||
+    stats.low_price ||
     stats.high_price
   );
 
@@ -38,28 +40,28 @@ export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => 
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Estadísticas</Text>
-      
+      <Text style={styles.title}>{t('discogs_stats_title')}</Text>
+
       {/* Precio medio destacado */}
       {stats?.avg_price && (
         <View style={styles.avgPriceContainer}>
-          <Text style={styles.avgPriceLabel}>Precio Medio</Text>
+          <Text style={styles.avgPriceLabel}>{t('discogs_stats_avg_price')}</Text>
           <Text style={styles.avgPriceValue}>
             {DiscogsStatsService.formatPrice(stats.avg_price)}
           </Text>
         </View>
       )}
-      
+
       <View style={styles.statsGrid}>
         {/* Columna izquierda */}
         <View style={styles.column}>
           <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Lo tienen:</Text>
+            <Text style={styles.statLabel}>{t('discogs_stats_have')}</Text>
             <Text style={styles.statValue}>{stats?.have || 0}</Text>
           </View>
-          
+
           <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Lo quieren:</Text>
+            <Text style={styles.statLabel}>{t('discogs_stats_want')}</Text>
             <Text style={styles.statValue}>{stats?.want || 0}</Text>
           </View>
         </View>
@@ -67,21 +69,21 @@ export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => 
         {/* Columna derecha */}
         <View style={styles.column}>
           <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Último vendido:</Text>
+            <Text style={styles.statLabel}>{t('discogs_stats_last_sold')}</Text>
             <Text style={styles.statValue}>
               {DiscogsStatsService.formatLastSoldDate(stats?.last_sold || '')}
             </Text>
           </View>
-          
+
           <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Bajo:</Text>
+            <Text style={styles.statLabel}>{t('discogs_stats_low')}</Text>
             <Text style={styles.statValue}>
               {DiscogsStatsService.formatPrice(stats?.low_price || 0)}
             </Text>
           </View>
-          
+
           <View style={styles.statRow}>
-            <Text style={styles.statLabel}>Alto:</Text>
+            <Text style={styles.statLabel}>{t('discogs_stats_high')}</Text>
             <Text style={styles.statValue}>
               {DiscogsStatsService.formatPrice(stats?.high_price || 0)}
             </Text>

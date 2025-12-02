@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, Animated, StyleSheet, Image } from "react-native";
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface BothsideLoaderProps {
     size?: 'small' | 'medium' | 'large';
@@ -8,6 +9,7 @@ interface BothsideLoaderProps {
 
 export const BothsideLoader = ({ size = 'large', fullscreen = true }: BothsideLoaderProps) => {
     const scaleAnim = useRef(new Animated.Value(1)).current;
+    const { t } = useTranslation();
 
     useEffect(() => {
         Animated.loop(
@@ -54,7 +56,7 @@ export const BothsideLoader = ({ size = 'large', fullscreen = true }: BothsideLo
                 />
             </Animated.View>
 
-            {size !== 'small' && <Text style={styles.loadingText}>Cargando datos...</Text>}
+            {size !== 'small' && <Text style={styles.loadingText}>{t('common_loading_data')}</Text>}
         </View>
     );
 };

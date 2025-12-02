@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getColorForTag } from '../src/utils/getColorForTag';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface TagSelectorProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export default function TagSelector({
   onClose,
   onSelectTag,
 }: TagSelectorProps) {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const [existingTags, setExistingTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
@@ -156,7 +158,7 @@ export default function TagSelector({
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>Seleccionar Tag</Text>
+              <Text style={styles.headerTitle}>{t('tag_selector_title')}</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
                 <Ionicons name="close" size={24} color="#000" />
               </TouchableOpacity>
@@ -169,7 +171,7 @@ export default function TagSelector({
                 style={styles.searchInput}
                 value={searchText}
                 onChangeText={setSearchText}
-                placeholder="Buscar o crear nuevo tag..."
+                placeholder={t('tag_selector_placeholder')}
                 placeholderTextColor="#999"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -190,7 +192,7 @@ export default function TagSelector({
               >
                 <Ionicons name="add-circle" size={24} color="#007AFF" />
                 <Text style={styles.createNewTagText}>
-                  Crear nuevo tag: <Text style={styles.createNewTagValue}>{searchText.trim()}</Text>
+                  {t('tag_selector_create_new')} <Text style={styles.createNewTagValue}>{searchText.trim()}</Text>
                 </Text>
               </TouchableOpacity>
             )}
@@ -212,8 +214,8 @@ export default function TagSelector({
                     <Ionicons name="pricetag-outline" size={48} color="#CCC" />
                     <Text style={styles.emptyText}>
                       {searchText.trim()
-                        ? 'No se encontraron tags'
-                        : 'No hay tags guardados'}
+                        ? t('tag_selector_no_results')
+                        : t('tag_selector_empty')}
                     </Text>
                   </View>
                 }

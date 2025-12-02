@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { getColorForTag } from '../src/utils/getColorForTag';
 import { activeLocale as currentLanguage } from '../src/i18n';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface Session {
   id: string;
@@ -30,6 +31,7 @@ interface SessionsListViewProps {
 }
 
 export default function SessionsListView({ sessions, onSessionPress }: SessionsListViewProps) {
+  const { t } = useTranslation();
   // Formatear fecha a "Jueves, 29 nov"
   const formatDate = (dateString: string): string => {
     const date = new Date(dateString);
@@ -93,7 +95,7 @@ export default function SessionsListView({ sessions, onSessionPress }: SessionsL
         {/* Nombre y horario */}
         <View style={styles.sessionInfo}>
           <Text style={styles.sessionName} numberOfLines={1}>
-            {item.name || 'Sin nombre'}
+            {item.name || t('sessions_list_no_name')}
           </Text>
           {formattedTime && (
             <Text style={styles.timeText}>{formattedTime}</Text>
@@ -126,7 +128,7 @@ export default function SessionsListView({ sessions, onSessionPress }: SessionsL
   const emptyListComponent = (
     <View style={styles.emptyContainer}>
       <Ionicons name="calendar-outline" size={48} color="#CCC" />
-      <Text style={styles.emptyText}>No hay sesiones próximas</Text>
+      <Text style={styles.emptyText}>{t('sessions_list_empty')}</Text>
     </View>
   );
 

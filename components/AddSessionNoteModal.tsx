@@ -11,6 +11,7 @@ import {
 import { BothsideLoader } from './BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface AddSessionNoteModalProps {
   visible: boolean;
@@ -26,17 +27,18 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
   onSuccess,
 }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [noteText, setNoteText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
     if (!noteText.trim()) {
-      Alert.alert('Error', 'Por favor, escribe una nota');
+      Alert.alert(t('common_error'), t('session_note_error_empty'));
       return;
     }
 
     if (!sessionId || !user?.id) {
-      Alert.alert('Error', 'No se pudo identificar la sesión o el usuario');
+      Alert.alert(t('common_error'), t('session_note_error_session_user'));
       return;
     }
 
@@ -53,13 +55,13 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
         throw error;
       }
 
-      Alert.alert('Éxito', 'Nota guardada correctamente');
+      Alert.alert(t('common_success'), t('session_note_success_save'));
       setNoteText('');
       onClose();
       onSuccess?.();
     } catch (error) {
       console.error('Error al guardar la nota:', error);
-      Alert.alert('Error', 'No se pudo guardar la nota. Intenta de nuevo.');
+      Alert.alert(t('common_error'), t('session_note_error_save'));
     } finally {
       setIsSaving(false);
     }
@@ -74,9 +76,9 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
     <Modal visible={visible} transparent animationType="fade">
       <View style={[styles.container, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
         <View style={[styles.modalContent, { backgroundColor: '#fff' }]}>
-          <Text style={[styles.title, { color: '#000' }]}>¿Cómo fue tu sesión?</Text>
+          <Text style={[styles.title, { color: '#000' }]}>{t('session_note_title')}</Text>
           <Text style={[styles.subtitle, { color: '#000' }]}>
-            Añade una nota para recordarlo más tarde
+            {t('session_note_subtitle')}
           </Text>
 
           <TextInput
@@ -88,7 +90,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
                 color: '#000',
               },
             ]}
-            placeholder="Escribe tu nota aquí..."
+            placeholder={t('session_note_placeholder')}
             placeholderTextColor="#99999980"
             multiline
             numberOfLines={6}
@@ -108,7 +110,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
               onPress={handleCancel}
               disabled={isSaving}
             >
-              <Text style={[styles.buttonText, { color: '#000' }]}>Cancelar</Text>
+              <Text style={[styles.buttonText, { color: '#000' }]}>{t('common_cancel')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -119,7 +121,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
               {isSaving ? (
                 <BothsideLoader size="small" fullscreen={false} />
               ) : (
-                <Text style={styles.saveButtonText}>Guardar</Text>
+                <Text style={styles.saveButtonText}>{t('common_save')}</Text>
               )}
             </TouchableOpacity>
           </View>

@@ -10,6 +10,7 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface TimePickerProps {
   label: string;
@@ -27,6 +28,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
   minute,
   onChange,
 }) => {
+  const { t } = useTranslation();
   const [isHourPickerVisible, setHourPickerVisible] = useState(false);
   const [isMinutePickerVisible, setMinutePickerVisible] = useState(false);
 
@@ -135,7 +137,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
           >
             <View style={styles.dropdownContainer}>
               <View style={styles.dropdownHeader}>
-                <Text style={styles.dropdownTitle}>Seleccionar hora</Text>
+                <Text style={styles.dropdownTitle}>{t('time_picker_select_hour')}</Text>
                 <TouchableOpacity onPress={() => setHourPickerVisible(false)}>
                   <Ionicons name="close" size={24} color="#000" />
                 </TouchableOpacity>
@@ -170,7 +172,7 @@ const TimePicker: React.FC<TimePickerProps> = ({
           >
             <View style={styles.dropdownContainer}>
               <View style={styles.dropdownHeader}>
-                <Text style={styles.dropdownTitle}>Seleccionar minutos</Text>
+                <Text style={styles.dropdownTitle}>{t('time_picker_select_minute')}</Text>
                 <TouchableOpacity onPress={() => setMinutePickerVisible(false)}>
                   <Ionicons name="close" size={24} color="#000" />
                 </TouchableOpacity>

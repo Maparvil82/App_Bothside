@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { GamificationService, CollectorRank } from '../services/gamification';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface CollectorRankCardProps {
   totalAlbums: number;
@@ -22,6 +23,7 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
 
 export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue, onPress, userPosition }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [tierShare, setTierShare] = useState<number | null>(null);
 
   const rank = GamificationService.computeCollectorRank(totalAlbums, collectionValue);
@@ -87,13 +89,13 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
   return (
     <CardComponent style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
       <View style={styles.headerRow}>
-        <Text style={styles.title}>Rango de Coleccionista</Text>
+        <Text style={styles.title}>{t('collector_rank_title')}</Text>
         <View style={styles.headerIcons}>
           <View style={styles.rankingContainer}>
             {userPosition && (
               <Text style={styles.positionNumber}>#{userPosition}</Text>
             )}
-            <Text style={styles.rankingText}>Ranking</Text>
+            <Text style={styles.rankingText}>{t('collector_rank_ranking')}</Text>
           </View>
           {onPress && (
             <Ionicons name="chevron-forward" size={16} color="#666" style={{ marginLeft: 8 }} />
@@ -103,27 +105,27 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
 
       <View style={styles.rankRow}>
         <Text style={styles.rankEmoji}>{emoji}</Text>
-        <Text style={styles.rankText}>{rank.tier}</Text>
+        <Text style={styles.rankText}>{t(`collector_rank_${rank.tier.toLowerCase()}` as any)}</Text>
       </View>
 
       <View style={styles.progressGroup}>
         <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>Álbumes</Text>
+          <Text style={styles.progressLabel}>{t('collector_rank_albums')}</Text>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${finalAlbumProgress * 100}%` }]} />
           </View>
           <Text style={[styles.progressValue, (rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) && styles.completedText]}>
-            {(rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) ? '¡Completado!' : `-${nextAlbumsMissing}`}
+            {(rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) ? t('collector_rank_completed') : `-${nextAlbumsMissing}`}
           </Text>
         </View>
 
         <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>Valor</Text>
+          <Text style={styles.progressLabel}>{t('collector_rank_value')}</Text>
           <View style={styles.progressBar}>
             <View style={[styles.progressFill, { width: `${finalValueProgress * 100}%` }]} />
           </View>
           <Text style={[styles.progressValue, (rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) && styles.completedText]}>
-            {(rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) ? '¡Completado!' : `-${formatCurrency(nextValueMissing)} €`}
+            {(rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) ? t('collector_rank_completed') : `-${formatCurrency(nextValueMissing)} €`}
           </Text>
         </View>
       </View>
@@ -133,12 +135,12 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
           <Ionicons name="arrow-up-circle" size={16} color="#0d6efd" />
           {hasNextAlbums && hasNextValue ? (
             <Text style={styles.nextText}>
-              Necesitas ambos: {nextAlbumsMissing} álbum(es) y {formatCurrency(nextValueMissing)} €
+              {t('collector_rank_missing_both', { count: nextAlbumsMissing, value: formatCurrency(nextValueMissing) })}
             </Text>
           ) : hasNextAlbums ? (
-            <Text style={styles.nextText}>Te faltan: {nextAlbumsMissing} álbum(es)</Text>
+            <Text style={styles.nextText}>{t('collector_rank_missing_albums', { count: nextAlbumsMissing })}</Text>
           ) : (
-            <Text style={styles.nextText}>Te faltan: {formatCurrency(nextValueMissing)} €</Text>
+            <Text style={styles.nextText}>{t('collector_rank_missing_value', { value: formatCurrency(nextValueMissing) })}</Text>
           )}
         </View>
       )}
@@ -147,7 +149,7 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         <View style={styles.shareRow}>
           <Ionicons name="people" size={14} color="#6c757d" />
           <Text style={styles.shareText}>
-            {new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(tierShare)} de usuarios (del total global) están en este nivel
+            {t('collector_rank_global_stats', { percent: new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(tierShare) })}
           </Text>
         </View>
       )}
@@ -156,7 +158,7 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         <View style={styles.nextTierRow}
         >
           <Ionicons name="star-outline" size={14} color="#6c757d" />
-          <Text style={styles.nextTierText}>Siguiente nivel: {rank.nextTier}</Text>
+          <Text style={styles.nextTierText}>{t('collector_rank_next_level', { level: t(`collector_rank_${rank.nextTier.toLowerCase()}` as any) })}</Text>
         </View>
       )}
     </CardComponent>

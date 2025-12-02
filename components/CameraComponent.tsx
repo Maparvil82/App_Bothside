@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface CameraComponentProps {
   onCapture: (imageUri: string) => void;
@@ -17,6 +18,7 @@ interface CameraComponentProps {
 }
 
 export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose, onOCRResult }) => {
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -110,18 +112,18 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
       // Preguntar si quiere guardar el álbum en la colección
       Alert.alert(
-        '✅ Álbum Reconocido',
-        `${album} - ${artist}\n\n¿Quieres guardar este álbum en tu colección?`,
+        t('camera_success_recognized_title'),
+        `${album} - ${artist}\n\n${t('camera_success_recognized_message')}`,
         [
           {
-            text: 'Cancelar',
+            text: t('common_cancel'),
             style: 'cancel',
             onPress: () => {
               console.log('❌ Usuario canceló el guardado del álbum');
             }
           },
           {
-            text: 'Guardar',
+            text: t('common_save'),
             style: 'default',
             onPress: () => {
               console.log('💾 Usuario quiere guardar el álbum, iniciando proceso...');
@@ -136,8 +138,8 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       setAiResult('❌ No se pudo reconocer el álbum');
 
       Alert.alert(
-        'Error en Reconocimiento',
-        'No se pudo identificar el álbum. Intenta con otra foto o busca manualmente.',
+        t('camera_error_recognition_title'),
+        t('camera_error_recognition_message'),
         [{ text: 'OK' }]
       );
     } finally {
@@ -151,7 +153,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   // Función para guardar el álbum reconocido en la colección
   const saveRecognizedAlbum = async (artist: string, album: string) => {
     if (!user?.id) {
-      Alert.alert('Error', 'No se pudo identificar al usuario');
+      Alert.alert(t('common_error'), t('camera_error_user_id'));
       return;
     }
 
@@ -188,14 +190,14 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           setDiscogsResults(vinylResults);
           setShowEditionsModal(true);
         } else {
-          Alert.alert('No se encontraron versiones en vinilo', 'Intenta con otra foto o busca manualmente.');
+          Alert.alert(t('camera_error_no_vinyl_title'), t('camera_error_no_vinyl_message'));
         }
       } else {
-        Alert.alert('Búsqueda', 'No se encontraron resultados en Discogs');
+        Alert.alert(t('common_search'), t('camera_error_no_results_discogs'));
       }
     } catch (error) {
       console.error('❌ Error buscando en Discogs:', error);
-      Alert.alert('Error', 'No se pudo buscar en Discogs');
+      Alert.alert(t('common_error'), t('camera_error_search_discogs'));
     }
   };
 
@@ -237,11 +239,11 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         setDiscogsResults([]);
 
         Alert.alert(
-          '✅ Disco Guardado',
-          `${release.title} se ha añadido correctamente a tu colección.`,
+          t('camera_success_saved_title'),
+          `${release.title} ${t('camera_success_saved_message_suffix')}`,
           [
             {
-              text: 'Ir a Colección',
+              text: t('camera_action_go_collection'),
               style: 'default',
               onPress: () => {
                 console.log('🚀 Navegando a la colección...');
@@ -252,7 +254,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
               }
             },
             {
-              text: 'Añadir Más',
+              text: t('camera_action_add_more'),
               style: 'default',
               onPress: () => {
                 console.log('📸 Volviendo a la vista de cámara...');
@@ -265,7 +267,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       }
     } catch (error) {
       console.error('❌ Error guardando release:', error);
-      Alert.alert('Error', 'No se pudo guardar el álbum en la colección');
+      Alert.alert(t('common_error'), t('camera_error_save_collection'));
     } finally {
       setIsSaving(false); // Desactivar estado de guardado
     }
@@ -312,7 +314,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
     // Fallback: si no se pudo extraer, usar el título completo
     if (!artistName) {
-      artistName = 'Artista Desconocido';
+      artistName = t('common_unknown_artist');
     }
 
     return (
@@ -351,7 +353,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
   const handleCapture = async () => {
     if (!cameraRef.current) {
-      Alert.alert('Error', 'Cámara no disponible');
+      Alert.alert(t('common_error'), t('camera_error_unavailable'));
       return;
     }
 
@@ -376,7 +378,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 
     } catch (error) {
       console.error('Error taking picture:', error);
-      Alert.alert('Error', 'No se pudo capturar la foto');
+      Alert.alert(t('common_error'), t('camera_error_capture'));
     } finally {
       setIsLoading(false);
     }
@@ -385,7 +387,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   if (!permission) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>Solicitando permisos de cámara...</Text>
+        <Text style={styles.text}>{t('camera_permission_requesting')}</Text>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Ionicons name="close" size={24} color="white" />
         </TouchableOpacity>
@@ -396,8 +398,8 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
   if (!permission.granted) {
     return (
       <View style={styles.container}>
-        <Text style={styles.text}>No tienes permisos de cámara</Text>
-        <Text style={styles.subtext}>Ve a Configuración y habilita los permisos de cámara</Text>
+        <Text style={styles.text}>{t('camera_permission_denied')}</Text>
+        <Text style={styles.subtext}>{t('camera_permission_instruction')}</Text>
         <TouchableOpacity style={styles.closeButton} onPress={onClose}>
           <Ionicons name="close" size={24} color="white" />
         </TouchableOpacity>
@@ -441,7 +443,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
             <View style={styles.cameraStatusIndicator}>
               <BothsideLoader size="small" fullscreen={false} />
               <Text style={styles.cameraStatusText}>
-                {isLoading ? 'Preparando cámara...' : 'Analizando...'}
+                {isLoading ? t('camera_preparing') : t('camera_analyzing')}
               </Text>
             </View>
           )}
@@ -452,8 +454,8 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       {isAIProcessing && (
         <View style={styles.aiOverlay}>
           <View style={styles.aiProcessingContainer}>
-            <Text style={styles.aiText}>🤖 Analizando portada...</Text>
-            <Text style={styles.aiSubtext}>Esto puede tomar unos segundos</Text>
+            <Text style={styles.aiText}>{t('camera_ai_analyzing')}</Text>
+            <Text style={styles.aiSubtext}>{t('camera_ai_wait')}</Text>
             <View style={styles.loadingSpinner}>
               <Text style={styles.spinnerText}>⏳</Text>
             </View>
@@ -464,7 +466,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       {/* Mostrar resultado de IA si está disponible */}
       {aiResult && !isAIProcessing && (
         <View style={styles.aiResult}>
-          <Text style={styles.aiResultTitle}>✅ Álbum Reconocido:</Text>
+          <Text style={styles.aiResultTitle}>{t('camera_success_recognized_title')}:</Text>
           <Text style={styles.aiResultText}>{aiResult}</Text>
         </View>
       )}
@@ -479,7 +481,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Selecciona la Edición Correcta</Text>
+              <Text style={styles.modalTitle}>{t('camera_select_edition')}</Text>
               <TouchableOpacity
                 style={styles.modalCloseButton}
                 onPress={() => setShowEditionsModal(false)}
@@ -501,7 +503,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
               <View style={styles.savingOverlay}>
                 <View style={styles.savingContainer}>
                   <BothsideLoader />
-                  <Text style={styles.savingText}>Guardando disco...</Text>
+                  <Text style={styles.savingText}>{t('camera_saving')}</Text>
                 </View>
               </View>
             )}

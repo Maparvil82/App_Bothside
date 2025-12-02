@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import ShelfGrid from '../components/ShelfGrid';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 type RootStackParamList = {
   ShelfEdit: { shelf: Shelf };
@@ -25,6 +26,7 @@ export default function ShelfViewScreen() {
   const navigation = useNavigation<ShelfViewNavigationProp>();
   const route = useRoute<RouteProp<{ params: { shelfId: string, shelfName: string } }, 'params'>>();
   const { shelfId, shelfName } = route.params;
+  const { t } = useTranslation();
 
   const [shelf, setShelf] = useState<Shelf | null>(null);
   const [loading, setLoading] = useState(true);
@@ -41,7 +43,7 @@ export default function ShelfViewScreen() {
       if (error) throw error;
       setShelf(data);
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudo cargar la estantería.');
+      Alert.alert(t('common_error'), t('shelf_view_error_load'));
       console.error('Error fetching shelf details:', error.message);
     } finally {
       setLoading(false);
@@ -74,7 +76,7 @@ export default function ShelfViewScreen() {
   }
 
   if (!shelf) {
-    return <Text style={styles.centered}>Estantería no encontrada.</Text>;
+    return <Text style={styles.centered}>{t('shelf_view_not_found')}</Text>;
   }
 
   return (

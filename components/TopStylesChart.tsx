@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface TopStyle {
   style: string;
@@ -15,6 +16,7 @@ interface TopStylesChartProps {
 const { width } = Dimensions.get('window');
 
 export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
+  const { t } = useTranslation();
   if (!data || data.length === 0) {
     return null;
   }
@@ -48,15 +50,16 @@ export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
     <View style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="musical-notes" size={20} color="#007AFF" />
-        <Text style={styles.title}>Top 5 Estilos</Text>
+        <Text style={styles.title}>{t('top_styles_title')}</Text>
       </View>
-      
+
       <View style={styles.chartContainer}>
         <BarChart
           data={chartData}
           width={width - 40}
           height={220}
           yAxisLabel=""
+          yAxisSuffix=""
           chartConfig={chartConfig}
           verticalLabelRotation={0}
           horizontalLabelRotation={45}

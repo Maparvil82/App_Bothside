@@ -20,6 +20,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface ViewListScreenProps {
   navigation: any;
@@ -28,6 +29,7 @@ interface ViewListScreenProps {
 
 const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const { maletaId, listTitle } = route.params;
 
   const [list, setList] = useState<any>(null);
@@ -51,7 +53,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       setList(listData);
     } catch (error) {
       console.error('Error loading list data:', error);
-      Alert.alert('Error', 'No se pudo cargar la lista');
+      Alert.alert(t('common_error'), t('view_maleta_error_load'));
     } finally {
       setLoading(false);
     }
@@ -95,11 +97,11 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       // Update local state
       setList((prev: any) => ({ ...prev, ...data }));
 
-      Alert.alert('Éxito', 'Maleta actualizada correctamente');
+      Alert.alert(t('common_success'), t('view_maleta_success_update'));
       setIsEditModalVisible(false);
     } catch (error) {
       console.error('Error updating maleta:', error);
-      Alert.alert('Error', 'No se pudo actualizar la maleta');
+      Alert.alert(t('common_error'), t('view_maleta_error_update'));
     } finally {
       setUpdatingMaleta(false);
     }
@@ -120,7 +122,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       setFilteredCollection(collection);
     } catch (error) {
       console.error('Error loading collection:', error);
-      Alert.alert('Error', 'No se pudo cargar tu colección');
+      Alert.alert(t('common_error'), t('view_maleta_error_load_collection'));
     } finally {
       setLoadingCollection(false);
     }
@@ -146,7 +148,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   const handleAddSelectedAlbums = async () => {
     if (selectedAlbums.size === 0) {
-      Alert.alert('Error', 'Selecciona al menos un álbum');
+      Alert.alert(t('common_error'), t('view_maleta_error_select_album'));
       return;
     }
 
@@ -176,14 +178,14 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       await Promise.all(promises);
 
       Alert.alert(
-        'Álbumes Añadidos',
-        `Se añadieron ${selectedAlbums.size} álbum(es) a la maleta`
+        t('view_maleta_success_add_title'),
+        t('view_maleta_success_add_message').replace('{0}', selectedAlbums.size.toString())
       );
 
       handleCloseAddModal();
     } catch (error) {
       console.error('Error adding albums to maleta:', error);
-      Alert.alert('Error', 'No se pudieron añadir los álbumes');
+      Alert.alert(t('common_error'), t('view_maleta_error_add'));
       // Recargar en caso de error para sincronizar
       await loadListData();
     } finally {
@@ -193,12 +195,12 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   const handleRemoveAlbum = async (albumId: string) => {
     Alert.alert(
-      'Remover Álbum',
-      '¿Estás seguro de que quieres remover este álbum de la lista?',
+      t('view_maleta_remove_title'),
+      t('view_maleta_remove_message'),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Remover',
+          text: t('common_remove'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -209,10 +211,10 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
               // Luego hacer la llamada a la API
               await UserMaletaService.removeAlbumFromMaleta(maletaId, albumId);
-              Alert.alert('Éxito', 'Álbum removido de la lista');
+              Alert.alert(t('common_success'), t('view_maleta_success_remove'));
             } catch (error) {
               console.error('Error removing album from maleta:', error);
-              Alert.alert('Error', 'No se pudo remover el álbum');
+              Alert.alert(t('common_error'), t('view_maleta_error_remove'));
               // Recargar en caso de error para sincronizar
               await loadListData();
             }
@@ -241,11 +243,11 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           <View style={styles.albumDetails}>
             <Text style={styles.albumDetail}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? `${item.albums.label} - ${item.albums.release_year}`
+                ? t('common_label_year_format').replace('{0}', item.albums.label).replace('{1}', item.albums.release_year)
                 : item.albums?.label && item.albums.label !== ''
-                  ? `Sello: ${item.albums.label}`
+                  ? t('common_label_format').replace('{0}', item.albums.label)
                   : item.albums?.release_year
-                    ? `Año: ${item.albums.release_year}`
+                    ? t('common_year_format').replace('{0}', item.albums.release_year)
                     : ''
               }
             </Text>
@@ -271,7 +273,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         onPress={() => handleSwipeDelete(rowMap, rowData.item.album_id)}
       >
         <Ionicons name="trash-outline" size={20} color="white" />
-        <Text style={styles.swipeActionText}>Eliminar</Text>
+        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -279,13 +281,13 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <Ionicons name="musical-notes-outline" size={64} color="#CCC" />
-      <Text style={styles.emptyStateTitle}>Lista Vacía</Text>
+      <Text style={styles.emptyStateTitle}>{t('view_maleta_empty_title')}</Text>
       <Text style={styles.emptyStateSubtitle}>
-        Añade álbumes de tu colección a esta estantería
+        {t('view_maleta_empty_text')}
       </Text>
       <TouchableOpacity style={styles.addButton} onPress={handleAddAlbum}>
         <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.addButtonText}>Añadir Álbumes</Text>
+        <Text style={styles.addButtonText}>{t('view_maleta_action_add')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -294,7 +296,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     return (
       <View style={styles.container}>
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Cargando estanterias...</Text>
+          <Text style={styles.loadingText}>{t('view_maleta_loading')}</Text>
         </View>
       </View>
     );
@@ -304,7 +306,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>No se pudo cargar la lista</Text>
+          <Text style={styles.errorText}>{t('view_maleta_error_load')}</Text>
         </View>
       </View>
     );
@@ -317,7 +319,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
           {list.is_public && (
             <View style={styles.publicBadge}>
-              <Text style={styles.publicBadgeText}>Público</Text>
+              <Text style={styles.publicBadgeText}>{t('common_public')}</Text>
             </View>
           )}
         </View>
@@ -371,7 +373,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             <View style={styles.modalContent}>
               {/* Header */}
               <View style={styles.modalHeaderNew}>
-                <Text style={styles.modalTitleNew}>Añadir Álbumes</Text>
+                <Text style={styles.modalTitleNew}>{t('view_maleta_modal_title')}</Text>
                 <TouchableOpacity onPress={handleCloseAddModal} style={styles.modalCloseButtonNew}>
                   <Ionicons name="close" size={28} color="#000" />
                 </TouchableOpacity>
@@ -385,7 +387,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                     style={styles.searchInput}
                     value={searchQuery}
                     onChangeText={setSearchQuery}
-                    placeholder="Buscar en tu colección..."
+                    placeholder={t('view_maleta_placeholder_search')}
                     placeholderTextColor="#999"
                   />
                   {searchQuery.length > 0 && (
@@ -404,7 +406,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
               >
                 {loadingCollection ? (
                   <View style={styles.loadingContainer}>
-                    <Text style={styles.loadingText}>Cargando colección...</Text>
+                    <Text style={styles.loadingText}>{t('view_maleta_loading_collection')}</Text>
                   </View>
                 ) : (
                   <FlatList
@@ -446,9 +448,9 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                     ListEmptyComponent={() => (
                       <View style={styles.emptyState}>
                         <Ionicons name="musical-notes-outline" size={64} color="#CCC" />
-                        <Text style={styles.emptyStateTitle}>Sin resultados</Text>
+                        <Text style={styles.emptyStateTitle}>{t('common_no_results')}</Text>
                         <Text style={styles.emptyStateSubtitle}>
-                          No se encontraron álbumes
+                          {t('view_maleta_no_albums_found')}
                         </Text>
                       </View>
                     )}
@@ -469,7 +471,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                   disabled={selectedAlbums.size === 0 || addingAlbums}
                 >
                   <Text style={styles.buttonTextPrimaryNew}>
-                    {addingAlbums ? 'Añadiendo...' : `Añadir (${selectedAlbums.size})`}
+                    {addingAlbums ? t('view_maleta_adding') : t('view_maleta_button_add_count').replace('{0}', selectedAlbums.size.toString())}
                   </Text>
                 </TouchableOpacity>
               </View>

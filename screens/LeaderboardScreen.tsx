@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface CollectorData {
   id: string;
@@ -28,6 +29,7 @@ interface CollectorData {
 export default function LeaderboardScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [collectors, setCollectors] = useState<CollectorData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -40,17 +42,17 @@ export default function LeaderboardScreen() {
 
   const getRankInfo = (totalAlbums: number, collectionValue: number) => {
     if (totalAlbums >= 1000 || collectionValue >= 50000) {
-      return { title: 'Maestro Coleccionista', color: '#FFD700' };
+      return { title: t('rank_master'), color: '#FFD700' };
     } else if (totalAlbums >= 500 || collectionValue >= 25000) {
-      return { title: 'Coleccionista Experto', color: '#C0C0C0' };
+      return { title: t('rank_expert'), color: '#C0C0C0' };
     } else if (totalAlbums >= 250 || collectionValue >= 10000) {
-      return { title: 'Coleccionista Avanzado', color: '#CD7F32' };
+      return { title: t('rank_advanced'), color: '#CD7F32' };
     } else if (totalAlbums >= 100 || collectionValue >= 5000) {
-      return { title: 'Coleccionista Intermedio', color: '#4CAF50' };
+      return { title: t('rank_intermediate'), color: '#4CAF50' };
     } else if (totalAlbums >= 25 || collectionValue >= 1000) {
-      return { title: 'Coleccionista Novato', color: '#2196F3' };
+      return { title: t('rank_novice'), color: '#2196F3' };
     } else {
-      return { title: 'Principiante', color: '#9E9E9E' };
+      return { title: t('rank_beginner'), color: '#9E9E9E' };
     }
   };
 
@@ -134,7 +136,7 @@ export default function LeaderboardScreen() {
             isCurrentUser && styles.currentUserText
           ]}>
             {item.full_name}
-            {isCurrentUser && ' (Tú)'}
+            {isCurrentUser && ` ${t('leaderboard_you_suffix')}`}
           </Text>
           <Text style={[
             styles.rankTitle,
@@ -147,13 +149,13 @@ export default function LeaderboardScreen() {
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{item.total_albums}</Text>
-            <Text style={styles.statLabel}>Álbumes</Text>
+            <Text style={styles.statLabel}>{t('common_albums')}</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>
               ${item.collection_value.toLocaleString()}
             </Text>
-            <Text style={styles.statLabel}>Valor</Text>
+            <Text style={styles.statLabel}>{t('common_value')}</Text>
           </View>
         </View>
       </View>

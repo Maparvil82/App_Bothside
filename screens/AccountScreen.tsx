@@ -208,7 +208,7 @@ export const AccountScreen: React.FC = () => {
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
                                     value={email}
                                     onChangeText={setEmail}
-                                    placeholder="nuevo@email.com"
+                                    placeholder={t('account_placeholder_new_email')}
                                     placeholderTextColor={colors.text + '80'}
                                     keyboardType="email-address"
                                     autoCapitalize="none"
@@ -363,7 +363,7 @@ export const AccountScreen: React.FC = () => {
                         <Text style={[styles.modalText, { color: colors.text }]}>
                             {t('account_modal_delete_message')}
                         </Text>
-                        <Text style={[styles.modalEmail, { color: colors.primary }]}>maparvil@gmail.com</Text>
+                        <Text style={[styles.modalEmail, { color: colors.primary }]}>{t('account_delete_modal_email_example')}</Text>
 
                         <TouchableOpacity
                             style={[styles.modalButton, { backgroundColor: colors.primary }]}

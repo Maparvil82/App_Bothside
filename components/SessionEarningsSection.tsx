@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { formatCurrencyES } from '../src/utils/formatCurrency';
 import { useIsFocused } from '@react-navigation/native';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface Session {
   id: string;
@@ -37,6 +38,7 @@ interface EarningsData {
 }
 
 export const SessionEarningsSection: React.FC = () => {
+  const { t } = useTranslation();
   const { user } = useAuth();
   const { colors } = useTheme();
   const navigation = useNavigation<any>();
@@ -55,7 +57,7 @@ export const SessionEarningsSection: React.FC = () => {
     const name = formatter.format(new Date());
     return name.charAt(0).toUpperCase() + name.slice(1);
   }, []);
-  const cardTitleText = `Ganancias de ${monthLabel}`;
+  const cardTitleText = t('session_earnings_title').replace('{0}', monthLabel);
 
   const handlePress = () => {
     console.log('🔀 Navegando a DjStatsDashboard desde SessionEarningsSection');
@@ -78,7 +80,7 @@ export const SessionEarningsSection: React.FC = () => {
 
       if (error) {
         console.error('Error loading session earnings:', error);
-        Alert.alert('Error', 'No se pudieron cargar las ganancias de sesiones');
+        Alert.alert(t('common_error'), t('session_earnings_error_load'));
         return;
       }
 
@@ -180,7 +182,7 @@ export const SessionEarningsSection: React.FC = () => {
       });
     } catch (error) {
       console.error('Error processing session earnings:', error);
-      Alert.alert('Error', 'No se pudieron procesar las ganancias de sesiones');
+      Alert.alert(t('common_error'), t('session_earnings_error_process'));
     } finally {
       setLoading(false);
     }
@@ -244,7 +246,7 @@ export const SessionEarningsSection: React.FC = () => {
               </View>
               <View style={styles.loadingContainer}>
                 <BothsideLoader size="small" fullscreen={false} />
-                <Text style={styles.loadingText}>Cargando ganancias...</Text>
+                <Text style={styles.loadingText}>{t('session_earnings_loading')}</Text>
               </View>
             </View>
           </Animated.View>
@@ -280,10 +282,9 @@ export const SessionEarningsSection: React.FC = () => {
             <View style={styles.innerGradientLayer}>
 
               <View style={styles.emptyContainer}>
-
-                <Text style={styles.emptyText}>No hay ganancias registradas</Text>
+                <Text style={styles.emptyText}>{t('session_earnings_empty_title')}</Text>
                 <Text style={styles.emptySubtext}>
-                  Las ganancias de tus sesiones aparecerán aquí
+                  {t('session_earnings_empty_text')}
                 </Text>
               </View>
             </View>
@@ -335,17 +336,17 @@ export const SessionEarningsSection: React.FC = () => {
                 <Text style={styles.earningsAmount}>
                   {formatCurrencyES(earningsData.realEarnings)}
                 </Text>
-                <Text style={styles.earningsLabel}>Ganado este mes</Text>
+                <Text style={styles.earningsLabel}>{t('session_earnings_earned_month')}</Text>
               </View>
               <View style={styles.earningsColumn}>
                 <Text style={styles.earningsAmount}>
                   {formatCurrencyES(earningsData.estimatedMonthEarnings)}
                 </Text>
-                <Text style={styles.earningsLabel}>Estimado del mes</Text>
+                <Text style={styles.earningsLabel}>{t('session_earnings_estimated_month')}</Text>
               </View>
             </View>
 
-            <Text style={styles.statsButtonText}>Ver estadísticas</Text>
+            <Text style={styles.statsButtonText}>{t('session_earnings_view_stats')}</Text>
 
           </View>
         </Animated.View>

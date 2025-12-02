@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 type RootStackParamList = {
   ShelfView: { shelfId: string, shelfName: string };
@@ -25,6 +26,7 @@ interface Shelf {
 export default function ShelvesListScreen() {
   const { user } = useAuth();
   const navigation = useNavigation<ShelvesListNavigationProp>();
+  const { t } = useTranslation();
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,7 +43,7 @@ export default function ShelvesListScreen() {
       if (error) throw error;
       setShelves(data || []);
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudieron cargar las estanterías.');
+      Alert.alert(t('common_error'), t('shelves_list_error_load'));
       console.error('Error fetching shelves:', error.message);
     } finally {
       setLoading(false);
@@ -77,12 +79,12 @@ export default function ShelvesListScreen() {
     if (!item) return;
 
     Alert.alert(
-      'Eliminar Estantería',
-      `¿Estás seguro de que quieres eliminar "${item.name}"? Esta acción no se puede deshacer.`,
+      t('shelves_list_delete_title'),
+      t('shelves_list_delete_message').replace('{0}', item.name),
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Eliminar',
+          text: t('common_delete'),
           style: 'destructive',
           onPress: async () => {
             try {
@@ -97,9 +99,9 @@ export default function ShelvesListScreen() {
               // Actualizar la lista local
               setShelves(prevShelves => prevShelves.filter(shelf => shelf.id !== item.id));
 
-              Alert.alert('Éxito', 'Estantería eliminada correctamente.');
+              Alert.alert(t('common_success'), t('shelves_list_success_delete'));
             } catch (error: any) {
-              Alert.alert('Error', 'No se pudo eliminar la estantería.');
+              Alert.alert(t('common_error'), t('shelves_list_error_delete'));
               console.error('Error deleting shelf:', error.message);
             }
           }
@@ -117,7 +119,7 @@ export default function ShelvesListScreen() {
         activeOpacity={0.8}
       >
         <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>Eliminar</Text>
+        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -138,8 +140,8 @@ export default function ShelvesListScreen() {
         previewOpenDelay={0}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>No tienes ninguna estantería.</Text>
-            <Text style={styles.emptySubText}>¡Crea una para empezar a organizar tus vinilos!</Text>
+            <Text style={styles.emptyText}>{t('shelves_list_empty_title')}</Text>
+            <Text style={styles.emptySubText}>{t('shelves_list_empty_text')}</Text>
           </View>
         }
         contentContainerStyle={{ flexGrow: 1 }}

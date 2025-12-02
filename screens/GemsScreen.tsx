@@ -17,12 +17,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { UserCollectionService } from '../services/database';
 import { useGems } from '../contexts/GemsContext';
 import { useTheme, useNavigation } from '@react-navigation/native';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export default function GemsScreen() {
   const { user } = useAuth();
   const { gems, loading, refreshGems, removeGem, updateGemStatus } = useGems();
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
 
 
@@ -47,12 +49,12 @@ export default function GemsScreen() {
       removeGem(item.id);
 
       Alert.alert(
-        'Gem Removido',
-        `"${item.albums?.title}" removido de tus Gems`
+        t('gems_removed_title'),
+        `"${item.albums?.title}" ${t('gems_removed_message_suffix')}`
       );
     } catch (error) {
       console.error('❌ GemsScreen: Error removing gem:', error);
-      Alert.alert('Error', 'No se pudo remover el Gem');
+      Alert.alert(t('common_error'), t('search_error_toggling_gem'));
     }
   };
 
@@ -61,12 +63,12 @@ export default function GemsScreen() {
     if (!item) return;
 
     Alert.alert(
-      'Remover Gem',
-      `¿Estás seguro de que quieres remover "${item.albums?.title}" de tus Gems?`,
+      t('gems_remove_confirm_title'),
+      `${t('gems_remove_confirm_message')} "${item.albums?.title}"?`,
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: t('common_cancel'), style: 'cancel' },
         {
-          text: 'Remover',
+          text: t('search_action_remove_gem'),
           style: 'destructive',
           onPress: () => handleRemoveGem(item)
         },
@@ -98,17 +100,17 @@ export default function GemsScreen() {
           <View style={styles.gemDetails}>
             <Text style={[styles.gemDetail, { color: colors.text }]}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? `Sello: ${item.albums.label} | Año: ${item.albums.release_year}`
+                ? t('common_label_year_format').replace('{0}', item.albums.label).replace('{1}', item.albums.release_year)
                 : item.albums?.label && item.albums.label !== ''
-                  ? `Sello: ${item.albums.label}`
+                  ? t('common_label_format').replace('{0}', item.albums.label)
                   : item.albums?.release_year
-                    ? `Año: ${item.albums.release_year}`
+                    ? t('common_year_format').replace('{0}', item.albums.release_year)
                     : ''
               }
             </Text>
             <Text style={[styles.gemDetail, { color: colors.text }]}>
               {item.albums?.album_styles && item.albums.album_styles.length > 0 &&
-                `Estilo: ${item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', ')}`
+                t('common_style_label').replace('{0}', item.albums.album_styles.map((as: any) => as.styles?.name).filter(Boolean).join(', '))
               }
             </Text>
           </View>
@@ -125,7 +127,7 @@ export default function GemsScreen() {
         activeOpacity={0.8}
       >
         <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>Eliminar</Text>
+        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
       </TouchableOpacity>
     </View>
   );
@@ -133,18 +135,18 @@ export default function GemsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-        <Text style={[styles.title, { color: colors.text }]}>Gems</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('gems_header')}</Text>
         <Text style={[styles.subtitle, { color: colors.text }]}>
-          {gems.length} {gems.length === 1 ? 'álbum favorito' : 'álbumes favoritos'}
+          {gems.length} {gems.length === 1 ? t('gems_count_singular') : t('gems_count_plural')}
         </Text>
       </View>
 
       {gems.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Ionicons name="diamond-outline" size={64} color={colors.text} />
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>No tienes Gems aún</Text>
+          <Text style={[styles.emptyTitle, { color: colors.text }]}>{t('gems_empty_title')}</Text>
           <Text style={[styles.emptyText, { color: colors.text }]}>
-            Marca tus álbumes favoritos como Gems desde la colección
+            {t('gems_empty_text')}
           </Text>
         </View>
       ) : (

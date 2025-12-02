@@ -14,10 +14,12 @@ import {
 import { useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const FeedbackScreen: React.FC = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [feedback, setFeedback] = useState('');
   const [rating, setRating] = useState<number | null>(null);
   const [category, setCategory] = useState<string>('');
@@ -32,22 +34,22 @@ export const FeedbackScreen: React.FC = () => {
   };
 
   const categories = [
-    { id: 'bug', label: '🐛 Bug/Error' },
-    { id: 'feature', label: '💡 Nueva funcionalidad' },
-    { id: 'improvement', label: '⚡ Mejora' },
-    { id: 'ui', label: '🎨 Interfaz' },
-    { id: 'performance', label: '⚡ Rendimiento' },
-    { id: 'other', label: '📝 Otro' },
+    { id: 'bug', label: t('feedback_cat_bug') },
+    { id: 'feature', label: t('feedback_cat_feature') },
+    { id: 'improvement', label: t('feedback_cat_improvement') },
+    { id: 'ui', label: t('feedback_cat_ui') },
+    { id: 'performance', label: t('feedback_cat_performance') },
+    { id: 'other', label: t('feedback_cat_other') },
   ];
 
   const handleSubmit = async () => {
     if (!feedback.trim()) {
-      Alert.alert('Error', 'Por favor, escribe tu feedback');
+      Alert.alert(t('common_error'), t('feedback_error_empty_text'));
       return;
     }
 
     if (!category) {
-      Alert.alert('Error', 'Por favor, selecciona una categoría');
+      Alert.alert(t('common_error'), t('feedback_error_empty_category'));
       return;
     }
 
@@ -69,8 +71,8 @@ export const FeedbackScreen: React.FC = () => {
       }
 
       Alert.alert(
-        '¡Gracias!',
-        'Tu feedback ha sido enviado. Lo revisaremos para mejorar Bothside.',
+        t('common_thanks'),
+        t('feedback_success_message'),
         [
           {
             text: 'OK',
@@ -84,7 +86,7 @@ export const FeedbackScreen: React.FC = () => {
       );
     } catch (error: any) {
       console.error('Error submitting feedback:', error);
-      Alert.alert('Error', 'No se pudo enviar el feedback. Inténtalo de nuevo.');
+      Alert.alert(t('common_error'), t('feedback_error_submit'));
     } finally {
       setIsSubmitting(false);
     }
@@ -93,7 +95,7 @@ export const FeedbackScreen: React.FC = () => {
   const renderStars = () => {
     return (
       <View style={styles.starsContainer}>
-        <Text style={[styles.starsLabel, { color: colors.text }]}>¿Cómo calificarías Bothside?</Text>
+        <Text style={[styles.starsLabel, { color: colors.text }]}>{t('feedback_rating_label')}</Text>
         <View style={styles.starsRow}>
           {[1, 2, 3, 4, 5].map((star) => (
             <TouchableOpacity
@@ -116,24 +118,24 @@ export const FeedbackScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
       >
-        <ScrollView 
+        <ScrollView
           ref={scrollViewRef}
-          style={styles.scrollView} 
+          style={styles.scrollView}
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.content}>
             <Text style={[styles.title, { color: colors.text }]}>
-              Tu opinión nos importa
+              {t('feedback_title')}
             </Text>
             <Text style={[styles.subtitle, { color: colors.text }]}>
-              Ayúdanos a mejorar Bothside compartiendo tu experiencia
+              {t('feedback_subtitle')}
             </Text>
 
             {/* Rating */}
@@ -142,7 +144,7 @@ export const FeedbackScreen: React.FC = () => {
             {/* Category */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Categoría
+                {t('feedback_section_category')}
               </Text>
               <View style={styles.categoriesContainer}>
                 {categories.map((cat) => (
@@ -150,7 +152,7 @@ export const FeedbackScreen: React.FC = () => {
                     key={cat.id}
                     style={[
                       styles.categoryButton,
-                      { 
+                      {
                         backgroundColor: category === cat.id ? colors.primary : colors.card,
                         borderColor: colors.border,
                       }
@@ -159,8 +161,8 @@ export const FeedbackScreen: React.FC = () => {
                   >
                     <Text style={[
                       styles.categoryText,
-                      { 
-                        color: category === cat.id ? '#fff' : colors.text 
+                      {
+                        color: category === cat.id ? '#fff' : colors.text
                       }
                     ]}>
                       {cat.label}
@@ -173,18 +175,18 @@ export const FeedbackScreen: React.FC = () => {
             {/* Feedback Text */}
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                Tu feedback
+                {t('feedback_section_text')}
               </Text>
               <TextInput
                 style={[
                   styles.textInput,
-                  { 
+                  {
                     backgroundColor: colors.card,
                     borderColor: colors.border,
                     color: colors.text,
                   }
                 ]}
-                placeholder="Cuéntanos qué piensas, qué te gustaría ver mejorado, o si has encontrado algún problema..."
+                placeholder={t('feedback_placeholder_text')}
                 placeholderTextColor={colors.text + '80'}
                 value={feedback}
                 onChangeText={setFeedback}
@@ -200,7 +202,7 @@ export const FeedbackScreen: React.FC = () => {
             <TouchableOpacity
               style={[
                 styles.submitButton,
-                { 
+                {
                   backgroundColor: isSubmitting ? colors.border : colors.primary,
                 }
               ]}
@@ -208,7 +210,7 @@ export const FeedbackScreen: React.FC = () => {
               disabled={isSubmitting}
             >
               <Text style={styles.submitButtonText}>
-                {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
+                {isSubmitting ? t('common_sending') : t('feedback_button_send')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -221,7 +223,7 @@ export const FeedbackScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    
+
   },
   keyboardView: {
     flex: 1,

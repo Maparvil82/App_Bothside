@@ -14,6 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { DjOverallDashboard, DjOverallDashboardData } from '../components/DjOverallDashboard';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface SessionRow {
   id: string;
@@ -165,6 +166,7 @@ const DjStatsDashboard: React.FC = () => {
   const { user } = useAuth();
   const { colors } = useTheme();
   const navigation = useNavigation();
+  const { t } = useTranslation();
 
   const [sessions, setSessions] = useState<EnrichedSession[]>([]);
   const [notes, setNotes] = useState<SessionNoteRow[]>([]);
@@ -467,7 +469,7 @@ const DjStatsDashboard: React.FC = () => {
   if (!user?.id) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <Text style={styles.loadingText}>Inicia sesión para ver tus estadísticas de DJ.</Text>
+        <Text style={styles.loadingText}>{t('dj_stats_login_required')}</Text>
       </View>
     );
   }
@@ -482,10 +484,10 @@ const DjStatsDashboard: React.FC = () => {
 
   const activityLevel = useMemo(() => {
     const h = totalHoursLast30Days;
-    if (h >= 20) return { label: 'Nivel Pro', progress: 1 };
-    if (h >= 10) return { label: 'Muy activo', progress: h / 20 };
-    if (h > 0) return { label: 'Calentando', progress: h / 10 };
-    return { label: 'Sin actividad reciente', progress: 0 };
+    if (h >= 20) return { label: t('dj_stats_level_pro'), progress: 1 };
+    if (h >= 10) return { label: t('dj_stats_level_active'), progress: h / 20 };
+    if (h > 0) return { label: t('dj_stats_level_warming_up'), progress: h / 10 };
+    return { label: t('dj_stats_level_none'), progress: 0 };
   }, [totalHoursLast30Days]);
 
   if (loading) {
@@ -533,11 +535,9 @@ const DjStatsDashboard: React.FC = () => {
         </View>
 
         <View style={styles.ctaCard}>
-          <Text style={styles.ctaTitle}>DJ Planner Pro</Text>
+          <Text style={styles.ctaTitle}>{t('dj_stats_cta_title')}</Text>
           <Text style={styles.ctaText}>
-            Bothside incluye funciones esenciales para registrar tus sesiones. Si quieres estadísticas
-            avanzadas, análisis de ingresos, informes y un panel profesional, prueba nuestra app
-            especializada <Text style={styles.ctaTextLink}>DJ Planner Pro</Text>.
+            {t('dj_stats_cta_description')} <Text style={styles.ctaTextLink}>{t('dj_stats_cta_link')}</Text>.
           </Text>
           <View>
             <Svg width={120} height={40} viewBox="0 0 119.66407 40">

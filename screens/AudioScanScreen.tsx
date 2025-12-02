@@ -4,10 +4,12 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { analyzeAudio, AudioScanResult, AudioScanStatus } from '../modules/audioScan';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const AudioScanScreen = () => {
     const navigation = useNavigation();
     const { colors } = useTheme();
+    const { t } = useTranslation();
 
     const [status, setStatus] = useState<AudioScanStatus>('idle');
     const [result, setResult] = useState<AudioScanResult | null>(null);
@@ -37,7 +39,7 @@ export const AudioScanScreen = () => {
 
         } catch (err) {
             console.error("Scan failed:", err);
-            setError("Ocurrió un error al analizar el audio.");
+            setError(t('audio_scan_error_analysis'));
             setStatus('idle');
         }
     };
@@ -59,14 +61,14 @@ export const AudioScanScreen = () => {
             case 'match':
                 return (
                     <>
-                        <Text style={[styles.title, { color: colors.text }]}>¡Encontrado!</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>{t('audio_scan_found_title')}</Text>
                         <View style={[styles.resultCard, { backgroundColor: colors.card, borderColor: colors.primary, borderWidth: 1 }]}>
                             <Ionicons name="checkmark-circle" size={48} color={colors.primary} style={{ marginBottom: 16 }} />
                             <Text style={[styles.trackName, { color: colors.text }]}>{result?.trackName}</Text>
                             <Text style={[styles.artistName, { color: colors.text }]}>{result?.artist}</Text>
                             <Text style={[styles.releaseName, { color: colors.text }]}>{result?.matchedRelease}</Text>
                             <Text style={[styles.confidence, { color: colors.primary }]}>
-                                Confianza: {result?.confidence ? Math.round(result.confidence * 100) : 0}%
+                                {t('audio_scan_confidence')} {result?.confidence ? Math.round(result.confidence * 100) : 0}%
                             </Text>
                         </View>
                         <TouchableOpacity
@@ -74,7 +76,7 @@ export const AudioScanScreen = () => {
                             onPress={handleReset}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.scanButtonText}>Escanear otra vez</Text>
+                            <Text style={styles.scanButtonText}>{t('audio_scan_button_scan_again')}</Text>
                         </TouchableOpacity>
                     </>
                 );
@@ -82,15 +84,15 @@ export const AudioScanScreen = () => {
             case 'no_match':
                 return (
                     <>
-                        <Text style={[styles.title, { color: colors.text }]}>No está en tu colección</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>{t('audio_scan_not_found_title')}</Text>
                         <View style={[styles.resultCard, { backgroundColor: colors.card }]}>
                             <Ionicons name="close-circle" size={48} color="#EF4444" style={{ marginBottom: 16 }} />
                             <Text style={[styles.description, { color: colors.text, marginBottom: 8 }]}>
-                                Parece que este tema no coincide con ningún disco de tu colección.
+                                {t('audio_scan_not_found_desc')}
                             </Text>
                             {result?.trackName && (
                                 <Text style={[styles.possibleMatch, { color: colors.text }]}>
-                                    Posible tema: {result.trackName} - {result.artist}
+                                    {t('audio_scan_possible_match')} {result.trackName} - {result.artist}
                                 </Text>
                             )}
                         </View>
@@ -99,7 +101,7 @@ export const AudioScanScreen = () => {
                             onPress={handleReset}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.scanButtonText}>Escanear otra vez</Text>
+                            <Text style={styles.scanButtonText}>{t('audio_scan_button_scan_again')}</Text>
                         </TouchableOpacity>
                     </>
                 );
@@ -108,14 +110,14 @@ export const AudioScanScreen = () => {
             default:
                 return (
                     <>
-                        <Text style={[styles.title, { color: colors.text }]}>¿Qué está sonando?</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>{t('audio_scan_idle_title')}</Text>
 
                         <View style={styles.iconContainer}>
                             <Ionicons name="musical-notes" size={64} color={colors.primary} />
                         </View>
 
                         <Text style={[styles.description, { color: colors.text }]}>
-                            Pulsa el botón para empezar a analizar la música.
+                            {t('audio_scan_idle_desc')}
                         </Text>
 
                         <TouchableOpacity
@@ -123,14 +125,14 @@ export const AudioScanScreen = () => {
                             onPress={handleStartScan}
                             activeOpacity={0.8}
                         >
-                            <Text style={styles.scanButtonText}>Iniciar escaneo</Text>
+                            <Text style={styles.scanButtonText}>{t('audio_scan_button_start')}</Text>
                         </TouchableOpacity>
 
                         {error && (
                             <View style={styles.errorContainer}>
                                 <Text style={styles.errorText}>{error}</Text>
                                 <TouchableOpacity onPress={() => setError(null)}>
-                                    <Text style={[styles.retryText, { color: colors.primary }]}>Volver a intentar</Text>
+                                    <Text style={[styles.retryText, { color: colors.primary }]}>{t('common_retry')}</Text>
                                 </TouchableOpacity>
                             </View>
                         )}
@@ -147,7 +149,7 @@ export const AudioScanScreen = () => {
                     style={styles.backButton}
                 >
                     <Ionicons name="chevron-back" size={24} color={colors.primary} />
-                    <Text style={[styles.backText, { color: colors.primary }]}>Volver</Text>
+                    <Text style={[styles.backText, { color: colors.primary }]}>{t('common_back')}</Text>
                 </TouchableOpacity>
             </View>
 

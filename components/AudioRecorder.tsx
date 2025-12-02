@@ -14,6 +14,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../lib/supabase';
 import { Buffer } from 'buffer';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface AudioRecorderProps {
   visible: boolean;
@@ -28,6 +29,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   onSave,
   albumTitle,
 }) => {
+  const { t } = useTranslation();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -58,7 +60,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
           return prev + 1;
         });
       }, 1000);
-      setTimer(interval);
+      setTimer(Number(interval));
     } else {
       if (timer) {
         clearInterval(timer);
@@ -78,7 +80,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       // Solicitar permisos
       const { status } = await Audio.requestPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permisos necesarios', 'Se necesitan permisos de micrófono para grabar audio.');
+        Alert.alert(t('common_permissions'), t('audio_recorder_permission_error'));
         return;
       }
 
@@ -92,16 +94,16 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       const { recording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.LOW_QUALITY
       );
-      
+
       setRecording(recording);
       setIsRecording(true);
       setRecordingTime(0);
       setRecordingUri(null);
-      
+
       console.log('🎤 Grabación iniciada');
     } catch (error) {
       console.error('❌ Error al iniciar grabación:', error);
-      Alert.alert('Error', 'No se pudo iniciar la grabación');
+      Alert.alert(t('common_error'), t('audio_recorder_error_start'));
     }
   };
 
@@ -112,16 +114,16 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       setIsRecording(false);
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
-      
+
       if (uri) {
         setRecordingUri(uri);
         console.log('✅ Grabación completada:', uri);
       }
-      
+
       setRecording(null);
     } catch (error) {
       console.error('❌ Error al detener grabación:', error);
-      Alert.alert('Error', 'No se pudo detener la grabación');
+      Alert.alert(t('common_error'), t('audio_recorder_error_stop'));
     }
   };
 
@@ -132,9 +134,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       setIsPlaying(true);
       const { sound } = await Audio.Sound.createAsync({ uri: recordingUri });
       setSound(sound);
-      
+
       await sound.playAsync();
-      
+
       sound.setOnPlaybackStatusUpdate((status) => {
         if (status.isLoaded && status.didJustFinish) {
           setIsPlaying(false);
@@ -142,7 +144,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
       });
     } catch (error) {
       console.error('❌ Error al reproducir:', error);
-      Alert.alert('Error', 'No se pudo reproducir la grabación');
+      Alert.alert(t('common_error'), t('audio_recorder_error_play'));
       setIsPlaying(false);
     }
   };
@@ -158,83 +160,86 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
   const handleSave = async () => {
     if (!recordingUri) {
-      Alert.alert('Error', 'No hay grabación para guardar');
+      Alert.alert(t('common_error'), t('audio_recorder_error_no_recording'));
       return;
     }
 
     try {
       console.log('🎵 Iniciando guardado de audio...');
       console.log('🎵 URI local:', recordingUri);
-      
+
       // Verificar que el archivo existe
       const fileInfo = await FileSystem.getInfoAsync(recordingUri);
       console.log('🎵 File info:', fileInfo);
-      
+
       if (!fileInfo.exists) {
         console.error('❌ El archivo no existe:', recordingUri);
-        Alert.alert('Error', 'El archivo de audio no existe');
+        Alert.alert(t('common_error'), t('audio_recorder_error_file_not_found'));
         return;
       }
-      
+
       // Verificar autenticación antes de guardar
       console.log('🔐 Verificando autenticación...');
       const { data: { user }, error: authError } = await supabase.auth.getUser();
-      
+
       if (authError) {
         console.error('❌ Error de autenticación:', authError);
         Alert.alert(
-          'Error de Autenticación', 
-          'No se pudo verificar tu sesión. Por favor, cierra sesión y vuelve a iniciar.'
+          t('common_auth_error'),
+          t('audio_recorder_error_auth_verify')
         );
         return;
       }
-      
+
       if (!user) {
         console.error('❌ Usuario no autenticado');
         Alert.alert(
-          'Usuario no Autenticado', 
-          'Debes iniciar sesión para guardar notas de audio. Por favor, ve a la pantalla de login.'
+          t('common_auth_error'),
+          t('audio_recorder_error_auth_login')
         );
         return;
       }
-      
+
       console.log('✅ Usuario autenticado:', user.id);
       console.log('✅ Archivo de audio válido, guardando URI local...');
-      
+
       // Guardar la URI local directamente en la base de datos
       onSave(recordingUri);
       onClose();
-      
-      Alert.alert('Éxito', 'Nota de audio guardada correctamente');
+
+      Alert.alert(t('common_success'), t('audio_recorder_success_save'));
     } catch (error) {
       console.error('❌ Error al guardar:', error);
-      
+
       // Mensajes de error más específicos
       let errorMessage = 'No se pudo guardar la nota de audio';
-      
+
       if (error instanceof Error) {
         if (error.message.includes('autenticado') || error.message.includes('authentication')) {
-          errorMessage = 'Error de autenticación. Por favor, inicia sesión nuevamente.';
+          Alert.alert(
+            t('common_auth_error'),
+            t('audio_recorder_error_auth_verify')
+          );
         } else if (error.message.includes('network') || error.message.includes('Network')) {
           errorMessage = 'Error de conexión. Verifica tu conexión a internet.';
         } else if (error.message.includes('permission') || error.message.includes('forbidden')) {
           errorMessage = 'No tienes permisos para realizar esta acción.';
         }
       }
-      
-      Alert.alert('Error', errorMessage);
+
+      Alert.alert(t('common_error'), errorMessage);
     }
   };
 
   const handleClose = () => {
     if (isRecording) {
       Alert.alert(
-        'Grabación en progreso',
-        '¿Estás seguro de que quieres cerrar? Se perderá la grabación actual.',
+        t('audio_recorder_recording_progress_title'),
+        t('audio_recorder_recording_progress_message'),
         [
-          { text: 'Cancelar', style: 'cancel' },
-          { 
-            text: 'Cerrar', 
+          { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: t('common_close'),
             style: 'destructive',
             onPress: () => {
               if (recording) {
@@ -277,7 +282,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         <View style={styles.modalContent}>
           <View style={styles.modalHeader}>
             <Text style={styles.modalTitle}>
-              Nota de audio para "{albumTitle}"
+              {t('audio_recorder_title').replace('{0}', albumTitle)}
             </Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color="#666" />
@@ -286,7 +291,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
           <View style={styles.modalBody}>
             <Text style={styles.instructions}>
-              Graba una nota de audio de máximo 1 minuto sobre este álbum
+              {t('audio_recorder_instructions')}
             </Text>
 
             <View style={styles.timerContainer}>
@@ -302,7 +307,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
                   onPress={startRecording}
                 >
                   <Ionicons name="mic" size={32} color="white" />
-                  <Text style={styles.recordButtonText}>Iniciar Grabación</Text>
+                  <Text style={styles.recordButtonText}>{t('audio_recorder_start')}</Text>
                 </TouchableOpacity>
               ) : isRecording ? (
                 <TouchableOpacity
@@ -310,7 +315,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
                   onPress={stopRecording}
                 >
                   <Ionicons name="stop" size={32} color="white" />
-                  <Text style={styles.recordButtonText}>Detener Grabación</Text>
+                  <Text style={styles.recordButtonText}>{t('audio_recorder_stop')}</Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.playbackContainer}>
@@ -318,13 +323,13 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
                     style={styles.playButton}
                     onPress={isPlaying ? stopPlaying : playRecording}
                   >
-                    <Ionicons 
-                      name={isPlaying ? "stop" : "play"} 
-                      size={24} 
-                      color="white" 
+                    <Ionicons
+                      name={isPlaying ? "stop" : "play"}
+                      size={24}
+                      color="white"
                     />
                   </TouchableOpacity>
-                  
+
                   <View style={styles.actionButtons}>
                     <TouchableOpacity
                       style={styles.actionButton}
@@ -334,16 +339,16 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
                       }}
                     >
                       <Ionicons name="refresh" size={20} color="#666" />
-                      <Text style={styles.actionButtonText}>Regrabar</Text>
+                      <Text style={styles.actionButtonText}>{t('audio_recorder_rerecord')}</Text>
                     </TouchableOpacity>
-                    
+
                     <TouchableOpacity
                       style={[styles.actionButton, styles.saveButton]}
                       onPress={handleSave}
                     >
                       <Ionicons name="checkmark" size={20} color="white" />
                       <Text style={[styles.actionButtonText, styles.saveButtonText]}>
-                        Guardar
+                        {t('common_save')}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -354,7 +359,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             {isRecording && (
               <View style={styles.recordingIndicator}>
                 <View style={styles.recordingDot} />
-                <Text style={styles.recordingText}>Grabando...</Text>
+                <Text style={styles.recordingText}>{t('audio_recorder_recording')}</Text>
               </View>
             )}
           </View>

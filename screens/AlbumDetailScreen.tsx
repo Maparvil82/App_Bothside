@@ -905,14 +905,14 @@ export default function AlbumDetailScreen() {
         await UserCollectionService.toggleGemStatus(user.id, album.albums.id);
         // Actualizar el contexto local
         updateGemStatus(album.albums.id, false);
-        Alert.alert('Gem Removido', 'El álbum se ha removido de tus Gems');
+        Alert.alert(t('album_detail_gem_removed_title'), t('album_detail_gem_removed_message'));
       } else {
         console.log('➕ Añadiendo gem para album.albums.id:', album.albums.id);
         // Usar el servicio de base de datos para toggle
         await UserCollectionService.toggleGemStatus(user.id, album.albums.id);
         // Actualizar el contexto local
         updateGemStatus(album.albums.id, true);
-        Alert.alert('Gem Añadido', 'El álbum se ha añadido a tus Gems');
+        Alert.alert(t('album_detail_gem_added_title'), t('album_detail_gem_added_message'));
       }
 
       // Recargar el álbum para actualizar el estado
@@ -924,7 +924,7 @@ export default function AlbumDetailScreen() {
       refreshGems();
     } catch (error) {
       console.error('❌ Error al gestionar gem:', error);
-      Alert.alert('Error', 'No se pudo gestionar el Gem');
+      Alert.alert(t('common_error'), t('album_detail_gem_error_message'));
     }
   };
 
@@ -938,14 +938,14 @@ export default function AlbumDetailScreen() {
       const isAlreadyInList = await UserMaletaService.isAlbumInMaleta(listId, album.albums.id);
 
       if (isAlreadyInList) {
-        Alert.alert('Ya en la maleta', 'Este álbum ya está en esta maleta');
+        Alert.alert(t('album_detail_already_in_bag_title'), t('album_detail_already_in_bag_message'));
         return;
       }
 
       // Añadir el álbum a la lista usando el servicio correcto
       await UserMaletaService.addAlbumToMaleta(listId, album.albums.id);
 
-      Alert.alert('¡Añadido!', 'El álbum se ha añadido a la maleta');
+      Alert.alert(t('album_detail_added_to_bag_title'), t('album_detail_added_to_bag_message'));
       setShowListsModal(false);
       setSelectedListId(null);
 
@@ -955,7 +955,7 @@ export default function AlbumDetailScreen() {
       loadAlbumDetail();
     } catch (error) {
       console.error('Error al añadir a maleta:', error);
-      Alert.alert('Error', 'No se pudo añadir el álbum a la maleta');
+      Alert.alert(t('common_error'), t('album_detail_error_adding_to_bag_message'));
     }
   };
 
@@ -1001,9 +1001,9 @@ export default function AlbumDetailScreen() {
     return (
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={48} color="#dc3545" />
-        <Text style={styles.errorText}>{error || 'No se encontró el álbum'}</Text>
+        <Text style={styles.errorText}>{error || t('album_detail_not_found')}</Text>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
-          <Text style={styles.errorButtonText}>Volver</Text>
+          <Text style={styles.errorButtonText}>{t('common_back')}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -1036,7 +1036,7 @@ export default function AlbumDetailScreen() {
             />
           ) : (
             <View style={[styles.fullCoverPlaceholder, { backgroundColor: colors.border }]}>
-              <Text style={[styles.fullCoverPlaceholderText, { color: colors.text }]}>Sin portada</Text>
+              <Text style={[styles.fullCoverPlaceholderText, { color: colors.text }]}>{t('album_detail_no_cover')}</Text>
             </View>
           )}
         </View>
@@ -1048,11 +1048,11 @@ export default function AlbumDetailScreen() {
               {/* Valor de Mercado */}
               {album.albums.album_stats?.avg_price && (
                 <View style={styles.marketValueSection}>
-                  <Text style={[styles.valueCardTitle, { color: colors.text }]}>Valor de mercado</Text>
+                  <Text style={[styles.valueCardTitle, { color: colors.text }]}>{t('album_detail_market_value')}</Text>
                   <Text style={[styles.valueCardAmount, { color: colors.primary }]}>
                     ${album.albums.album_stats.avg_price.toFixed(2)}
                   </Text>
-                  <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>Precio promedio</Text>
+                  <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>{t('album_detail_avg_price')}</Text>
                 </View>
               )}
 
@@ -1078,7 +1078,7 @@ export default function AlbumDetailScreen() {
                       activeOpacity={0.8}
                     >
                       <View style={styles.ratioCardHeader}>
-                        <Text style={styles.ratioCardTitle}>Ratio de Venta</Text>
+                        <Text style={styles.ratioCardTitle}>{t('album_detail_sales_ratio')}</Text>
                       </View>
                       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
                         <Text style={styles.ratioCardAmount}>
@@ -1175,7 +1175,7 @@ export default function AlbumDetailScreen() {
                 { color: colors.text },
                 isGem(album.albums.id) && styles.actionButtonTextActive
               ]}>
-                {isGem(album.albums.id) ? 'Quitar Gem' : 'Añadir Gem'}
+                {isGem(album.albums.id) ? t('album_detail_remove_gem') : t('album_detail_add_gem')}
               </Text>
             </TouchableOpacity>
 
@@ -1193,12 +1193,12 @@ export default function AlbumDetailScreen() {
                   try {
                     // Mostrar alerta de confirmación
                     Alert.alert(
-                      "Quitar de Maleta",
-                      "¿Quieres eliminar este álbum de tus maletas?",
+                      t('album_detail_remove_from_bag_title'),
+                      t('album_detail_remove_from_bag_message'),
                       [
-                        { text: "Cancelar", style: "cancel" },
+                        { text: t('common_cancel'), style: "cancel" },
                         {
-                          text: "Eliminar",
+                          text: t('common_delete'),
                           style: "destructive",
                           onPress: async () => {
                             // Eliminar de todas las listas
@@ -1215,7 +1215,7 @@ export default function AlbumDetailScreen() {
                     );
                   } catch (error) {
                     console.error("Error removing from maletas:", error);
-                    Alert.alert("Error", "No se pudo quitar el álbum de las maletas");
+                    Alert.alert(t('common_error'), t('album_detail_error_removing_from_bag'));
                   }
                 } else {
                   // Si no está, abrir modal
@@ -1232,7 +1232,7 @@ export default function AlbumDetailScreen() {
                 styles.actionButtonText,
                 { color: (album.user_list_items && album.user_list_items.length > 0) ? '#0284c7' : colors.text }
               ]}>
-                {(album.user_list_items && album.user_list_items.length > 0) ? 'En tu Maleta' : 'Añadir a Maleta'}
+                {(album.user_list_items && album.user_list_items.length > 0) ? t('album_detail_in_bag') : t('album_detail_add_to_bag')}
               </Text>
             </TouchableOpacity>
           </View>
@@ -1242,7 +1242,7 @@ export default function AlbumDetailScreen() {
         {/* Listas donde está guardado */}
         {album.user_list_items && album.user_list_items.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Guardado en estas maletas</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_saved_in_bags')}</Text>
             {album.user_list_items.map((item, index) => (
               <TouchableOpacity
                 key={index}
@@ -1289,7 +1289,7 @@ export default function AlbumDetailScreen() {
         {/* Sección de Tracks */}
         {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Tracks</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_tracks')}</Text>
             {(() => {
               const seen = new Set<string>();
               const uniqueTracks = (album.albums.tracks || []).filter((t) => {
@@ -1317,11 +1317,11 @@ export default function AlbumDetailScreen() {
 
         {/* Sección de Ediciones */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ediciones en Vinilo</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_vinyl_editions')}</Text>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
               <BothsideLoader />
-              <Text style={[styles.loadingText, { color: colors.text }]}>Cargando ediciones...</Text>
+              <Text style={[styles.loadingText, { color: colors.text }]}>{t('album_detail_loading_editions')}</Text>
             </View>
           ) : editions.length > 0 ? (
             <View style={styles.editionsContainer}>
@@ -1344,7 +1344,7 @@ export default function AlbumDetailScreen() {
                     {/* Formato */}
                     {edition.format && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Formato:</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_format')}</Text>
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
                       </View>
                     )}
@@ -1352,7 +1352,7 @@ export default function AlbumDetailScreen() {
                     {/* Sello */}
                     {edition.label && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Sello:</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_label')}</Text>
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
                       </View>
                     )}
@@ -1360,7 +1360,7 @@ export default function AlbumDetailScreen() {
                     {/* Año */}
                     {edition.year && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Año:</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_year')}</Text>
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
                       </View>
                     )}
@@ -1368,7 +1368,7 @@ export default function AlbumDetailScreen() {
                     {/* País */}
                     {edition.country && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">País:</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_country')}</Text>
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
                       </View>
                     )}
@@ -1376,7 +1376,7 @@ export default function AlbumDetailScreen() {
                     {/* Catálogo */}
                     {edition.catno && (
                       <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">Catálogo:</Text>
+                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_catalog')}</Text>
                         <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
                       </View>
                     )}
@@ -1391,7 +1391,7 @@ export default function AlbumDetailScreen() {
                   onPress={() => setShowAllEditions(!showAllEditions)}
                 >
                   <Text style={[styles.seeMoreButtonText]}>
-                    {showAllEditions ? 'Ver menos' : `Ver ${editions.length - 3} más`}
+                    {showAllEditions ? t('album_detail_see_less') : `${t('album_detail_see_more')} (${editions.length - 3})`}
                   </Text>
                   <Ionicons
                     name={showAllEditions ? "chevron-up" : "chevron-down"}
@@ -1402,20 +1402,20 @@ export default function AlbumDetailScreen() {
               )}
             </View>
           ) : (
-            <Text style={[styles.noEditionsText, { color: colors.text }]}>No se encontraron ediciones en vinilo</Text>
+            <Text style={[styles.noEditionsText, { color: colors.text }]}>{t('album_detail_no_editions')}</Text>
           )}
         </View>
 
         {/* Nota de Audio */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Nota de Audio</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_audio_note')}</Text>
           {album.audio_note ? (
             // Si existe nota de audio
             <>
               <View style={styles.audioSection}>
                 <View style={styles.audioInfo}>
                   <Ionicons name="mic" size={20} color={colors.primary} />
-                  <Text style={[styles.audioInfoText, { color: colors.text }]}>Tienes una nota de audio para este álbum</Text>
+                  <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_has_audio_note')}</Text>
                 </View>
               </View>
               <TouchableOpacity
@@ -1423,7 +1423,7 @@ export default function AlbumDetailScreen() {
                 onPress={() => handlePlayAudio(album.audio_note!)}
               >
                 <Ionicons name="play-circle" size={24} color={colors.primary} />
-                <Text style={[styles.playAudioButtonText]}>Reproducir nota de audio</Text>
+                <Text style={[styles.playAudioButtonText]}>{t('album_detail_play_audio_note')}</Text>
               </TouchableOpacity>
             </>
           ) : (
@@ -1432,7 +1432,7 @@ export default function AlbumDetailScreen() {
               <View style={styles.audioSection}>
                 <View style={styles.audioInfo}>
                   <Ionicons name="mic-outline" size={20} color={colors.text} />
-                  <Text style={[styles.audioInfoText, { color: colors.text }]}>No tienes una nota de audio para este álbum</Text>
+                  <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_no_audio_note')}</Text>
                 </View>
               </View>
               <TouchableOpacity
@@ -1440,7 +1440,7 @@ export default function AlbumDetailScreen() {
                 onPress={() => handleRecordAudio()}
               >
                 <Ionicons name="mic" size={24} />
-                <Text style={[styles.recordAudioButtonText]}>Grabar nota de audio</Text>
+                <Text style={[styles.recordAudioButtonText]}>{t('album_detail_record_audio_note')}</Text>
               </TouchableOpacity>
             </>
           )}
@@ -1449,21 +1449,21 @@ export default function AlbumDetailScreen() {
 
         {/* Nueva Sección de Ubicación RECONSTRUIDA */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Ubicación</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_location')}</Text>
 
           {album.shelf_id && album.location_row && album.location_column ? (
             <>
-              <Text style={[styles.currentShelfTitle, { color: colors.text }]}>Actualmente en: {album.shelf_name || 'Estantería sin nombre'}</Text>
+              <Text style={[styles.currentShelfTitle, { color: colors.text }]}>{t('album_detail_currently_in')} {album.shelf_name || t('album_detail_unnamed_shelf')}</Text>
               <ShelfGrid
                 rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
                 columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
                 highlightRow={album.location_row}
                 highlightColumn={album.location_column}
               />
-              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Cambiar ubicación:</Text>
+              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_change_location')}</Text>
             </>
           ) : (
-            <Text style={[styles.selectShelfTitle, { color: colors.text }]}>Asignar a una estantería:</Text>
+            <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_assign_shelf')}</Text>
           )}
 
           {shelves.map((shelf) => {
@@ -1488,7 +1488,7 @@ export default function AlbumDetailScreen() {
             );
           })}
           {shelves.length === 0 && (
-            <Text style={[styles.noShelvesText, { color: colors.text }]}>No tienes estanterías para asignar.</Text>
+            <Text style={[styles.noShelvesText, { color: colors.text }]}>{t('album_detail_no_shelves')}</Text>
           )}
         </View>
 
@@ -1549,7 +1549,7 @@ export default function AlbumDetailScreen() {
         {/* Sección de Álbumes Similares */}
         {similarAlbums.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>De tu colección</Text>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_from_collection')}</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -1586,10 +1586,10 @@ export default function AlbumDetailScreen() {
                   </View>
                   <View style={styles.similarAlbumInfo}>
                     <Text style={[styles.similarAlbumTitle, { color: colors.text }]} numberOfLines={2} ellipsizeMode="tail">
-                      {item.albums?.title || 'Sin título'}
+                      {item.albums?.title || t('common_untitled')}
                     </Text>
                     <Text style={[styles.similarAlbumArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-                      {item.albums?.artist || 'Artista desconocido'}
+                      {item.albums?.artist || t('common_unknown_artist')}
                     </Text>
                     {item.albums?.year && (
                       <Text style={[styles.similarAlbumYear, { color: colors.text }]}>
@@ -1637,7 +1637,7 @@ export default function AlbumDetailScreen() {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Selecciona una Maleta</Text>
+              <Text style={styles.modalTitle}>{t('album_detail_select_bag')}</Text>
               <TouchableOpacity
                 style={styles.closeButton}
                 onPress={() => setShowListsModal(false)}
@@ -1670,7 +1670,7 @@ export default function AlbumDetailScreen() {
                   ))
                 ) : (
                   <View style={styles.emptyListsContainer}>
-                    <Text style={styles.emptyListsText}>No tienes maletas creadas</Text>
+                    <Text style={styles.emptyListsText}>{t('album_detail_no_bags')}</Text>
                   </View>
                 )}
               </ScrollView>
@@ -1682,7 +1682,7 @@ export default function AlbumDetailScreen() {
                 onPress={handleCreateNewList}
               >
                 <Ionicons name="cube-outline" size={20} color="#fff" />
-                <Text style={styles.createListButtonText}>Crear Nueva Maleta</Text>
+                <Text style={styles.createListButtonText}>{t('album_detail_create_new_bag')}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1714,21 +1714,21 @@ export default function AlbumDetailScreen() {
 
                 <ScrollView style={styles.modalBody}>
                   <View style={styles.ratioInfoSection}>
-                    <Text style={styles.ratioInfoTitle}>Significado</Text>
+                    <Text style={styles.ratioInfoTitle}>{t('album_detail_meaning')}</Text>
                     <Text style={styles.ratioInfoText}>
                       {getRatioInfo(currentRatioData.level).significado}
                     </Text>
                   </View>
 
                   <View style={styles.ratioInfoSection}>
-                    <Text style={styles.ratioInfoTitle}>Probabilidad de venta</Text>
+                    <Text style={styles.ratioInfoTitle}>{t('album_detail_probability')}</Text>
                     <Text style={styles.ratioInfoText}>
                       {getRatioInfo(currentRatioData.level).probabilidad}
                     </Text>
                   </View>
 
                   <View style={styles.ratioInfoSection}>
-                    <Text style={styles.ratioInfoTitle}>Estrategia</Text>
+                    <Text style={styles.ratioInfoTitle}>{t('album_detail_strategy')}</Text>
                     <Text style={styles.ratioInfoText}>
                       {getRatioInfo(currentRatioData.level).estrategia}
                     </Text>
@@ -1810,7 +1810,7 @@ export default function AlbumDetailScreen() {
                 // Resto de preguntas: Input de texto normal
                 <TextInput
                   style={[styles.typeFormInput, { color: colors.text, backgroundColor: colors.card, borderColor: colors.border }]}
-                  placeholder="Escribe tu respuesta..."
+                  placeholder={t('album_detail_tell_us_placeholder') || "Escribe tu respuesta..."}
                   value={typeFormAnswers[currentQuestion]}
                   onChangeText={handleTypeFormAnswer}
                   multiline
@@ -1831,7 +1831,7 @@ export default function AlbumDetailScreen() {
                 onPress={handleSaveQuestion}
                 disabled={!typeFormAnswers[currentQuestion].trim()}
               >
-                <Text style={styles.typeFormSaveText}>Guardar</Text>
+                <Text style={styles.typeFormSaveText}>{t('common_save')}</Text>
                 <Ionicons name="checkmark" size={20} color="white" />
               </TouchableOpacity>
             </View>

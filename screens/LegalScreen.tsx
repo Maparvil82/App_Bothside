@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { WebView } from 'react-native-webview';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 /**
  * LegalScreen
@@ -22,6 +23,7 @@ import { WebView } from 'react-native-webview';
 export const LegalScreen: React.FC = () => {
     const navigation = useNavigation();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const [webViewVisible, setWebViewVisible] = useState(false);
     const [webViewUrl, setWebViewUrl] = useState('');
     const [webViewTitle, setWebViewTitle] = useState('');
@@ -55,21 +57,21 @@ export const LegalScreen: React.FC = () => {
 
                 {/* Versión de la app */}
                 <View style={styles.versionContainer}>
-                    <Text style={[styles.versionText, { color: colors.text }]}>Bothside v1.0.0 (Beta)</Text>
+                    <Text style={[styles.versionText, { color: colors.text }]}>{t('legal_version_text')}</Text>
                 </View>
 
                 {/* Sección: Documentos Legales */}
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Documentos Legales</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('legal_section_docs')}</Text>
 
                     {/* Política de Privacidad */}
                     <TouchableOpacity
                         style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                        onPress={() => openWebView(PRIVACY_POLICY_URL, 'Política de Privacidad')}
+                        onPress={() => openWebView(PRIVACY_POLICY_URL, t('legal_item_privacy'))}
                     >
                         <View style={styles.menuItemContent}>
                             <Ionicons name="shield-checkmark-outline" size={22} color={colors.text} />
-                            <Text style={[styles.menuItemText, { color: colors.text }]}>Política de Privacidad</Text>
+                            <Text style={[styles.menuItemText, { color: colors.text }]}>{t('legal_item_privacy')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
                     </TouchableOpacity>
@@ -77,11 +79,11 @@ export const LegalScreen: React.FC = () => {
                     {/* Términos y Condiciones */}
                     <TouchableOpacity
                         style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                        onPress={() => openWebView(TERMS_URL, 'Términos y Condiciones')}
+                        onPress={() => openWebView(TERMS_URL, t('legal_item_terms'))}
                     >
                         <View style={styles.menuItemContent}>
                             <Ionicons name="document-text-outline" size={22} color={colors.text} />
-                            <Text style={[styles.menuItemText, { color: colors.text }]}>Términos y Condiciones</Text>
+                            <Text style={[styles.menuItemText, { color: colors.text }]}>{t('legal_item_terms')}</Text>
                         </View>
                         <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
                     </TouchableOpacity>
@@ -89,21 +91,21 @@ export const LegalScreen: React.FC = () => {
 
                 {/* Sección: Avisos de Terceros */}
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Avisos de Terceros</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('legal_section_third_party')}</Text>
 
                     {/* Atribución Discogs */}
                     <View style={styles.attributionBlock}>
-                        <Text style={[styles.attributionTitle, { color: colors.text }]}>Discogs API</Text>
+                        <Text style={[styles.attributionTitle, { color: colors.text }]}>{t('legal_attr_discogs_title')}</Text>
                         <Text style={[styles.attributionText, { color: colors.text }]}>
-                            This application uses Discogs' API but is not affiliated with, sponsored or endorsed by Discogs. 'Discogs' is a trademark of Zink Media, LLC.
+                            {t('legal_attr_discogs')}
                         </Text>
                     </View>
 
                     {/* Aviso Google Gemini */}
                     <View style={styles.attributionBlock}>
-                        <Text style={[styles.attributionTitle, { color: colors.text }]}>Google Gemini AI</Text>
+                        <Text style={[styles.attributionTitle, { color: colors.text }]}>{t('legal_attr_gemini_title')}</Text>
                         <Text style={[styles.attributionText, { color: colors.text }]}>
-                            Bothside uses Google Gemini for AI-powered features such as chat, cover recognition, and metadata analysis. Some data may be sent to Google Gemini for processing.
+                            {t('legal_attr_gemini')}
                         </Text>
                     </View>
                 </View>
@@ -151,9 +153,9 @@ export const LegalScreen: React.FC = () => {
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
                         <Ionicons name="information-circle-outline" size={48} color={colors.primary} />
-                        <Text style={[styles.modalTitle, { color: colors.text }]}>Eliminación de Cuenta</Text>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>{t('legal_delete_account_title')}</Text>
                         <Text style={[styles.modalText, { color: colors.text }]}>
-                            La eliminación de cuenta estará disponible próximamente. Mientras tanto, puedes solicitarlo escribiendo a:
+                            {t('legal_delete_account_message')}
                         </Text>
                         <Text style={[styles.modalEmail, { color: colors.primary }]}>maparvil@gmail.com</Text>
 
@@ -161,7 +163,7 @@ export const LegalScreen: React.FC = () => {
                             style={[styles.modalButton, { backgroundColor: colors.primary }]}
                             onPress={() => setDeleteAccountModalVisible(false)}
                         >
-                            <Text style={styles.modalButtonText}>Entendido</Text>
+                            <Text style={styles.modalButtonText}>{t('common_understood')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

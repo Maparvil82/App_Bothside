@@ -586,7 +586,8 @@ export default function CalendarScreen() {
             user?.user_metadata?.full_name ||
             user?.user_metadata?.name ||
             user?.email?.split("@")[0] ||
-            "Tu";
+            user?.email?.split("@")[0] ||
+            t('planner_user_default_name');
           const notificationIds = await scheduleNotificationsForSession(insertedData, userName);
           console.log('Notificaciones programadas:', notificationIds);
         }
@@ -705,7 +706,8 @@ export default function CalendarScreen() {
             user?.user_metadata?.full_name ||
             user?.user_metadata?.name ||
             user?.email?.split("@")[0] ||
-            "Tu";
+            user?.email?.split("@")[0] ||
+            t('planner_user_default_name');
           const notificationIds = await scheduleNotificationsForSession(updatedData, userName);
           console.log('Notificaciones reprogramadas:', notificationIds);
         }
@@ -886,17 +888,17 @@ export default function CalendarScreen() {
         } else if (actionIdentifier === 'snooze_2h') {
           // Programar snooze de 2 horas
           // Obtener nombre de la sesión desde la notificación o cargar desde Supabase
-          const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
+          const sessionName = notification.request.content.body?.split('"')[1] || t('planner_session_default_name');
           const sessionId = data.sessionId as string;
           await scheduleSnoozeNotification(sessionId, sessionName, 2);
         } else if (actionIdentifier === 'snooze_4h') {
           // Programar snooze de 4 horas
-          const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
+          const sessionName = notification.request.content.body?.split('"')[1] || t('planner_session_default_name');
           const sessionId = data.sessionId as string;
           await scheduleSnoozeNotification(sessionId, sessionName, 4);
         } else if (actionIdentifier === 'snooze_8h') {
           // Programar snooze de 8 horas
-          const sessionName = notification.request.content.body?.split('"')[1] || 'Sesión';
+          const sessionName = notification.request.content.body?.split('"')[1] || t('planner_session_default_name');
           const sessionId = data.sessionId as string;
           await scheduleSnoozeNotification(sessionId, sessionName, 8);
         }

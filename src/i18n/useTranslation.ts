@@ -6,6 +6,6 @@ export type TxKeyPath = keyof typeof es;
 
 export const useTranslation = () => {
     return {
-        t: (key: TxKeyPath) => translate(key),
+        t: (key: TxKeyPath, options?: Record<string, string | number>) => translate(key, options),
     };
 };

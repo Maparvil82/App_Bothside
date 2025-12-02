@@ -12,9 +12,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { AlbumService } from '../services/database';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const AdminScreen: React.FC = () => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const [updatingStats, setUpdatingStats] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -38,7 +40,7 @@ export const AdminScreen: React.FC = () => {
         .not('discogs_id', 'is', null);
 
       if (error) {
-        Alert.alert('Error', 'No se pudieron obtener los álbumes');
+        Alert.alert(t('common_error'), t('admin_error_fetch_albums'));
         return;
       }
 
@@ -55,7 +57,7 @@ export const AdminScreen: React.FC = () => {
 
     } catch (error) {
       console.error('Error checking album stats:', error);
-      Alert.alert('Error', 'No se pudo verificar las estadísticas');
+      Alert.alert(t('common_error'), t('admin_error_fetch_albums'));
     } finally {
       setLoading(false);
     }
@@ -80,7 +82,7 @@ export const AdminScreen: React.FC = () => {
         .not('discogs_id', 'is', null);
 
       if (error) {
-        Alert.alert('Error', 'No se pudieron obtener los álbumes');
+        Alert.alert(t('common_error'), t('admin_error_fetch_albums'));
         return;
       }
 
@@ -90,22 +92,22 @@ export const AdminScreen: React.FC = () => {
       );
 
       if (albumsWithoutStats.length === 0) {
-        Alert.alert('Info', 'Todos los álbumes ya tienen estadísticas');
+        Alert.alert(t('common_info'), t('admin_info_all_stats_present'));
         return;
       }
 
       Alert.alert(
-        'Confirmar actualización',
-        `¿Estás seguro de que quieres actualizar las estadísticas de ${albumsWithoutStats.length} álbumes? Esto puede tomar varios minutos.`,
+        t('admin_confirm_update_title'),
+        t('admin_confirm_update_message'),
         [
-          { text: 'Cancelar', style: 'cancel' },
-          { text: 'Actualizar', onPress: () => performUpdate(albumsWithoutStats) }
+          { text: t('common_cancel'), style: 'cancel' },
+          { text: t('admin_button_update_stats'), onPress: () => performUpdate(albumsWithoutStats) }
         ]
       );
 
     } catch (error) {
       console.error('Error preparing update:', error);
-      Alert.alert('Error', 'No se pudo preparar la actualización');
+      Alert.alert(t('common_error'), t('admin_error_prepare_update'));
     } finally {
       setUpdatingStats(false);
     }
@@ -146,14 +148,14 @@ export const AdminScreen: React.FC = () => {
       }
 
       Alert.alert(
-        'Actualización completada',
+        t('admin_update_completed_title'),
         `Éxitos: ${successCount}\nErrores: ${errorCount}`,
         [{ text: 'OK', onPress: () => checkAlbumStats() }]
       );
 
     } catch (error) {
       console.error('Error durante la actualización:', error);
-      Alert.alert('Error', 'Ocurrió un error durante la actualización');
+      Alert.alert(t('common_error'), t('admin_error_update_failed'));
     } finally {
       setUpdatingStats(false);
     }
@@ -161,10 +163,10 @@ export const AdminScreen: React.FC = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <Text style={styles.title}>Panel de Administración</Text>
+      <Text style={styles.title}>{t('admin_header_title')}</Text>
 
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Estadísticas de Álbumes</Text>
+        <Text style={styles.sectionTitle}>{t('admin_section_stats')}</Text>
 
         <TouchableOpacity
           style={styles.button}
@@ -174,15 +176,15 @@ export const AdminScreen: React.FC = () => {
           {loading ? (
             <BothsideLoader size="small" fullscreen={false} />
           ) : (
-            <Text style={styles.buttonText}>Verificar Estadísticas</Text>
+            <Text style={styles.buttonText}>{t('admin_button_check_stats')}</Text>
           )}
         </TouchableOpacity>
 
         {stats && (
           <View style={styles.statsContainer}>
-            <Text style={styles.statsText}>Total de álbumes: {stats.total}</Text>
-            <Text style={styles.statsText}>Con estadísticas: {stats.withStats}</Text>
-            <Text style={styles.statsText}>Sin estadísticas: {stats.withoutStats}</Text>
+            <Text style={styles.statsText}>{t('admin_stats_total')} {stats.total}</Text>
+            <Text style={styles.statsText}>{t('admin_stats_with')} {stats.withStats}</Text>
+            <Text style={styles.statsText}>{t('admin_stats_without')} {stats.withoutStats}</Text>
           </View>
         )}
 
@@ -194,13 +196,13 @@ export const AdminScreen: React.FC = () => {
           {updatingStats ? (
             <BothsideLoader size="small" fullscreen={false} />
           ) : (
-            <Text style={styles.buttonText}>Actualizar Estadísticas</Text>
+            <Text style={styles.buttonText}>{t('admin_button_update_stats')}</Text>
           )}
         </TouchableOpacity>
 
         {updatingStats && (
           <Text style={styles.updatingText}>
-            Actualizando estadísticas... Esto puede tomar varios minutos.
+            {t('admin_loading_updating')}
           </Text>
         )}
       </View>

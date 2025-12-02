@@ -4,6 +4,7 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ShelfGridSelectable from '../components/ShelfGridSelectable';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface Shelf {
   id: string;
@@ -15,6 +16,7 @@ interface Shelf {
 export default function SelectCellScreen() {
   const navigation = useNavigation();
   const route = useRoute();
+  const { t } = useTranslation();
   const { user_collection_id, shelf, current_row, current_column } = route.params as {
     user_collection_id: string,
     shelf: Shelf,
@@ -37,10 +39,10 @@ export default function SelectCellScreen() {
         .eq('id', user_collection_id);
 
       if (error) throw error;
-      Alert.alert('¡Ubicación Guardada!', `${shelf.name} (Fila ${row + 1}, Columna ${column + 1})`);
+      Alert.alert(t('select_cell_success_title'), `${shelf.name} (${t('common_row')} ${row + 1}, ${t('common_column')} ${column + 1})`);
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('Error', 'No se pudo guardar la ubicación.');
+      Alert.alert(t('common_error'), t('select_cell_error_save'));
       console.error(error.message);
     } finally {
       setSaving(false);
@@ -53,8 +55,8 @@ export default function SelectCellScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.title}>Selecciona la Ubicación</Text>
-      <Text style={styles.subtitle}>Estás ubicando en: {shelf.name}</Text>
+      <Text style={styles.title}>{t('select_cell_title')}</Text>
+      <Text style={styles.subtitle}>{t('select_cell_subtitle')} {shelf.name}</Text>
       <ShelfGridSelectable
         rows={shelf.shelf_rows}
         columns={shelf.shelf_columns}

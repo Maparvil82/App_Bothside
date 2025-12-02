@@ -13,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { FloatingAudioPlayer } from './FloatingAudioPlayer';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface AudioNoteAlbum {
   id: string;
@@ -29,6 +30,7 @@ interface AudioNotesSectionProps {
 
 export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const [albumsWithAudio, setAlbumsWithAudio] = useState<AudioNoteAlbum[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
@@ -65,14 +67,14 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
 
       if (error) {
         console.error('Error loading albums with audio:', error);
-        Alert.alert('Error', 'No se pudieron cargar los álbumes con notas de audio');
+        Alert.alert(t('common_error'), t('audio_notes_error_load'));
         return;
       }
 
       const albumsData: AudioNoteAlbum[] = (collection || []).map(item => ({
         id: item.id,
-        title: item.albums?.title || 'Sin título',
-        artist: item.albums?.artist || 'Artista desconocido',
+        title: item.albums?.title || t('common_untitled'),
+        artist: item.albums?.artist || t('common_unknown_artist'),
         cover_url: item.albums?.cover_url,
         audio_note: item.audio_note,
         added_at: item.added_at,
@@ -83,7 +85,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
 
     } catch (error) {
       console.error('Error processing audio albums:', error);
-      Alert.alert('Error', 'No se pudieron procesar los álbumes con audio');
+      Alert.alert(t('common_error'), t('audio_notes_error_process'));
     } finally {
       setLoading(false);
     }
@@ -96,7 +98,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
       setShowFloatingPlayer(true);
     } catch (error) {
       console.error('Error playing audio:', error);
-      Alert.alert('Error', 'No se pudo reproducir la nota de audio');
+      Alert.alert(t('common_error'), t('audio_notes_error_play'));
     }
   };
 
@@ -114,11 +116,11 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
       <View style={styles.container}>
         <View style={styles.header}>
           <Ionicons name="mic" size={20} color="#007AFF" />
-          <Text style={styles.title}>Notas de Audio</Text>
+          <Text style={styles.title}>{t('audio_notes_title')}</Text>
         </View>
         <View style={styles.loadingContainer}>
           <BothsideLoader size="small" fullscreen={false} />
-          <Text style={styles.loadingText}>Cargando notas de audio...</Text>
+          <Text style={styles.loadingText}>{t('audio_notes_loading')}</Text>
         </View>
       </View>
     );
@@ -129,12 +131,12 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
       <View style={styles.container}>
         <View style={styles.header}>
           <Ionicons name="mic" size={20} color="#007AFF" />
-          <Text style={styles.title}>Notas de Audio</Text>
+          <Text style={styles.title}>{t('audio_notes_title')}</Text>
         </View>
         <View style={styles.emptyContainer}>
           <Ionicons name="mic-outline" size={24} color="#9CA3AF" />
-          <Text style={styles.emptyText}>No tienes notas de audio</Text>
-          <Text style={styles.emptySubtext}>Graba notas de audio en tus álbumes para verlas aquí</Text>
+          <Text style={styles.emptyText}>{t('audio_notes_empty_title')}</Text>
+          <Text style={styles.emptySubtext}>{t('audio_notes_empty_text')}</Text>
         </View>
       </View>
     );
@@ -144,7 +146,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
     <View style={styles.container}>
       <View style={styles.header}>
         <Ionicons name="mic" size={20} color="#007AFF" />
-        <Text style={styles.title}>Notas de Audio ({albumsWithAudio.length})</Text>
+        <Text style={styles.title}>{t('audio_notes_title')} ({albumsWithAudio.length})</Text>
       </View>
 
       <ScrollView
@@ -168,7 +170,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
                 />
               ) : (
                 <View style={styles.albumImagePlaceholder}>
-                  <Text style={styles.albumImagePlaceholderText}>Sin imagen</Text>
+                  <Text style={styles.albumImagePlaceholderText}>{t('common_no_image')}</Text>
                 </View>
               )}
               <View style={styles.playButton}>

@@ -16,7 +16,7 @@ export const translations = {
 };
 
 // Función de traducción simple
-export const translate = (key: keyof typeof es) => {
+export const translate = (key: keyof typeof es, options?: Record<string, string | number>) => {
     const lang = activeLocale;
     // @ts-ignore
     let text = translations[lang][key];
@@ -31,6 +31,12 @@ export const translate = (key: keyof typeof es) => {
     if (!text && lang === 'es') {
         // @ts-ignore
         text = translations['en'][key];
+    }
+
+    if (text && options) {
+        Object.keys(options).forEach(option => {
+            text = text.replace(new RegExp(`{${option}}`, 'g'), String(options[option]));
+        });
     }
 
     return text || key;

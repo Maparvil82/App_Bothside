@@ -11,6 +11,7 @@ import {
     ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface CreateMaletaModalProps {
     visible: boolean;
@@ -39,6 +40,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
     const [description, setDescription] = useState(initialValues?.description || '');
     const [isPublic, setIsPublic] = useState(initialValues?.is_public || false);
     const [validationError, setValidationError] = useState<string | null>(null);
+    const { t } = useTranslation();
 
     // Update state when visible or initialValues change
     React.useEffect(() => {
@@ -103,7 +105,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                     <View style={styles.modalContent}>
                         {/* Header */}
                         <View style={styles.modalHeaderNew}>
-                            <Text style={styles.modalTitleNew}>{isEditing ? 'Editar Maleta' : 'Nueva Maleta'}</Text>
+                            <Text style={styles.modalTitleNew}>{isEditing ? t('common_edit') : t('album_detail_create_new_bag')}</Text>
                             <TouchableOpacity onPress={handleClose} style={styles.modalCloseButtonNew}>
                                 <Ionicons name="close" size={28} color="#000" />
                             </TouchableOpacity>
@@ -117,7 +119,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                             {/* Nombre */}
                             <View style={styles.formGroupNew}>
                                 <Text style={styles.labelNew}>
-                                    Nombre <Text style={styles.requiredAsterisk}>*</Text>
+                                    {t('common_title_required')}
                                 </Text>
                                 <TextInput
                                     style={[
@@ -141,7 +143,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
 
                             {/* Descripción */}
                             <View style={styles.formGroupNew}>
-                                <Text style={styles.labelNew}>Descripción</Text>
+                                <Text style={styles.labelNew}>{t('common_description')}</Text>
                                 <TextInput
                                     style={[styles.inputNew, styles.textAreaNew]}
                                     value={description}
@@ -156,7 +158,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
 
                             {/* Privacidad */}
                             <View style={styles.formGroupNew}>
-                                <Text style={styles.labelNew}>Privacidad</Text>
+                                <Text style={styles.labelNew}>{t('common_private')}</Text>
                                 <View style={styles.paymentPickerNew}>
                                     <TouchableOpacity
                                         style={[
@@ -177,7 +179,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                                                 !isPublic && styles.paymentOptionTextSelectedNew,
                                             ]}
                                         >
-                                            Privada
+                                            {t('common_private')}
                                         </Text>
                                     </TouchableOpacity>
                                     <TouchableOpacity
@@ -199,7 +201,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                                                 isPublic && styles.paymentOptionTextSelectedNew,
                                             ]}
                                         >
-                                            Pública
+                                            {t('common_public')}
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
@@ -217,7 +219,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                                 disabled={loading}
                             >
                                 <Text style={styles.createButtonTextNew}>
-                                    {loading ? 'Guardando...' : (isEditing ? 'Guardar Cambios' : 'Crear Maleta')}
+                                    {loading ? t('common_saving') : (isEditing ? t('common_save') : t('album_detail_create_new_bag'))}
                                 </Text>
                             </TouchableOpacity>
                         </View>
