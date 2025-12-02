@@ -473,4 +473,9 @@ export const en = {
     planner_success_deleted: "Session deleted",
     planner_error_delete: "Could not delete session",
     planner_error_loading: "Error loading sessions",
+
+    // Album Detail
+    album_detail_header: "Album Detail",
+    album_detail_tell_us: "Tell us about this album",
+    album_detail_subtitle: "Answer the questions you want to personalize your experience",
 };

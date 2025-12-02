@@ -93,6 +93,10 @@ export default function AlbumDetailScreen() {
   const { t } = useTranslation();
   const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
 
+  useEffect(() => {
+    navigation.setOptions({ title: t("album_detail_header") });
+  }, [navigation, t]);
+
   // Color constante para botones y tags
   const LIGHT_BG_COLOR = '#f1f1f1ff';
 
@@ -1492,9 +1496,9 @@ export default function AlbumDetailScreen() {
 
         {/* Sección TypeForm */}
         <View style={[styles.typeFormSection, { backgroundColor: colors.card }]}>
-          <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>Cuéntanos sobre este álbum</Text>
+          <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>{t('album_detail_tell_us')}</Text>
           <Text style={[styles.typeFormSectionSubtitle, { color: colors.text }]}>
-            Responde las preguntas que quieras para personalizar tu experiencia
+            {t('album_detail_subtitle')}
           </Text>
 
           {/* Mostrar todas las preguntas directamente */}

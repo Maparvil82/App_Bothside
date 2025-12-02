@@ -473,4 +473,9 @@ export const es = {
     planner_success_deleted: "Sesión eliminada",
     planner_error_delete: "No se pudo eliminar la sesión",
     planner_error_loading: "Error al cargar sesiones",
+
+    // Album Detail
+    album_detail_header: "Detalle del Álbum",
+    album_detail_tell_us: "Cuéntanos sobre este álbum",
+    album_detail_subtitle: "Responde las preguntas que quieras para personalizar tu experiencia",
 };
