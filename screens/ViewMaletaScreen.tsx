@@ -13,6 +13,8 @@ import {
   FlatList,
   TextInput,
   ScrollView,
+  Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
@@ -21,7 +23,7 @@ import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { useTranslation } from '../src/i18n/useTranslation';
-import { useIsCollaborator } from '../hooks/useCollaboration';
+import { useIsCollaborator, useMaletaCollaborators } from '../hooks/useCollaboration';
 import { addAlbumToMaletaAsCollaborator, removeAlbumFromMaletaAsCollaborator } from '../lib/supabase/collaboration';
 
 interface ViewListScreenProps {
@@ -29,11 +31,76 @@ interface ViewListScreenProps {
   route: any;
 }
 
+const AlbumItem = ({ item, navigation, t }: { item: any, navigation: any, t: any }) => {
+  const fadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  React.useEffect(() => {
+    Animated.timing(fadeAnim, {
+      toValue: 1,
+      duration: 500,
+      useNativeDriver: true,
+    }).start();
+  }, [fadeAnim]);
+
+  return (
+    <Animated.View style={[styles.albumItemContainer, { opacity: fadeAnim }]}>
+      <TouchableOpacity
+        style={styles.albumItem}
+        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.album_id })}
+        activeOpacity={0.7}
+      >
+        <Image
+          source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+          style={styles.albumCover}
+        />
+        <View style={styles.albumInfo}>
+          <Text style={styles.albumTitle} numberOfLines={1}>
+            {item.albums?.title}
+          </Text>
+          <Text style={styles.albumArtist}>{item.albums?.artist}</Text>
+          <View style={styles.albumDetails}>
+            <Text style={styles.albumDetail}>
+              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
+                ? t('common_label_year_format').replace('{0}', item.albums.label).replace('{1}', item.albums.release_year)
+                : item.albums?.label && item.albums.label !== ''
+                  ? t('common_label_format').replace('{0}', item.albums.label)
+                  : item.albums?.release_year
+                    ? t('common_year_format').replace('{0}', item.albums.release_year)
+                    : ''
+              }
+            </Text>
+          </View>
+        </View>
+
+        {/* Added by Avatar */}
+        {item.added_by_user && (
+          <View style={styles.addedByRow}>
+            {item.added_by_user.avatar_url ? (
+              <Image
+                source={{ uri: item.added_by_user.avatar_url }}
+                style={styles.avatarSmall}
+              />
+            ) : (
+              <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                <Ionicons name="person" size={10} color="#666" />
+              </View>
+            )}
+            <Text style={styles.addedByText}>
+              {t('maletas_collaborative_addedBy')} @{item.added_by_user.username}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+};
+
 const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
   const { maletaId, listTitle } = route.params;
   const { isCollaborator, status: collaboratorStatus } = useIsCollaborator(maletaId);
+  const { collaborators } = useMaletaCollaborators(maletaId);
 
   const [list, setList] = useState<any>(null);
   const { albums, loading: albumsLoading, addAlbumLocally, removeAlbumLocally } = useRealtimeMaletaAlbums(maletaId);
@@ -64,7 +131,13 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
   const onRefresh = async () => {
     setRefreshing(true);
-    await loadListData();
+    await Promise.all([
+      loadListData(),
+      // refresh() from useRealtimeMaletaAlbums is not exposed but loadInitialAlbums runs on mount.
+      // Ideally we should expose a refresh method from the hook.
+      // For now, we rely on loadListData which fetches the maleta details.
+      // The albums are realtime so they should be up to date, but we can force a re-fetch if needed.
+    ]);
     setTimeout(() => setRefreshing(false), 1000);
   };
 
@@ -240,57 +313,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     );
   };
 
-  const renderAlbumItem = ({ item }: { item: any }) => (
-    <View style={styles.albumItemContainer}>
-      <TouchableOpacity
-        style={styles.albumItem}
-        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.album_id })}
-        activeOpacity={0.7}
-      >
-        <Image
-          source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-          style={styles.albumCover}
-        />
-        <View style={styles.albumInfo}>
-          <Text style={styles.albumTitle} numberOfLines={1}>
-            {item.albums?.title}
-          </Text>
-          <Text style={styles.albumArtist}>{item.albums?.artist}</Text>
-          <View style={styles.albumDetails}>
-            <Text style={styles.albumDetail}>
-              {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
-                ? t('common_label_year_format').replace('{0}', item.albums.label).replace('{1}', item.albums.release_year)
-                : item.albums?.label && item.albums.label !== ''
-                  ? t('common_label_format').replace('{0}', item.albums.label)
-                  : item.albums?.release_year
-                    ? t('common_year_format').replace('{0}', item.albums.release_year)
-                    : ''
-              }
-            </Text>
-          </View>
-        </View>
 
-        {/* Added by Avatar */}
-        {item.added_by_user && (
-          <View style={styles.addedByRow}>
-            {item.added_by_user.avatar_url ? (
-              <Image
-                source={{ uri: item.added_by_user.avatar_url }}
-                style={styles.avatarSmall}
-              />
-            ) : (
-              <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
-                <Ionicons name="person" size={10} color="#666" />
-              </View>
-            )}
-            <Text style={styles.addedByText}>
-              {t('maletas_collaborative_addedBy')} @{item.added_by_user.username}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
-    </View>
-  );
 
   const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
     const item = albums.find(album => album.album_id === rowKey);
@@ -337,9 +360,22 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   if (loading || albumsLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>{t('view_maleta_loading')}</Text>
+        <View style={styles.header}>
+          <View style={styles.headerInfo}>
+            <View style={{ width: 150, height: 24, backgroundColor: '#E0E0E0', borderRadius: 4 }} />
+          </View>
         </View>
+        <ScrollView style={{ flex: 1 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <View key={i} style={styles.albumItem}>
+              <View style={[styles.albumCover, { backgroundColor: '#E0E0E0' }]} />
+              <View style={styles.albumInfo}>
+                <View style={{ width: '70%', height: 16, backgroundColor: '#E0E0E0', marginBottom: 8, borderRadius: 4 }} />
+                <View style={{ width: '50%', height: 14, backgroundColor: '#E0E0E0', borderRadius: 4 }} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       </View>
     );
   }
@@ -379,13 +415,38 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         </View>
       </View>
 
-
-
-
+      {list.is_collaborative && (
+        <View style={styles.collaborationSection}>
+          <View style={styles.collaborationHeader}>
+            <Text style={styles.collaborationIcon}>👥</Text>
+            <Text style={styles.collaborationText}>{t('maletas_collaborative_badgeLabel')}</Text>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.collaboratorsRow}>
+            {collaborators.filter(c => c.status === 'accepted').map(item => (
+              <View style={styles.collaboratorPill} key={item.id}>
+                {item.profile?.avatar_url ? (
+                  <Image source={{ uri: item.profile.avatar_url }} style={styles.avatarSmall} />
+                ) : (
+                  <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Ionicons name="person" size={10} color="#666" />
+                  </View>
+                )}
+                <Text style={styles.collaboratorName}>@{item.profile?.username}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
+      )}
 
       <SwipeListView
         data={albums}
-        renderItem={renderAlbumItem}
+        renderItem={({ item }) => (
+          <AlbumItem
+            item={item}
+            navigation={navigation}
+            t={t}
+          />
+        )}
         renderHiddenItem={renderSwipeActions}
         keyExtractor={(item) => item.album_id}
         contentContainerStyle={styles.albumsContainer}
@@ -531,7 +592,11 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                   disabled={selectedAlbums.size === 0 || addingAlbums}
                 >
                   <Text style={styles.buttonTextPrimaryNew}>
-                    {addingAlbums ? t('view_maleta_adding') : t('view_maleta_button_add_count').replace('{0}', selectedAlbums.size.toString())}
+                    {addingAlbums ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      t('view_maleta_button_add_count').replace('{0}', selectedAlbums.size.toString())
+                    )}
                   </Text>
                 </TouchableOpacity>
               </View>
@@ -962,6 +1027,44 @@ const styles = StyleSheet.create({
   addedByText: {
     fontSize: 12,
     color: '#666',
+  },
+  collaborationSection: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E5E5',
+  },
+  collaborationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  collaborationIcon: {
+    fontSize: 16,
+    marginRight: 6,
+  },
+  collaborationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#333',
+  },
+  collaboratorsRow: {
+    flexDirection: 'row',
+  },
+  collaboratorPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F5F5F5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 16,
+    marginRight: 8,
+  },
+  collaboratorName: {
+    fontSize: 12,
+    color: '#333',
+    fontWeight: '500',
   },
 });
 

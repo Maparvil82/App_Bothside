@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 
+import { useTranslation } from '../../src/i18n/useTranslation';
+
 interface UserSearchItemProps {
     user: {
         id: string;
@@ -16,6 +18,7 @@ interface UserSearchItemProps {
 
 export const UserSearchItem: React.FC<UserSearchItemProps> = ({ user, onInvite, isInvited = false }) => {
     const { colors } = useTheme();
+    const { t } = useTranslation();
 
     return (
         <View style={[styles.container, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
@@ -47,7 +50,7 @@ export const UserSearchItem: React.FC<UserSearchItemProps> = ({ user, onInvite, 
                     styles.inviteButtonText,
                     isInvited ? { color: colors.text } : { color: 'white' }
                 ]}>
-                    {isInvited ? 'Invited' : 'Invite'}
+                    {isInvited ? t('maletas_collaborative_errorAlreadyInvited') : t('maletas_collaborative_inviteButton')}
                 </Text>
             </TouchableOpacity>
         </View>

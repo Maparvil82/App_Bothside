@@ -1138,7 +1138,8 @@ export const UserMaletaService = {
       .insert([{
         maleta_id: maletaId,
         album_id: albumId,
-        added_by: user.id
+        added_by: user.id,
+        added_at: new Date().toISOString()
       }]);
 
     if (error) throw error;

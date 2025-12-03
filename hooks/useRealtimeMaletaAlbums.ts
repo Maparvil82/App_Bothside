@@ -47,7 +47,8 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
               )
             )
           `)
-          .eq('maleta_id', maletaId);
+          .eq('maleta_id', maletaId)
+          .order('added_at', { ascending: false });
 
         if (error) {
           console.error('❌ useRealtimeMaletaAlbums: Error loading initial albums:', error);
