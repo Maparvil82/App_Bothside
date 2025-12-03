@@ -1130,11 +1130,15 @@ export const UserMaletaService = {
 
   // Añadir álbum a maleta
   async addAlbumToMaleta(maletaId: string, albumId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
     const { error } = await supabase
       .from('maleta_albums')
       .insert([{
         maleta_id: maletaId,
-        album_id: albumId
+        album_id: albumId,
+        added_by: user.id
       }]);
 
     if (error) throw error;

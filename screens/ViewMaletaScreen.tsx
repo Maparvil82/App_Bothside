@@ -272,17 +272,20 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
         {/* Added by Avatar */}
         {item.added_by_user && (
-          <View style={{ marginLeft: 8, justifyContent: 'center', alignItems: 'center' }}>
+          <View style={styles.addedByRow}>
             {item.added_by_user.avatar_url ? (
               <Image
                 source={{ uri: item.added_by_user.avatar_url }}
-                style={{ width: 24, height: 24, borderRadius: 12 }}
+                style={styles.avatarSmall}
               />
             ) : (
-              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }}>
-                <Ionicons name="person" size={12} color="#666" />
+              <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                <Ionicons name="person" size={10} color="#666" />
               </View>
             )}
+            <Text style={styles.addedByText}>
+              {t('maletas_collaborative_addedBy')} @{item.added_by_user.username}
+            </Text>
           </View>
         )}
       </TouchableOpacity>
@@ -944,6 +947,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  avatarSmall: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    marginRight: 6,
+  },
+  addedByRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  addedByText: {
+    fontSize: 12,
+    color: '#666',
   },
 });
 
