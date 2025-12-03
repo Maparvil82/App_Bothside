@@ -268,6 +268,22 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
               </View>
             )}
 
+            {/* Owner Avatar (if not me) */}
+            {item.owner && (
+              <View style={[styles.collaboratorAvatarContainer, { marginLeft: 8, zIndex: 20 }]}>
+                {item.owner.avatar_url ? (
+                  <Image
+                    source={{ uri: item.owner.avatar_url }}
+                    style={[styles.collaboratorAvatar, { borderWidth: 1, borderColor: '#000' }]}
+                  />
+                ) : (
+                  <View style={[styles.collaboratorAvatar, { backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }]}>
+                    <Ionicons name="person" size={10} color="#fff" />
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* Collaborator Avatars */}
             {item.collaborators && item.collaborators.length > 0 && (
               <View style={styles.collaboratorAvatars}>

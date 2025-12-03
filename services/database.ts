@@ -94,12 +94,19 @@ export interface UserMaleta {
       cover_url?: string;
     };
   }>;
-  collaborators?: Array<{
+  collaborators?: {
     user_id: string;
     profile: {
+      id: string;
+      username: string;
       avatar_url: string | null;
     } | null;
-  }>;
+  }[];
+  owner?: {
+    id: string;
+    username: string;
+    avatar_url: string | null;
+  };
 }
 
 export interface MaletaAlbum {
@@ -884,20 +891,54 @@ export const UserMaletaService = {
     console.log('🔍 UserMaletaService: Getting maletas with albums for user:', userId);
 
     // Primero obtener las maletas
-    const { data: maletas, error: maletasError } = await supabase
+    // 1. Obtener maletas propias y colaborativas
+    // 1. Query A — Maletas creadas por el usuario
+    const { data: own, error: ownError } = await supabase
       .from('user_maletas')
       .select('*')
+      .eq('user_id', userId);
+
+    if (ownError) throw ownError;
+
+    // 2. Query B — Maletas donde el usuario es colaborador aceptado
+    const { data: collab, error: collabError } = await supabase
+      .from('maleta_collaborators')
+      .select(`
+        maleta_id,
+        status,
+        user_maletas (
+          id,
+          user_id,
+          title,
+          description,
+          cover_url,
+          created_at,
+          updated_at,
+          is_public,
+          is_collaborative
+        )
+      `)
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .eq('status', 'accepted');
 
-    if (maletasError) {
-      console.error('❌ UserMaletaService: Error getting user maletas:', maletasError);
-      throw maletasError;
-    }
+    if (collabError) throw collabError;
 
-    // Para cada maleta, obtener sus álbumes
+    // 3. Combinar resultados
+    const collabMaletas = collab
+      ?.map((item: any) => item.user_maletas)
+      ?.filter(Boolean) || [];
+
+    const allMaletas = [...(own || []), ...collabMaletas];
+
+    // 4. Eliminar duplicados por id
+    const uniqueMaletas = Array.from(new Map(allMaletas.map(m => [m.id, m])).values());
+
+    // Ordenar por fecha de creación (más recientes primero)
+    uniqueMaletas.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+    // Para cada maleta, obtener sus álbumes y detalles adicionales
     const maletasWithAlbums = await Promise.all(
-      (maletas || []).map(async (maleta) => {
+      uniqueMaletas.map(async (maleta) => {
         try {
           const { data: albums, error: albumsError } = await supabase
             .from('maleta_albums')
@@ -936,12 +977,28 @@ export const UserMaletaService = {
             }));
           }
 
+          // Obtener información del owner si no soy yo
+          let ownerProfile = null;
+          if (maleta.user_id !== userId) {
+            const { data: ownerData } = await supabase
+              .from('profiles')
+              .select('id, username, avatar_url')
+              .eq('id', maleta.user_id)
+              .single();
+            ownerProfile = ownerData;
+          }
+
           if (albumsError) {
             console.error('❌ UserMaletaService: Error getting albums for maleta:', maleta.id, albumsError);
             return { ...maleta, albums: [], collaborators: [] };
           }
 
-          return { ...maleta, albums: albums || [], collaborators: collaboratorsWithProfiles };
+          return {
+            ...maleta,
+            albums: albums || [],
+            collaborators: collaboratorsWithProfiles,
+            owner: ownerProfile // Añadir info del owner
+          };
         } catch (error) {
           console.error('❌ UserMaletaService: Error processing maleta:', maleta.id, error);
           return { ...maleta, albums: [] };
