@@ -125,6 +125,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
 
                         <ScrollView
                             style={styles.modalBodyNew}
+                            contentContainerStyle={{ paddingBottom: 40 }}
                             showsVerticalScrollIndicator={false}
                             bounces={false}
                         >
@@ -168,61 +169,12 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                                 />
                             </View>
 
-                            {/* Privacidad */}
-                            <View style={styles.formGroupNew}>
-                                <Text style={styles.labelNew}>{t('common_private')}</Text>
-                                <View style={styles.paymentPickerNew}>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.paymentOptionNew,
-                                            !isPublic && styles.paymentOptionSelectedNew,
-                                        ]}
-                                        onPress={() => setIsPublic(false)}
-                                    >
-                                        <Ionicons
-                                            name="lock-closed"
-                                            size={18}
-                                            color={!isPublic ? '#fff' : '#666'}
-                                            style={{ marginRight: 6 }}
-                                        />
-                                        <Text
-                                            style={[
-                                                styles.paymentOptionTextNew,
-                                                !isPublic && styles.paymentOptionTextSelectedNew,
-                                            ]}
-                                        >
-                                            {t('common_private')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.paymentOptionNew,
-                                            isPublic && styles.paymentOptionSelectedNew,
-                                        ]}
-                                        onPress={() => setIsPublic(true)}
-                                    >
-                                        <Ionicons
-                                            name="globe-outline"
-                                            size={18}
-                                            color={isPublic ? '#fff' : '#666'}
-                                            style={{ marginRight: 6 }}
-                                        />
-                                        <Text
-                                            style={[
-                                                styles.paymentOptionTextNew,
-                                                isPublic && styles.paymentOptionTextSelectedNew,
-                                            ]}
-                                        >
-                                            {t('common_public')}
-                                        </Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
+
 
                             {/* Colaboración */}
                             <View style={styles.formGroupNew}>
                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                                    <Text style={[styles.labelNew, { marginBottom: 0 }]}>Collaborative Suitcase</Text>
+                                    <Text style={[styles.labelNew, { marginBottom: 0 }]}>{t('maletas_collaborative_switchLabel')}</Text>
                                     <Switch
                                         value={isCollaborative}
                                         onValueChange={setIsCollaborative}
@@ -230,8 +182,8 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                                         thumbColor={isCollaborative ? '#fff' : '#f4f3f4'}
                                     />
                                 </View>
-                                <Text style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>
-                                    Allow other users to add albums to this suitcase.
+                                <Text style={styles.helperText}>
+                                    {t('maletas_collaborative_switchDescription')}
                                 </Text>
 
                                 {isCollaborative && isEditing && maletaId && (
@@ -298,6 +250,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.25,
         shadowRadius: 8,
         elevation: 10,
+        paddingBottom: 32,
     },
     modalHeaderNew: {
         flexDirection: 'row',
@@ -427,5 +380,10 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontSize: 16,
         fontWeight: '700',
+    },
+    helperText: {
+        fontSize: 12,
+        color: '#666',
+        marginBottom: 12,
     },
 });
