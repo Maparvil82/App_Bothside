@@ -4,6 +4,7 @@ import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/nativ
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
+import { usePendingInvitationsCount } from '../hooks/useCollaboration';
 
 export const HeaderAvatar = () => {
     const navigation = useNavigation();
@@ -11,6 +12,7 @@ export const HeaderAvatar = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const { count: pendingInvites, refresh: refreshInvites } = usePendingInvitationsCount();
 
     const loadProfile = async () => {
         try {
@@ -34,7 +36,8 @@ export const HeaderAvatar = () => {
     useFocusEffect(
         React.useCallback(() => {
             loadProfile();
-        }, [user?.id])
+            refreshInvites();
+        }, [user?.id, refreshInvites])
     );
 
     const getInitials = () => {
@@ -62,6 +65,13 @@ export const HeaderAvatar = () => {
             ) : (
                 <View style={[styles.avatarPlaceholder, { borderColor: colors.border }]}>
                     <Text style={styles.avatarText}>{getInitials()}</Text>
+                </View>
+            )}
+            {pendingInvites > 0 && (
+                <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                        {pendingInvites > 9 ? '9+' : pendingInvites}
+                    </Text>
                 </View>
             )}
         </TouchableOpacity>
@@ -109,5 +119,24 @@ const styles = StyleSheet.create({
     calendarButton: {
         marginLeft: 16,
         padding: 4,
+    },
+    badge: {
+        position: 'absolute',
+        top: -2,
+        right: -2,
+        backgroundColor: '#E33',
+        borderRadius: 10,
+        minWidth: 18,
+        height: 18,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 3,
+        borderWidth: 1.5,
+        borderColor: 'white',
+    },
+    badgeText: {
+        color: '#FFF',
+        fontSize: 10,
+        fontWeight: '700',
     },
 });

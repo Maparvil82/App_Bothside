@@ -164,3 +164,28 @@ export const useIsCollaborator = (maletaId: string | undefined) => {
 
     return { isCollaborator, status };
 };
+
+export const usePendingInvitationsCount = () => {
+    const [count, setCount] = useState(0);
+
+    const fetchCount = useCallback(async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { count: exactCount, error } = await supabase
+            .from('maleta_collaborators')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id)
+            .eq('status', 'pending');
+
+        if (!error) {
+            setCount(exactCount || 0);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCount();
+    }, [fetchCount]);
+
+    return { count, refresh: fetchCount };
+};
