@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, ActivityIndicator, Alert, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, ActivityIndicator, Alert, TouchableOpacity } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMaletaCollaborators, useUserSearch, useInviteCollaborator } from '../../hooks/useCollaboration';
@@ -14,37 +14,10 @@ interface InviteCollaboratorsScreenProps {
 }
 
 const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ route, navigation }) => {
-    const { maletaId } = route.params;
-    const { colors } = useTheme();
     const { t } = useTranslation();
+    const { colors } = useTheme();
+    const { maletaId } = route.params;
     const [searchQuery, setSearchQuery] = useState('');
-    const [ownerProfile, setOwnerProfile] = useState<any>(null);
-
-    React.useEffect(() => {
-        const fetchOwner = async () => {
-            // 1. Get maleta owner id
-            const { data: maleta } = await supabase
-                .from('user_maletas')
-                .select('user_id')
-                .eq('id', maletaId)
-                .single();
-
-            if (maleta?.user_id) {
-                // 2. Get owner profile
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('id, username, avatar_url')
-                    .eq('id', maleta.user_id)
-                    .single();
-
-                if (profile) {
-                    setOwnerProfile(profile);
-                }
-            }
-        };
-
-        fetchOwner();
-    }, [maletaId]);
 
     const { collaborators, loading: loadingCollaborators, refresh } = useMaletaCollaborators(maletaId);
     const { results: searchResults, loading: searching, search } = useUserSearch();
@@ -152,29 +125,6 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
                     <ActivityIndicator size="large" color={colors.primary} />
                 ) : (
                     <>
-                        {/* Owner Section */}
-                        {ownerProfile && (
-                            <View style={styles.section}>
-                                <Text style={[styles.sectionTitle, { color: colors.text }]}>Owner</Text>
-                                <View style={[styles.ownerContainer, { borderColor: colors.border }]}>
-                                    {ownerProfile.avatar_url ? (
-                                        <Image source={{ uri: ownerProfile.avatar_url }} style={styles.avatarLarge} />
-                                    ) : (
-                                        <View style={[styles.avatarLarge, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
-                                            <Ionicons name="person" size={24} color="#666" />
-                                        </View>
-                                    )}
-
-                                    <View style={{ flexDirection: 'column' }}>
-                                        <Text style={[styles.username, { color: colors.text }]}>@{ownerProfile.username}</Text>
-
-                                        <View style={styles.ownerBadge}>
-                                            <Text style={styles.ownerBadgeText}>OWNER</Text>
-                                        </View>
-                                    </View>
-                                </View>
-                            </View>
-                        )}
 
                         {/* Pending Invitations */}
                         <View style={styles.section}>
@@ -269,41 +219,6 @@ const styles = StyleSheet.create({
         padding: 16,
         color: '#999',
         fontStyle: 'italic',
-    },
-    ownerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 16,
-        backgroundColor: '#FFF',
-        borderRadius: 12,
-        marginBottom: 12,
-        borderWidth: 1,
-        marginHorizontal: 16,
-    },
-    avatarLarge: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        marginRight: 12,
-    },
-    username: {
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    ownerBadge: {
-        backgroundColor: '#E6B800',
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-        borderRadius: 6,
-        marginTop: 4,
-        alignSelf: 'flex-start',
-    },
-    ownerBadgeText: {
-        color: '#FFF',
-        fontSize: 11,
-        fontWeight: '600',
-        letterSpacing: 0.3,
     },
 });
 

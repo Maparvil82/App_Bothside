@@ -798,6 +798,8 @@ export const en = {
     audio_recorder_error_auth_login: "You must log in to save audio notes. Please go to the login screen.",
     audio_recorder_success_save: "Audio note saved successfully",
     audio_recorder_recording_progress_title: "Recording in progress",
+
+    maletas_collaborative_youAreOwner: "You are the owner",
     audio_recorder_recording_progress_message: "Are you sure you want to close? The current recording will be lost.",
 
     // Maletas Collaborative

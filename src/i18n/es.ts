@@ -798,6 +798,8 @@ export const es = {
     audio_recorder_error_auth_login: "Debes iniciar sesión para guardar notas de audio. Por favor, ve a la pantalla de login.",
     audio_recorder_success_save: "Nota de audio guardada correctamente",
     audio_recorder_recording_progress_title: "Grabación en progreso",
+
+    maletas_collaborative_youAreOwner: "Eres el creador",
     audio_recorder_recording_progress_message: "¿Estás seguro de que quieres cerrar? Se perderá la grabación actual.",
 
     // Maletas Collaborative

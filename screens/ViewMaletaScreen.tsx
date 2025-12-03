@@ -26,6 +26,7 @@ import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useIsCollaborator, useMaletaCollaborators } from '../hooks/useCollaboration';
 import { addAlbumToMaletaAsCollaborator, removeAlbumFromMaletaAsCollaborator } from '../lib/supabase/collaboration';
+import { supabase } from '../lib/supabase';
 
 interface ViewListScreenProps {
   navigation: any;
@@ -87,7 +88,7 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
               </View>
             )}
             <Text style={styles.addedByText}>
-              {t('maletas_collaborative_addedBy')} @{item.added_by_user.username}
+              {t('maletas_collaborative_addedBy')} {item.added_by_user.username}
             </Text>
           </View>
         )}
@@ -107,6 +108,25 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   const { albums, loading: albumsLoading, addAlbumLocally, removeAlbumLocally } = useRealtimeMaletaAlbums(maletaId);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [ownerProfile, setOwnerProfile] = useState<any>(null);
+
+  React.useEffect(() => {
+    const fetchOwner = async () => {
+      if (!list?.user_id) return;
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .eq('id', list.user_id)
+        .single();
+
+      if (profile) {
+        setOwnerProfile(profile);
+      }
+    };
+
+    fetchOwner();
+  }, [list?.user_id]);
 
   // Refresh collaborators when screen is focused
   useFocusEffect(
@@ -427,9 +447,34 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       {list.is_collaborative && (
         <View style={styles.collaborationSection}>
           <View style={styles.collaborationHeader}>
+
             <Text style={styles.collaborationIcon}>👥</Text>
             <Text style={styles.collaborationText}>{t('maletas_collaborative_badgeLabel')}</Text>
           </View>
+
+          {/* Owner Badge */}
+          {ownerProfile && list.user_id !== user?.id && (
+            <View style={styles.ownerRow}>
+              {ownerProfile.avatar_url ? (
+                <Image source={{ uri: ownerProfile.avatar_url }} style={styles.ownerAvatar} />
+              ) : (
+                <View style={[styles.ownerAvatar, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                  <Ionicons name="person" size={16} color="#666" />
+                </View>
+              )}
+              <Text style={styles.ownerUsername}>{ownerProfile.username}</Text>
+              <View style={styles.ownerBadge}>
+                <Text style={styles.ownerBadgeText}>OWNER</Text>
+              </View>
+            </View>
+          )}
+
+          {list.user_id === user?.id && (
+            <View style={styles.ownerRow}>
+              <Text style={styles.ownerBadgeTextSelf}>{t('maletas_collaborative_youAreOwner')}</Text>
+            </View>
+          )}
+
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.collaboratorsRow}>
             {collaborators.filter(c => c.status === 'accepted').map(item => (
               <View style={styles.collaboratorPill} key={item.id}>
@@ -440,7 +485,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                     <Ionicons name="person" size={10} color="#666" />
                   </View>
                 )}
-                <Text style={styles.collaboratorName}>@{item.profile?.username}</Text>
+                <Text style={styles.collaboratorName}>{item.profile?.username}</Text>
               </View>
             ))}
           </ScrollView>
@@ -795,9 +840,41 @@ const styles = StyleSheet.create({
     color: '#999',
     marginBottom: 2,
   },
+
+  ownerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingHorizontal: 20,
+  },
+  ownerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 8,
+  },
+  ownerUsername: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  ownerBadge: {
+    backgroundColor: '#E6B800',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  ownerBadgeText: {
+    fontSize: 11,
+    color: '#FFF',
+    fontWeight: '700',
+  },
+  ownerBadgeTextSelf: {
+    fontSize: 13,
+    color: '#666',
+    fontStyle: 'italic',
+  },
   emptyState: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 40,
     paddingVertical: 60,
