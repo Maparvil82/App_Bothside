@@ -83,6 +83,7 @@ export interface UserMaleta {
   description?: string;
   cover_url?: string;
   is_public: boolean;
+  is_collaborative?: boolean;
   user_id: string;
   created_at: string;
   albums?: Array<{
@@ -92,6 +93,12 @@ export interface UserMaleta {
       artist: string;
       cover_url?: string;
     };
+  }>;
+  collaborators?: Array<{
+    user_id: string;
+    profile: {
+      avatar_url: string | null;
+    } | null;
   }>;
 }
 
@@ -906,12 +913,35 @@ export const UserMaletaService = {
             .eq('maleta_id', maleta.id)
             .limit(4); // Solo los últimos 4 para el collage
 
-          if (albumsError) {
-            console.error('❌ UserMaletaService: Error getting albums for maleta:', maleta.id, albumsError);
-            return { ...maleta, albums: [] };
+          const { data: collaborators, error: collaboratorsError } = await supabase
+            .from('maleta_collaborators')
+            .select('user_id')
+            .eq('maleta_id', maleta.id)
+            .eq('status', 'accepted')
+            .limit(3);
+
+          let collaboratorsWithProfiles: any[] = [];
+          if (!collaboratorsError && collaborators && collaborators.length > 0) {
+            const userIds = collaborators.map(c => c.user_id);
+            const { data: profiles } = await supabase
+              .from('profiles')
+              .select('id, avatar_url')
+              .in('id', userIds);
+
+            const profilesMap = (profiles || []).reduce((acc, p) => ({ ...acc, [p.id]: p }), {} as Record<string, any>);
+
+            collaboratorsWithProfiles = collaborators.map(c => ({
+              user_id: c.user_id,
+              profile: profilesMap[c.user_id] || null
+            }));
           }
 
-          return { ...maleta, albums: albums || [] };
+          if (albumsError) {
+            console.error('❌ UserMaletaService: Error getting albums for maleta:', maleta.id, albumsError);
+            return { ...maleta, albums: [], collaborators: [] };
+          }
+
+          return { ...maleta, albums: albums || [], collaborators: collaboratorsWithProfiles };
         } catch (error) {
           console.error('❌ UserMaletaService: Error processing maleta:', maleta.id, error);
           return { ...maleta, albums: [] };
@@ -1000,7 +1030,45 @@ export const UserMaletaService = {
       .eq('maleta_id', maletaId);
 
     if (error) throw error;
-    return data;
+
+    // Manually fetch profiles for added_by users
+    const addedByUserIds = [...new Set(data?.map(item => item.added_by).filter(Boolean))];
+    let profilesMap: Record<string, any> = {};
+
+    if (addedByUserIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .in('id', addedByUserIds);
+
+      if (!profilesError && profiles) {
+        // Note: We need to fetch ID to map correctly, but select only asked for username/avatar.
+        // Let's re-fetch with ID or assume order? No, map by ID.
+        // Re-doing the select to include ID.
+      }
+    }
+
+    // Correct implementation with ID
+    if (addedByUserIds.length > 0) {
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .in('id', addedByUserIds);
+
+      if (!profilesError && profiles) {
+        profilesMap = profiles.reduce((acc, profile) => {
+          acc[profile.id] = profile;
+          return acc;
+        }, {} as Record<string, any>);
+      }
+    }
+
+    const albumsWithProfiles = data?.map(item => ({
+      ...item,
+      added_by_user: item.added_by ? profilesMap[item.added_by] : null
+    }));
+
+    return albumsWithProfiles;
   },
 
   // Añadir álbum a maleta

@@ -9,6 +9,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     ScrollView,
+    Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
@@ -16,15 +17,18 @@ import { useTranslation } from '../src/i18n/useTranslation';
 interface CreateMaletaModalProps {
     visible: boolean;
     onClose: () => void;
-    onSubmit: (data: { title: string; description?: string; is_public: boolean }, initialAlbumId?: string) => void;
+    onSubmit: (data: { title: string; description?: string; is_public: boolean; is_collaborative?: boolean }, initialAlbumId?: string) => void;
     loading?: boolean;
     initialAlbumId?: string;
     initialValues?: {
         title: string;
         description?: string;
         is_public: boolean;
+        is_collaborative?: boolean;
     };
     isEditing?: boolean;
+    maletaId?: string;
+    navigation?: any;
 }
 
 export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
@@ -35,10 +39,13 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
     initialAlbumId,
     initialValues,
     isEditing = false,
+    maletaId,
+    navigation,
 }) => {
     const [title, setTitle] = useState(initialValues?.title || '');
     const [description, setDescription] = useState(initialValues?.description || '');
     const [isPublic, setIsPublic] = useState(initialValues?.is_public || false);
+    const [isCollaborative, setIsCollaborative] = useState(initialValues?.is_collaborative || false);
     const [validationError, setValidationError] = useState<string | null>(null);
     const { t } = useTranslation();
 
@@ -48,11 +55,13 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
             setTitle(initialValues.title);
             setDescription(initialValues.description || '');
             setIsPublic(initialValues.is_public);
+            setIsCollaborative(initialValues.is_collaborative || false);
         } else if (visible && !isEditing) {
             // Reset for new creation
             setTitle('');
             setDescription('');
             setIsPublic(false);
+            setIsCollaborative(false);
         }
     }, [visible, initialValues, isEditing]);
 
@@ -61,6 +70,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
             setTitle('');
             setDescription('');
             setIsPublic(false);
+            setIsCollaborative(false);
         }
         setValidationError(null);
         onClose();
@@ -76,6 +86,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
             title: title.trim(),
             description: description.trim() || undefined,
             is_public: isPublic,
+            is_collaborative: isCollaborative,
         }, initialAlbumId);
 
         if (!isEditing) {
@@ -83,6 +94,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
             setTitle('');
             setDescription('');
             setIsPublic(false);
+            setIsCollaborative(false);
         }
         setValidationError(null);
     };
@@ -205,6 +217,43 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
                                         </Text>
                                     </TouchableOpacity>
                                 </View>
+                            </View>
+
+                            {/* Colaboración */}
+                            <View style={styles.formGroupNew}>
+                                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                    <Text style={[styles.labelNew, { marginBottom: 0 }]}>Collaborative Suitcase</Text>
+                                    <Switch
+                                        value={isCollaborative}
+                                        onValueChange={setIsCollaborative}
+                                        trackColor={{ false: '#767577', true: '#000' }}
+                                        thumbColor={isCollaborative ? '#fff' : '#f4f3f4'}
+                                    />
+                                </View>
+                                <Text style={{ fontSize: 12, color: '#666', marginBottom: 12 }}>
+                                    Allow other users to add albums to this suitcase.
+                                </Text>
+
+                                {isCollaborative && isEditing && maletaId && (
+                                    <TouchableOpacity
+                                        style={{
+                                            flexDirection: 'row',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            padding: 12,
+                                            backgroundColor: '#f0f0f0',
+                                            borderRadius: 12,
+                                            marginTop: 8
+                                        }}
+                                        onPress={() => {
+                                            onClose(); // Close modal first
+                                            navigation?.navigate('InviteCollaborators', { maletaId });
+                                        }}
+                                    >
+                                        <Ionicons name="people" size={20} color="#000" style={{ marginRight: 8 }} />
+                                        <Text style={{ fontWeight: '600', color: '#000' }}>Invite Collaborators</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
 
                             {/* Espacio para botones */}

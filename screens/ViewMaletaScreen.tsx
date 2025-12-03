@@ -21,6 +21,8 @@ import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useIsCollaborator } from '../hooks/useCollaboration';
+import { addAlbumToMaletaAsCollaborator, removeAlbumFromMaletaAsCollaborator } from '../lib/supabase/collaboration';
 
 interface ViewListScreenProps {
   navigation: any;
@@ -31,6 +33,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   const { user } = useAuth();
   const { t } = useTranslation();
   const { maletaId, listTitle } = route.params;
+  const { isCollaborator, status: collaboratorStatus } = useIsCollaborator(maletaId);
 
   const [list, setList] = useState<any>(null);
   const { albums, loading: albumsLoading, addAlbumLocally, removeAlbumLocally } = useRealtimeMaletaAlbums(maletaId);
@@ -165,16 +168,25 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           const albumData = {
             album_id: albumId,
             maleta_id: maletaId,
-            albums: albumFromCollection.albums
+            albums: albumFromCollection.albums,
+            added_by: user?.id, // Optimistic update
+            added_by_user: { // Optimistic update
+              username: user?.user_metadata?.username || 'Me',
+              avatar_url: user?.user_metadata?.avatar_url
+            }
           };
           addAlbumLocally(albumData);
         }
       }
 
       // Luego hacer la llamada a la API
-      const promises = albumsToAdd.map(albumId =>
-        UserMaletaService.addAlbumToMaleta(maletaId, albumId)
-      );
+      const promises = albumsToAdd.map(albumId => {
+        if (isCollaborator && collaboratorStatus === 'accepted') {
+          return addAlbumToMaletaAsCollaborator(maletaId, albumId);
+        } else {
+          return UserMaletaService.addAlbumToMaleta(maletaId, albumId);
+        }
+      });
       await Promise.all(promises);
 
       Alert.alert(
@@ -210,7 +222,11 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
               }
 
               // Luego hacer la llamada a la API
-              await UserMaletaService.removeAlbumFromMaleta(maletaId, albumId);
+              if (isCollaborator && collaboratorStatus === 'accepted') {
+                await removeAlbumFromMaletaAsCollaborator(maletaId, albumId);
+              } else {
+                await UserMaletaService.removeAlbumFromMaleta(maletaId, albumId);
+              }
               Alert.alert(t('common_success'), t('view_maleta_success_remove'));
             } catch (error) {
               console.error('Error removing album from maleta:', error);
@@ -251,9 +267,24 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                     : ''
               }
             </Text>
-
           </View>
         </View>
+
+        {/* Added by Avatar */}
+        {item.added_by_user && (
+          <View style={{ marginLeft: 8, justifyContent: 'center', alignItems: 'center' }}>
+            {item.added_by_user.avatar_url ? (
+              <Image
+                source={{ uri: item.added_by_user.avatar_url }}
+                style={{ width: 24, height: 24, borderRadius: 12 }}
+              />
+            ) : (
+              <View style={{ width: 24, height: 24, borderRadius: 12, backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }}>
+                <Ionicons name="person" size={12} color="#666" />
+              </View>
+            )}
+          </View>
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -266,17 +297,25 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     rowMap[rowKey]?.closeRow();
   };
 
-  const renderSwipeActions = (rowData: any, rowMap: any) => (
-    <View style={styles.swipeActionsContainer}>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeDelete]}
-        onPress={() => handleSwipeDelete(rowMap, rowData.item.album_id)}
-      >
-        <Ionicons name="trash-outline" size={20} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const renderSwipeActions = (rowData: any, rowMap: any) => {
+    const item = rowData.item;
+    const isOwner = list?.user_id === user?.id;
+    const canDelete = isOwner || (isCollaborator && collaboratorStatus === 'accepted' && item.added_by === user?.id);
+
+    if (!canDelete) return <View />;
+
+    return (
+      <View style={styles.swipeActionsContainer}>
+        <TouchableOpacity
+          style={[styles.swipeAction, styles.swipeDelete]}
+          onPress={() => handleSwipeDelete(rowMap, rowData.item.album_id)}
+        >
+          <Ionicons name="trash-outline" size={20} color="white" />
+          <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -324,12 +363,16 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           )}
         </View>
         <View style={styles.headerActions}>
-          <TouchableOpacity onPress={handleAddAlbum} style={styles.addHeaderButton}>
-            <Ionicons name="add" size={24} color="#007AFF" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleEditList} style={styles.editButton}>
-            <Ionicons name="create-outline" size={24} color="#007AFF" />
-          </TouchableOpacity>
+          {(list.user_id === user?.id || (isCollaborator && collaboratorStatus === 'accepted')) && (
+            <TouchableOpacity onPress={handleAddAlbum} style={styles.addHeaderButton}>
+              <Ionicons name="add" size={24} color="#007AFF" />
+            </TouchableOpacity>
+          )}
+          {list.user_id === user?.id && (
+            <TouchableOpacity onPress={handleEditList} style={styles.editButton}>
+              <Ionicons name="create-outline" size={24} color="#007AFF" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 

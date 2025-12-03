@@ -19,6 +19,7 @@ import { GamificationService } from '../services/gamification';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useMyInvitations } from '../hooks/useCollaboration';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -30,6 +31,8 @@ export const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
+  const { invitations } = useMyInvitations();
+  const pendingInvitationsCount = invitations.filter(inv => inv.status === 'pending').length;
 
   useEffect(() => {
     setIsDarkMode(mode === 'dark');
@@ -195,6 +198,21 @@ export const ProfileScreen: React.FC = () => {
         {/* Información */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
 
+          {/* Invitaciones */}
+          <TouchableOpacity
+            style={[styles.menuItem, { borderBottomColor: colors.border }]}
+            onPress={() => navigation.navigate('Invitations' as never)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[styles.menuItemText, { color: colors.text }]}>Invitaciones de Colaboración</Text>
+              {pendingInvitationsCount > 0 && (
+                <View style={{ backgroundColor: '#FF3B30', borderRadius: 10, paddingHorizontal: 6, paddingVertical: 2, marginLeft: 8 }}>
+                  <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>{pendingInvitationsCount}</Text>
+                </View>
+              )}
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
+          </TouchableOpacity>
 
           {/* Feedback */}
           <TouchableOpacity

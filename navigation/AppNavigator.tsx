@@ -18,6 +18,8 @@ import GemsScreen from '../screens/GemsScreen';
 import MaletasScreen from '../screens/MaletasScreen';
 import ViewMaletaScreen from '../screens/ViewMaletaScreen';
 import EditMaletaScreen from '../screens/EditMaletaScreen';
+import InviteCollaboratorsScreen from '../screens/collaboration/InviteCollaboratorsScreen';
+import InvitationsScreen from '../screens/collaboration/InvitationsScreen';
 import { HeaderAvatar, HeaderCalendar } from '../components/HeaderComponents';
 import { useAuth } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
@@ -132,6 +134,11 @@ const MaletasStack = () => (
       component={EditMaletaScreen}
       options={{ title: 'Editar Maleta' }}
     />
+    <Stack.Screen
+      name="InviteCollaborators"
+      component={InviteCollaboratorsScreen}
+      options={{ title: 'Invitar Colaboradores' }}
+    />
   </Stack.Navigator>
 );
 
@@ -236,6 +243,15 @@ const ProfileStack = () => (
       component={AccountScreen}
       options={{
         title: 'Cuenta',
+        headerShown: true,
+        headerBackTitle: 'Atrás'
+      }}
+    />
+    <Stack.Screen
+      name="Invitations"
+      component={InvitationsScreen}
+      options={{
+        title: 'Invitaciones',
         headerShown: true,
         headerBackTitle: 'Atrás'
       }}

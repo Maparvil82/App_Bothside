@@ -117,7 +117,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     setIsEditModalVisible(true);
   };
 
-  const handleUpdateMaleta = async (data: { title: string; description?: string; is_public: boolean }) => {
+  const handleUpdateMaleta = async (data: { title: string; description?: string; is_public: boolean; is_collaborative?: boolean }) => {
     if (!selectedMaletaForEdit) return;
 
     try {
@@ -260,6 +260,33 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 {item.is_public ? t('common_public') : t('common_private')}
               </Text>
             </View>
+
+            {item.is_collaborative && (
+              <View style={styles.collaborativeBadge}>
+                <Ionicons name="people" size={12} color="#fff" style={{ marginRight: 4 }} />
+                <Text style={styles.collaborativeBadgeText}>Collab</Text>
+              </View>
+            )}
+
+            {/* Collaborator Avatars */}
+            {item.collaborators && item.collaborators.length > 0 && (
+              <View style={styles.collaboratorAvatars}>
+                {item.collaborators.map((collab, index) => (
+                  <View key={collab.user_id} style={[styles.collaboratorAvatarContainer, { marginLeft: index > 0 ? -8 : 0, zIndex: 10 - index }]}>
+                    {collab.profile?.avatar_url ? (
+                      <Image
+                        source={{ uri: collab.profile.avatar_url }}
+                        style={styles.collaboratorAvatar}
+                      />
+                    ) : (
+                      <View style={[styles.collaboratorAvatar, { backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }]}>
+                        <Ionicons name="person" size={10} color="#fff" />
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            )}
           </View>
         </View>
       </TouchableOpacity>
@@ -424,8 +451,11 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           title: selectedMaletaForEdit.title,
           description: selectedMaletaForEdit.description || '',
           is_public: selectedMaletaForEdit.is_public,
+          is_collaborative: selectedMaletaForEdit.is_collaborative,
         } : undefined}
         isEditing={true}
+        maletaId={selectedMaletaForEdit?.id}
+        navigation={navigation}
       />
     </View>
   );
@@ -581,6 +611,8 @@ const styles = StyleSheet.create({
   },
   listMeta: {
     marginTop: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   publicBadge: {
     paddingHorizontal: 6,
@@ -597,6 +629,37 @@ const styles = StyleSheet.create({
   publicBadgeText: {
     fontSize: 10,
     fontWeight: '500',
+  },
+  collaborativeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#7B1FA2', // Purple for collab
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  collaborativeBadgeText: {
+    fontSize: 10,
+    fontWeight: '500',
+    color: '#fff',
+  },
+  collaboratorAvatars: {
+    flexDirection: 'row',
+    marginLeft: 12,
+    alignItems: 'center',
+  },
+  collaboratorAvatarContainer: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff',
+    overflow: 'hidden',
+  },
+  collaboratorAvatar: {
+    width: '100%',
+    height: '100%',
   },
 
   emptyState: {

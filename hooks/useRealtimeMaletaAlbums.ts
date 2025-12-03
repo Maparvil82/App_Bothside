@@ -54,8 +54,32 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
           return;
         }
 
-        console.log('✅ useRealtimeMaletaAlbums: Initial albums loaded:', data?.length || 0);
-        setAlbums(data || []);
+        // Manually fetch profiles for added_by users
+        const addedByUserIds = [...new Set(data?.map(item => item.added_by).filter(Boolean))];
+        let profilesMap: Record<string, any> = {};
+
+        if (addedByUserIds.length > 0) {
+          const { data: profiles, error: profilesError } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url')
+            .in('id', addedByUserIds);
+
+          if (!profilesError && profiles) {
+            profilesMap = profiles.reduce((acc, profile) => {
+              acc[profile.id] = profile;
+              return acc;
+            }, {} as Record<string, any>);
+          }
+        }
+
+        // Merge profiles into album data
+        const albumsWithProfiles = data?.map(item => ({
+          ...item,
+          added_by_user: item.added_by ? profilesMap[item.added_by] : null
+        })) || [];
+
+        console.log('✅ useRealtimeMaletaAlbums: Initial albums loaded:', albumsWithProfiles.length);
+        setAlbums(albumsWithProfiles);
       } catch (error) {
         console.error('❌ useRealtimeMaletaAlbums: Error in loadInitialAlbums:', error);
       } finally {
@@ -95,12 +119,28 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
             .single();
 
           if (!error && albumData) {
+            // Fetch profile for the new album adder
+            let addedByUser = null;
+            if (albumData.added_by) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, avatar_url')
+                .eq('id', albumData.added_by)
+                .single();
+              addedByUser = profile;
+            }
+
+            const albumWithProfile = {
+              ...albumData,
+              added_by_user: addedByUser
+            };
+
             console.log('✅ useRealtimeMaletaAlbums: Album data fetched, adding to list');
             setAlbums(prev => {
               // Evitar duplicados
-              const exists = prev.some(a => a.album_id === albumData.album_id);
+              const exists = prev.some(a => a.album_id === albumWithProfile.album_id);
               if (exists) return prev;
-              return [albumData, ...prev];
+              return [albumWithProfile, ...prev];
             });
           } else {
             console.error('❌ useRealtimeMaletaAlbums: Error fetching album data:', error);
