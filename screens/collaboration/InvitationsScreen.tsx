@@ -9,25 +9,28 @@ interface InvitationsScreenProps {
     navigation: any;
 }
 
+import { useTranslation } from '../../src/i18n/useTranslation';
+
 const InvitationsScreen: React.FC<InvitationsScreenProps> = ({ navigation }) => {
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const { invitations, loading, respond, refresh } = useMyInvitations();
 
     const handleAccept = async (id: string) => {
         const success = await respond(id, 'accepted');
         if (success) {
-            Alert.alert('Success', 'Invitation accepted!');
+            Alert.alert(t('common_success'), t('maletas_collaborative_successInvitationAccepted'));
         } else {
-            Alert.alert('Error', 'Failed to accept invitation');
+            Alert.alert(t('common_error'), t('maletas_collaborative_errorGeneric'));
         }
     };
 
     const handleReject = async (id: string) => {
         const success = await respond(id, 'rejected');
         if (success) {
-            Alert.alert('Success', 'Invitation rejected');
+            Alert.alert(t('common_success'), t('maletas_collaborative_successInvitationRejected'));
         } else {
-            Alert.alert('Error', 'Failed to reject invitation');
+            Alert.alert(t('common_error'), t('maletas_collaborative_errorGeneric'));
         }
     };
 
@@ -37,7 +40,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({ navigation }) => 
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Invitations</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('maletas_collaborative_invitationsTitle')}</Text>
             </View>
 
             {loading ? (
@@ -59,7 +62,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({ navigation }) => 
                     ListEmptyComponent={
                         <View style={styles.emptyState}>
                             <Ionicons name="mail-open-outline" size={64} color={colors.border} />
-                            <Text style={[styles.emptyText, { color: colors.text }]}>No pending invitations</Text>
+                            <Text style={[styles.emptyText, { color: colors.text }]}>{t('common_no_results')}</Text>
                         </View>
                     }
                     refreshing={loading}

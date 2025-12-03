@@ -376,11 +376,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         </View>
       </View>
 
-      {list.description && (
-        <View style={styles.descriptionContainer}>
-          <Text style={styles.descriptionText}>{list.description}</Text>
-        </View>
-      )}
+
 
 
 
@@ -392,6 +388,24 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         contentContainerStyle={styles.albumsContainer}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+        ListHeaderComponent={
+          <View>
+            {list.description && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.descriptionText}>{list.description}</Text>
+              </View>
+            )}
+            {list.is_collaborative && list.user_id === user?.id && (
+              <TouchableOpacity
+                style={styles.inviteButton}
+                onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}
+              >
+                <Ionicons name="person-add" size={20} color="#fff" style={{ marginRight: 8 }} />
+                <Text style={styles.inviteButtonText}>{t('maletas_collaborative_inviteButton')}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
@@ -915,6 +929,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  inviteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#000',
+    marginHorizontal: 20,
+    marginBottom: 16,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  inviteButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

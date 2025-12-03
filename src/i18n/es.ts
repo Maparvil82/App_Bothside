@@ -113,6 +113,7 @@ export const es = {
     common_column: "Columna",
     common_columns: "Columnas",
     common_invalid_values: "Valores inválidos",
+    common_results: "Resultados",
     common_no_results: "Sin resultados",
     common_understood: "Entendido",
     common_retry: "Volver a intentar",
@@ -817,6 +818,8 @@ export const es = {
     maletas_collaborative_errorAlreadyInvited: "Este usuario ya tiene una invitación activa",
     maletas_collaborative_errorUserNotFound: "Usuario no encontrado",
     maletas_collaborative_errorGeneric: "Ha ocurrido un error. Inténtalo de nuevo",
+    maletas_collaborative_successInvitationAccepted: "Invitación aceptada correctamente",
+    maletas_collaborative_successInvitationRejected: "Invitación rechazada",
 
     camera_permission_requesting: "Solicitando permisos de cámara...",
     camera_permission_denied: "No tienes permisos de cámara",

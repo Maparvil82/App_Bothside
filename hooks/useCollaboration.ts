@@ -62,14 +62,14 @@ export const useUserSearch = () => {
     const [results, setResults] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
 
-    const search = async (query: string) => {
+    const search = async (query: string, maletaId?: string) => {
         if (query.length < 3) {
             setResults([]);
             return;
         }
         setLoading(true);
         try {
-            const data = await searchUsers(query);
+            const data = await searchUsers(query, maletaId);
             setResults(data);
         } catch (error) {
             console.error(error);

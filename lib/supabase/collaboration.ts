@@ -3,13 +3,35 @@ import { MaletaCollaboratorWithProfile, MaletaCollaboratorStatus } from '../../t
 
 // --- Search Users ---
 
-export const searchUsers = async (query: string) => {
+export const searchUsers = async (query: string, maletaId?: string) => {
     if (!query || query.length < 3) return [];
 
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    // 1. Get IDs of users already collaborating or invited to this maleta
+    let excludedUserIds = [user.id]; // Always exclude current user
+
+    if (maletaId) {
+        const { data: existingCollaborators } = await supabase
+            .from('maleta_collaborators')
+            .select('user_id')
+            .eq('maleta_id', maletaId);
+
+        if (existingCollaborators) {
+            const collaboratorIds = existingCollaborators
+                .map(c => c.user_id)
+                .filter((id): id is string => !!id);
+            excludedUserIds = [...excludedUserIds, ...collaboratorIds];
+        }
+    }
+
+    // 2. Search profiles excluding these IDs
     const { data, error } = await supabase
         .from('profiles')
         .select('id, username, avatar_url, full_name')
-        .or(`username.ilike.%${query}%,email.ilike.%${query}%`)
+        .or(`username.ilike.%${query}%,full_name.ilike.%${query}%`)
+        .not('id', 'in', `(${excludedUserIds.join(',')})`)
         .limit(10);
 
     if (error) {
@@ -97,7 +119,7 @@ export const getMyInvitations = async () => {
       *,
       maleta:maleta_id (
         id,
-        name,
+        title,
         cover_url
       )
     `)

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useMaletaCollaborators, useUserSearch, useInviteCollaborator } from '../../hooks/useCollaboration';
 import { UserSearchItem } from '../../components/collaboration/UserSearchItem';
 import { CollaboratorItem } from '../../components/collaboration/CollaboratorItem';
+import { useTranslation } from '../../src/i18n/useTranslation';
 
 interface InviteCollaboratorsScreenProps {
     route: any;
@@ -14,6 +15,7 @@ interface InviteCollaboratorsScreenProps {
 const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ route, navigation }) => {
     const { maletaId } = route.params;
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const [searchQuery, setSearchQuery] = useState('');
 
     const { collaborators, loading: loadingCollaborators, refresh } = useMaletaCollaborators(maletaId);
@@ -23,18 +25,21 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
     const handleSearch = (text: string) => {
         setSearchQuery(text);
         if (text.length >= 3) {
-            search(text);
+            search(text, maletaId);
         }
     };
 
     const handleInvite = async (userId: string) => {
         const result = await invite(maletaId, userId);
         if (result.success) {
-            Alert.alert('Success', 'Invitation sent successfully');
+            Alert.alert(t('common_success'), t('maletas_collaborative_successInvitationSent'));
             setSearchQuery(''); // Clear search
             refresh(); // Refresh collaborators list
         } else {
-            Alert.alert('Error', result.error || 'Failed to send invitation');
+            const errorMessage = result.error === 'User already invited or collaborating'
+                ? t('maletas_collaborative_errorAlreadyInvited')
+                : t('maletas_collaborative_errorInvitationFailed');
+            Alert.alert(t('common_error'), errorMessage);
         }
     };
 
@@ -48,7 +53,7 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Invite Collaborators</Text>
+                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('maletas_collaborative_inviteScreenTitle')}</Text>
             </View>
 
             <View style={styles.searchContainer}>
@@ -56,7 +61,7 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
                     <Ionicons name="search" size={20} color={colors.text} style={styles.searchIcon} />
                     <TextInput
                         style={[styles.searchInput, { color: colors.text }]}
-                        placeholder="Search by username or email..."
+                        placeholder={t('maletas_collaborative_searchPlaceholder')}
                         placeholderTextColor="#999"
                         value={searchQuery}
                         onChangeText={handleSearch}
@@ -67,7 +72,7 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
 
             {searchQuery.length >= 3 && (
                 <View style={styles.resultsContainer}>
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Search Results</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('common_results')}</Text>
                     {searching ? (
                         <ActivityIndicator size="small" color={colors.primary} />
                     ) : (
@@ -82,7 +87,7 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
                                 />
                             )}
                             ListEmptyComponent={
-                                <Text style={styles.emptyText}>No users found</Text>
+                                <Text style={styles.emptyText}>{t('maletas_collaborative_errorUserNotFound')}</Text>
                             }
                         />
                     )}
@@ -90,18 +95,36 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
             )}
 
             <View style={styles.collaboratorsContainer}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Collaborators</Text>
                 {loadingCollaborators ? (
                     <ActivityIndicator size="large" color={colors.primary} />
                 ) : (
-                    <FlatList
-                        data={collaborators}
-                        keyExtractor={(item) => item.id}
-                        renderItem={({ item }) => <CollaboratorItem collaborator={item} />}
-                        ListEmptyComponent={
-                            <Text style={styles.emptyText}>No collaborators yet</Text>
-                        }
-                    />
+                    <>
+                        {/* Pending Invitations */}
+                        <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('maletas_collaborative_pendingSectionTitle')}</Text>
+                            <FlatList
+                                data={collaborators.filter(c => c.status === 'pending')}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => <CollaboratorItem collaborator={item} />}
+                                ListEmptyComponent={
+                                    <Text style={styles.emptyText}>{t('common_no_results')}</Text>
+                                }
+                            />
+                        </View>
+
+                        {/* Accepted Collaborators */}
+                        <View style={styles.section}>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('maletas_collaborative_acceptedSectionTitle')}</Text>
+                            <FlatList
+                                data={collaborators.filter(c => c.status === 'accepted')}
+                                keyExtractor={(item) => item.id}
+                                renderItem={({ item }) => <CollaboratorItem collaborator={item} />}
+                                ListEmptyComponent={
+                                    <Text style={styles.emptyText}>{t('common_no_results')}</Text>
+                                }
+                            />
+                        </View>
+                    </>
                 )}
             </View>
         </View>
@@ -156,6 +179,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         padding: 16,
         paddingBottom: 8,
+    },
+    section: {
+        marginBottom: 24,
     },
     emptyText: {
         padding: 16,
