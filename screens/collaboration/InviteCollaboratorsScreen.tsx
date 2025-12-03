@@ -48,13 +48,8 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('maletas_collaborative_inviteScreenTitle')}</Text>
-            </View>
+        <View style={[styles.container, { backgroundColor: '#FFF' }]}>
+
 
             <View style={styles.searchContainer}>
                 <View style={[styles.searchInputContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
