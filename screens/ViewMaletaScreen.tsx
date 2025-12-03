@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
+import { useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
@@ -31,7 +32,7 @@ interface ViewListScreenProps {
   route: any;
 }
 
-const AlbumItem = ({ item, navigation, t }: { item: any, navigation: any, t: any }) => {
+const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, navigation: any, t: any, isCollaborative: boolean }) => {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
@@ -73,7 +74,7 @@ const AlbumItem = ({ item, navigation, t }: { item: any, navigation: any, t: any
         </View>
 
         {/* Added by Avatar */}
-        {item.added_by_user && (
+        {isCollaborative && item.added_by_user && (
           <View style={styles.addedByRow}>
             {item.added_by_user.avatar_url ? (
               <Image
@@ -100,12 +101,20 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   const { t } = useTranslation();
   const { maletaId, listTitle } = route.params;
   const { isCollaborator, status: collaboratorStatus } = useIsCollaborator(maletaId);
-  const { collaborators } = useMaletaCollaborators(maletaId);
+  const { collaborators, refresh: refreshCollaborators } = useMaletaCollaborators(maletaId);
 
   const [list, setList] = useState<any>(null);
   const { albums, loading: albumsLoading, addAlbumLocally, removeAlbumLocally } = useRealtimeMaletaAlbums(maletaId);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Refresh collaborators when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      refreshCollaborators();
+      loadListData();
+    }, [maletaId])
+  );
 
   // Modal state
   const [isAddAlbumModalVisible, setIsAddAlbumModalVisible] = useState(false);
@@ -445,6 +454,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             item={item}
             navigation={navigation}
             t={t}
+            isCollaborative={!!list?.is_collaborative}
           />
         )}
         renderHiddenItem={renderSwipeActions}
