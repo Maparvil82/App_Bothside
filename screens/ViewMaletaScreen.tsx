@@ -429,6 +429,21 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
               <Text style={styles.publicBadgeText}>{t('common_public')}</Text>
             </View>
           )}
+          {ownerProfile && list.user_id !== user?.id && (
+            <View style={styles.headerOwnerRow}>
+              {ownerProfile.avatar_url ? (
+                <Image source={{ uri: ownerProfile.avatar_url }} style={styles.headerOwnerAvatar} />
+              ) : (
+                <View style={[styles.headerOwnerAvatar, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                  <Ionicons name="person" size={16} color="#666" />
+                </View>
+              )}
+              <Text style={styles.headerOwnerUsername}>@{ownerProfile.username}</Text>
+              <View style={styles.headerOwnerBadge}>
+                <Text style={styles.headerOwnerBadgeText}>OWNER</Text>
+              </View>
+            </View>
+          )}
         </View>
         <View style={styles.headerActions}>
           {(list.user_id === user?.id || (isCollaborator && collaboratorStatus === 'accepted')) && (
@@ -452,22 +467,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             <Text style={styles.collaborationText}>{t('maletas_collaborative_badgeLabel')}</Text>
           </View>
 
-          {/* Owner Badge */}
-          {ownerProfile && list.user_id !== user?.id && (
-            <View style={styles.ownerRow}>
-              {ownerProfile.avatar_url ? (
-                <Image source={{ uri: ownerProfile.avatar_url }} style={styles.ownerAvatar} />
-              ) : (
-                <View style={[styles.ownerAvatar, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
-                  <Ionicons name="person" size={16} color="#666" />
-                </View>
-              )}
-              <Text style={styles.ownerUsername}>{ownerProfile.username}</Text>
-              <View style={styles.ownerBadge}>
-                <Text style={styles.ownerBadgeText}>OWNER</Text>
-              </View>
-            </View>
-          )}
+
 
           {list.user_id === user?.id && (
             <View style={styles.ownerRow}>
@@ -1152,6 +1152,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#333',
     fontWeight: '500',
+  },
+  headerOwnerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 8,
+    marginBottom: 12,
+  },
+  headerOwnerAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    marginRight: 8,
+  },
+  headerOwnerUsername: {
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  headerOwnerBadge: {
+    backgroundColor: '#E6B800',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  headerOwnerBadgeText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
 });
 
