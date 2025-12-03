@@ -6,6 +6,7 @@ import { useMaletaCollaborators, useUserSearch, useInviteCollaborator } from '..
 import { UserSearchItem } from '../../components/collaboration/UserSearchItem';
 import { CollaboratorItem } from '../../components/collaboration/CollaboratorItem';
 import { useTranslation } from '../../src/i18n/useTranslation';
+import { supabase } from '../../lib/supabase';
 
 interface InviteCollaboratorsScreenProps {
     route: any;
@@ -41,6 +42,36 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
                 : t('maletas_collaborative_errorInvitationFailed');
             Alert.alert(t('common_error'), errorMessage);
         }
+    };
+
+    const handleRemoveCollaborator = async (collaboratorId: string) => {
+        Alert.alert(
+            t('maletas_collaborative_removeTitle'),
+            t('maletas_collaborative_removeMessage'),
+            [
+                { text: t('common_cancel'), style: 'cancel' },
+                {
+                    text: t('maletas_collaborative_removeConfirm'),
+                    style: 'destructive',
+                    onPress: async () => {
+                        const { error } = await supabase
+                            .from('maleta_collaborators')
+                            .delete()
+                            .eq('maleta_id', maletaId)
+                            .eq('user_id', collaboratorId);
+
+                        if (error) {
+                            console.error(error);
+                            Alert.alert(t('common_error'), t('maletas_collaborative_errorRemoveFailed'));
+                            return;
+                        }
+
+                        // refrescar listas
+                        refresh();
+                    }
+                }
+            ]
+        );
     };
 
     const isUserInvited = (userId: string) => {
@@ -113,7 +144,12 @@ const InviteCollaboratorsScreen: React.FC<InviteCollaboratorsScreenProps> = ({ r
                             <FlatList
                                 data={collaborators.filter(c => c.status === 'accepted')}
                                 keyExtractor={(item) => item.id}
-                                renderItem={({ item }) => <CollaboratorItem collaborator={item} />}
+                                renderItem={({ item }) => (
+                                    <CollaboratorItem
+                                        collaborator={item}
+                                        onRemove={handleRemoveCollaborator}
+                                    />
+                                )}
                                 ListEmptyComponent={
                                     <Text style={styles.emptyText}>{t('common_no_results')}</Text>
                                 }

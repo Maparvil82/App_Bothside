@@ -1,14 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { MaletaCollaboratorWithProfile } from '../../types/collaboration';
 
 interface CollaboratorItemProps {
     collaborator: MaletaCollaboratorWithProfile;
+    onRemove?: (collaboratorId: string) => void;
 }
 
-export const CollaboratorItem: React.FC<CollaboratorItemProps> = ({ collaborator }) => {
+export const CollaboratorItem: React.FC<CollaboratorItemProps> = ({ collaborator, onRemove }) => {
     const { colors } = useTheme();
     const { profile, status } = collaborator;
 
@@ -38,6 +39,11 @@ export const CollaboratorItem: React.FC<CollaboratorItemProps> = ({ collaborator
                     </Text>
                 </View>
             </View>
+            {onRemove && (
+                <TouchableOpacity onPress={() => onRemove(collaborator.user_id)} style={styles.removeButton}>
+                    <Ionicons name="close-circle" size={24} color="#FF3B30" />
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
@@ -79,5 +85,8 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: '500',
         marginTop: 2,
+    },
+    removeButton: {
+        padding: 8,
     },
 });

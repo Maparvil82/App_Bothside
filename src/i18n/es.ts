@@ -820,6 +820,10 @@ export const es = {
     maletas_collaborative_errorGeneric: "Ha ocurrido un error. Inténtalo de nuevo",
     maletas_collaborative_successInvitationAccepted: "Invitación aceptada correctamente",
     maletas_collaborative_successInvitationRejected: "Invitación rechazada",
+    maletas_collaborative_removeTitle: "Eliminar colaborador",
+    maletas_collaborative_removeMessage: "¿Estás seguro de que quieres eliminar a este colaborador?",
+    maletas_collaborative_removeConfirm: "Eliminar",
+    maletas_collaborative_errorRemoveFailed: "No se pudo eliminar al colaborador",
 
     camera_permission_requesting: "Solicitando permisos de cámara...",
     camera_permission_denied: "No tienes permisos de cámara",

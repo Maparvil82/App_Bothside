@@ -820,6 +820,10 @@ export const en = {
     maletas_collaborative_errorGeneric: "An error occurred. Please try again",
     maletas_collaborative_successInvitationAccepted: "Invitation accepted successfully",
     maletas_collaborative_successInvitationRejected: "Invitation rejected",
+    maletas_collaborative_removeTitle: "Remove Collaborator",
+    maletas_collaborative_removeMessage: "Are you sure you want to remove this collaborator?",
+    maletas_collaborative_removeConfirm: "Remove",
+    maletas_collaborative_errorRemoveFailed: "Could not remove collaborator",
 
     camera_permission_requesting: "Requesting camera permissions...",
     camera_permission_denied: "You do not have camera permissions",
