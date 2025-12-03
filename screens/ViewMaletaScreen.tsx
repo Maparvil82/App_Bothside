@@ -92,7 +92,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     setIsEditModalVisible(true);
   };
 
-  const handleUpdateMaleta = async (data: { title: string; description?: string; is_public: boolean }) => {
+  const handleUpdateMaleta = async (data: { title: string; description?: string; is_public: boolean; is_collaborative?: boolean }) => {
     try {
       setUpdatingMaleta(true);
       await UserMaletaService.updateMaleta(maletaId, data);
@@ -532,6 +532,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           title: list?.title || '',
           description: list?.description || '',
           is_public: list?.is_public || false,
+          is_collaborative: list?.is_collaborative ?? false,
         }}
         isEditing={true}
       />

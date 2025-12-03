@@ -369,7 +369,7 @@ const AppNavigator = () => {
 
   // Handler for creating maleta
   const handleCreateMaleta = async (
-    data: { title: string; description?: string; is_public: boolean },
+    data: { title: string; description?: string; is_public: boolean; is_collaborative?: boolean },
     albumId?: string
   ) => {
     if (!user) {
@@ -383,6 +383,7 @@ const AppNavigator = () => {
         title: data.title,
         description: data.description,
         is_public: data.is_public,
+        is_collaborative: data.is_collaborative,
         user_id: user.id,
       });
 

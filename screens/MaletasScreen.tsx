@@ -451,7 +451,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           title: selectedMaletaForEdit.title,
           description: selectedMaletaForEdit.description || '',
           is_public: selectedMaletaForEdit.is_public,
-          is_collaborative: selectedMaletaForEdit.is_collaborative,
+          is_collaborative: selectedMaletaForEdit.is_collaborative ?? false,
         } : undefined}
         isEditing={true}
         maletaId={selectedMaletaForEdit?.id}

@@ -45,7 +45,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
     const [title, setTitle] = useState(initialValues?.title || '');
     const [description, setDescription] = useState(initialValues?.description || '');
     const [isPublic, setIsPublic] = useState(initialValues?.is_public || false);
-    const [isCollaborative, setIsCollaborative] = useState(initialValues?.is_collaborative || false);
+    const [isCollaborative, setIsCollaborative] = useState(initialValues?.is_collaborative ?? false);
     const [validationError, setValidationError] = useState<string | null>(null);
     const { t } = useTranslation();
 
@@ -55,7 +55,7 @@ export const CreateMaletaModal: React.FC<CreateMaletaModalProps> = ({
             setTitle(initialValues.title);
             setDescription(initialValues.description || '');
             setIsPublic(initialValues.is_public);
-            setIsCollaborative(initialValues.is_collaborative || false);
+            setIsCollaborative(initialValues.is_collaborative ?? false);
         } else if (visible && !isEditing) {
             // Reset for new creation
             setTitle('');
