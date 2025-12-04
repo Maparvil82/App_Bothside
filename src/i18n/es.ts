@@ -71,6 +71,7 @@ export const es = {
     common_unknown_year: "Año desconocido",
     common_warning: "Aviso",
     common_info: "Info",
+    common_notice: "Aviso",
 
     common_success: "Éxito",
     common_error: "Error",
@@ -379,6 +380,11 @@ export const es = {
     album_detail_no_bags: "No tienes maletas creadas",
     album_detail_error_adding_to_bag_message: "No se pudo añadir el álbum a la maleta",
     album_detail_not_found: "No se encontró el álbum",
+    album_detail_add_to_collection_first: "Debes añadir este álbum a tu colección primero",
+    album_detail_audio_saved: "Nota de audio guardada correctamente",
+    album_detail_error_saving_audio: "Error al guardar la nota de audio",
+    album_detail_no_videos: "No hay videos disponibles para este álbum",
+    album_detail_want_have: "Want / Have",
 
     // Collector Rank
     collector_rank_title: "Rango de Coleccionista",

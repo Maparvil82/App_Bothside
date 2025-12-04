@@ -996,13 +996,22 @@ export const UserMaletaService = {
 
   // Obtener maleta por ID
   async getMaletaById(maletaId: string) {
+    // Obtener el usuario actual
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      throw new Error('No user found');
+    }
+
+    // Usar función RPC para obtener la maleta (bypasea RLS)
     const { data, error } = await supabase
-      .from('user_maletas')
-      .select('*')
-      .eq('id', maletaId)
-      .single();
+      .rpc('get_maleta_by_id_for_user', {
+        p_maleta_id: maletaId,
+        p_user_id: user.id
+      })
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) throw new Error('Maleta not found or access denied');
     return data;
   },
 

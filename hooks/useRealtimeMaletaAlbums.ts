@@ -36,27 +36,63 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
         setLoading(true);
         console.log('🔍 useRealtimeMaletaAlbums: Loading initial albums...');
 
-        const { data, error } = await supabase
-          .from('maleta_albums')
-          .select(`
-            *,
-            albums (
-              *,
-              album_styles (
-                styles (*)
-              )
-            )
-          `)
-          .eq('maleta_id', maletaId)
-          .order('added_at', { ascending: false });
-
-        if (error) {
-          console.error('❌ useRealtimeMaletaAlbums: Error loading initial albums:', error);
+        // Obtener el usuario actual
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.error('❌ useRealtimeMaletaAlbums: No user found');
+          setLoading(false);
           return;
         }
 
-        // Manually fetch profiles for added_by users
-        const addedByUserIds = [...new Set(data?.map(item => item.added_by).filter(Boolean))];
+        // Usar función RPC para obtener álbumes (bypasea RLS)
+        console.log('🔍 Calling RPC with maletaId:', maletaId, 'userId:', user.id);
+        const { data: maletaAlbums, error: maletaAlbumsError } = await supabase
+          .rpc('get_maleta_albums_for_user', {
+            p_maleta_id: maletaId,
+            p_user_id: user.id
+          });
+
+        console.log('🔍 RPC result - data:', maletaAlbums, 'error:', maletaAlbumsError);
+
+        if (maletaAlbumsError) {
+          console.error('❌ useRealtimeMaletaAlbums: Error loading albums via RPC:', maletaAlbumsError);
+          setLoading(false);
+          return;
+        }
+
+        if (!maletaAlbums || maletaAlbums.length === 0) {
+          console.log('✅ useRealtimeMaletaAlbums: No albums found');
+          setAlbums([]);
+          setLoading(false);
+          return;
+        }
+
+        console.log('🔍 Found', maletaAlbums.length, 'albums from RPC');
+
+        // Obtener los datos completos de los álbumes desde la tabla albums
+        const albumIds = maletaAlbums.map((ma: any) => ma.album_id);
+        const { data: albumsData, error: albumsError } = await supabase
+          .from('albums')
+          .select(`
+            *,
+            album_styles (
+              styles (*)
+            )
+          `)
+          .in('id', albumIds);
+
+        if (albumsError) {
+          console.error('❌ useRealtimeMaletaAlbums: Error loading album details:', albumsError);
+        }
+
+        // Crear un mapa de álbumes por ID
+        const albumsMap = (albumsData || []).reduce((acc, album) => {
+          acc[album.id] = album;
+          return acc;
+        }, {} as Record<string, any>);
+
+        // Obtener perfiles de los usuarios que añadieron los álbumes
+        const addedByUserIds = [...new Set(maletaAlbums.map((item: any) => item.added_by).filter(Boolean))];
         let profilesMap: Record<string, any> = {};
 
         if (addedByUserIds.length > 0) {
@@ -73,14 +109,15 @@ export const useRealtimeMaletaAlbums = (maletaId: string) => {
           }
         }
 
-        // Merge profiles into album data
-        const albumsWithProfiles = data?.map(item => ({
-          ...item,
-          added_by_user: item.added_by ? profilesMap[item.added_by] : null
-        })) || [];
+        // Combinar datos de maleta_albums con datos de albums y perfiles
+        const albumsWithDetails = maletaAlbums.map((ma: any) => ({
+          ...ma,
+          albums: albumsMap[ma.album_id] || null,
+          added_by_user: ma.added_by ? profilesMap[ma.added_by] : null
+        }));
 
-        console.log('✅ useRealtimeMaletaAlbums: Initial albums loaded:', albumsWithProfiles.length);
-        setAlbums(albumsWithProfiles);
+        console.log('✅ useRealtimeMaletaAlbums: Initial albums loaded:', albumsWithDetails.length);
+        setAlbums(albumsWithDetails);
       } catch (error) {
         console.error('❌ useRealtimeMaletaAlbums: Error in loadInitialAlbums:', error);
       } finally {
