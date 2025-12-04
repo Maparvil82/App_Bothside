@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -8,11 +8,12 @@ import {
     Image,
     Dimensions,
     SafeAreaView,
+    Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
-import { Linking, Alert } from 'react-native';
+import { YouTubeWebViewPlayer } from './YouTubeWebViewPlayer';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +28,8 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
 }) => {
     const { colors } = useTheme();
     const { t } = useTranslation();
+    const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
+    const [currentYoutubeUrl, setCurrentYoutubeUrl] = useState<string | null>(null);
 
     if (!album || !album.albums) {
         return null;
@@ -34,17 +37,35 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
 
     const { title, artist, cover_url, release_year, label, tracks, album_stats, catalog_no, album_youtube_urls } = album.albums;
 
-    const openVideo = async (url: string) => {
-        try {
-            const supported = await Linking.canOpenURL(url);
-            if (supported) {
-                await Linking.openURL(url);
-            } else {
-                Alert.alert(t('common_error'), t('album_detail_error_youtube_url'));
-            }
-        } catch (error) {
-            console.error("Error opening YouTube URL:", error);
-            Alert.alert(t('common_error'), t('album_detail_error_youtube_url'));
+    // Calcular ratio de ventas (Lógica copiada de AlbumDetailScreen para consistencia)
+    const calculateSalesRatio = (want: number, have: number) => {
+        if (!have || have === 0) return { ratio: 0, level: 'N/A', color: '#9ca3af' };
+        const ratio = want / have;
+        let level = t('album_detail_ratio_medium'); // Default to Medium/Normal
+        let color = '#9ca3af';
+
+        if (ratio > 10) {
+            level = t('album_detail_ratio_exceptional'); // Holy Grail
+            color = '#FFD700'; // Gold
+        } else if (ratio > 5) {
+            level = t('album_detail_ratio_high'); // Muy Deseado
+            color = '#FF4500'; // OrangeRed
+        } else if (ratio > 2) {
+            level = t('album_detail_ratio_medium'); // Popular
+            color = '#32CD32'; // LimeGreen
+        } else {
+            level = t('album_detail_ratio_low'); // Normal/Bajo
+        }
+
+        return { ratio, level, color };
+    };
+
+    const handlePlayYouTubeDirect = () => {
+        if (album_youtube_urls && album_youtube_urls.length > 0) {
+            setCurrentYoutubeUrl(album_youtube_urls[0].url);
+            setShowYoutubePlayer(true);
+        } else {
+            Alert.alert(t('common_notice'), t('album_detail_no_videos'));
         }
     };
 
@@ -73,27 +94,15 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
                     <Text style={[styles.albumTitle, { color: colors.text }]}>{title}</Text>
                     <Text style={[styles.albumArtist, { color: colors.text }]}>{artist}</Text>
                     <View style={styles.metaRow}>
-                        {release_year && (
-                            <Text style={[styles.metaText, { color: colors.text }]}>{release_year}</Text>
-                        )}
-                        {label && (
-                            <>
-                                <Text style={[styles.metaDot, { color: colors.text }]}>•</Text>
-                                <Text style={[styles.metaText, { color: colors.text }]}>{label}</Text>
-                            </>
-                        )}
+                        <Text style={[styles.metaText, { color: colors.text }]}>
+                            {[
+                                label,
+                                release_year,
+                                catalog_no
+                            ].filter(Boolean).join(' · ')}
+                        </Text>
                     </View>
                 </View>
-
-                {/* Nº de Catálogo */}
-                {catalog_no && (
-                    <View style={[styles.section, { backgroundColor: colors.card, marginTop: 0, paddingTop: 0 }]}>
-                        <Text style={[styles.sectionTitle, { color: colors.text, fontSize: 14, marginBottom: 4 }]}>{t('album_detail_catalog')}</Text>
-                        <Text style={[styles.catalogText, { color: colors.text }]}>{catalog_no}</Text>
-                    </View>
-                )}
-
-
 
                 {/* Sección Unificada: Valor de Mercado y Ratio de Venta */}
                 {(album_stats?.avg_price || (album_stats?.want && album_stats?.have)) && (
@@ -116,16 +125,26 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
                             )}
 
                             {/* Ratio de Venta */}
-                            {(album_stats?.want && album_stats?.have) && (
-                                <View style={styles.marketValueSection}>
-                                    <Text style={[styles.valueCardTitle, { color: colors.text }]}>{t('album_detail_sales_ratio')}</Text>
-                                    <Text style={[styles.valueCardAmount, { color: colors.text }]}>
-                                        {(album_stats.want / album_stats.have).toFixed(2)}
-                                    </Text>
-                                    <Text style={[styles.valueCardSubtitle, { color: colors.text }]}>
-                                        {t('album_detail_want_have')}
-                                    </Text>
-                                </View>
+                            {album_stats?.want && album_stats?.have && (
+                                (() => {
+                                    const { ratio, level, color } = calculateSalesRatio(
+                                        album_stats.want,
+                                        album_stats.have
+                                    );
+                                    return (
+                                        <View style={[styles.marketValueSection, { backgroundColor: color + '10' }]}>
+                                            <Text style={[styles.valueCardTitle, { color: colors.text }]}>{t('album_detail_sales_ratio')}</Text>
+                                            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Text style={[styles.valueCardAmount, { color: color }]}>
+                                                    {ratio > 0 ? ratio.toFixed(1) : 'N/A'}
+                                                </Text>
+                                            </View>
+                                            <Text style={[styles.valueCardSubtitle, { color: color, fontWeight: '600' }]}>
+                                                {level}
+                                            </Text>
+                                        </View>
+                                    );
+                                })()
                             )}
                         </View>
                     </View>
@@ -148,28 +167,33 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
                         ))}
                     </View>
                 )}
-
-                {/* Sección de Audio/Videos */}
-                {album_youtube_urls && album_youtube_urls.length > 0 && (
-                    <View style={[styles.section, { backgroundColor: colors.card }]}>
-                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Audio</Text>
-                        {album_youtube_urls.map((video: any, index: number) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[styles.videoItem, { borderBottomColor: colors.border }]}
-                                onPress={() => openVideo(video.url)}
-                            >
-                                <Ionicons name="logo-youtube" size={20} color="#FF0000" style={{ marginRight: 10 }} />
-                                <Text style={[styles.videoTitle, { color: colors.text }]} numberOfLines={1}>
-                                    {video.title || `Video ${index + 1}`}
-                                </Text>
-                                <Ionicons name="open-outline" size={16} color={colors.text} style={{ opacity: 0.5 }} />
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                )}
             </ScrollView>
-        </SafeAreaView >
+
+            {/* Botón flotante de YouTube */}
+            {album_youtube_urls && album_youtube_urls.length > 0 && (
+                <TouchableOpacity
+                    style={[styles.floatingPlayButton, styles.youtubeButton]}
+                    onPress={handlePlayYouTubeDirect}
+                    activeOpacity={0.8}
+                >
+                    <Ionicons
+                        name="logo-youtube"
+                        size={24}
+                        color="#fff"
+                    />
+                </TouchableOpacity>
+            )}
+
+            {/* Reproductor de YouTube Interno */}
+            {currentYoutubeUrl && (
+                <YouTubeWebViewPlayer
+                    visible={showYoutubePlayer}
+                    youtubeUrl={currentYoutubeUrl}
+                    title={title || t('album_detail_video_title')}
+                    onClose={() => setShowYoutubePlayer(false)}
+                />
+            )}
+        </SafeAreaView>
     );
 };
 
@@ -327,5 +351,27 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: 14,
         marginRight: 10,
+    },
+    floatingPlayButton: {
+        position: 'absolute',
+        bottom: 16,
+        right: 16,
+        backgroundColor: '#007AFF',
+        borderRadius: 50,
+        width: 56,
+        height: 56,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    youtubeButton: {
+        backgroundColor: '#FF0000',
     },
 });

@@ -385,6 +385,7 @@ export const en = {
     album_detail_error_saving_audio: "Error saving audio note",
     album_detail_no_videos: "No videos available for this album",
     album_detail_want_have: "Want / Have",
+    album_detail_video_title: "Album Video",
 
     // Collector Rank
     collector_rank_title: "Collector Rank",

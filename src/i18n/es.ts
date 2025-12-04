@@ -385,6 +385,7 @@ export const es = {
     album_detail_error_saving_audio: "Error al guardar la nota de audio",
     album_detail_no_videos: "No hay videos disponibles para este álbum",
     album_detail_want_have: "Want / Have",
+    album_detail_video_title: "Video del Álbum",
 
     // Collector Rank
     collector_rank_title: "Rango de Coleccionista",
