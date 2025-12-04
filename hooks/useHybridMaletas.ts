@@ -30,77 +30,36 @@ export const useHybridMaletas = () => {
 
   useEffect(() => {
     if (!user) {
-      console.log('🔍 useHybridMaletas: No user, clearing lists');
       setLists([]);
       setLoading(false);
       return;
     }
 
-    console.log('🔍 useHybridMaletas: Setting up for user:', user.id);
-
-    // Cargar listas iniciales
     loadListsManually();
 
-    // Suscripción en tiempo real para user_maletas
-    const listsSubscription = supabase
+    // Suscripción a mis maletas
+    const myMaletasSub = supabase
       .channel(`user_maletas_${user.id}`)
       .on(
         'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'user_maletas',
-          filter: `user_id=eq.${user.id}`,
-        },
-        (payload) => {
-          console.log('🔄 useHybridMaletas: Realtime change:', payload);
-
-          if (payload.eventType === 'INSERT') {
-            console.log('➕ useHybridMaletas: Adding new list:', payload.new);
-            // Verificar que la lista no esté ya en el estado
-            setLists(prev => {
-              const exists = prev.some(list => list.id === payload.new.id);
-              if (exists) {
-                console.log('⚠️ useHybridMaletas: List already exists, skipping');
-                return prev;
-              }
-              console.log('✅ useHybridMaletas: Adding new list to state');
-              return [payload.new as UserMaleta, ...prev];
-            });
-          } else if (payload.eventType === 'UPDATE') {
-            console.log('✏️ useHybridMaletas: Updating list:', payload.new);
-            setLists(prev =>
-              prev.map(list =>
-                list.id === payload.new.id ? payload.new as UserMaleta : list
-              )
-            );
-          } else if (payload.eventType === 'DELETE') {
-            console.log('🗑️ useHybridMaletas: Deleting list:', payload.old);
-            setLists(prev =>
-              prev.filter(list => list.id !== payload.old.id)
-            );
-          }
-        }
+        { event: '*', schema: 'public', table: 'user_maletas', filter: `user_id=eq.${user.id}` },
+        () => loadListsManually()
       )
-      .subscribe((status) => {
-        console.log('🔌 useHybridMaletas: Subscription status:', status);
-        if (status === 'SUBSCRIBED') {
-          console.log('✅ useHybridMaletas: Successfully subscribed to realtime');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('❌ useHybridMaletas: Channel error, will use manual refresh');
-          // Si hay error en tiempo real, recargar manualmente después de un delay
-          setTimeout(() => {
-            console.log('🔄 useHybridMaletas: Triggering manual refresh due to channel error');
-            loadListsManually();
-          }, 2000);
-        } else {
-          console.log('⚠️ useHybridMaletas: Unknown subscription status:', status);
-        }
-      });
+      .subscribe();
+
+    // Suscripción a colaboraciones (para saber si me invitan o acepto)
+    const myCollabsSub = supabase
+      .channel(`my_collabs_${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'maleta_collaborators', filter: `user_id=eq.${user.id}` },
+        () => loadListsManually()
+      )
+      .subscribe();
 
     return () => {
-      console.log('🔌 useHybridMaletas: Unsubscribing from channel');
-      listsSubscription.unsubscribe();
+      myMaletasSub.unsubscribe();
+      myCollabsSub.unsubscribe();
     };
   }, [user, loadListsManually]);
 
@@ -111,34 +70,22 @@ export const useHybridMaletas = () => {
 
   // Función para recargar después de cambios
   const refreshAfterChange = useCallback(async () => {
-    console.log('🔄 useHybridMaletas: Refreshing after change...');
     setTimeout(async () => {
       await loadListsManually();
-    }, 1000); // Esperar 1 segundo para que se complete la operación
+    }, 1000);
   }, [loadListsManually]);
 
-  // Función para añadir lista localmente (sin esperar tiempo real)
+  // Función para añadir lista localmente
   const addListLocally = useCallback((newList: UserMaleta) => {
-    console.log('➕ useHybridMaletas: Adding list locally:', newList);
     setLists(prev => {
-      const exists = prev.some(list => list.id === newList.id);
-      if (exists) {
-        console.log('⚠️ useHybridMaletas: List already exists locally, skipping');
-        return prev;
-      }
-      console.log('✅ useHybridMaletas: Adding new list to local state');
+      if (prev.some(list => list.id === newList.id)) return prev;
       return [newList, ...prev];
     });
   }, []);
 
-  // Función para eliminar lista localmente (sin esperar tiempo real)
+  // Función para eliminar lista localmente
   const removeListLocally = useCallback((maletaId: string) => {
-    console.log('🗑️ useHybridMaletas: Removing list locally:', maletaId);
-    setLists(prev => {
-      const filtered = prev.filter(list => list.id !== maletaId);
-      console.log('✅ useHybridMaletas: Removed list from local state');
-      return filtered;
-    });
+    setLists(prev => prev.filter(list => list.id !== maletaId));
   }, []);
 
   return {

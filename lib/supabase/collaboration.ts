@@ -155,14 +155,23 @@ export const getMyInvitations = async () => {
 };
 
 export const respondToInvitation = async (invitationId: string, status: 'accepted' | 'rejected') => {
+    console.log('🔄 Responding to invitation:', invitationId, 'with status:', status);
+
     const { data, error } = await supabase
         .from('maleta_collaborators')
         .update({ status })
         .eq('id', invitationId)
         .select()
-        .single();
+        .maybeSingle();
 
-    if (error) throw error;
+    console.log('📝 Update result:', { data, error });
+
+    if (error) {
+        console.error('❌ Error updating invitation:', error);
+        throw error;
+    }
+
+    console.log('✅ Invitation updated successfully');
     return data;
 };
 

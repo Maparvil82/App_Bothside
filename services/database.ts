@@ -890,9 +890,7 @@ export const UserMaletaService = {
   async getUserMaletasWithAlbums(userId: string) {
     console.log('🔍 UserMaletaService: Getting maletas with albums for user:', userId);
 
-    // Primero obtener las maletas
-    // 1. Obtener maletas propias y colaborativas
-    // 1. Query A — Maletas creadas por el usuario
+    // 1. Obtener maletas propias
     const { data: own, error: ownError } = await supabase
       .from('user_maletas')
       .select('*')
@@ -900,35 +898,18 @@ export const UserMaletaService = {
 
     if (ownError) throw ownError;
 
-    // 2. Query B — Maletas donde el usuario es colaborador aceptado
-    const { data: collab, error: collabError } = await supabase
-      .from('maleta_collaborators')
-      .select(`
-        maleta_id,
-        status,
-        user_maletas (
-          id,
-          user_id,
-          title,
-          description,
-          cover_url,
-          created_at,
-          updated_at,
-          is_public,
-          is_collaborative
-        )
-      `)
-      .eq('user_id', userId)
-      .eq('status', 'accepted');
+    // 2. Obtener maletas colaborativas usando función RPC (bypasea RLS)
+    const { data: collabMaletas, error: collabError } = await supabase
+      .rpc('get_user_collaborative_maletas', { p_user_id: userId });
 
-    if (collabError) throw collabError;
+    if (collabError) {
+      console.error('❌ Error fetching collaborative maletas:', collabError);
+    }
 
-    // 3. Combinar resultados
-    const collabMaletas = collab
-      ?.map((item: any) => item.user_maletas)
-      ?.filter(Boolean) || [];
+    console.log('🔍 Own maletas:', own?.length || 0);
+    console.log('🔍 Collaborative maletas:', collabMaletas?.length || 0);
 
-    const allMaletas = [...(own || []), ...collabMaletas];
+    const allMaletas = [...(own || []), ...(collabMaletas || [])];
 
     // 4. Eliminar duplicados por id
     const uniqueMaletas = Array.from(new Map(allMaletas.map(m => [m.id, m])).values());
@@ -980,12 +961,15 @@ export const UserMaletaService = {
           // Obtener información del owner si no soy yo
           let ownerProfile = null;
           if (maleta.user_id !== userId) {
-            const { data: ownerData } = await supabase
+            const { data: ownerData, error: ownerError } = await supabase
               .from('profiles')
               .select('id, username, avatar_url')
               .eq('id', maleta.user_id)
-              .single();
-            ownerProfile = ownerData;
+              .maybeSingle();
+
+            if (!ownerError && ownerData) {
+              ownerProfile = ownerData;
+            }
           }
 
           if (albumsError) {
