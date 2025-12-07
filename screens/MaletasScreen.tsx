@@ -243,7 +243,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       >
         <MaletaCoverCollage
           albums={item.albums || []}
-          size={100}
+          size={120}
         />
         <View style={styles.listInfo}>
           <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
