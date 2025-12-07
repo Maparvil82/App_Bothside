@@ -22,7 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
-import { getAlbumEditions, DiscogsService } from '../services/discogs';
+import { DiscogsService, getAlbumEditions } from '../services/discogs';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
@@ -71,6 +71,7 @@ interface AlbumDetail {
     id: string;
     title: string;
     description?: string;
+    is_collaborative?: boolean;
     albums?: Array<{
       id: string;
       title: string;
@@ -665,7 +666,8 @@ export default function AlbumDetailScreen() {
               user_maletas (
                 id,
                 title,
-                description
+                description,
+                is_collaborative
               )
             `)
             .eq('album_id', fullAlbumData.albums.id);
@@ -694,6 +696,7 @@ export default function AlbumDetailScreen() {
                 id: list.id,
                 title: list.title,
                 description: list.description,
+                is_collaborative: list.is_collaborative,
                 albums: list.albums,
                 list_items: [{ album_id: fullAlbumData!.albums.id }]
               }))
@@ -939,9 +942,19 @@ export default function AlbumDetailScreen() {
     }
   };
 
-  // Cargar ediciones (Stub)
+  // Cargar ediciones
   const loadAlbumEditions = async (artist?: string, title?: string) => {
-    setEditionsLoading(false);
+    if (!artist || !title) return;
+
+    setEditionsLoading(true);
+    try {
+      const results = await getAlbumEditions(artist, title);
+      setEditions(results);
+    } catch (error) {
+      console.error('Error loading editions:', error);
+    } finally {
+      setEditionsLoading(false);
+    }
   };
 
   // Backfill Discogs (Stub)
@@ -1319,6 +1332,25 @@ export default function AlbumDetailScreen() {
                     <Text style={[styles.listDescription, { color: colors.text }]} numberOfLines={2}>
                       {item.description}
                     </Text>
+                  )}
+                  {/* Collaborative Badge */}
+                  {item.is_collaborative && (
+                    <View style={{
+                      backgroundColor: '#dbeafe', // blue-100
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 4,
+                      alignSelf: 'flex-start',
+                      marginTop: 4
+                    }}>
+                      <Text style={{
+                        fontSize: 10,
+                        color: '#1e40af', // blue-800
+                        fontWeight: '600'
+                      }}>
+                        {t('collaborative_label')}
+                      </Text>
+                    </View>
                   )}
                 </View>
                 <Ionicons name="chevron-forward" size={16} color={colors.text} />

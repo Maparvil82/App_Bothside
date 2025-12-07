@@ -827,6 +827,7 @@ export const en = {
     maletas_collaborative_badgeLabel: "Collaborative",
     maletas_collaborative_addedBy: "Added by",
     maletas_collaborative_successInvitationSent: "Invitation sent successfully",
+    collaborative_label: "Collaborative",
     maletas_collaborative_errorInvitationFailed: "Could not send invitation",
     maletas_collaborative_errorAlreadyInvited: "This user already has an active invitation",
     maletas_collaborative_errorUserNotFound: "User not found",

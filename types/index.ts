@@ -28,6 +28,20 @@ export interface DiscogsRelease {
     have: number;
     want: number;
   };
+  // Additional fields used in service
+  images?: Array<{
+    uri: string;
+    type: string;
+  }>;
+  tracklist?: Array<{
+    position: string;
+    title: string;
+    duration: string;
+  }>;
+  format?: string | string[];
+  country?: string;
+  catno?: string;
+  uri?: string;
 }
 
 export interface DiscogsSearchResponse {

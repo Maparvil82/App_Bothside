@@ -308,7 +308,9 @@ export const getAlbumEditions = async (artist: string, title: string): Promise<a
           format.includes('blu-ray') ||
           format.includes('vhs');
 
-        return isVinyl && !isNotVinyl;
+        // Allow mixed formats as long as Vinyl is primary or present
+        // Removed strict !isNotVinyl check to allow box sets or mixed media
+        return isVinyl;
       })
       .slice(0, 10) // Limitar a 10 ediciones
       .map((release: any) => {
