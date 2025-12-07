@@ -10,102 +10,89 @@ interface MaletaCoverCollageProps {
   size?: number;
 }
 
-export const MaletaCoverCollage: React.FC<MaletaCoverCollageProps> = ({ 
-  albums, 
-  size = 80 
+export const MaletaCoverCollage: React.FC<MaletaCoverCollageProps> = ({
+  albums,
+  size = 80
 }) => {
-  // Obtener los últimos 4 álbumes
-  const last4Albums = albums.slice(-4);
-  
+  // Obtener los últimos 3 álbumes (suficiente para el mosaico)
+  // Invertimos para mostrar los más recientes primero si vienen ordenados cronológicamente
+  // Asumimos que 'albums' viene ordenado, tomamos los últimos.
+  const displayAlbums = albums.slice(0, 3);
+  const count = displayAlbums.length;
+
+  const GAP = 2;
+  const BORDER_RADIUS = 12;
+
   // Si no hay álbumes, mostrar placeholder
-  if (last4Albums.length === 0) {
+  if (count === 0) {
     return (
-      <View style={[styles.container, { width: size, height: size }]}>
-        <View style={[styles.placeholder, { width: size, height: size }]}>
-          {/* Placeholder content */}
+      <View style={[styles.container, { width: size, height: size, borderRadius: BORDER_RADIUS, backgroundColor: '#F0F0F0' }]}>
+        <View style={styles.placeholder}>
+          {/* Placeholder content could go here */}
         </View>
       </View>
     );
   }
 
-  // Si hay 1 álbum
-  if (last4Albums.length === 1) {
+  // 1 Álbum: Imagen completa
+  if (count === 1) {
     return (
-      <View style={[styles.container, { width: size, height: size }]}>
+      <View style={[styles.container, { width: size, height: size, borderRadius: BORDER_RADIUS }]}>
         <Image
-          source={{ uri: last4Albums[0].albums.cover_url || 'https://via.placeholder.com/80' }}
-          style={[styles.singleImage, { width: size, height: size }]}
+          source={{ uri: displayAlbums[0].albums.cover_url || 'https://via.placeholder.com/150' }}
+          style={{ width: '100%', height: '100%' }}
+          resizeMode="cover"
         />
       </View>
     );
   }
 
-  // Si hay 2 álbumes
-  if (last4Albums.length === 2) {
+  // 2 Álbumes: Split vertical (50/50)
+  if (count === 2) {
+    const itemWidth = (size - GAP) / 2;
     return (
-      <View style={[styles.container, { width: size, height: size }]}>
-        <View style={styles.twoImagesContainer}>
-          <Image
-            source={{ uri: last4Albums[0].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.halfImage, { width: size / 2, height: size }]}
-          />
-          <Image
-            source={{ uri: last4Albums[1].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.halfImage, { width: size / 2, height: size }]}
-          />
-        </View>
+      <View style={[styles.container, { width: size, height: size, borderRadius: BORDER_RADIUS, flexDirection: 'row', gap: GAP }]}>
+        <Image
+          source={{ uri: displayAlbums[0].albums.cover_url || 'https://via.placeholder.com/150' }}
+          style={{ width: itemWidth, height: '100%' }}
+          resizeMode="cover"
+        />
+        <Image
+          source={{ uri: displayAlbums[1].albums.cover_url || 'https://via.placeholder.com/150' }}
+          style={{ width: itemWidth, height: '100%' }}
+          resizeMode="cover"
+        />
       </View>
     );
   }
 
-  // Si hay 3 álbumes
-  if (last4Albums.length === 3) {
-    return (
-      <View style={[styles.container, { width: size, height: size }]}>
-        <View style={styles.threeImagesContainer}>
-          <Image
-            source={{ uri: last4Albums[0].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-          />
-          <View style={styles.rightColumn}>
-            <Image
-              source={{ uri: last4Albums[1].albums.cover_url || 'https://via.placeholder.com/40' }}
-              style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-            />
-            <Image
-              source={{ uri: last4Albums[2].albums.cover_url || 'https://via.placeholder.com/40' }}
-              style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-            />
-          </View>
-        </View>
-      </View>
-    );
-  }
+  // 3+ Álbumes: Mosaico (1 Grande izquierda, 2 Pequeños derecha)
+  // Left: 66%, Right: 33%
+  const leftWidth = (size * 0.66) - (GAP / 2);
+  const rightWidth = (size * 0.34) - (GAP / 2);
+  const rightItemHeight = (size - GAP) / 2;
 
-  // Si hay 4 o más álbumes (mostrar los últimos 4)
   return (
-    <View style={[styles.container, { width: size, height: size }]}>
-      <View style={styles.fourImagesContainer}>
-        <View style={styles.topRow}>
-          <Image
-            source={{ uri: last4Albums[0].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-          />
-          <Image
-            source={{ uri: last4Albums[1].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-          />
-        </View>
-        <View style={styles.bottomRow}>
-          <Image
-            source={{ uri: last4Albums[2].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-          />
-          <Image
-            source={{ uri: last4Albums[3].albums.cover_url || 'https://via.placeholder.com/40' }}
-            style={[styles.quarterImage, { width: size / 2, height: size / 2 }]}
-          />
-        </View>
+    <View style={[styles.container, { width: size, height: size, borderRadius: BORDER_RADIUS, flexDirection: 'row', gap: GAP }]}>
+      {/* Main Image (Left) */}
+      <Image
+        source={{ uri: displayAlbums[0].albums.cover_url || 'https://via.placeholder.com/150' }}
+        style={{ width: leftWidth, height: '100%' }}
+        resizeMode="cover"
+      />
+
+      {/* Right Column */}
+      <View style={{ width: rightWidth, height: '100%', gap: GAP }}>
+        <Image
+          source={{ uri: displayAlbums[1].albums.cover_url || 'https://via.placeholder.com/150' }}
+          style={{ width: '100%', height: rightItemHeight }}
+          resizeMode="cover"
+        />
+        <Image
+          source={{ uri: displayAlbums[2].albums.cover_url || 'https://via.placeholder.com/150' }}
+          style={{ width: '100%', height: rightItemHeight }}
+          resizeMode="cover"
+        />
       </View>
     </View>
   );
@@ -113,43 +100,12 @@ export const MaletaCoverCollage: React.FC<MaletaCoverCollageProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 4,
     overflow: 'hidden',
+    backgroundColor: '#E0E0E0',
   },
   placeholder: {
-    backgroundColor: '#F0F0F0',
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  singleImage: {
-    borderRadius: 4,
-  },
-  twoImagesContainer: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  halfImage: {
-    borderRadius: 0,
-  },
-  threeImagesContainer: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  rightColumn: {
-    flex: 1,
-  },
-  fourImagesContainer: {
-    flex: 1,
-  },
-  topRow: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  bottomRow: {
-    flexDirection: 'row',
-    flex: 1,
-  },
-  quarterImage: {
-    borderRadius: 0,
   },
 }); 

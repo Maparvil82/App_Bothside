@@ -632,14 +632,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   listMeta: {
-    marginTop: 4,
-    flexDirection: 'column',
-    alignItems: 'flex-start',
+    marginTop: 'auto', // Push to bottom
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   avatarsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    marginLeft: 2,
   },
   publicBadge: {
     paddingHorizontal: 6,
@@ -664,7 +664,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 12,
-    marginTop: 4,
     alignSelf: 'flex-start',
   },
   collaborativeBadgeText: {
@@ -678,9 +677,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   collaboratorAvatarContainer: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 25,
+    height: 25,
+    borderRadius: 20,
     borderWidth: 1,
     borderColor: '#fff',
     overflow: 'hidden',
