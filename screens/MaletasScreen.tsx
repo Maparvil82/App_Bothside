@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Alert,
   RefreshControl,
   Image,
+  ScrollView,
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,11 +31,11 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridMaletas();
   const { colors } = useTheme();
   const { t } = useTranslation();
-  const [filteredLists, setFilteredLists] = useState<UserMaleta[]>([]);
   const [refreshing, setRefreshing] = useState(false);
-  const [showFilters, setShowFilters] = useState<boolean>(false);
-  console.log('🔍 ListsScreen: Initial showFilters state:', false);
-  const [filterByPrivacy, setFilterByPrivacy] = useState<'all' | 'public' | 'private'>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
+  // Nuevo estado de filtro: 'all' | 'mine' | 'collab'
+  const [filterType, setFilterType] = useState<'all' | 'mine' | 'collab'>('all');
 
   // Global modal context
   const { setIsCreateMaletaVisible } = React.useContext(CreateMaletaModalContext);
@@ -60,31 +61,30 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     return unsubscribe;
   }, [navigation, refreshLists]);
 
-  // Aplicar filtros cuando cambien las listas o el filtro
-  useEffect(() => {
+  // Filtrado de listas
+  const filteredLists = useMemo(() => {
+    if (!user) return [];
+
     let filtered = [...lists];
 
-    // Filtrar por privacidad
-    if (filterByPrivacy === 'public') {
-      filtered = filtered.filter(list => list.is_public);
-    } else if (filterByPrivacy === 'private') {
-      filtered = filtered.filter(list => !list.is_public);
+    if (filterType === 'mine') {
+      // Propias: owner_id === user.id AND NOT collaborative
+      filtered = filtered.filter(list => list.user_id === user.id && !list.is_collaborative);
+    } else if (filterType === 'collab') {
+      // Colaborativas: is_collaborative === true OR owner_id !== user.id (shared with me)
+      filtered = filtered.filter(list => list.is_collaborative === true || list.user_id !== user.id);
     }
+    // 'all' no filtra nada, muestra todas
 
     // Ordenar por fecha de creación (más recientes primero)
-    filtered.sort((a, b) => {
+    return filtered.sort((a, b) => {
       const dateA = new Date(a.created_at).getTime();
       const dateB = new Date(b.created_at).getTime();
       return dateB - dateA;
     });
+  }, [lists, filterType, user]);
 
-    setFilteredLists(filtered);
-  }, [lists, filterByPrivacy]);
 
-  // Debug para el filtro
-  useEffect(() => {
-    console.log('🔍 ListsScreen: showFilters changed to:', showFilters);
-  }, [showFilters]);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -243,7 +243,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       >
         <MaletaCoverCollage
           albums={item.albums || []}
-          size={80}
+          size={100}
         />
         <View style={styles.listInfo}>
           <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
@@ -339,78 +339,72 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <Text style={[styles.listCount, { color: colors.text }]}>{t('maletas_count_text').replace('{0}', filteredLists.length.toString())}</Text>
         </View>
         <View style={styles.headerActions}>
+
           <TouchableOpacity style={styles.createMaletaButton} onPress={handleOpenCreateModal}>
             <Ionicons name="add" size={24} color={colors.primary} />
           </TouchableOpacity>
-
           <TouchableOpacity
-            style={[
-              styles.filterButton,
-              { backgroundColor: showFilters ? colors.border : 'transparent' }
-            ]}
-            onPress={() => {
-              console.log('🔍 ListsScreen: Filter button pressed, current showFilters:', showFilters);
-              setShowFilters(!showFilters);
-              console.log('🔍 ListsScreen: showFilters will be set to:', !showFilters);
-            }}
+            style={[styles.headerButton, { marginRight: 8 }]}
+            onPress={() => setShowFilters(!showFilters)}
           >
             <Ionicons
               name="filter-outline"
               size={24}
-              color={colors.text}
+              color={filterType !== 'all' ? '#34A853' : colors.text}
             />
+            {filterType !== 'all' && (
+              <View style={styles.activeFilterBadge} />
+            )}
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Filtros */}
+      {/* Filtros Dropdown */}
       {showFilters && (
-        <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
-          <View style={styles.filterSection}>
-            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>{t('maletas_filter_privacy')}</Text>
-            <View style={styles.filterChips}>
+        <View style={[styles.filterDropdownContent, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+          <View style={[styles.filterSection, { borderBottomColor: colors.border }]}>
+            <Text style={[styles.filterSectionTitle, { color: colors.text }]}>{t('maletas_filter_type')}</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
-                style={[
-                  styles.filterChip,
-                  filterByPrivacy === 'all' && styles.filterChipActive
-                ]}
-                onPress={() => setFilterByPrivacy('all')}
+                style={[styles.filterChip, filterType === 'all' && styles.filterChipActive]}
+                onPress={() => setFilterType('all')}
               >
-                <Text style={[
-                  styles.filterChipText,
-                  filterByPrivacy === 'all' && styles.filterChipTextActive
-                ]}>{t('maletas_filter_all')}</Text>
+                <Text style={[styles.filterChipText, filterType === 'all' && styles.filterChipTextActive]}>
+                  {t('maletas_filter_all')}
+                </Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                style={[
-                  styles.filterChip,
-                  filterByPrivacy === 'public' && styles.filterChipActive
-                ]}
-                onPress={() => setFilterByPrivacy('public')}
+                style={[styles.filterChip, filterType === 'mine' && styles.filterChipActive]}
+                onPress={() => setFilterType('mine')}
               >
-                <Text style={[
-                  styles.filterChipText,
-                  filterByPrivacy === 'public' && styles.filterChipTextActive
-                ]}>{t('maletas_filter_public')}</Text>
+                <Text style={[styles.filterChipText, filterType === 'mine' && styles.filterChipTextActive]}>
+                  {t('maletas_filter_mine')}
+                </Text>
               </TouchableOpacity>
-
               <TouchableOpacity
-                style={[
-                  styles.filterChip,
-                  filterByPrivacy === 'private' && styles.filterChipActive
-                ]}
-                onPress={() => setFilterByPrivacy('private')}
+                style={[styles.filterChip, filterType === 'collab' && styles.filterChipActive]}
+                onPress={() => setFilterType('collab')}
               >
-                <Text style={[
-                  styles.filterChipText,
-                  filterByPrivacy === 'private' && styles.filterChipTextActive
-                ]}>{t('maletas_filter_private')}</Text>
+                <Text style={[styles.filterChipText, filterType === 'collab' && styles.filterChipTextActive]}>
+                  {t('maletas_filter_collab')}
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+
+          {/* Clear Filters Button */}
+          {filterType !== 'all' && (
+            <View style={[styles.clearFiltersContainer, { borderTopColor: colors.border }]}>
+              <TouchableOpacity onPress={() => setFilterType('all')} style={styles.clearFiltersButton}>
+                <Ionicons name="close-circle-outline" size={16} color="#888" style={{ marginRight: 4 }} />
+                <Text style={styles.clearFiltersText}>{t('search_action_clear_filters')}</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          )}
         </View>
       )}
+
+
 
       {loading ? (
         <View style={styles.loadingContainer}>
@@ -424,7 +418,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
             {t('maletas_empty_subtitle')}
           </Text>
           <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
-            <Ionicons name="cube-outline" size={20} color="white" />
+            <Ionicons name="bag-remove-outline" size={20} color="white" />
             <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
           </TouchableOpacity>
         </View>
@@ -500,55 +494,71 @@ const styles = StyleSheet.create({
   createMaletaButton: {
     padding: 8,
   },
-  filterButton: {
+  headerButton: {
     padding: 8,
-    marginRight: 8,
-    borderRadius: 8,
+    position: 'relative',
   },
+  activeFilterBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#34A853',
+  },
+  // Filter Dropdown
   filterDropdownContent: {
-    backgroundColor: 'white',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E5E5',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    zIndex: 1000,
-    elevation: 5,
-    borderWidth: 2,
-    borderColor: 'white',
   },
   filterSection: {
-    marginBottom: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderBottomWidth: 1,
   },
   filterSectionTitle: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    marginBottom: 10,
+    opacity: 0.8,
   },
   filterChips: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
   },
   filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
+    marginRight: 8,
     borderRadius: 16,
-    backgroundColor: '#F0F0F0',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    backgroundColor: '#f0f0f0',
   },
   filterChipActive: {
     backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
   },
   filterChipText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 14,
     color: '#666',
   },
   filterChipTextActive: {
     color: 'white',
+  },
+  clearFiltersContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    marginTop: 0,
+  },
+  clearFiltersButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  clearFiltersText: {
+    fontSize: 14,
+    color: '#888',
+    textDecorationLine: 'underline',
   },
   swipeActionsContainer: {
     flexDirection: 'row',

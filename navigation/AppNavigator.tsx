@@ -272,7 +272,7 @@ const TabNavigator = () => (
         } else if (route.name === 'AddDiscTab') {
           iconName = focused ? 'add' : 'add';
         } else if (route.name === 'MaletasTab') {
-          iconName = focused ? 'cube' : 'cube-outline';
+          iconName = focused ? 'bag-remove' : 'bag-remove-outline';
         } else if (route.name === 'GemsTab') {
           iconName = focused ? 'diamond' : 'diamond-outline';
         }
