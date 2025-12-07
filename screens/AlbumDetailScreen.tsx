@@ -1118,10 +1118,10 @@ export default function AlbumDetailScreen() {
   const youtubeVideoId = youtubeUrls.length > 0 ? extractYouTubeId(youtubeUrls[0]) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingBottom: 20 }]}>
 
 
-      <ScrollView showsVerticalScrollIndicator={false} removeClippedSubviews={false}>
+      <ScrollView showsVerticalScrollIndicator={false} removeClippedSubviews={false} style={[styles.detalleScroll]}>
         {/* Portada */}
         <Animated.View style={[
           styles.coverSection,
@@ -1989,7 +1989,8 @@ export default function AlbumDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffffff',
+
+    backgroundColor: '#fff',
   },
   header: {
     backgroundColor: '#fff',
@@ -3978,6 +3979,10 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 0,
     alignItems: 'center',
+  },
+  detalleScroll: {
+    marginBottom: 55,
+
   },
 });
 
