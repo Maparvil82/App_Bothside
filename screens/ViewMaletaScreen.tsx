@@ -424,7 +424,15 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       <View style={styles.header}>
         <View style={styles.headerInfo}>
 
-          <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
+          <View style={styles.headerTitleRow}>
+
+            <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
+            {list.user_id === user?.id && (
+              <View style={styles.ownerTagHeader}>
+                <Text style={styles.ownerTagHeaderText}>OWNER</Text>
+              </View>
+            )}
+          </View>
           {list.is_public && (
             <View style={styles.publicBadge}>
               <Text style={styles.publicBadgeText}>{t('common_public')}</Text>
@@ -468,13 +476,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
 
 
-          {list.user_id === user?.id && (
-            <View style={styles.ownerRow}>
-              <View style={styles.ownerTag}>
-                <Text style={styles.ownerTagText}>OWNER</Text>
-              </View>
-            </View>
-          )}
+
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.collaboratorsRow}>
             {collaborators.filter(c => c.status === 'accepted').map(item => (
@@ -1209,6 +1211,23 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 12,
     fontWeight: 'bold',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  ownerTagHeader: {
+    backgroundColor: '#FFD700',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginRight: 8,
+  },
+  ownerTagHeaderText: {
+    color: '#000',
+    fontSize: 10,
+    fontWeight: '700',
   },
 });
 
