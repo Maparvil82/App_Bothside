@@ -89,10 +89,9 @@ export const AudioMiniPlayer: React.FC<AudioMiniPlayerProps> = ({
 
     if (!videoId) return null;
 
-    const containerHeight = expandAnim.interpolate({
-        inputRange: [0, 1],
-        outputRange: [80, 330] // 80 (mini) + 250 (video)
-    });
+    // Container height is now fixed to mini-player height (80)
+    // The video floats outside using absolute positioning
+    const containerHeight = 80;
 
     // videoOpacity is no longer directly used for the video container's opacity,
     // but expandAnim is still used for the overall container height.
@@ -123,12 +122,32 @@ export const AudioMiniPlayer: React.FC<AudioMiniPlayerProps> = ({
             {/* Video Container */}
             {/* Video Container */}
             {isExpanded && (
-                <View style={{ width: '100%', height: 250, backgroundColor: '#000' }}>
-                    <YoutubePlayer
+                <View
+                    style={{
+                        position: 'absolute',
+                        bottom: 90, // Just above the mini-player
+                        right: 16,
+                        width: 200,
+                        height: 120,
+                        zIndex: 999,
+                        borderRadius: 12,
+                        overflow: 'hidden',
+                        backgroundColor: 'black',
+                        elevation: 6, // Android shadow
+                        shadowColor: "#000", // iOS shadow
+                        shadowOffset: {
+                            width: 0,
+                            height: 2,
+                        },
+                        shadowOpacity: 0.25,
+                        shadowRadius: 3.84,
+                    }}
+                >
+                    <YoutubePlayer style={{ flex: 1 }}
                         key={videoId}
                         videoId={videoId}
-                        height={250}
-                        width={"100%"}
+                        height={120}
+                        width={200}
                         onReady={() => setIsReady(true)}
                         onChangeState={(state: string) => {
                             if (state === 'ended') setIsPlaying(false);
@@ -145,7 +164,8 @@ export const AudioMiniPlayer: React.FC<AudioMiniPlayerProps> = ({
                         }}
                     />
                 </View>
-            )}
+            )
+            }
 
             {/* Mini Player Controls */}
             <View style={styles.controlsContainer}>
@@ -155,17 +175,11 @@ export const AudioMiniPlayer: React.FC<AudioMiniPlayerProps> = ({
                 </View>
 
                 <View style={styles.buttonsContainer}>
-                    <TouchableOpacity onPress={togglePlay} style={styles.iconButton}>
-                        <Ionicons
-                            name={isPlaying ? "pause" : "play"}
-                            size={28}
-                            color="#333"
-                        />
-                    </TouchableOpacity>
+
 
                     <TouchableOpacity onPress={toggleExpand} style={styles.iconButton}>
                         <Ionicons
-                            name={isExpanded ? "chevron-down" : "chevron-up"}
+                            name={isExpanded ? "pause" : "play"}
                             size={28}
                             color="#333"
                         />
@@ -174,7 +188,7 @@ export const AudioMiniPlayer: React.FC<AudioMiniPlayerProps> = ({
 
                 </View>
             </View>
-        </Animated.View>
+        </Animated.View >
     );
 };
 
@@ -196,7 +210,7 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
         zIndex: 1000,
-        overflow: 'hidden', // Hide video when collapsed
+        overflow: 'visible', // Allow video to float outside
     },
     videoContainer: {
         overflow: 'hidden',
