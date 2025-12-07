@@ -14,6 +14,7 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
@@ -141,6 +142,27 @@ export default function AlbumDetailScreen() {
   // Estado para refresco de Discogs
   const [isRefreshingDiscogs, setIsRefreshingDiscogs] = useState(false);
   const refreshInProgressRef = useRef<boolean>(false);
+
+  // Animation for cover
+  const coverAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(coverAnim, {
+      toValue: showFloatingPlayer ? 1 : 0,
+      duration: 300,
+      useNativeDriver: false, // Height/Layout changes usually require false
+    }).start();
+  }, [showFloatingPlayer]);
+
+  const coverHeight = coverAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [width, 100], // Collapse to 100 when player is active
+  });
+
+  const coverOpacity = coverAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 0.8],
+  });
 
   // Estados para álbumes similares
   const [similarAlbums, setSimilarAlbums] = useState<any[]>([]);
@@ -936,7 +958,9 @@ export default function AlbumDetailScreen() {
   // YouTube handler
   const handlePlayYouTubeDirect = () => {
     if (youtubeUrls.length > 0) {
-      Linking.openURL(youtubeUrls[0]);
+      setFloatingAudioUri(youtubeUrls[0]);
+      setFloatingAlbumTitle(album?.albums?.title || 'Álbum');
+      setShowFloatingPlayer(true);
     } else {
       Alert.alert(t('common_notice'), t('album_detail_no_videos'));
     }
@@ -1079,11 +1103,21 @@ export default function AlbumDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Portada */}
-        <View style={[styles.coverSection, { backgroundColor: colors.card }]}>
+        <Animated.View style={[
+          styles.coverSection,
+          {
+            backgroundColor: colors.card,
+            height: coverHeight, // Animate height
+            overflow: 'hidden'
+          }
+        ]}>
           {album.albums.cover_url ? (
-            <Image
+            <Animated.Image
               source={{ uri: album.albums.cover_url }}
-              style={styles.fullCoverImage}
+              style={[
+                styles.fullCoverImage,
+                { opacity: coverOpacity }
+              ]}
               resizeMode="cover"
             />
           ) : (
@@ -1091,7 +1125,7 @@ export default function AlbumDetailScreen() {
               <Text style={[styles.fullCoverPlaceholderText, { color: colors.text }]}>{t('album_detail_no_cover')}</Text>
             </View>
           )}
-        </View>
+        </Animated.View>
 
 
 
@@ -1924,7 +1958,7 @@ export default function AlbumDetailScreen() {
         </TouchableOpacity>
       )}
 
-      {/* Reproductor de audio flotante */}
+      {/* Reproductor de audio flotante (Notas de voz) */}
       {currentAudioUrl && (
         <View style={styles.floatingAudioPlayer}>
           <AudioPlayer
@@ -1938,6 +1972,14 @@ export default function AlbumDetailScreen() {
           />
         </View>
       )}
+
+      {/* Floating Audio Player (YouTube / Internal) */}
+      <FloatingAudioPlayer
+        visible={showFloatingPlayer}
+        audioUri={floatingAudioUri}
+        albumTitle={floatingAlbumTitle}
+        onClose={() => setShowFloatingPlayer(false)}
+      />
     </SafeAreaView>
   );
 }
