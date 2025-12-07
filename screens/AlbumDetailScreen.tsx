@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+// Refreshed to fix ReferenceError
 import {
   View,
   Text,
@@ -24,7 +25,7 @@ import { useGems } from '../contexts/GemsContext';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { DiscogsService, getAlbumEditions } from '../services/discogs';
-import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
+import { AudioMiniPlayer } from '../components/AudioMiniPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { UserCollectionService, AlbumService, UserMaletaService } from '../services/database';
@@ -87,6 +88,31 @@ interface AlbumDetail {
   location_column?: number;
 }
 
+// Helper to extract YouTube ID
+const extractYouTubeId = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+
+    // Formato corto: https://youtu.be/VIDEO_ID
+    if (parsed.hostname.includes('youtu.be')) {
+      return parsed.pathname.replace('/', '') || null;
+    }
+
+    // Formato estándar: https://www.youtube.com/watch?v=VIDEO_ID
+    const vParam = parsed.searchParams.get('v');
+    if (vParam) return vParam;
+
+    // Otros formatos posibles (embed, shorts, etc.)
+    const match = url.match(/(?:embed\/|shorts\/|v\/|watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+    return match ? match[1] : null;
+  } catch {
+    // fallback por si URL() falla
+    const match = url.match(/(?:embed\/|shorts\/|v\/|watch\?v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+    return match ? match[1] : null;
+  }
+};
+
 export default function AlbumDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
@@ -108,9 +134,7 @@ export default function AlbumDetailScreen() {
   const [album, setAlbum] = useState<AlbumDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
-  const [floatingAudioUri, setFloatingAudioUri] = useState('');
-  const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
+
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [editions, setEditions] = useState<any[]>([]);
   const [editionsLoading, setEditionsLoading] = useState(false);
@@ -143,20 +167,23 @@ export default function AlbumDetailScreen() {
   const [isRefreshingDiscogs, setIsRefreshingDiscogs] = useState(false);
   const refreshInProgressRef = useRef<boolean>(false);
 
+  // Audio Mini Player State
+  const [isPlayerExpanded, setIsPlayerExpanded] = useState(false);
+
   // Animation for cover
   const coverAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(coverAnim, {
-      toValue: showFloatingPlayer ? 1 : 0,
+      toValue: isPlayerExpanded ? 1 : 0,
       duration: 300,
-      useNativeDriver: false, // Height/Layout changes usually require false
+      useNativeDriver: false,
     }).start();
-  }, [showFloatingPlayer]);
+  }, [isPlayerExpanded]);
 
   const coverHeight = coverAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [width, 100], // Collapse to 100 when player is active
+    outputRange: [width, 100],
   });
 
   const coverOpacity = coverAnim.interpolate({
@@ -955,16 +982,7 @@ export default function AlbumDetailScreen() {
     }
   };
 
-  // YouTube handler
-  const handlePlayYouTubeDirect = () => {
-    if (youtubeUrls.length > 0) {
-      setFloatingAudioUri(youtubeUrls[0]);
-      setFloatingAlbumTitle(album?.albums?.title || 'Álbum');
-      setShowFloatingPlayer(true);
-    } else {
-      Alert.alert(t('common_notice'), t('album_detail_no_videos'));
-    }
-  };
+
 
   // Cargar ediciones
   const loadAlbumEditions = async (artist?: string, title?: string) => {
@@ -1097,11 +1115,13 @@ export default function AlbumDetailScreen() {
 
   const youtubeUrls = album.albums.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
 
+  const youtubeVideoId = youtubeUrls.length > 0 ? extractYouTubeId(youtubeUrls[0]) : null;
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
 
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false} removeClippedSubviews={false}>
         {/* Portada */}
         <Animated.View style={[
           styles.coverSection,
@@ -1716,12 +1736,7 @@ export default function AlbumDetailScreen() {
 
 
       {/* Reproductor flotante */}
-      <FloatingAudioPlayer
-        visible={showFloatingPlayer}
-        audioUri={floatingAudioUri}
-        albumTitle={floatingAlbumTitle}
-        onClose={() => setShowFloatingPlayer(false)}
-      />
+
 
       {/* Audio Recorder Modal */}
       <AudioRecorder
@@ -1943,20 +1958,7 @@ export default function AlbumDetailScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Botón flotante de YouTube */}
-      {youtubeUrls.length > 0 && !showFloatingPlayer && (
-        <TouchableOpacity
-          style={[styles.floatingPlayButton, styles.youtubeButton]}
-          onPress={handlePlayYouTubeDirect}
-          activeOpacity={0.8}
-        >
-          <Ionicons
-            name="logo-youtube"
-            size={24}
-            color="#fff"
-          />
-        </TouchableOpacity>
-      )}
+
 
       {/* Reproductor de audio flotante (Notas de voz) */}
       {currentAudioUrl && (
@@ -1973,12 +1975,12 @@ export default function AlbumDetailScreen() {
         </View>
       )}
 
-      {/* Floating Audio Player (YouTube / Internal) */}
-      <FloatingAudioPlayer
-        visible={showFloatingPlayer}
-        audioUri={floatingAudioUri}
-        albumTitle={floatingAlbumTitle}
-        onClose={() => setShowFloatingPlayer(false)}
+      {/* Audio Mini Player (Fixed Bottom) */}
+      <AudioMiniPlayer
+        videoId={youtubeVideoId}
+        title={album?.albums?.title || 'Álbum'}
+        isVisible={!!youtubeVideoId}
+        onExpandChange={setIsPlayerExpanded}
       />
     </SafeAreaView>
   );
