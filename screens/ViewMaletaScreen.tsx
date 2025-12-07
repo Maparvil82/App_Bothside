@@ -515,15 +515,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                 <Text style={styles.descriptionText}>{list.description}</Text>
               </View>
             )}
-            {list.is_collaborative && list.user_id === user?.id && (
-              <TouchableOpacity
-                style={styles.inviteButton}
-                onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}
-              >
-                <Ionicons name="person-add" size={20} color="#fff" style={{ marginRight: 8 }} />
-                <Text style={styles.inviteButtonText}>{t('maletas_collaborative_inviteButton')}</Text>
-              </TouchableOpacity>
-            )}
+
           </View>
         }
         ListEmptyComponent={renderEmptyState}
@@ -532,6 +524,19 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         previewOpenValue={0}
         previewOpenDelay={0}
       />
+
+      {/* Fixed Invite Button Footer */}
+      {list.is_collaborative && list.user_id === user?.id && (
+        <View style={styles.footerContainer}>
+          <TouchableOpacity
+            style={styles.inviteButton}
+            onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}
+          >
+            <Ionicons name="person-add" size={20} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.inviteButtonText}>{t('maletas_collaborative_inviteButton')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Modal para añadir álbumes */}
       <Modal
@@ -1085,14 +1090,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '700',
   },
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 34, // Safe area for iPhone X+
+    borderTopWidth: 1,
+    borderTopColor: '#E5E5E5',
+    zIndex: 100,
+  },
   inviteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#000',
-    marginHorizontal: 20,
-    marginBottom: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     borderRadius: 12,
   },
   inviteButtonText: {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer, DefaultTheme, DarkTheme, Theme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -293,7 +293,20 @@ const TabNavigator = () => (
     <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: '' }} />
     <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ title: '' }} />
     <Tab.Screen name="AddDiscTab" component={AddDiscStack} options={{ title: '' }} />
-    <Tab.Screen name="MaletasTab" component={MaletasStack} options={{ title: '' }} />
+    <Tab.Screen
+      name="MaletasTab"
+      component={MaletasStack}
+      options={({ route }) => {
+        const routeName = getFocusedRouteNameFromRoute(route) ?? 'Maletas';
+        if (routeName === 'ViewMaleta' || routeName === 'InviteCollaborators') {
+          return {
+            title: '',
+            tabBarStyle: { display: 'none' }
+          };
+        }
+        return { title: '' };
+      }}
+    />
     <Tab.Screen name="GemsTab" component={GemsStack} options={{ title: '' }} />
   </Tab.Navigator>
 );
