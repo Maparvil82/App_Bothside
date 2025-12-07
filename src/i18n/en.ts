@@ -765,6 +765,10 @@ export const en = {
 
     // Shelves List Screen
     shelves_list_error_load: "Could not load shelves.",
+    collection_delete_title: "Delete “{{title}}”",
+    collection_delete_message: "Are you sure you want to delete this album from your collection?\nIt will also be removed from your gems and crates.",
+    cancel: "Cancel",
+    delete: "Delete",
     shelves_list_delete_title: "Delete Shelf",
     shelves_list_delete_message: "Are you sure you want to delete \"{0}\"? This action cannot be undone.",
     shelves_list_success_delete: "Shelf deleted successfully.",

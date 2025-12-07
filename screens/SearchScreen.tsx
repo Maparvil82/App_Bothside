@@ -153,6 +153,16 @@ export const SearchScreen: React.FC = () => {
   const [floatingAudioUri, setFloatingAudioUri] = useState('');
   const [floatingAlbumTitle, setFloatingAlbumTitle] = useState('');
 
+  // --- DELETE MODAL STATE ---
+  const [showDeleteRecordModal, setShowDeleteRecordModal] = useState(false);
+  const [recordToDelete, setRecordToDelete] = useState<any>(null);
+  const [isDeletingRecord, setIsDeletingRecord] = useState(false);
+  // --------------------------
+
+  // Helper to truncate title
+  const truncate = (text: string, maxLen = 30) =>
+    text && text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
+
   useEffect(() => {
     if (user) {
       loadCollection();
@@ -368,6 +378,54 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  const confirmDeleteRecord = (item: any) => {
+    setRecordToDelete(item);
+
+    const truncatedTitle = truncate(item.albums?.title || '');
+
+    Alert.alert(
+      t("collection_delete_title", { title: truncatedTitle }),
+      t("collection_delete_message"),
+      [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("delete"),
+          style: "destructive",
+          onPress: () => handleDeleteRecordConfirmed()
+        }
+      ],
+      { cancelable: true }
+    );
+  };
+
+  const handleDeleteRecordConfirmed = async () => {
+    if (!recordToDelete || !user) return;
+
+    try {
+      setIsDeletingRecord(true);
+
+      // First delete
+      await UserCollectionService.removeFromCollection(user.id, recordToDelete.albums.id);
+
+      // Refresh collection
+      await loadCollection();
+
+      // Double check delete (legacy logic kept from original handleDeleteItem)
+      await UserCollectionService.removeFromCollection(user.id, recordToDelete.albums.id);
+      await loadCollection();
+
+      setShowDeleteRecordModal(false);
+      setRecordToDelete(null);
+
+      Alert.alert(t('common_success'), t('search_success_deleted'));
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      Alert.alert(t('common_error'), t('search_error_deleting'));
+    } finally {
+      setIsDeletingRecord(false);
+    }
+  };
+
   const handleLongPress = (item: any) => {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
@@ -380,7 +438,7 @@ export const SearchScreen: React.FC = () => {
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
-            handleDeleteItem(item);
+            confirmDeleteRecord(item);
           }
         }
       );
@@ -390,30 +448,21 @@ export const SearchScreen: React.FC = () => {
         t('search_action_sheet_title'),
         [
           { text: t('common_cancel'), style: 'cancel' },
-          { text: t('common_delete'), style: 'destructive', onPress: () => handleDeleteItem(item) },
+          { text: t('common_delete'), style: 'destructive', onPress: () => confirmDeleteRecord(item) },
         ]
       );
     }
   };
 
+  // Legacy direct delete function - kept for reference but unused in UI now
   const handleDeleteItem = async (item: any) => {
-    if (!user) return;
-    try {
-      await UserCollectionService.removeFromCollection(user.id, item.albums.id);
-      await loadCollection();
-      await UserCollectionService.removeFromCollection(user.id, item.albums.id);
-      await loadCollection();
-      Alert.alert(t('common_success'), t('search_success_deleted'));
-    } catch (error) {
-      console.error('Error deleting item:', error);
-      Alert.alert(t('common_error'), t('search_error_deleting'));
-    }
+    confirmDeleteRecord(item);
   };
 
   const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
     const item = filteredCollection.find(col => col.id === rowKey);
     if (item) {
-      await handleDeleteItem(item);
+      confirmDeleteRecord(item);
     }
     rowMap[rowKey]?.closeRow();
   };
@@ -1630,6 +1679,7 @@ export const SearchScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+
       {/* Toolbar con botones de búsqueda, vista y filtros */}
       <View style={[styles.toolbarContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         {/* Contador de discos y porcentaje ubicados a la izquierda */}

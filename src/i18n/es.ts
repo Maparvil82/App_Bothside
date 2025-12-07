@@ -765,6 +765,10 @@ export const es = {
 
     // Shelves List Screen
     shelves_list_error_load: "No se pudieron cargar las estanterías.",
+    collection_delete_title: "Eliminar “{{title}}”",
+    collection_delete_message: "¿Estás seguro de que quieres eliminar este álbum de tu colección?\nTambién se eliminará de tus gemas y maletas.",
+    cancel: "Cancelar",
+    delete: "Eliminar",
     shelves_list_delete_title: "Eliminar Estantería",
     shelves_list_delete_message: "¿Estás seguro de que quieres eliminar \"{0}\"? Esta acción no se puede deshacer.",
     shelves_list_success_delete: "Estantería eliminada correctamente.",

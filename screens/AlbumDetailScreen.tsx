@@ -34,6 +34,7 @@ import { DiscogsAttribution } from '../components/DiscogsAttribution';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { PublicAlbumView } from '../components/PublicAlbumView';
+import { DeleteConfirmationModal } from '../components/DeleteConfirmationModal';
 
 const { width } = Dimensions.get('window');
 
@@ -94,9 +95,10 @@ export default function AlbumDetailScreen() {
   const { t } = useTranslation();
   const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
 
-  useEffect(() => {
-    navigation.setOptions({ title: t("album_detail_header") });
-  }, [navigation, t]);
+  // Header configuration moved down to include delete handler
+  // useEffect(() => {
+  //   navigation.setOptions({ title: t("album_detail_header") });
+  // }, [navigation, t]);
 
   // Color constante para botones y tags
   const LIGHT_BG_COLOR = '#f1f1f1ff';
@@ -149,6 +151,53 @@ export default function AlbumDetailScreen() {
 
 
   const { albumId } = route.params as { albumId: string };
+
+  // --- DELETE MODAL LOGIC ---
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [albumToDelete, setAlbumToDelete] = useState<any>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const confirmDeleteAlbum = useCallback((albumToDelete: any) => {
+    setAlbumToDelete(albumToDelete);
+    setShowDeleteModal(true);
+  }, []);
+
+  const handleDeleteConfirmed = async () => {
+    if (!albumToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      if (user?.id) {
+        // Assuming UserCollectionService.removeFromCollection exists
+        await UserCollectionService.removeFromCollection(user.id, albumToDelete.albums?.id || albumToDelete.id);
+      }
+
+      setShowDeleteModal(false);
+      navigation.goBack();
+      Alert.alert(t('common_success'), t('album_detail_deleted_success') || "Álbum eliminado con éxito");
+    } catch (error) {
+      console.error('Error deleting album:', error);
+      Alert.alert(t('common_error'), t('album_detail_delete_error') || "Error al eliminar el álbum");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Update header with delete button
+  useEffect(() => {
+    navigation.setOptions({
+      title: t("album_detail_header"),
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => confirmDeleteAlbum(album)}
+          style={{ marginRight: 16 }}
+        >
+          <Ionicons name="trash-outline" size={24} color="#ef4444" />
+        </TouchableOpacity>
+      )
+    });
+  }, [navigation, t, album, confirmDeleteAlbum]);
+  // --------------------------
 
   // Preguntas del TypeForm
   // Preguntas del TypeForm
@@ -1836,6 +1885,14 @@ export default function AlbumDetailScreen() {
       )}
 
 
+      <DeleteConfirmationModal
+        visible={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDeleteConfirmed}
+        loading={isDeleting}
+        title={t('album_detail_delete_title') || "Eliminar álbum"}
+        message={t('album_detail_delete_message') || "¿Seguro que quieres eliminar este álbum? Esta acción no se puede deshacer."}
+      />
     </SafeAreaView>
   );
 }
