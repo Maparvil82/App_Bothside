@@ -423,6 +423,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerInfo}>
+
           <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
           {list.is_public && (
             <View style={styles.publicBadge}>
@@ -439,9 +440,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                 </View>
               )}
               <Text style={styles.headerOwnerUsername}>@{ownerProfile.username}</Text>
-              <View style={styles.headerOwnerBadge}>
-                <Text style={styles.headerOwnerBadgeText}>OWNER</Text>
-              </View>
+
             </View>
           )}
         </View>
@@ -463,7 +462,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         <View style={styles.collaborationSection}>
           <View style={styles.collaborationHeader}>
 
-            <Text style={styles.collaborationIcon}>👥</Text>
+
             <Text style={styles.collaborationText}>{t('maletas_collaborative_badgeLabel')}</Text>
           </View>
 
@@ -471,7 +470,9 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
           {list.user_id === user?.id && (
             <View style={styles.ownerRow}>
-              <Text style={styles.ownerBadgeTextSelf}>{t('maletas_collaborative_youAreOwner')}</Text>
+              <View style={styles.ownerTag}>
+                <Text style={styles.ownerTagText}>OWNER</Text>
+              </View>
             </View>
           )}
 
@@ -1196,6 +1197,18 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 11,
     fontWeight: '700',
+  },
+  ownerTag: {
+    backgroundColor: '#FFD700', // Yellow
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  ownerTagText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: 'bold',
   },
 });
 

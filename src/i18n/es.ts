@@ -827,7 +827,7 @@ export const es = {
     maletas_collaborative_invitationsTitle: "Invitaciones a colaborar",
     maletas_collaborative_invitationAccept: "Aceptar",
     maletas_collaborative_invitationReject: "Rechazar",
-    maletas_collaborative_badgeLabel: "Colaborativa",
+    maletas_collaborative_badgeLabel: "Colaboradores",
     maletas_collaborative_addedBy: "Añadido por",
     maletas_collaborative_successInvitationSent: "Invitación enviada correctamente",
     collaborative_label: "Colaborativa",
