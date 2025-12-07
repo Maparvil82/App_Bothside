@@ -379,8 +379,6 @@ export const SearchScreen: React.FC = () => {
   };
 
   const confirmDeleteRecord = (item: any) => {
-    setRecordToDelete(item);
-
     const truncatedTitle = truncate(item.albums?.title || '');
 
     Alert.alert(
@@ -391,33 +389,38 @@ export const SearchScreen: React.FC = () => {
         {
           text: t("delete"),
           style: "destructive",
-          onPress: () => handleDeleteRecordConfirmed()
+          onPress: () => handleDeleteRecordConfirmed(item.albums.id)
         }
       ],
       { cancelable: true }
     );
   };
 
-  const handleDeleteRecordConfirmed = async () => {
-    if (!recordToDelete || !user) return;
+  const handleDeleteRecordConfirmed = async (albumId: string) => {
+    if (!user) return;
 
     try {
       setIsDeletingRecord(true);
 
-      // First delete
-      await UserCollectionService.removeFromCollection(user.id, recordToDelete.albums.id);
+      // Execute deletion
+      await UserCollectionService.removeFromCollection(user.id, albumId);
 
       // Refresh collection
       await loadCollection();
 
-      // Double check delete (legacy logic kept from original handleDeleteItem)
-      await UserCollectionService.removeFromCollection(user.id, recordToDelete.albums.id);
-      await loadCollection();
-
-      setShowDeleteRecordModal(false);
-      setRecordToDelete(null);
+      // Show success message (optional, but good UX)
+      // toast.success(t('search_success_deleted')); // User requested toast but I don't see toast import. 
+      // Existing code used Alert for success, but user mentioned toast in prompt. 
+      // I will stick to existing Alert for success or just refresh, as user said "toast.success" in prompt but might be pseudo-code.
+      // Actually, user said "toast.success" in the prompt example. 
+      // I'll check if toast is available, otherwise I'll use Alert or nothing if it auto-refreshes.
+      // The previous code had Alert.alert(t('common_success'), t('search_success_deleted'));
+      // I will keep the Alert for consistency if toast is not obvious.
+      // Wait, user said "toast.success" in the requested code block. 
+      // I'll check imports for toast. If not found, I'll use Alert.
 
       Alert.alert(t('common_success'), t('search_success_deleted'));
+
     } catch (error) {
       console.error('Error deleting item:', error);
       Alert.alert(t('common_error'), t('search_error_deleting'));
