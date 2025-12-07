@@ -29,6 +29,7 @@ export interface Album {
   discogs_id?: number;
   master_id?: number;
   format_descriptions?: string[];
+  discogs_cached_at?: string;
 }
 
 export interface AlbumStats {

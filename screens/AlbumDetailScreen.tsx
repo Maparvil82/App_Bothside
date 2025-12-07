@@ -278,17 +278,88 @@ export default function AlbumDetailScreen() {
         return;
       }
 
+      // DEEP COMPARISON: Check if data actually changed
+      // We need to compare specific fields that we care about
+      const currentAlbumData = album?.albums;
+
+      if (currentAlbumData) {
+        // Construct a comparable object from current data
+        // Note: This is a simplified comparison. For a perfect match we'd need to normalize everything.
+        // But checking title, artist, year and track count is usually enough to catch "no changes"
+        const currentComparable = {
+          title: currentAlbumData.title,
+          artist: currentAlbumData.artist,
+          year: parseInt(currentAlbumData.release_year || '0'),
+          label: currentAlbumData.label,
+          trackCount: currentAlbumData.tracks?.length || 0
+        };
+
+        const newComparable = {
+          title: cc0Data.title,
+          artist: cc0Data.artists,
+          year: cc0Data.year,
+          label: cc0Data.label,
+          trackCount: cc0Data.tracklist?.length || 0
+        };
+
+        // Simple JSON stringify comparison for these core fields
+        if (JSON.stringify(currentComparable) === JSON.stringify(newComparable)) {
+          console.log('⏭️ Data is identical, skipping full DB update to prevent loops.');
+
+          // Update ONLY the timestamp to prevent re-checking immediately
+          try {
+            await AlbumService.updateAlbum(albumDbId, {
+              discogs_cached_at: new Date().toISOString()
+            });
+            console.log('✅ Updated cached_at timestamp only.');
+
+            // Update local state timestamp
+            setAlbum(prev => {
+              if (!prev || !prev.albums) return prev;
+              return {
+                ...prev,
+                albums: {
+                  ...prev.albums,
+                  discogs_cached_at: new Date().toISOString()
+                }
+              };
+            });
+          } catch (e) {
+            console.error('Error updating timestamp:', e);
+          }
+
+          return;
+        }
+      }
+
       // Update database with fresh data
       const success = await AlbumService.updateAlbumCC0Data(albumDbId, cc0Data);
 
       if (success) {
-        console.log('✅ Discogs data refreshed successfully, reloading album...');
-        // Trigger a reload by calling loadAlbumDetail again
-        setTimeout(() => {
-          if (user?.id) {
-            loadAlbumDetail();
-          }
-        }, 100);
+        console.log('✅ Discogs data refreshed successfully. Updating local state...');
+
+        // UPDATE LOCAL STATE MANUALLY instead of reloading
+        // This prevents the infinite loop of loadAlbumDetail -> refreshDiscogsData -> loadAlbumDetail
+        setAlbum(prev => {
+          if (!prev || !prev.albums) return prev;
+
+          return {
+            ...prev,
+            albums: {
+              ...prev.albums,
+              title: cc0Data.title,
+              artist: cc0Data.artists,
+              release_year: cc0Data.year.toString(),
+              label: cc0Data.label,
+              cover_url: cc0Data.cover_url || prev.albums.cover_url,
+              discogs_cached_at: new Date().toISOString(), // Update timestamp locally
+              // We might need to reload tracks if they changed, but for now let's assume
+              // the main info update is enough to stop the loop. 
+              // If tracks changed significantly, a manual pull-to-refresh would be better
+              // than an auto-loop.
+            }
+          };
+        });
       }
     } catch (error) {
       console.error('❌ Error refreshing Discogs data:', error);
@@ -297,7 +368,7 @@ export default function AlbumDetailScreen() {
       setIsRefreshingDiscogs(false);
       refreshInProgressRef.current = false;
     }
-  }, [user?.id, isInCollection]);
+  }, [user?.id, isInCollection, album?.albums]);
 
   // Check collection status immediately
   useEffect(() => {
