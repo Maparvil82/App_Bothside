@@ -255,54 +255,50 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
             </Text>
           )}
           <View style={styles.listMeta}>
-            <View style={[styles.publicBadge, item.is_public ? styles.publicBadgePublic : styles.publicBadgePrivate]}>
-              <Text style={styles.publicBadgeText}>
-                {item.is_public ? t('common_public') : t('common_private')}
-              </Text>
-            </View>
-
             {item.is_collaborative && (
               <View style={styles.collaborativeBadge}>
-                <Ionicons name="people" size={12} color="#fff" style={{ marginRight: 4 }} />
+                <Ionicons name="people" size={14} color="#7B1FA2" style={{ marginRight: 4 }} />
                 <Text style={styles.collaborativeBadgeText}>Collab</Text>
               </View>
             )}
 
-            {/* Owner Avatar (if not me) */}
-            {item.owner && (
-              <View style={[styles.collaboratorAvatarContainer, { marginLeft: 8, zIndex: 20 }]}>
-                {item.owner.avatar_url ? (
-                  <Image
-                    source={{ uri: item.owner.avatar_url }}
-                    style={[styles.collaboratorAvatar, { borderWidth: 1, borderColor: '#000' }]}
-                  />
-                ) : (
-                  <View style={[styles.collaboratorAvatar, { backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }]}>
-                    <Ionicons name="person" size={10} color="#fff" />
-                  </View>
-                )}
-              </View>
-            )}
+            <View style={styles.avatarsRow}>
+              {/* Owner Avatar (if not me) */}
+              {item.owner && (
+                <View style={[styles.collaboratorAvatarContainer, { zIndex: 20 }]}>
+                  {item.owner.avatar_url ? (
+                    <Image
+                      source={{ uri: item.owner.avatar_url }}
+                      style={[styles.collaboratorAvatar, { borderWidth: 1, borderColor: '#000' }]}
+                    />
+                  ) : (
+                    <View style={[styles.collaboratorAvatar, { backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }]}>
+                      <Ionicons name="person" size={10} color="#fff" />
+                    </View>
+                  )}
+                </View>
+              )}
 
-            {/* Collaborator Avatars */}
-            {item.collaborators && item.collaborators.length > 0 && (
-              <View style={styles.collaboratorAvatars}>
-                {item.collaborators.map((collab, index) => (
-                  <View key={collab.user_id} style={[styles.collaboratorAvatarContainer, { marginLeft: index > 0 ? -8 : 0, zIndex: 10 - index }]}>
-                    {collab.profile?.avatar_url ? (
-                      <Image
-                        source={{ uri: collab.profile.avatar_url }}
-                        style={styles.collaboratorAvatar}
-                      />
-                    ) : (
-                      <View style={[styles.collaboratorAvatar, { backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }]}>
-                        <Ionicons name="person" size={10} color="#fff" />
-                      </View>
-                    )}
-                  </View>
-                ))}
-              </View>
-            )}
+              {/* Collaborator Avatars */}
+              {item.collaborators && item.collaborators.length > 0 && (
+                <View style={styles.collaboratorAvatars}>
+                  {item.collaborators.map((collab, index) => (
+                    <View key={collab.user_id} style={[styles.collaboratorAvatarContainer, { marginLeft: index > 0 ? -8 : 0, zIndex: 10 - index }]}>
+                      {collab.profile?.avatar_url ? (
+                        <Image
+                          source={{ uri: collab.profile.avatar_url }}
+                          style={styles.collaboratorAvatar}
+                        />
+                      ) : (
+                        <View style={[styles.collaboratorAvatar, { backgroundColor: '#ccc', justifyContent: 'center', alignItems: 'center' }]}>
+                          <Ionicons name="person" size={10} color="#fff" />
+                        </View>
+                      )}
+                    </View>
+                  ))}
+                </View>
+              )}
+            </View>
           </View>
         </View>
       </TouchableOpacity>
@@ -637,8 +633,13 @@ const styles = StyleSheet.create({
   },
   listMeta: {
     marginTop: 4,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+  },
+  avatarsRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    marginTop: 6,
   },
   publicBadge: {
     paddingHorizontal: 6,
@@ -659,20 +660,21 @@ const styles = StyleSheet.create({
   collaborativeBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#7B1FA2', // Purple for collab
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 8,
-    marginLeft: 8,
+    backgroundColor: '#F3E5F5', // Light purple background (matching tag style)
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 4,
+    alignSelf: 'flex-start',
   },
   collaborativeBadgeText: {
-    fontSize: 10,
+    fontSize: 12,
     fontWeight: '500',
-    color: '#fff',
+    color: '#7B1FA2', // Purple text
   },
   collaboratorAvatars: {
     flexDirection: 'row',
-    marginLeft: 12,
+    marginLeft: 8,
     alignItems: 'center',
   },
   collaboratorAvatarContainer: {
