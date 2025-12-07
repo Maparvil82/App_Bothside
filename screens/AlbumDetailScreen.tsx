@@ -153,33 +153,56 @@ export default function AlbumDetailScreen() {
   const { albumId } = route.params as { albumId: string };
 
   // --- DELETE MODAL LOGIC ---
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [albumToDelete, setAlbumToDelete] = useState<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  // Helper to truncate title
+  const truncate = (text: string, maxLen = 30) =>
+    text && text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
 
   const confirmDeleteAlbum = useCallback((albumToDelete: any) => {
-    setAlbumToDelete(albumToDelete);
-    setShowDeleteModal(true);
-  }, []);
-
-  const handleDeleteConfirmed = async () => {
     if (!albumToDelete) return;
 
-    try {
-      setIsDeleting(true);
-      if (user?.id) {
-        // Assuming UserCollectionService.removeFromCollection exists
-        await UserCollectionService.removeFromCollection(user.id, albumToDelete.albums?.id || albumToDelete.id);
-      }
+    // Determine the correct title path. 
+    // In SearchScreen it's item.albums.title. 
+    // In AlbumDetailScreen, 'album' state might be the user_collection row joined with albums.
+    // Based on usage like album.albums.id, the title is likely in album.albums.title.
+    // However, sometimes it might be flattened or different. 
+    // We'll try both: albumToDelete.albums?.title || albumToDelete.title
+    const title = albumToDelete.albums?.title || albumToDelete.title || '';
+    const truncatedTitle = truncate(title);
 
-      setShowDeleteModal(false);
+    Alert.alert(
+      t("collection_delete_title", { title: truncatedTitle }),
+      t("collection_delete_message"),
+      [
+        { text: t("cancel"), style: "cancel" },
+        {
+          text: t("delete"),
+          style: "destructive",
+          onPress: async () => {
+            // Pass the user_collection ID (albumToDelete.id)
+            await handleDeleteConfirmed(albumToDelete.id);
+          }
+        }
+      ],
+      { cancelable: true }
+    );
+  }, [t]);
+
+  const handleDeleteConfirmed = async (userCollectionId: string) => {
+    if (!userCollectionId) return;
+
+    try {
+      // Delete directly from user_collection using the primary key ID
+      const { error } = await supabase
+        .from('user_collection')
+        .delete()
+        .eq('id', userCollectionId);
+
+      if (error) throw error;
+
       navigation.goBack();
-      Alert.alert(t('common_success'), t('album_detail_deleted_success') || "Álbum eliminado con éxito");
     } catch (error) {
       console.error('Error deleting album:', error);
-      Alert.alert(t('common_error'), t('album_detail_delete_error') || "Error al eliminar el álbum");
-    } finally {
-      setIsDeleting(false);
+      Alert.alert(t('common_error'), t('search_error_deleting'));
     }
   };
 
@@ -1883,16 +1906,6 @@ export default function AlbumDetailScreen() {
           />
         </View>
       )}
-
-
-      <DeleteConfirmationModal
-        visible={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        onConfirm={handleDeleteConfirmed}
-        loading={isDeleting}
-        title={t('album_detail_delete_title') || "Eliminar álbum"}
-        message={t('album_detail_delete_message') || "¿Seguro que quieres eliminar este álbum? Esta acción no se puede deshacer."}
-      />
     </SafeAreaView>
   );
 }
