@@ -108,11 +108,15 @@ const GemsStack = () => {
       <Stack.Screen
         name="Gems"
         component={GemsScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Bothside',
-          headerLeft: () => <HeaderCalendar />,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
           headerRight: () => <HeaderAvatar />,
-        }}
+        })}
       />
     </Stack.Navigator>
   );
@@ -133,11 +137,15 @@ const MaletasStack = () => {
       <Stack.Screen
         name="Maletas"
         component={MaletasScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Bothside',
-          headerLeft: () => <HeaderCalendar />,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
           headerRight: () => <HeaderAvatar />,
-        }}
+        })}
       />
       <Stack.Screen
         name="ViewMaleta"
@@ -227,11 +235,15 @@ const AddDiscStack = () => {
       <Stack.Screen
         name="AddDisc"
         component={AddDiscScreen}
-        options={{
+        options={({ navigation }) => ({
           title: 'Bothside',
-          headerLeft: () => <HeaderCalendar />,
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
           headerRight: () => <HeaderAvatar />,
-        }}
+        })}
       />
     </Stack.Navigator>
   );

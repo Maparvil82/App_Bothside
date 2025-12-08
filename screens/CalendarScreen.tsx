@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
@@ -95,6 +96,90 @@ export default function CalendarScreen() {
   // Estados para autocomplete de tags
   const [existingTags, setExistingTags] = useState<string[]>([]);
   const [filteredTags, setFilteredTags] = useState<string[]>([]);
+
+  // Estados para autocomplete de nombres y colores
+  const [filteredNames, setFilteredNames] = useState<string[]>([]);
+  const [nameColors, setNameColors] = useState<Record<string, string>>({});
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+
+  // Cargar colores guardados al inicio
+  useEffect(() => {
+    loadSessionNameColors();
+  }, []);
+
+  const loadSessionNameColors = async () => {
+    try {
+      const storedColors = await AsyncStorage.getItem('sessionNameColors');
+      if (storedColors) {
+        setNameColors(JSON.parse(storedColors));
+      }
+    } catch (error) {
+      console.error('Error loading session name colors:', error);
+    }
+  };
+
+  const saveSessionNameColor = async (name: string, color: string) => {
+    try {
+      const newColors = { ...nameColors, [name]: color };
+      setNameColors(newColors);
+      await AsyncStorage.setItem('sessionNameColors', JSON.stringify(newColors));
+    } catch (error) {
+      console.error('Error saving session name color:', error);
+    }
+  };
+
+  const getRandomColor = () => {
+    const letters = '0123456789ABCDEF';
+    let color = '#';
+    for (let i = 0; i < 6; i++) {
+      color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  };
+
+  const fetchNameSuggestions = async (query: string) => {
+    if (!query || query.length < 2) {
+      setFilteredNames([]);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('sessions')
+        .select('name')
+        .ilike('name', `%${query}%`)
+        .limit(5);
+
+      if (!error && data) {
+        // Unique names
+        const names = Array.from(new Set(data.map(item => item.name)));
+        setFilteredNames(names);
+      }
+    } catch (error) {
+      console.error('Error fetching name suggestions:', error);
+    }
+  };
+
+  const handleNameChange = (text: string) => {
+    setFormName(text);
+    if (validationErrors.name) {
+      setValidationErrors({ ...validationErrors, name: undefined });
+    }
+    if (text.length >= 2) {
+      fetchNameSuggestions(text);
+      setShowNameSuggestions(true);
+    } else {
+      setShowNameSuggestions(false);
+    }
+  };
+
+  const handleSelectName = (name: string) => {
+    setFormName(name);
+    setShowNameSuggestions(false);
+    setFilteredNames([]);
+    if (validationErrors.name) {
+      setValidationErrors({ ...validationErrors, name: undefined });
+    }
+  };
 
   // Estados de validación
   const [validationErrors, setValidationErrors] = useState<{
@@ -543,6 +628,15 @@ export default function CalendarScreen() {
         payment_type: formPaymentType || null,
       };
 
+      // Gestionar color
+      let sessionColor = nameColors[formName.trim()];
+      if (!sessionColor) {
+        sessionColor = getRandomColor();
+        await saveSessionNameColor(formName.trim(), sessionColor);
+      }
+      // No enviamos 'color' a Supabase porque la columna no existe
+      // sessionData.color = sessionColor;
+
       if (formPaymentType === 'gratis') {
         sessionData.payment_amount = 0;
       } else if (formPaymentType === 'cerrado') {
@@ -655,6 +749,14 @@ export default function CalendarScreen() {
         tag: formTag.trim() || null,
         payment_type: formPaymentType || null,
       };
+
+      // Gestionar color
+      let sessionColor = nameColors[formName.trim()];
+      if (!sessionColor) {
+        sessionColor = getRandomColor();
+        await saveSessionNameColor(formName.trim(), sessionColor);
+      }
+      // updateData.color = sessionColor;
 
       if (formPaymentType === 'gratis') {
         updateData.payment_amount = 0;
@@ -1262,15 +1364,31 @@ export default function CalendarScreen() {
                       validationErrors.name ? styles.inputError : null,
                     ]}
                     value={formName}
-                    onChangeText={(text) => {
-                      setFormName(text);
-                      if (validationErrors.name) {
-                        setValidationErrors({ ...validationErrors, name: undefined });
-                      }
-                    }}
+                    onChangeText={handleNameChange}
                     placeholder={t('planner_placeholder_name')}
                     placeholderTextColor="#999"
                   />
+                  {/* Autocomplete de Nombres */}
+                  {showNameSuggestions && filteredNames.length > 0 && (
+                    <View style={styles.autocompleteContainer}>
+                      {filteredNames.map((name, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={styles.autocompleteItem}
+                          onPress={() => handleSelectName(name)}
+                          activeOpacity={0.7}
+                        >
+                          <View
+                            style={[
+                              styles.autocompleteTagDot,
+                              { backgroundColor: nameColors[name] || '#ccc' },
+                            ]}
+                          />
+                          <Text style={styles.autocompleteItemText}>{name}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  )}
                   {validationErrors.name && (
                     <Text style={styles.errorText}>{validationErrors.name}</Text>
                   )}
