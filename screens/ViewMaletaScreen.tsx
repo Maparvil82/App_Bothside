@@ -18,7 +18,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { SwipeListView } from 'react-native-swipe-list-view';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
@@ -35,6 +35,7 @@ interface ViewListScreenProps {
 
 const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, navigation: any, t: any, isCollaborative: boolean }) => {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
+  const { colors } = useTheme();
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -47,7 +48,7 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
   return (
     <Animated.View style={[styles.albumItemContainer, { opacity: fadeAnim }]}>
       <TouchableOpacity
-        style={styles.albumItem}
+        style={[styles.albumItem, { backgroundColor: colors.card }]}
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.album_id })}
         activeOpacity={0.7}
       >
@@ -56,12 +57,12 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
           style={styles.albumCover}
         />
         <View style={styles.albumInfo}>
-          <Text style={styles.albumTitle} numberOfLines={1}>
+          <Text style={[styles.albumTitle, { color: colors.text }]} numberOfLines={1}>
             {item.albums?.title}
           </Text>
-          <Text style={styles.albumArtist}>{item.albums?.artist}</Text>
+          <Text style={[styles.albumArtist, { color: colors.text, opacity: 0.7 }]}>{item.albums?.artist}</Text>
           <View style={styles.albumDetails}>
-            <Text style={styles.albumDetail}>
+            <Text style={[styles.albumDetail, { color: colors.text, opacity: 0.5 }]}>
               {item.albums?.label && item.albums.label !== '' && item.albums?.release_year
                 ? t('common_label_year_format').replace('{0}', item.albums.label).replace('{1}', item.albums.release_year)
                 : item.albums?.label && item.albums.label !== ''
@@ -81,11 +82,11 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
                   style={styles.avatarSmall}
                 />
               ) : (
-                <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
-                  <Ionicons name="person" size={10} color="#666" />
+                <View style={[styles.avatarSmall, { backgroundColor: colors.border, justifyContent: 'center', alignItems: 'center' }]}>
+                  <Ionicons name="person" size={10} color={colors.text} />
                 </View>
               )}
-              <Text style={styles.addedByText}>
+              <Text style={[styles.addedByText, { color: colors.text, opacity: 0.6 }]}>
                 {t('maletas_collaborative_addedBy')} {item.added_by_user.username}
               </Text>
             </View>
@@ -102,6 +103,7 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
 const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { colors } = useTheme();
   const { maletaId, listTitle } = route.params;
   const { isCollaborator, status: collaboratorStatus } = useIsCollaborator(maletaId);
   const { collaborators, refresh: refreshCollaborators } = useMaletaCollaborators(maletaId);
@@ -422,13 +424,13 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <View style={styles.headerInfo}>
 
           <View style={styles.headerTitleRow}>
 
-            <Text style={styles.headerTitle}>{albums.length} álbumes</Text>
+            <Text style={[styles.headerTitle, { color: colors.text }]}>{albums.length} álbumes</Text>
             {list.user_id === user?.id && (
               <View style={styles.ownerTagHeader}>
                 <Text style={styles.ownerTagHeaderText}>OWNER</Text>
@@ -449,7 +451,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                   <Ionicons name="person" size={16} color="#666" />
                 </View>
               )}
-              <Text style={styles.headerOwnerUsername}>@{ownerProfile.username}</Text>
+              <Text style={[styles.headerOwnerUsername, { color: colors.text }]}>@{ownerProfile.username}</Text>
 
             </View>
           )}
@@ -469,11 +471,11 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       </View>
 
       {list.is_collaborative && (
-        <View style={styles.collaborationSection}>
+        <View style={[styles.collaborationSection, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
           <View style={styles.collaborationHeader}>
 
 
-            <Text style={styles.collaborationText}>{t('maletas_collaborative_badgeLabel')}</Text>
+            <Text style={[styles.collaborationText, { color: colors.text }]}>{t('maletas_collaborative_badgeLabel')}</Text>
           </View>
 
 
@@ -520,7 +522,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
           <View>
             {list.description && (
               <View style={styles.descriptionContainer}>
-                <Text style={styles.descriptionText}>{list.description}</Text>
+                <Text style={[styles.descriptionText, { color: colors.text }]}>{list.description}</Text>
               </View>
             )}
 
@@ -535,7 +537,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
       {/* Fixed Invite Button Footer */}
       {list.is_collaborative && list.user_id === user?.id && (
-        <View style={styles.footerContainer}>
+        <View style={[styles.footerContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
           <TouchableOpacity
             style={styles.inviteButton}
             onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}

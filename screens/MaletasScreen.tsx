@@ -243,25 +243,24 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       >
         <MaletaCoverCollage
           albums={item.albums || []}
-          size={120}
+          size={50}
         />
         <View style={styles.listInfo}>
-          <Text style={styles.listTitle} numberOfLines={1} ellipsizeMode="tail">
-            {item.title}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+            <Text style={[styles.listTitle, { color: colors.text }]}>{item.title}</Text>
+            {item.is_collaborative && (
+              <View style={[styles.collabBadge, { backgroundColor: '#E8EAF6' }]}>
+                <Ionicons name="people" size={12} color="#3F51B5" />
+                <Text style={[styles.collabBadgeText, { color: '#3F51B5' }]}>Collab</Text>
+              </View>
+            )}
+          </View>
           {item.description && (
-            <Text style={styles.listDescription} numberOfLines={2}>
+            <Text style={[styles.listDescription, { color: colors.text, opacity: 0.7 }]} numberOfLines={2}>
               {item.description}
             </Text>
           )}
           <View style={styles.listMeta}>
-            {item.is_collaborative && (
-              <View style={styles.collaborativeBadge}>
-                <Ionicons name="people" size={14} color="#7B1FA2" style={{ marginRight: 4 }} />
-                <Text style={styles.collaborativeBadgeText}>Collab</Text>
-              </View>
-            )}
-
             <View style={styles.avatarsRow}>
               {/* Owner Avatar (if not me) */}
               {item.owner && (
@@ -590,12 +589,12 @@ const styles = StyleSheet.create({
   },
   listItem: {
     flexDirection: 'row',
-    backgroundColor: 'white',
+    // backgroundColor: 'white', // Removed to allow override
     marginHorizontal: 0,
     marginVertical: 0,
     padding: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    // borderBottomColor: '#eee', // Removed to allow override
     minHeight: 80,
   },
   listThumbnail: {
@@ -609,7 +608,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 0,
-    backgroundColor: '#F0F0F0',
+    // backgroundColor: '#F0F0F0', // Removed to allow override
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
@@ -622,13 +621,13 @@ const styles = StyleSheet.create({
   listTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    // color: '#333', // Removed to allow override
     marginBottom: 4,
 
   },
   listDescription: {
     fontSize: 14,
-    color: '#666',
+    // color: '#666', // Removed to allow override
     marginBottom: 4,
   },
   listMeta: {
@@ -640,6 +639,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginLeft: 2,
+  },
+  collabBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    marginLeft: 8,
+  },
+  collabBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    marginLeft: 4,
   },
   publicBadge: {
     paddingHorizontal: 6,

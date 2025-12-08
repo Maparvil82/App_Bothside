@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute, useTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -67,149 +67,174 @@ const AppDarkTheme: Theme = {
   },
 };
 
-const SearchStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerBackTitle: '',
-      headerTintColor: 'black',
-      headerShown: true,
-    }}
-  >
-    <Stack.Screen
-      name="Search"
-      component={SearchScreen}
-      options={{
-        title: 'Bothside',
-        headerLeft: () => <HeaderCalendar />,
-        headerRight: () => <HeaderAvatar />,
+const SearchStack = () => {
+  const { colors } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
       }}
-    />
-  </Stack.Navigator>
-);
+    >
+      <Stack.Screen
+        name="Search"
+        component={SearchScreen}
+        options={{
+          title: 'Bothside',
+          headerLeft: () => <HeaderCalendar />,
+          headerRight: () => <HeaderAvatar />,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
-const GemsStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerBackTitle: '',
-      headerTintColor: 'black',
-      headerShown: true,
-    }}
-  >
-    <Stack.Screen
-      name="Gems"
-      component={GemsScreen}
-      options={{
-        title: 'Bothside',
-        headerLeft: () => <HeaderCalendar />,
-        headerRight: () => <HeaderAvatar />,
+const GemsStack = () => {
+  const { colors } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
       }}
-    />
-  </Stack.Navigator>
-);
+    >
+      <Stack.Screen
+        name="Gems"
+        component={GemsScreen}
+        options={{
+          title: 'Bothside',
+          headerLeft: () => <HeaderCalendar />,
+          headerRight: () => <HeaderAvatar />,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
-const MaletasStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerBackTitle: '',
-      headerTintColor: 'black',
-      headerShown: true,
-    }}
-  >
-    <Stack.Screen
-      name="Maletas"
-      component={MaletasScreen}
-      options={{
-        title: 'Bothside',
-        headerLeft: () => <HeaderCalendar />,
-        headerRight: () => <HeaderAvatar />,
+const MaletasStack = () => {
+  const { colors } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
       }}
-    />
-    <Stack.Screen
-      name="ViewMaleta"
-      component={ViewMaletaScreen}
-      options={({ route }: any) => ({
-        title: route.params?.listTitle || 'Ver Maleta',
-        headerRight: () => <HeaderAvatar />,
-      })}
-    />
-    <Stack.Screen
-      name="EditMaleta"
-      component={EditMaletaScreen}
-      options={{ title: 'Editar Maleta' }}
-    />
-    <Stack.Screen
-      name="InviteCollaborators"
-      component={InviteCollaboratorsScreen}
-      options={{ title: 'Invitar Colaboradores' }}
-    />
-  </Stack.Navigator>
-);
+    >
+      <Stack.Screen
+        name="Maletas"
+        component={MaletasScreen}
+        options={{
+          title: 'Bothside',
+          headerLeft: () => <HeaderCalendar />,
+          headerRight: () => <HeaderAvatar />,
+        }}
+      />
+      <Stack.Screen
+        name="ViewMaleta"
+        component={ViewMaletaScreen}
+        options={({ route }: any) => ({
+          title: route.params?.listTitle || 'Ver Maleta',
+          headerRight: () => <HeaderAvatar />,
+        })}
+      />
+      <Stack.Screen
+        name="EditMaleta"
+        component={EditMaletaScreen}
+        options={{ title: 'Editar Maleta' }}
+      />
+      <Stack.Screen
+        name="InviteCollaborators"
+        component={InviteCollaboratorsScreen}
+        options={{ title: 'Invitar Colaboradores' }}
+      />
+    </Stack.Navigator>
+  );
+};
 
-const DashboardStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerBackTitle: '',
-      headerTintColor: 'black',
-      headerShown: true,
-    }}
-  >
-    <Stack.Screen
-      name="Dashboard"
-      component={DashboardScreen}
-      options={({ navigation }) => ({
-        title: 'Bothside',
-        headerLeft: () => (
-          <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
-            <Ionicons name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-        ),
-        headerRight: () => <HeaderAvatar />,
-      })}
-    />
-    <Stack.Screen
-      name="DjStatsDashboard"
-      component={DjStatsDashboard}
-      options={{ title: 'Panel DJ' }}
-    />
-    <Stack.Screen
-      name="ShelvesList"
-      component={ShelvesListScreen}
-      options={{ title: 'Mis Estanterías' }}
-    />
-    <Stack.Screen
-      name="ShelfEdit"
-      component={ShelfEditScreen}
-      options={{ title: 'Editar Estantería' }}
-    />
-    <Stack.Screen
-      name="ShelfView"
-      component={ShelfViewScreen}
-      options={({ route }: any) => ({
-        title: route.params?.shelfName || 'Estantería'
-      })}
-    />
-  </Stack.Navigator>
-);
-
-const AddDiscStack = () => (
-  <Stack.Navigator
-    screenOptions={{
-      headerBackTitle: '',
-      headerTintColor: 'black',
-      headerShown: true,
-    }}
-  >
-    <Stack.Screen
-      name="AddDisc"
-      component={AddDiscScreen}
-      options={{
-        title: 'Bothside',
-        headerLeft: () => <HeaderCalendar />,
-        headerRight: () => <HeaderAvatar />,
+const DashboardStack = () => {
+  const { colors } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
       }}
-    />
-  </Stack.Navigator>
-);
+    >
+      <Stack.Screen
+        name="Dashboard"
+        component={DashboardScreen}
+        options={({ navigation }) => ({
+          title: 'Bothside',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="arrow-back" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
+          headerRight: () => <HeaderAvatar />,
+        })}
+      />
+      <Stack.Screen
+        name="DjStatsDashboard"
+        component={DjStatsDashboard}
+        options={{ title: 'Panel DJ' }}
+      />
+      <Stack.Screen
+        name="ShelvesList"
+        component={ShelvesListScreen}
+        options={{ title: 'Mis Estanterías' }}
+      />
+      <Stack.Screen
+        name="ShelfEdit"
+        component={ShelfEditScreen}
+        options={{ title: 'Editar Estantería' }}
+      />
+      <Stack.Screen
+        name="ShelfView"
+        component={ShelfViewScreen}
+        options={({ route }: any) => ({
+          title: route.params?.shelfName || 'Estantería'
+        })}
+      />
+    </Stack.Navigator>
+  );
+};
+
+const AddDiscStack = () => {
+  const { colors } = useTheme();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
+      }}
+    >
+      <Stack.Screen
+        name="AddDisc"
+        component={AddDiscScreen}
+        options={{
+          title: 'Bothside',
+          headerLeft: () => <HeaderCalendar />,
+          headerRight: () => <HeaderAvatar />,
+        }}
+      />
+    </Stack.Navigator>
+  );
+};
 
 const ProfileStack = () => (
   <Stack.Navigator>
@@ -364,6 +389,123 @@ const MainAppWrapper = () => (
   </StatsProvider>
 );
 
+const AppStack = () => {
+  const { colors } = useTheme();
+  const { user } = useAuth();
+
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
+      }}
+    >
+      {user ? (
+        <>
+          <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
+
+          <Stack.Screen name="Profile" component={ProfileStack} />
+          <Stack.Screen
+            name="AlbumDetail"
+            component={AlbumDetailScreen}
+            options={{
+              headerShown: true,
+              title: 'Detalle del Álbum'
+            }}
+          />
+          <Stack.Screen
+            name="AIChat"
+            component={AIChatScreen}
+            options={{
+              headerShown: true,
+              title: 'Chat IA'
+            }}
+          />
+          <Stack.Screen
+            name="Leaderboard"
+            component={LeaderboardScreen}
+            options={{
+              headerShown: true,
+              title: 'Ranking'
+            }}
+          />
+          <Stack.Screen
+            name="ViewMaleta"
+            component={ViewMaletaScreen}
+            options={({ route }: any) => ({
+              headerShown: true,
+              title: route.params?.listTitle || 'Ver Maleta',
+              headerRight: () => <HeaderAvatar />,
+            })}
+          />
+          <Stack.Screen
+            name="EditMaleta"
+            component={EditMaletaScreen}
+            options={{
+              headerShown: true,
+              title: 'Editar Maleta'
+            }}
+          />
+          <Stack.Screen
+            name="Account"
+            component={AccountScreen}
+            options={{
+              headerShown: true,
+              title: 'Cuenta'
+            }}
+          />
+          <Stack.Screen
+            name="IaSubscriptionScreen"
+            component={IaSubscriptionScreen}
+            options={{
+              headerShown: true,
+              title: 'IA y Suscripción'
+            }}
+          />
+          <Stack.Screen
+            name="Calendar"
+            component={CalendarScreen}
+            options={{
+              headerShown: true,
+              title: 'Calendario'
+            }}
+          />
+          {ENABLE_AUDIO_SCAN && (
+            <Stack.Screen
+              name="AudioScan"
+              component={AudioScanScreen}
+              options={{
+                headerShown: true,
+                title: 'Escaneo de Audio'
+              }}
+            />
+          )}
+          <Stack.Screen
+            name="SelectCell"
+            component={SelectCellScreen}
+            options={{
+              headerShown: true,
+              title: 'Ubicar Vinilo'
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
+          <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal' }} />
+        </>
+      )}
+
+      <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} options={{ headerShown: false }} />
+    </Stack.Navigator>
+  );
+};
+
 const AppNavigator = () => {
   const { user, loading } = useAuth();
 
@@ -450,116 +592,7 @@ const AppNavigator = () => {
       <ThemeProvider>
         <ThemedNavigationContainer>
           <GemsProvider>
-            <Stack.Navigator
-              screenOptions={{
-                headerBackTitle: '',
-                headerTintColor: 'black',
-                headerShown: true,
-              }}
-            >
-              {user ? (
-
-                <>
-                  <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
-
-                  <Stack.Screen name="Profile" component={ProfileStack} />
-                  <Stack.Screen
-                    name="AlbumDetail"
-                    component={AlbumDetailScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Detalle del Álbum'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="AIChat"
-                    component={AIChatScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Chat IA'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="Leaderboard"
-                    component={LeaderboardScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Ranking'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="ViewMaleta"
-                    component={ViewMaletaScreen}
-                    options={({ route }: any) => ({
-                      headerShown: true,
-                      title: route.params?.listTitle || 'Ver Maleta',
-                      headerRight: () => <HeaderAvatar />,
-                    })}
-                  />
-                  <Stack.Screen
-                    name="EditMaleta"
-                    component={EditMaletaScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Editar Maleta'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="Account"
-                    component={AccountScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Cuenta'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="IaSubscriptionScreen"
-                    component={IaSubscriptionScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'IA y Suscripción'
-                    }}
-                  />
-                  <Stack.Screen
-                    name="Calendar"
-                    component={CalendarScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Calendario'
-                    }}
-                  />
-                  {ENABLE_AUDIO_SCAN && (
-                    <Stack.Screen
-                      name="AudioScan"
-                      component={AudioScanScreen}
-                      options={{
-                        headerShown: true,
-                        title: 'Escaneo de Audio'
-                      }}
-                    />
-                  )}
-                  <Stack.Screen
-                    name="SelectCell"
-                    component={SelectCellScreen}
-                    options={{
-                      headerShown: true,
-                      title: 'Ubicar Vinilo'
-                    }}
-                  />
-                </>
-              ) : (
-
-                <>
-                  <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-                  <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-                  <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
-                  <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal' }} />
-                </>
-              )}
-
-
-              <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} options={{ headerShown: false }} />
-            </Stack.Navigator>
+            <AppStack />
 
             {/* Modal Global - Fuera del Stack Navigator */}
             <CreateMaletaModal
