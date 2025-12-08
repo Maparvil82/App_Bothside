@@ -798,6 +798,12 @@ export const es = {
 
     audio_recorder_title: "Nota de audio para {0}",
     audio_recorder_instructions: "Graba una nota de audio de máximo 1 minuto sobre este álbum",
+
+    // Dark Mode Modal
+    darkMode_modal_title: "Modo Oscuro en Desarrollo",
+    darkMode_modal_message: "Estamos trabajando activamente en la interfaz de usuario de la versión oscura para ofrecerte la mejor experiencia.",
+    darkMode_modal_sub_message: "Es posible que encuentres algunos elementos que aún no estén perfectamente adaptados.",
+    darkMode_modal_button: "Entendido",
     audio_recorder_start: "Iniciar Grabación",
     audio_recorder_stop: "Detener Grabación",
     audio_recorder_rerecord: "Regrabar",

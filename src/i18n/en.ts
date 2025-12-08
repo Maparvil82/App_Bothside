@@ -798,6 +798,12 @@ export const en = {
 
     audio_recorder_title: "Audio note for {0}",
     audio_recorder_instructions: "Record an audio note of max 1 minute about this album",
+
+    // Dark Mode Modal
+    darkMode_modal_title: "Dark Mode in Development",
+    darkMode_modal_message: "We are actively working on the dark version user interface to offer you the best experience.",
+    darkMode_modal_sub_message: "You may find some elements that are not perfectly adapted yet.",
+    darkMode_modal_button: "Understood",
     audio_recorder_start: "Start Recording",
     audio_recorder_stop: "Stop Recording",
     audio_recorder_rerecord: "Re-record",

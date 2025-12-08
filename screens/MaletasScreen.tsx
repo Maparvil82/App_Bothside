@@ -8,6 +8,7 @@ import {
   RefreshControl,
   Image,
   ScrollView,
+  Dimensions,
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,9 @@ import { useTheme } from '@react-navigation/native';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { useTranslation } from '../src/i18n/useTranslation';
+
+const { width } = Dimensions.get('window');
+const MALETA_SIZE = width * 0.25;
 
 interface ListsScreenProps {
   navigation: any;
@@ -243,7 +247,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       >
         <MaletaCoverCollage
           albums={item.albums || []}
-          size={50}
+          size={MALETA_SIZE}
         />
         <View style={styles.listInfo}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -594,19 +598,19 @@ const styles = StyleSheet.create({
     marginVertical: 0,
     padding: 15,
     borderBottomWidth: 1,
-    // borderBottomColor: '#eee', // Removed to allow override
+    borderBottomColor: '#eee',
     minHeight: 80,
   },
   listThumbnail: {
-    width: 50,
-    height: 50,
+    width: MALETA_SIZE,
+    height: MALETA_SIZE,
     borderRadius: 0,
     marginRight: 15,
 
   },
   listThumbnailPlaceholder: {
-    width: 50,
-    height: 50,
+    width: MALETA_SIZE,
+    height: MALETA_SIZE,
     borderRadius: 0,
     // backgroundColor: '#F0F0F0', // Removed to allow override
     justifyContent: 'center',
@@ -777,4 +781,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ListsScreen;
+export default ListsScreen; 

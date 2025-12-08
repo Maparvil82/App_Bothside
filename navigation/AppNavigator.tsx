@@ -49,6 +49,7 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService } from '../services/database';
 import { PrePurchaseScreen } from '../screens/PrePurchaseScreen';
 import { Alert } from 'react-native';
+import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -593,6 +594,7 @@ const AppNavigator = () => {
         <ThemedNavigationContainer>
           <GemsProvider>
             <AppStack />
+            <DarkModeWIPModal />
 
             {/* Modal Global - Fuera del Stack Navigator */}
             <CreateMaletaModal

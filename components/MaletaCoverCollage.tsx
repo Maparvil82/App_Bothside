@@ -12,7 +12,7 @@ interface MaletaCoverCollageProps {
 
 export const MaletaCoverCollage: React.FC<MaletaCoverCollageProps> = ({
   albums,
-  size = 50
+  size = 400
 }) => {
   // Obtener los últimos 3 álbumes (suficiente para el mosaico)
   // Invertimos para mostrar los más recientes primero si vienen ordenados cronológicamente
