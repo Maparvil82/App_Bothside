@@ -823,7 +823,7 @@ export const en = {
     maletas_collaborative_inviteScreenTitle: "Invite collaborators",
     maletas_collaborative_searchPlaceholder: "Search users...",
     maletas_collaborative_pendingSectionTitle: "Pending invitations",
-    maletas_collaborative_acceptedSectionTitle: "Accepted collaborators",
+    maletas_collaborative_acceptedSectionTitle: "Manage collaborators",
     maletas_collaborative_invitationsTitle: "Collaboration invites",
     maletas_collaborative_invitationAccept: "Accept",
     maletas_collaborative_invitationReject: "Decline",

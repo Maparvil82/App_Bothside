@@ -819,7 +819,7 @@ export const es = {
     // Maletas Collaborative
     maletas_collaborative_switchLabel: "Hacer maleta colaborativa",
     maletas_collaborative_switchDescription: "Invita a otros usuarios de Bothside para crear esta maleta juntos. Cada colaborador puede añadir discos de su propia colección.",
-    maletas_collaborative_inviteButton: "Invitar colaboradores",
+    maletas_collaborative_inviteButton: "Gestionar colaboradores",
     maletas_collaborative_inviteScreenTitle: "Invitar colaboradores",
     maletas_collaborative_searchPlaceholder: "Buscar usuarios...",
     maletas_collaborative_pendingSectionTitle: "Invitaciones pendientes",

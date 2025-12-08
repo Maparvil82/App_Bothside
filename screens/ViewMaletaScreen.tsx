@@ -509,7 +509,10 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         )}
         renderHiddenItem={renderSwipeActions}
         keyExtractor={(item) => item.album_id}
-        contentContainerStyle={styles.albumsContainer}
+        contentContainerStyle={[
+          styles.albumsContainer,
+          list.is_collaborative && list.user_id === user?.id && { paddingBottom: 100 }
+        ]}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -537,7 +540,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             style={styles.inviteButton}
             onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}
           >
-            <Ionicons name="person-add" size={20} color="#fff" style={{ marginRight: 8 }} />
+
             <Text style={styles.inviteButtonText}>{t('maletas_collaborative_inviteButton')}</Text>
           </TouchableOpacity>
         </View>
