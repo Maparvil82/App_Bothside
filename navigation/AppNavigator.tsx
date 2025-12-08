@@ -3,7 +3,7 @@ import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNam
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
@@ -156,11 +156,15 @@ const DashboardStack = () => (
     <Stack.Screen
       name="Dashboard"
       component={DashboardScreen}
-      options={{
+      options={({ navigation }) => ({
         title: 'Bothside',
-        headerLeft: () => <HeaderCalendar />,
+        headerLeft: () => (
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+            <Ionicons name="arrow-back" size={24} color="#000" />
+          </TouchableOpacity>
+        ),
         headerRight: () => <HeaderAvatar />,
-      }}
+      })}
     />
     <Stack.Screen
       name="DjStatsDashboard"

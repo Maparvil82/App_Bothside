@@ -41,7 +41,7 @@ interface CollectionStats {
   totalArtists: number;
   totalLabels: number;
   totalStyles: number;
-  oldestAlbum: number;
+  oldestAlbum: number | null;
   newestAlbum: number;
   collectionValue: number;
   topArtists: Array<{ artist: string; count: number }>;
@@ -165,7 +165,7 @@ export default function DashboardScreen() {
           totalArtists: 0,
           totalLabels: 0,
           totalStyles: 0,
-          oldestAlbum: 0,
+          oldestAlbum: null,
           newestAlbum: 0,
           collectionValue: 0,
           topArtists: [],
@@ -238,10 +238,12 @@ export default function DashboardScreen() {
         // Años
         if (album.release_year && !isNaN(Number(album.release_year))) {
           const year = Number(album.release_year);
-          years.push(year);
-          const decade = Math.floor(year / 10) * 10;
-          const decadeLabel = `${decade}s`;
-          decades.set(decadeLabel, (decades.get(decadeLabel) || 0) + 1);
+          if (year > 0) {
+            years.push(year);
+            const decade = Math.floor(year / 10) * 10;
+            const decadeLabel = `${decade}s`;
+            decades.set(decadeLabel, (decades.get(decadeLabel) || 0) + 1);
+          }
         }
       });
 
@@ -278,7 +280,7 @@ export default function DashboardScreen() {
           console.log(`📊 Álbum ${index + 1} con sello:`, album.title, album.label);
         }
       });
-      const oldestAlbum = years.length > 0 ? Math.min(...years) : 0;
+      const oldestAlbum = years.length > 0 ? Math.min(...years) : null;
       const newestAlbum = years.length > 0 ? Math.max(...years) : 0;
 
       // Top 5 artistas
@@ -660,7 +662,7 @@ export default function DashboardScreen() {
           <StatCard title={t('dashboard_stat_unique_artists')} value={stats.totalArtists} />
           <StatCard title={t('dashboard_stat_unique_labels')} value={stats.totalLabels} />
           <StatCard title={t('dashboard_stat_unique_styles')} value={stats.totalStyles} />
-          <StatCard title={t('dashboard_stat_oldest_album')} value={stats.oldestAlbum} />
+          <StatCard title={t('dashboard_stat_oldest_album')} value={stats.oldestAlbum ?? '—'} />
           <StatCard title={t('dashboard_stat_newest_album')} value={stats.newestAlbum} />
         </View>
 
