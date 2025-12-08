@@ -127,7 +127,10 @@ const MaletasStack = () => (
     <Stack.Screen
       name="ViewMaleta"
       component={ViewMaletaScreen}
-      options={{ title: 'Ver Maleta' }}
+      options={{
+        title: 'Ver Maleta',
+        headerRight: () => <HeaderAvatar />,
+      }}
     />
     <Stack.Screen
       name="EditMaleta"
@@ -198,7 +201,7 @@ const AddDiscStack = () => (
       options={{
         title: 'Bothside',
         headerLeft: () => <HeaderCalendar />,
-        // No avatar on AddDisc screen as per previous config (showAvatar={false})
+        headerRight: () => <HeaderAvatar />,
       }}
     />
   </Stack.Navigator>
@@ -485,7 +488,8 @@ const AppNavigator = () => {
                     component={ViewMaletaScreen}
                     options={{
                       headerShown: true,
-                      title: 'Ver Maleta'
+                      title: 'Ver Maleta',
+                      headerRight: () => <HeaderAvatar />,
                     }}
                   />
                   <Stack.Screen

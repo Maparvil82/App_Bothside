@@ -72,26 +72,28 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
               }
             </Text>
           </View>
+          {/* Added by Avatar */}
+          {isCollaborative && item.added_by_user && (
+            <View style={styles.addedByRow}>
+              {item.added_by_user.avatar_url ? (
+                <Image
+                  source={{ uri: item.added_by_user.avatar_url }}
+                  style={styles.avatarSmall}
+                />
+              ) : (
+                <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
+                  <Ionicons name="person" size={10} color="#666" />
+                </View>
+              )}
+              <Text style={styles.addedByText}>
+                {t('maletas_collaborative_addedBy')} {item.added_by_user.username}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Added by Avatar */}
-        {isCollaborative && item.added_by_user && (
-          <View style={styles.addedByRow}>
-            {item.added_by_user.avatar_url ? (
-              <Image
-                source={{ uri: item.added_by_user.avatar_url }}
-                style={styles.avatarSmall}
-              />
-            ) : (
-              <View style={[styles.avatarSmall, { backgroundColor: '#eee', justifyContent: 'center', alignItems: 'center' }]}>
-                <Ionicons name="person" size={10} color="#666" />
-              </View>
-            )}
-            <Text style={styles.addedByText}>
-              {t('maletas_collaborative_addedBy')} {item.added_by_user.username}
-            </Text>
-          </View>
-        )}
+
       </TouchableOpacity>
     </Animated.View>
   );
@@ -689,6 +691,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F8F9FA',
+    marginBottom: 20,
   },
   header: {
     flexDirection: 'row',
@@ -1110,7 +1113,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: '#007AFF',
     paddingVertical: 16,
     borderRadius: 12,
   },
