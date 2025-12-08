@@ -127,10 +127,10 @@ const MaletasStack = () => (
     <Stack.Screen
       name="ViewMaleta"
       component={ViewMaletaScreen}
-      options={{
-        title: 'Ver Maleta',
+      options={({ route }: any) => ({
+        title: route.params?.listTitle || 'Ver Maleta',
         headerRight: () => <HeaderAvatar />,
-      }}
+      })}
     />
     <Stack.Screen
       name="EditMaleta"
@@ -486,11 +486,11 @@ const AppNavigator = () => {
                   <Stack.Screen
                     name="ViewMaleta"
                     component={ViewMaletaScreen}
-                    options={{
+                    options={({ route }: any) => ({
                       headerShown: true,
-                      title: 'Ver Maleta',
+                      title: route.params?.listTitle || 'Ver Maleta',
                       headerRight: () => <HeaderAvatar />,
-                    }}
+                    })}
                   />
                   <Stack.Screen
                     name="EditMaleta"
