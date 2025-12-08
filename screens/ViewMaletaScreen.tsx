@@ -428,7 +428,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
           <View style={styles.headerTitleRow}>
 
-            <Text style={styles.headerTitle}>{list.title} - {albums.length} álbumes</Text>
+            <Text style={styles.headerTitle}>{albums.length} álbumes</Text>
             {list.user_id === user?.id && (
               <View style={styles.ownerTagHeader}>
                 <Text style={styles.ownerTagHeaderText}>OWNER</Text>
