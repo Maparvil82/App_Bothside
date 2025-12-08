@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 import { YouTubeWebViewPlayer } from './YouTubeWebViewPlayer';
 
 const { width } = Dimensions.get('window');
@@ -356,13 +357,13 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 16,
         right: 16,
-        backgroundColor: '#000',
+        backgroundColor: AppColors.primary,
         borderRadius: 50,
         width: 56,
         height: 56,
         justifyContent: 'center',
         alignItems: 'center',
-        shadowColor: '#000',
+        shadowColor: AppColors.primary,
         shadowOffset: {
             width: 0,
             height: 2,

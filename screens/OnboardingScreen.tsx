@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -41,7 +42,7 @@ export const OnboardingScreen: React.FC = () => {
       title: t('onboarding_step3_title'),
       subtitle: t('onboarding_step3_subtitle'),
       image: require('../assets/videoframe_8000.png'),
-      color: '#000',
+      color: AppColors.primary,
     },
     {
       id: 4,
@@ -251,17 +252,17 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     width: 24,
   },
   nextButton: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: 14,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '500',
   },
   logoContainer: {

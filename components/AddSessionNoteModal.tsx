@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from './BothsideLoader';
 import { supabase } from '../lib/supabase';
+import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 
@@ -100,7 +101,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
             editable={!isSaving}
           />
 
-          <Text style={[styles.charCount, { color: '#000' }]}>
+          <Text style={[styles.charCount, { color: AppColors.primary }]}>
             {noteText.length}/500
           </Text>
 
@@ -110,11 +111,11 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
               onPress={handleCancel}
               disabled={isSaving}
             >
-              <Text style={[styles.buttonText, { color: '#000' }]}>{t('common_cancel')}</Text>
+              <Text style={[styles.buttonText, { color: AppColors.primary }]}>{t('common_cancel')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.saveButton, { backgroundColor: '#000' }]}
+              style={[styles.button, styles.saveButton, { backgroundColor: AppColors.primary }]}
               onPress={handleSave}
               disabled={isSaving}
             >
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     padding: 20,
     width: '100%',
     maxWidth: 350,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,

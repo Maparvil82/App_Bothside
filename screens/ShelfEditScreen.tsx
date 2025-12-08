@@ -5,6 +5,7 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 export default function ShelfEditScreen() {
   const { user } = useAuth();
@@ -146,7 +147,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',

@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 interface CollectorData {
   id: string;
@@ -234,7 +235,7 @@ const styles = StyleSheet.create({
   },
   currentUserItem: {
     borderLeftWidth: 4,
-    borderLeftColor: '#000',
+    borderLeftColor: AppColors.primary,
     backgroundColor: '#f8f9ff',
   },
   rankContainer: {
@@ -262,7 +263,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   currentUserText: {
-    color: '#000',
+    color: AppColors.primary,
   },
   rankTitle: {
     fontSize: 14,

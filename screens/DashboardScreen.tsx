@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { useStats } from '../contexts/StatsContext';
 import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
@@ -1126,7 +1127,7 @@ const styles = StyleSheet.create({
   },
   albumDate: {
     fontSize: 11,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '500',
   },
   albumImageContainer: {
@@ -1158,7 +1159,7 @@ const styles = StyleSheet.create({
     color: '#28a745',
   },
   albumRank: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 12,
     width: 22,
     height: 22,
@@ -1171,7 +1172,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   valueCard: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 12,
@@ -1209,7 +1210,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 8,
     paddingVertical: 10,
     marginTop: 12,
@@ -1297,7 +1298,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 50,
     padding: 15,
     shadowColor: '#000',

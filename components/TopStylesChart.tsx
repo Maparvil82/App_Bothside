@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 interface TopStyle {
   style: string;
@@ -49,7 +50,7 @@ export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="musical-notes" size={20} color="#000" />
+        <Ionicons name="musical-notes" size={20} color={AppColors.primary} />
         <Text style={styles.title}>{t('top_styles_title')}</Text>
       </View>
 

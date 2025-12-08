@@ -13,6 +13,7 @@ import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { AlbumService } from '../services/database';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 export const AdminScreen: React.FC = () => {
   const { user } = useAuth();
@@ -242,7 +243,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',

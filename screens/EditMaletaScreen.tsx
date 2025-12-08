@@ -10,6 +10,7 @@ import {
   Switch,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService } from '../services/database';
 import { useTranslation } from '../src/i18n/useTranslation';
@@ -191,7 +192,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
             <Switch
               value={isPublic}
               onValueChange={setIsPublic}
-              trackColor={{ false: '#E5E5E5', true: '#000' }}
+              trackColor={{ false: '#E5E5E5', true: AppColors.primary }}
               thumbColor={isPublic ? '#FFFFFF' : '#FFFFFF'}
             />
           </View>
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   saveButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

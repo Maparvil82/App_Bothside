@@ -16,6 +16,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useTranslation } from '../src/i18n/useTranslation';
 
 export const LoginScreen: React.FC = () => {
@@ -253,13 +254,13 @@ const styles = StyleSheet.create({
     top: 13,
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     height: 52,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 24,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,

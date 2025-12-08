@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useCameraPermissions } from 'expo-camera';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { CameraComponent } from '../components/CameraComponent';
@@ -1465,7 +1466,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#000',
+    borderBottomColor: AppColors.primary,
   },
   tabText: {
     marginLeft: 8,
@@ -1474,7 +1475,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '600',
   },
   tabContent: {
@@ -1531,7 +1532,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   manualSearchButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1547,7 +1548,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   searchButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1596,7 +1597,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1727,7 +1728,7 @@ const styles = StyleSheet.create({
   capturedImageButtonText: {
     marginLeft: 8,
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '600',
   },
   permissionText: {
@@ -1739,7 +1740,7 @@ const styles = StyleSheet.create({
   cameraOpenButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -1806,7 +1807,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 24,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
@@ -1822,10 +1823,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 50,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,

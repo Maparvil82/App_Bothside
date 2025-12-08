@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 
 interface ShelfGridProps {
   rows: number;
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   highlightedCell: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderColor: '#0056b3',
     borderStyle: 'solid',
   },

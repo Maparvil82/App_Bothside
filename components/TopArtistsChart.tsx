@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
+import { AppColors } from '../src/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
 
@@ -48,7 +49,7 @@ export const TopArtistsChart: React.FC<TopArtistsChartProps> = ({ data }) => {
     propsForDots: {
       r: '6',
       strokeWidth: '2',
-      stroke: '#000',
+      stroke: AppColors.primary,
     },
     propsForLabels: {
       fontSize: 10,

@@ -17,6 +17,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
@@ -627,7 +628,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                               <Ionicons
                                 name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                                 size={24}
-                                color={isSelected ? '#000' : '#CCC'}
+                                color={isSelected ? AppColors.primary : '#CCC'}
                               />
                             </View>
                           </View>
@@ -773,7 +774,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#000',
+    color: AppColors.primary,
   },
   statLabel: {
     fontSize: 12,
@@ -807,7 +808,7 @@ const styles = StyleSheet.create({
   },
   addAlbumButtonText: {
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     marginLeft: 4,
   },
   albumsContainer: {
@@ -911,7 +912,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -996,7 +997,7 @@ const styles = StyleSheet.create({
   modalTitleNew: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#000',
+    color: AppColors.primary,
   },
   modalCloseButtonNew: {
     padding: 8,
@@ -1086,7 +1087,7 @@ const styles = StyleSheet.create({
   },
   buttonPrimaryNew: {
     paddingVertical: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -1118,7 +1119,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 16,
     borderRadius: 12,
   },

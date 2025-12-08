@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
+import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -199,7 +200,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,

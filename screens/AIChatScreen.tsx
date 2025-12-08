@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -585,7 +586,7 @@ const styles = StyleSheet.create({
     minWidth: 60,
   },
   userBubble: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   aiBubble: {
     // backgroundColor se aplica dinámicamente
@@ -636,7 +637,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },

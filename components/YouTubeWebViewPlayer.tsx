@@ -10,6 +10,7 @@ import {
   Linking,
 } from 'react-native';
 import { WebView } from 'react-native-webview';
+import { AppColors } from '../src/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
 
@@ -242,7 +243,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   header: {
     flexDirection: 'row',
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
   },
   webViewContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   webView: {
     flex: 1,
@@ -292,7 +293,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     zIndex: 1,
   },
   loadingText: {
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   errorTitle: {
     color: '#fff',
@@ -327,7 +328,7 @@ const styles = StyleSheet.create({
   retryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,

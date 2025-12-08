@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Audio } from 'expo-av';
+import { AppColors } from '../src/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import YoutubePlayer from "react-native-youtube-iframe";
 
@@ -251,7 +252,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                 <Ionicons
                   name={isMinimized ? 'chevron-up' : 'chevron-down'}
                   size={24}
-                  color={'#000'}
+                  color={AppColors.primary}
                 />
               </TouchableOpacity>
 
@@ -285,7 +286,7 @@ const styles = StyleSheet.create({
     right: 20,
     backgroundColor: 'white',
     borderRadius: 12,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -306,7 +307,7 @@ const styles = StyleSheet.create({
   videoContainer: {
     width: '100%',
     height: 180,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   hiddenVideo: {
     width: 1,
@@ -352,7 +353,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 2,
   },
   timeText: {

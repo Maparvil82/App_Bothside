@@ -7,6 +7,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from './BothsideLoader';
 import { LineChart } from 'react-native-chart-kit';
+import { AppColors } from '../src/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 import { useStats } from '../contexts/StatsContext';
 
@@ -70,7 +71,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
     propsForDots: {
       r: '4',
       strokeWidth: '2',
-      stroke: '#000',
+      stroke: AppColors.primary,
     },
   };
 
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     padding: 16,
     marginHorizontal: 16,
     marginVertical: 8,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   averagePrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#000',
+    color: AppColors.primary,
   },
   moreStylesText: {
     fontSize: 12,

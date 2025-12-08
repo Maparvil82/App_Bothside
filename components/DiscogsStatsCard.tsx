@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 interface DiscogsStatsCardProps {
   album: {
@@ -100,7 +101,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginVertical: 8,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 1,
@@ -153,7 +154,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#000',
+    color: AppColors.primary,
     textAlign: 'right',
   },
 }); 

@@ -1,4 +1,6 @@
 import React from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 
 interface ShelfGridSelectableProps {
@@ -66,7 +68,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   selectedCell: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderColor: '#0056b3',
     borderStyle: 'solid',
   },

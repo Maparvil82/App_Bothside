@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { FloatingAudioPlayer } from './FloatingAudioPlayer';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 interface AudioNoteAlbum {
   id: string;

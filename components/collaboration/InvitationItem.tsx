@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
+import { AppColors } from '../../src/theme/colors';
 
 interface InvitationItemProps {
     invitation: any; // Using any for now to avoid complex type imports, but should be typed properly
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     acceptButton: {
-        backgroundColor: '#000',
+        backgroundColor: AppColors.primary,
     },
     rejectButton: {
         backgroundColor: 'transparent',

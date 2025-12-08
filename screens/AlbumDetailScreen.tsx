@@ -19,6 +19,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useRoute, useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
@@ -2099,7 +2100,7 @@ const styles = StyleSheet.create({
   },
   catalogNumber: {
     fontSize: 12,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '500',
     marginTop: 2,
   },
@@ -2202,7 +2203,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: '#f0f9ff',
 
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -2223,7 +2224,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 12,
 
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -2244,7 +2245,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginHorizontal: 16,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2268,7 +2269,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     marginBottom: 8,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 1,
@@ -2343,7 +2344,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#000',
+    borderLeftColor: AppColors.primary,
   },
   shelfInfo: {
     flex: 1,
@@ -2381,14 +2382,14 @@ const styles = StyleSheet.create({
   },
   videoModalContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   videoModalHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   videoCloseButton: {
     padding: 8,
@@ -2405,11 +2406,11 @@ const styles = StyleSheet.create({
   },
   videoContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   videoPlayer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   videoPlayerHidden: {
     display: 'none',
@@ -2441,7 +2442,7 @@ const styles = StyleSheet.create({
   },
   videoErrorButton: {
     marginTop: 15,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -2491,12 +2492,12 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   valueCard: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     margin: 10,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2526,7 +2527,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2595,7 +2596,7 @@ const styles = StyleSheet.create({
   },
   catalog: {
     fontSize: 12,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '500',
   },
   countryText: {
@@ -2660,7 +2661,7 @@ const styles = StyleSheet.create({
   },
   videoButtonText: {
     fontSize: 14,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '500',
   },
   videosSection: {
@@ -2672,7 +2673,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderRadius: 8,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2685,13 +2686,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30, // Cambiado de 120 a 30 para que esté más pegado al fondo
     right: 20,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     width: 60,
     height: 60,
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -2797,7 +2798,7 @@ const styles = StyleSheet.create({
     margin: 20,
     maxHeight: '90%',
     width: '90%',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -2893,7 +2894,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   videoLoadingTextModal: {
     color: '#fff',
@@ -2904,7 +2905,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   videoErrorTextModal: {
     color: '#fff',
@@ -2975,7 +2976,7 @@ const styles = StyleSheet.create({
     height: 280,
     borderRadius: 140,
     marginBottom: 40,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
     shadowRadius: 16,
@@ -3312,7 +3313,7 @@ const styles = StyleSheet.create({
   },
   typeFormProgressFill: {
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   typeFormContent: {
     flex: 1,
@@ -3370,7 +3371,7 @@ const styles = StyleSheet.create({
   typeFormNextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3387,7 +3388,7 @@ const styles = StyleSheet.create({
   typeFormSaveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3430,7 +3431,7 @@ const styles = StyleSheet.create({
   },
   typeFormButtonText: {
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '600',
     flex: 1,
     marginLeft: 12,
@@ -3481,11 +3482,11 @@ const styles = StyleSheet.create({
   },
   trackItemSelected: {
     backgroundColor: '#f0f9ff',
-    borderColor: '#000',
+    borderColor: AppColors.primary,
 
   },
   trackTitleSelected: {
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '600',
   },
   typeFormResponsesInline: {
@@ -3533,7 +3534,7 @@ const styles = StyleSheet.create({
   typeFormQuestionNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: AppColors.primary,
     marginRight: 12,
     minWidth: 20,
   },
@@ -3558,7 +3559,7 @@ const styles = StyleSheet.create({
   },
   errorButton: {
     marginTop: 20,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3578,7 +3579,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -3631,7 +3632,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   retryAudioButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
@@ -3655,7 +3656,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -3687,7 +3688,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     borderColor: '#e9ecef',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -3783,7 +3784,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3798,10 +3799,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 50,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -3838,13 +3839,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 50,
     width: 56,
     height: 56,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -3867,7 +3868,7 @@ const styles = StyleSheet.create({
     marginRight: 12,
     backgroundColor: '#fff',
     borderRadius: 8,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,

@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -251,7 +252,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     marginBottom: 20,
     marginTop: 10,
-    tintColor: '#000',
+    tintColor: AppColors.primary,
   },
   header: {
     alignItems: 'center',
@@ -305,7 +306,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedPlan: {
-    borderColor: '#000',
+    borderColor: AppColors.primary,
     backgroundColor: '#f8f9ff',
     borderWidth: 2,
   },
@@ -316,7 +317,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -12,
     right: 20,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -348,13 +349,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   radioButtonSelected: {
-    borderColor: '#000',
+    borderColor: AppColors.primary,
   },
   radioButtonInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   planTitle: {
     fontSize: 18,
@@ -407,12 +408,12 @@ const styles = StyleSheet.create({
     color: '#155724',
   },
   subscribeButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -434,7 +435,7 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     fontWeight: '600',
   },
   footerLinks: {

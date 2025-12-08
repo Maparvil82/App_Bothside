@@ -6,6 +6,7 @@ import { useTheme, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AppColors } from '../src/theme/colors';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
@@ -1683,7 +1684,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1817,8 +1818,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pickerOptionSelected: {
-    backgroundColor: '#000',
-    borderColor: '#000',
+    backgroundColor: AppColors.primary,
+    borderColor: AppColors.primary,
   },
   pickerOptionText: {
     fontSize: 14,
@@ -1836,7 +1837,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   saveButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   deleteButton: {
     backgroundColor: '#dc3545',
@@ -1865,7 +1866,7 @@ const styles = StyleSheet.create({
   modalTitleNew: {
     fontSize: 22,
     fontWeight: '700',
-    color: '#000',
+    color: AppColors.primary,
   },
   modalDateSeparator: {
     fontSize: 22,
@@ -1900,7 +1901,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: AppColors.primary,
   },
   requiredAsterisk: {
     color: '#ef4444',
@@ -1912,7 +1913,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     minHeight: 48,
   },
   inputError: {
@@ -1946,8 +1947,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   paymentOptionSelectedNew: {
-    backgroundColor: '#000',
-    borderColor: '#000',
+    backgroundColor: AppColors.primary,
+    borderColor: AppColors.primary,
   },
   paymentOptionTextNew: {
     fontSize: 14,
@@ -1966,7 +1967,7 @@ const styles = StyleSheet.create({
   },
   buttonPrimaryNew: {
     paddingVertical: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
@@ -2037,7 +2038,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
-    color: '#000',
+    color: AppColors.primary,
   },
   timePicker: {
     height: 120,
@@ -2063,7 +2064,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   viewToggleButtonActive: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
 
   },
   viewToggleButtonText: {
@@ -2082,7 +2083,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     maxHeight: 200,
     overflow: 'hidden',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,

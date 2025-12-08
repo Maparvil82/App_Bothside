@@ -20,6 +20,7 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
 import { useStats } from '../contexts/StatsContext';
@@ -2111,7 +2112,7 @@ export const SearchScreen: React.FC = () => {
                     >
                       <View style={[
                         styles.toggleTrack,
-                        { backgroundColor: newShelfIsPublic ? '#000' : '#ccc' }
+                        { backgroundColor: newShelfIsPublic ? AppColors.primary : '#ccc' }
                       ]}>
                         <View style={[
                           styles.toggleThumb,
@@ -2533,7 +2534,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   filterChipActive: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   filterChipText: {
     fontSize: 14,
@@ -2633,7 +2634,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   addButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -2680,7 +2681,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -2720,7 +2721,7 @@ const styles = StyleSheet.create({
     borderRadius: 0, // Sin bordes redondeados
   },
   swipeOptions: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRightWidth: 2,
     borderRightColor: 'rgba(255,255,255,0.5)', // Separador más visible
   },
@@ -2746,7 +2747,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     width: '90%',
     maxHeight: '80%',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,
@@ -2786,7 +2787,7 @@ const styles = StyleSheet.create({
   createNewShelfText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#000',
+    color: AppColors.primary,
     marginLeft: 10,
   },
   shelfListTitle: {
@@ -2906,7 +2907,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     borderRadius: 8,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     alignItems: 'center',
   },
   formCreateButtonText: {
@@ -2975,7 +2976,7 @@ const styles = StyleSheet.create({
   },
   audioTagText: {
     fontSize: 12,
-    color: '#000',
+    color: AppColors.primary,
     marginLeft: 5,
   },
 
@@ -3051,7 +3052,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   createShelfButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -3115,10 +3116,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 50,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
@@ -3180,13 +3181,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#000',
+    borderLeftColor: AppColors.primary,
   },
   extractedTextLabel: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#000',
+    color: AppColors.primary,
   },
   extractedText: {
     fontSize: 14,
@@ -3241,7 +3242,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     minWidth: 280,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -3287,7 +3288,7 @@ const styles = StyleSheet.create({
   },
   loadingProgressFill: {
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 2,
     width: '70%',
     // Animación de progreso

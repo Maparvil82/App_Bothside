@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from './BothsideLoader';
 import { Audio } from 'expo-av';
+import { AppColors } from '../src/theme/colors';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AudioPlayerProps {
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -228,7 +229,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 2,
   },
   timeContainer: {
@@ -256,7 +257,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   retryButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,

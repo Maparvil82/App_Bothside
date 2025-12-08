@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 export default function ShelfConfigScreen() {
   const { user } = useAuth();
@@ -167,7 +168,7 @@ const styles = StyleSheet.create({
     borderColor: '#dee2e6',
   },
   button: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 8,
     padding: 16,
     alignItems: 'center',

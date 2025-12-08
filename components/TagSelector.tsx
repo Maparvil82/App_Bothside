@@ -11,6 +11,7 @@ import {
 import { BothsideLoader } from './BothsideLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getColorForTag } from '../src/utils/getColorForTag';
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#000',
+    color: AppColors.primary,
   },
   closeButton: {
     padding: 4,
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     padding: 0,
   },
   createNewTagButton: {
@@ -291,11 +292,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F7FF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#000',
+    borderColor: AppColors.primary,
   },
   createNewTagText: {
     fontSize: 16,
-    color: '#000',
+    color: AppColors.primary,
     marginLeft: 8,
     fontWeight: '500',
   },

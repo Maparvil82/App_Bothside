@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 export const IaSubscriptionScreen = () => {
     const { user } = useAuth();
@@ -206,7 +207,7 @@ const styles = StyleSheet.create({
     creditsValue: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#000',
+        color: AppColors.primary,
     },
     progressBarContainer: {
         height: 12,
@@ -217,7 +218,7 @@ const styles = StyleSheet.create({
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#000',
+        backgroundColor: AppColors.primary,
         borderRadius: 6,
     },
     renewalText: {
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     button: {
         width: '100%',
         height: 50,
-        backgroundColor: '#000',
+        backgroundColor: AppColors.primary,
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',

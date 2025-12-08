@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { GamificationService, CollectorRank } from '../services/gamification';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AppColors } from '../src/theme/colors';
 
 interface CollectorRankCardProps {
   totalAlbums: number;
@@ -198,7 +199,7 @@ const styles = StyleSheet.create({
   positionNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: AppColors.primary,
   },
   rankingText: {
     fontSize: 12,

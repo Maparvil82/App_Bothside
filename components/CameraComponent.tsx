@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert, Modal, FlatList, Image } from 'react-native';
 import { BothsideLoader } from './BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, CameraType, FlashMode, useCameraPermissions } from 'expo-camera';
+import { AppColors } from '../src/theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import { GeminiService } from '../services/gemini';
 import { supabase } from '../lib/supabase';
@@ -517,7 +518,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   camera: {
     flex: 1,
@@ -555,7 +556,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 4,
     borderColor: 'rgba(255,255,255,0.8)',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 4,
@@ -578,7 +579,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   bottomControls: {
     position: 'absolute',
@@ -736,7 +737,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
@@ -761,7 +762,7 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 15,
     alignItems: 'center',
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
       height: 2,

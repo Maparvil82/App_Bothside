@@ -9,6 +9,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Audio } from 'expo-av';
+import { AppColors } from '../src/theme/colors';
 // TODO: Migrar a la nueva API de filesystem cuando se reescriba el flujo de notas de audio
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
@@ -424,7 +425,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   recordButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 25,
@@ -446,7 +447,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playButton: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     width: 60,
     height: 60,
     borderRadius: 30,

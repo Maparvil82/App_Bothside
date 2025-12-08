@@ -3,6 +3,7 @@ import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { useFocusEffect } from '@react-navigation/native';
+import { AppColors } from '../src/theme/colors';
 
 interface UserAvatarProps {
   size?: number;
@@ -64,7 +65,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     height: size,
     borderRadius: size / 2,
     borderWidth: showBorder ? 2 : 0,
-    borderColor: showBorder ? '#000' : 'transparent',
+    borderColor: showBorder ? AppColors.primary : 'transparent',
   } as const;
 
   if (loading) {
@@ -122,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   avatarPlaceholder: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },

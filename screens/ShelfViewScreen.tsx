@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useFocusEffect, useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { supabase } from '../lib/supabase';
 import ShelfGrid from '../components/ShelfGrid';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -64,7 +65,7 @@ export default function ShelfViewScreen() {
           style={{ marginRight: 15 }}
           disabled={!shelf}
         >
-          <Ionicons name="create-outline" size={24} color={shelf ? "#000" : "#D1D1D6"} />
+          <Ionicons name="create-outline" size={24} color={shelf ? AppColors.primary : "#D1D1D6"} />
         </TouchableOpacity>
       ),
     });

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
+import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService } from '../services/database';
 import { UserMaleta } from '../services/database';
@@ -533,7 +534,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   filterChipActive: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   filterChipText: {
     fontSize: 14,
@@ -574,7 +575,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
   swipeEdit: {
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
   },
   swipeDelete: {
     backgroundColor: '#FF3B30',
@@ -729,7 +730,7 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -765,10 +766,10 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#000',
+    backgroundColor: AppColors.primary,
     borderRadius: 50,
     padding: 15,
-    shadowColor: '#000',
+    shadowColor: AppColors.primary,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
