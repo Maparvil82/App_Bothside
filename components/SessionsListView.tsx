@@ -28,9 +28,10 @@ interface Session {
 interface SessionsListViewProps {
   sessions: Session[];
   onSessionPress: (session: Session) => void;
+  nameColors?: Record<string, string>;
 }
 
-export default function SessionsListView({ sessions, onSessionPress }: SessionsListViewProps) {
+export default function SessionsListView({ sessions, onSessionPress, nameColors = {} }: SessionsListViewProps) {
   const { t } = useTranslation();
   // Formatear fecha a "Jueves, 29 nov"
   const formatDate = (dateString: string): string => {
@@ -75,7 +76,13 @@ export default function SessionsListView({ sessions, onSessionPress }: SessionsL
     const formattedDate = formatDate(item.date);
     const formattedTime = formatTime(item.start_time, item.end_time);
     const price = formatPrice(item.payment_type, item.payment_amount);
-    const bgColor = getColorForTag(item.tag);
+
+
+    // Prioridad: color por nombre > color por tag
+    let bgColor = getColorForTag(item.tag);
+    if (item.name && nameColors[item.name.trim()]) {
+      bgColor = nameColors[item.name.trim()];
+    }
 
     return (
       <TouchableOpacity

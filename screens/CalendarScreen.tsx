@@ -109,7 +109,7 @@ export default function CalendarScreen() {
 
   const loadSessionNameColors = async () => {
     try {
-      const storedColors = await AsyncStorage.getItem('sessionNameColors');
+      const storedColors = await AsyncStorage.getItem('sessionNameColors_v2');
       if (storedColors) {
         setNameColors(JSON.parse(storedColors));
       }
@@ -122,19 +122,21 @@ export default function CalendarScreen() {
     try {
       const newColors = { ...nameColors, [name]: color };
       setNameColors(newColors);
-      await AsyncStorage.setItem('sessionNameColors', JSON.stringify(newColors));
+      await AsyncStorage.setItem('sessionNameColors_v2', JSON.stringify(newColors));
     } catch (error) {
       console.error('Error saving session name color:', error);
     }
   };
 
   const getRandomColor = () => {
-    const letters = '0123456789ABCDEF';
-    let color = '#';
-    for (let i = 0; i < 6; i++) {
-      color += letters[Math.floor(Math.random() * 16)];
-    }
-    return color;
+    // Generar color pastel aleatorio con transparencia
+    const hue = Math.floor(Math.random() * 360);
+    // Saturation: 70-100% para que sea bonito
+    const saturation = Math.floor(Math.random() * 30) + 70;
+    // Lightness: 85-95% para que sea muy pastel/claro
+    const lightness = Math.floor(Math.random() * 10) + 85;
+    // Alpha: 0.6 para transparencia
+    return `hsla(${hue}, ${saturation}%, ${lightness}%, 0.6)`;
   };
 
   const fetchNameSuggestions = async (query: string) => {
@@ -1203,10 +1205,19 @@ export default function CalendarScreen() {
                   })
                   : [];
 
-                // Obtener el color del tag de la primera sesión (si existe)
-                const cellColor = daySessions.length > 0
-                  ? getColorForTag(daySessions[0].tag)
-                  : undefined;
+                // Obtener el color de la sesión (prioridad: nombre > tag)
+                let cellColor = undefined;
+                if (daySessions.length > 0) {
+                  const session = daySessions[0];
+                  // Intentar obtener color por nombre (guardado localmente)
+                  if (session.name && nameColors[session.name.trim()]) {
+                    cellColor = nameColors[session.name.trim()];
+                  }
+                  // Si no, fallback al color del tag
+                  else if (session.tag) {
+                    cellColor = getColorForTag(session.tag);
+                  }
+                }
 
                 const today = new Date();
                 const isToday =
@@ -1293,6 +1304,7 @@ export default function CalendarScreen() {
             setFormPaymentAmount(session.payment_amount?.toString() || '');
             setIsModalVisible(true);
           }}
+          nameColors={nameColors}
         />
       )}
 
@@ -1671,7 +1683,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#22C55E',
+    backgroundColor: '#007AFF',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -2035,6 +2047,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: 16,
     paddingVertical: 10,
+    marginBottom: 50,
     gap: 10,
   },
   viewToggleButton: {
@@ -2050,8 +2063,8 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   viewToggleButtonActive: {
-    backgroundColor: '#000',
-    borderColor: '#000',
+    backgroundColor: '#007AFF',
+
   },
   viewToggleButtonText: {
     fontSize: 14,
