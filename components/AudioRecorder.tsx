@@ -424,7 +424,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   recordButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 25,
@@ -446,7 +446,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   playButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     width: 60,
     height: 60,
     borderRadius: 30,

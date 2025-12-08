@@ -103,7 +103,7 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
           </TouchableOpacity>
         )}
         {showBackButton && (
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.backButton}
             onPress={handleBackPress}
           >
@@ -199,7 +199,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,

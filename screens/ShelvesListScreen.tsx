@@ -64,7 +64,7 @@ export default function ShelvesListScreen() {
       onPress={() => navigation.navigate('ShelfView', { shelfId: item.id, shelfName: item.name })}
     >
       <View style={styles.itemTextContainer}>
-        <Ionicons name="grid-outline" size={24} color="#007AFF" />
+        <Ionicons name="grid-outline" size={24} color="#000" />
         <Text style={styles.itemText}>{item.name}</Text>
       </View>
       <View style={styles.itemDetailsContainer}>
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 30,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',

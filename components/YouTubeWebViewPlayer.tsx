@@ -131,7 +131,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Ionicons name="musical-note" size={24} color="#007AFF" />
+            <Ionicons name="musical-note" size={24} color="#000" />
             <Text style={styles.title} numberOfLines={1}>
               {title}
             </Text>
@@ -141,7 +141,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
               style={styles.browserButton}
               onPress={handleOpenInBrowser}
             >
-              <Ionicons name="open-outline" size={20} color="#007AFF" />
+              <Ionicons name="open-outline" size={20} color="#000" />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.closeButton}
@@ -189,7 +189,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
             <>
               {isLoading && (
                 <View style={styles.loadingContainer}>
-                  <Ionicons name="musical-notes" size={48} color="#007AFF" />
+                  <Ionicons name="musical-notes" size={48} color="#000" />
                   <Text style={styles.loadingText}>{t('youtube_player_loading')}</Text>
                 </View>
               )}
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   retryButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,

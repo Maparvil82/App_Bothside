@@ -49,7 +49,7 @@ export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="musical-notes" size={20} color="#007AFF" />
+        <Ionicons name="musical-notes" size={20} color="#000" />
         <Text style={styles.title}>{t('top_styles_title')}</Text>
       </View>
 

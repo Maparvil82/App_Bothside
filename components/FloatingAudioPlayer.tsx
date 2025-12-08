@@ -226,7 +226,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
 
       <View style={styles.content}>
         <View style={styles.albumInfo}>
-          <Ionicons name="musical-note" size={16} color="#007AFF" />
+          <Ionicons name="musical-note" size={16} color="#000" />
           <Text style={styles.albumTitle} numberOfLines={1}>
             {albumTitle}
           </Text>
@@ -238,7 +238,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               <Ionicons name="warning" size={16} color="#dc3545" />
               <Text style={styles.errorText} numberOfLines={1}>{error}</Text>
               <TouchableOpacity style={styles.retryButton} onPress={() => isYouTube ? setIsPlaying(true) : loadAudio()}>
-                <Ionicons name="refresh" size={16} color="#007AFF" />
+                <Ionicons name="refresh" size={16} color="#000" />
               </TouchableOpacity>
             </View>
           ) : (
@@ -251,7 +251,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                 <Ionicons
                   name={isMinimized ? 'chevron-up' : 'chevron-down'}
                   size={24}
-                  color={'#007AFF'}
+                  color={'#000'}
                 />
               </TouchableOpacity>
 
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 2,
   },
   timeText: {

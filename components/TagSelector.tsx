@@ -190,7 +190,7 @@ export default function TagSelector({
                 onPress={handleCreateNewTag}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add-circle" size={24} color="#007AFF" />
+                <Ionicons name="add-circle" size={24} color="#000" />
                 <Text style={styles.createNewTagText}>
                   {t('tag_selector_create_new')} <Text style={styles.createNewTagValue}>{searchText.trim()}</Text>
                 </Text>
@@ -291,11 +291,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0F7FF',
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#007AFF',
+    borderColor: '#000',
   },
   createNewTagText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#000',
     marginLeft: 8,
     fontWeight: '500',
   },

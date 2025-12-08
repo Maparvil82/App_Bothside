@@ -191,7 +191,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
             <Switch
               value={isPublic}
               onValueChange={setIsPublic}
-              trackColor={{ false: '#E5E5E5', true: '#007AFF' }}
+              trackColor={{ false: '#E5E5E5', true: '#000' }}
               thumbColor={isPublic ? '#FFFFFF' : '#FFFFFF'}
             />
           </View>
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,

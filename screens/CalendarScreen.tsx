@@ -1683,7 +1683,7 @@ const styles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -1817,8 +1817,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   pickerOptionSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: '#000',
+    borderColor: '#000',
   },
   pickerOptionText: {
     fontSize: 14,
@@ -1836,7 +1836,7 @@ const styles = StyleSheet.create({
     minHeight: 50,
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   deleteButton: {
     backgroundColor: '#dc3545',
@@ -2063,7 +2063,7 @@ const styles = StyleSheet.create({
     borderColor: '#E0E0E0',
   },
   viewToggleButtonActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
 
   },
   viewToggleButtonText: {

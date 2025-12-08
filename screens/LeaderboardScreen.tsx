@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   currentUserItem: {
     borderLeftWidth: 4,
-    borderLeftColor: '#007AFF',
+    borderLeftColor: '#000',
     backgroundColor: '#f8f9ff',
   },
   rankContainer: {
@@ -262,7 +262,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   currentUserText: {
-    color: '#007AFF',
+    color: '#000',
   },
   rankTitle: {
     fontSize: 14,

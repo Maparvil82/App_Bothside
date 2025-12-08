@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   selectedCell: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderColor: '#0056b3',
     borderStyle: 'solid',
   },

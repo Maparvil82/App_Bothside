@@ -14,7 +14,7 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, high
   const containerPadding = 32; // Padding total (16 * 2)
   const gridGap = 12; // Espaciado unificado
   const totalGapWidth = (columns - 1) * gridGap;
-  const availableWidth = screenWidth - containerPadding; 
+  const availableWidth = screenWidth - containerPadding;
   const cellWidth = Math.min((availableWidth - totalGapWidth) / columns, 80); // Máximo 80px por celda
 
   const renderGrid = () => {
@@ -64,7 +64,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   highlightedCell: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderColor: '#0056b3',
     borderStyle: 'solid',
   },

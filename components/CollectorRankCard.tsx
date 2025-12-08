@@ -198,7 +198,7 @@ const styles = StyleSheet.create({
   positionNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000',
   },
   rankingText: {
     fontSize: 12,

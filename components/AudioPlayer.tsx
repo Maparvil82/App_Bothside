@@ -138,7 +138,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     <View style={styles.container}>
       <View style={styles.playerContainer}>
         <View style={styles.header}>
-          <Ionicons name="musical-notes" size={20} color="#007AFF" />
+          <Ionicons name="musical-notes" size={20} color="#000" />
           <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   },
   progressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 2,
   },
   timeContainer: {
@@ -256,7 +256,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   retryButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,

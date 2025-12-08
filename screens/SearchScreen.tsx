@@ -1615,7 +1615,7 @@ export const SearchScreen: React.FC = () => {
               {/* Tag de audio - SEGUNDO (solo icono) */}
               {item.audio_note && (
                 <View style={styles.audioTagIconOnly}>
-                  <Ionicons name="mic" size={12} color="#007AFF" />
+                  <Ionicons name="mic" size={12} color="#000" />
                 </View>
               )}
 
@@ -2040,7 +2040,7 @@ export const SearchScreen: React.FC = () => {
                   style={styles.createNewShelfButton}
                   onPress={() => setShowCreateShelfForm(true)}
                 >
-                  <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+                  <Ionicons name="add-circle-outline" size={24} color="#000" />
                   <Text style={styles.createNewShelfText}>{t('search_action_create_shelf')}</Text>
                 </TouchableOpacity>
 
@@ -2111,7 +2111,7 @@ export const SearchScreen: React.FC = () => {
                     >
                       <View style={[
                         styles.toggleTrack,
-                        { backgroundColor: newShelfIsPublic ? '#007AFF' : '#ccc' }
+                        { backgroundColor: newShelfIsPublic ? '#000' : '#ccc' }
                       ]}>
                         <View style={[
                           styles.toggleThumb,
@@ -2533,7 +2533,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   filterChipActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   filterChipText: {
     fontSize: 14,
@@ -2633,7 +2633,7 @@ const styles = StyleSheet.create({
     color: '#999',
   },
   addButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     width: 30,
     height: 30,
     borderRadius: 15,
@@ -2680,7 +2680,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -2720,7 +2720,7 @@ const styles = StyleSheet.create({
     borderRadius: 0, // Sin bordes redondeados
   },
   swipeOptions: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRightWidth: 2,
     borderRightColor: 'rgba(255,255,255,0.5)', // Separador más visible
   },
@@ -2786,7 +2786,7 @@ const styles = StyleSheet.create({
   createNewShelfText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#007AFF',
+    color: '#000',
     marginLeft: 10,
   },
   shelfListTitle: {
@@ -2906,7 +2906,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 15,
     borderRadius: 8,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     alignItems: 'center',
   },
   formCreateButtonText: {
@@ -2975,7 +2975,7 @@ const styles = StyleSheet.create({
   },
   audioTagText: {
     fontSize: 12,
-    color: '#007AFF',
+    color: '#000',
     marginLeft: 5,
   },
 
@@ -3051,7 +3051,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   createShelfButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -3115,7 +3115,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 50,
     padding: 15,
     shadowColor: '#000',
@@ -3180,13 +3180,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 20,
     borderLeftWidth: 4,
-    borderLeftColor: '#007AFF',
+    borderLeftColor: '#000',
   },
   extractedTextLabel: {
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
-    color: '#007AFF',
+    color: '#000',
   },
   extractedText: {
     fontSize: 14,
@@ -3287,7 +3287,7 @@ const styles = StyleSheet.create({
   },
   loadingProgressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 2,
     width: '70%',
     // Animación de progreso

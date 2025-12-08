@@ -74,7 +74,7 @@ export const PrePurchaseScreen: React.FC = () => {
     return (
         <SafeAreaView style={styles.container}>
             <View style={styles.content}>
-                <ActivityIndicator size="large" color="#007AFF" style={styles.loader} />
+                <ActivityIndicator size="large" color="#000" style={styles.loader} />
                 <Text style={styles.title}>{t('pre_purchase_status_preparing')}</Text>
                 <Text style={styles.subtitle}>
                     {t('pre_purchase_label_selected_plan')} {selectedPlan === 'annual'

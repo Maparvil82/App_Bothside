@@ -48,7 +48,7 @@ export const TopArtistsChart: React.FC<TopArtistsChartProps> = ({ data }) => {
     propsForDots: {
       r: '6',
       strokeWidth: '2',
-      stroke: '#007AFF',
+      stroke: '#000',
     },
     propsForLabels: {
       fontSize: 10,
@@ -58,7 +58,7 @@ export const TopArtistsChart: React.FC<TopArtistsChartProps> = ({ data }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="people" size={20} color="#007AFF" />
+        <Ionicons name="people" size={20} color="#000" />
         <Text style={styles.title}>{t('top_artists_title')}</Text>
       </View>
 

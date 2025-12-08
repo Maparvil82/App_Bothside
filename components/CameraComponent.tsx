@@ -578,7 +578,7 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   bottomControls: {
     position: 'absolute',
@@ -736,7 +736,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',

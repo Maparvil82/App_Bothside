@@ -111,7 +111,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     acceptButton: {
-        backgroundColor: '#007AFF',
+        backgroundColor: '#000',
     },
     rejectButton: {
         backgroundColor: 'transparent',

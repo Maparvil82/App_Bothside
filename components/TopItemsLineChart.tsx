@@ -51,7 +51,7 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
       case 'calendar': // Décadas
         return '#34D399'; // Verde esmeralda
       default:
-        return '#007AFF'; // Azul por defecto
+        return '#000'; // Azul por defecto
     }
   };
 
@@ -66,7 +66,7 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
       case 'calendar':
         return { from: '#34D399', to: '#6EE7B7' };
       default:
-        return { from: '#007AFF', to: '#4DA3FF' };
+        return { from: '#000', to: '#4DA3FF' };
     }
   };
 

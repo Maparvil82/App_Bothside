@@ -1126,7 +1126,7 @@ const styles = StyleSheet.create({
   },
   albumDate: {
     fontSize: 11,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '500',
   },
   albumImageContainer: {
@@ -1158,7 +1158,7 @@ const styles = StyleSheet.create({
     color: '#28a745',
   },
   albumRank: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 12,
     width: 22,
     height: 22,
@@ -1171,7 +1171,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   valueCard: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 12,
@@ -1209,7 +1209,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 8,
     paddingVertical: 10,
     marginTop: 12,
@@ -1297,7 +1297,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 50,
     padding: 15,
     shadowColor: '#000',

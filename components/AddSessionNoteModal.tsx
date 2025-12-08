@@ -114,7 +114,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.saveButton, { backgroundColor: '#007AFF' }]}
+              style={[styles.button, styles.saveButton, { backgroundColor: '#000' }]}
               onPress={handleSave}
               disabled={isSaving}
             >

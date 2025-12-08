@@ -41,7 +41,7 @@ export const OnboardingScreen: React.FC = () => {
       title: t('onboarding_step3_title'),
       subtitle: t('onboarding_step3_subtitle'),
       image: require('../assets/videoframe_8000.png'),
-      color: '#007AFF',
+      color: '#000',
     },
     {
       id: 4,
@@ -251,14 +251,14 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     width: 24,
   },
   nextButton: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
     shadowColor: '#000',
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   loginLink: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '500',
   },
   logoContainer: {

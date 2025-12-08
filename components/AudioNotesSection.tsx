@@ -115,7 +115,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="mic" size={20} color="#007AFF" />
+          <Ionicons name="mic" size={20} color="#000" />
           <Text style={styles.title}>{t('audio_notes_title')}</Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -130,7 +130,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="mic" size={20} color="#007AFF" />
+          <Ionicons name="mic" size={20} color="#000" />
           <Text style={styles.title}>{t('audio_notes_title')}</Text>
         </View>
         <View style={styles.emptyContainer}>
@@ -145,7 +145,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="mic" size={20} color="#007AFF" />
+        <Ionicons name="mic" size={20} color="#000" />
         <Text style={styles.title}>{t('audio_notes_title')} ({albumsWithAudio.length})</Text>
       </View>
 

@@ -10,10 +10,10 @@ interface UserAvatarProps {
   showBorder?: boolean;
 }
 
-export const UserAvatar: React.FC<UserAvatarProps> = ({ 
-  size = 40, 
-  onPress, 
-  showBorder = true 
+export const UserAvatar: React.FC<UserAvatarProps> = ({
+  size = 40,
+  onPress,
+  showBorder = true
 }) => {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -64,7 +64,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     height: size,
     borderRadius: size / 2,
     borderWidth: showBorder ? 2 : 0,
-    borderColor: showBorder ? '#007AFF' : 'transparent',
+    borderColor: showBorder ? '#000' : 'transparent',
   } as const;
 
   if (loading) {
@@ -122,7 +122,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   avatarPlaceholder: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
   },

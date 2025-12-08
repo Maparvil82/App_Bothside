@@ -153,7 +153,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#007AFF',
+    color: '#000',
     textAlign: 'right',
   },
 }); 

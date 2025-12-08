@@ -1655,7 +1655,7 @@ export default function AlbumDetailScreen() {
                       {hasAnswer ? (
                         <Ionicons name="checkmark-circle" size={20} color="#28a745" />
                       ) : (
-                        <Ionicons name="add-circle-outline" size={20} color="#007AFF" />
+                        <Ionicons name="add-circle-outline" size={20} color="#000" />
                       )}
                     </View>
                     {hasAnswer && (
@@ -1784,7 +1784,7 @@ export default function AlbumDetailScreen() {
                           <Text style={styles.listOptionDescription}>{list.description}</Text>
                         )}
                       </View>
-                      <Ionicons name="add-circle-outline" size={24} color="#007AFF" />
+                      <Ionicons name="add-circle-outline" size={24} color="#000" />
                     </TouchableOpacity>
                   ))
                 ) : (
@@ -1920,7 +1920,7 @@ export default function AlbumDetailScreen() {
                       </View>
                       <Text style={[styles.trackDuration, { color: colors.text }]}>{track.duration}</Text>
                       {typeFormAnswers[0] === track.title && (
-                        <Ionicons name="checkmark-circle" size={24} color="#007AFF" />
+                        <Ionicons name="checkmark-circle" size={24} color="#000" />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -2099,7 +2099,7 @@ const styles = StyleSheet.create({
   },
   catalogNumber: {
     fontSize: 12,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '500',
     marginTop: 2,
   },
@@ -2343,7 +2343,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 8,
     borderLeftWidth: 3,
-    borderLeftColor: '#007AFF',
+    borderLeftColor: '#000',
   },
   shelfInfo: {
     flex: 1,
@@ -2441,7 +2441,7 @@ const styles = StyleSheet.create({
   },
   videoErrorButton: {
     marginTop: 15,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -2491,7 +2491,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   valueCard: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     margin: 10,
     borderRadius: 8,
     padding: 16,
@@ -2595,7 +2595,7 @@ const styles = StyleSheet.create({
   },
   catalog: {
     fontSize: 12,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '500',
   },
   countryText: {
@@ -2660,7 +2660,7 @@ const styles = StyleSheet.create({
   },
   videoButtonText: {
     fontSize: 14,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '500',
   },
   videosSection: {
@@ -2685,7 +2685,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 30, // Cambiado de 120 a 30 para que esté más pegado al fondo
     right: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     width: 60,
     height: 60,
     borderRadius: 30,
@@ -3312,7 +3312,7 @@ const styles = StyleSheet.create({
   },
   typeFormProgressFill: {
     height: '100%',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   typeFormContent: {
     flex: 1,
@@ -3370,7 +3370,7 @@ const styles = StyleSheet.create({
   typeFormNextButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3387,7 +3387,7 @@ const styles = StyleSheet.create({
   typeFormSaveButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3430,7 +3430,7 @@ const styles = StyleSheet.create({
   },
   typeFormButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
     flex: 1,
     marginLeft: 12,
@@ -3481,11 +3481,11 @@ const styles = StyleSheet.create({
   },
   trackItemSelected: {
     backgroundColor: '#f0f9ff',
-    borderColor: '#007AFF',
+    borderColor: '#000',
 
   },
   trackTitleSelected: {
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
   typeFormResponsesInline: {
@@ -3533,7 +3533,7 @@ const styles = StyleSheet.create({
   typeFormQuestionNumber: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000',
     marginRight: 12,
     minWidth: 20,
   },
@@ -3558,7 +3558,7 @@ const styles = StyleSheet.create({
   },
   errorButton: {
     marginTop: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3631,7 +3631,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   retryAudioButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 6,
@@ -3783,7 +3783,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 16,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -3798,7 +3798,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 50,
     padding: 15,
     shadowColor: '#000',
@@ -3838,7 +3838,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 50,
     width: 56,
     height: 56,

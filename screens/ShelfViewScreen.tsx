@@ -64,7 +64,7 @@ export default function ShelfViewScreen() {
           style={{ marginRight: 15 }}
           disabled={!shelf}
         >
-          <Ionicons name="create-outline" size={24} color={shelf ? "#007AFF" : "#D1D1D6"} />
+          <Ionicons name="create-outline" size={24} color={shelf ? "#000" : "#D1D1D6"} />
         </TouchableOpacity>
       ),
     });

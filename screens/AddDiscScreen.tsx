@@ -1310,7 +1310,7 @@ Progressive Rock`;
                   setExtractedText('');
                 }}
               >
-                <Ionicons name="refresh" size={20} color="#007AFF" />
+                <Ionicons name="refresh" size={20} color="#000" />
                 <Text style={styles.capturedImageButtonText}>{t('add_disc_button_new_photo')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
@@ -1318,7 +1318,7 @@ Progressive Rock`;
                 onPress={() => performOCR(capturedImage)}
                 disabled={ocrLoading}
               >
-                <Ionicons name="text" size={20} color={ocrLoading ? "#ccc" : "#007AFF"} />
+                <Ionicons name="text" size={20} color={ocrLoading ? "#ccc" : "#000"} />
                 <Text style={[styles.capturedImageButtonText, ocrLoading && styles.capturedImageButtonTextDisabled]}>
                   {ocrLoading ? t('add_disc_button_analyzing') : t('add_disc_button_analyze_text')}
                 </Text>
@@ -1465,7 +1465,7 @@ const styles = StyleSheet.create({
   },
   activeTab: {
     borderBottomWidth: 2,
-    borderBottomColor: '#007AFF',
+    borderBottomColor: '#000',
   },
   tabText: {
     marginLeft: 8,
@@ -1474,7 +1474,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   activeTabText: {
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
   tabContent: {
@@ -1531,7 +1531,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   manualSearchButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1547,7 +1547,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   searchButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1596,7 +1596,7 @@ const styles = StyleSheet.create({
   addButton: {
     width: 44,
     height: 44,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
@@ -1727,7 +1727,7 @@ const styles = StyleSheet.create({
   capturedImageButtonText: {
     marginLeft: 8,
     fontSize: 16,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
   permissionText: {
@@ -1739,7 +1739,7 @@ const styles = StyleSheet.create({
   cameraOpenButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -1822,7 +1822,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 50,
     padding: 15,
     shadowColor: '#000',

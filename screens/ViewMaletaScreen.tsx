@@ -459,12 +459,12 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         <View style={styles.headerActions}>
           {(list.user_id === user?.id || (isCollaborator && collaboratorStatus === 'accepted')) && (
             <TouchableOpacity onPress={handleAddAlbum} style={styles.addHeaderButton}>
-              <Ionicons name="add" size={24} color="#007AFF" />
+              <Ionicons name="add" size={24} color="#000" />
             </TouchableOpacity>
           )}
           {list.user_id === user?.id && (
             <TouchableOpacity onPress={handleEditList} style={styles.editButton}>
-              <Ionicons name="create-outline" size={24} color="#007AFF" />
+              <Ionicons name="create-outline" size={24} color="#000" />
             </TouchableOpacity>
           )}
         </View>
@@ -627,7 +627,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                               <Ionicons
                                 name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                                 size={24}
-                                color={isSelected ? '#007AFF' : '#CCC'}
+                                color={isSelected ? '#000' : '#CCC'}
                               />
                             </View>
                           </View>
@@ -773,7 +773,7 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000',
   },
   statLabel: {
     fontSize: 12,
@@ -807,7 +807,7 @@ const styles = StyleSheet.create({
   },
   addAlbumButtonText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#000',
     marginLeft: 4,
   },
   albumsContainer: {
@@ -911,7 +911,7 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -1118,7 +1118,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingVertical: 16,
     borderRadius: 12,
   },

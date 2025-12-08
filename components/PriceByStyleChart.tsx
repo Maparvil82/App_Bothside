@@ -30,7 +30,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="trending-up" size={20} color="#007AFF" />
+          <Ionicons name="trending-up" size={20} color="#000" />
           <Text style={styles.title}>Valor Total por Estilo</Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -45,7 +45,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="trending-up" size={20} color="#007AFF" />
+          <Ionicons name="trending-up" size={20} color="#000" />
           <Text style={styles.title}>Valor Total por Estilo</Text>
         </View>
         <View style={styles.emptyContainer}>
@@ -70,7 +70,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
     propsForDots: {
       r: '4',
       strokeWidth: '2',
-      stroke: '#007AFF',
+      stroke: '#000',
     },
   };
 
@@ -88,7 +88,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="trending-up" size={20} color="#007AFF" />
+        <Ionicons name="trending-up" size={20} color="#000" />
         <Text style={styles.title}>Valor Total por Estilo</Text>
       </View>
 
@@ -228,7 +228,7 @@ const styles = StyleSheet.create({
   averagePrice: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#007AFF',
+    color: '#000',
   },
   moreStylesText: {
     fontSize: 12,

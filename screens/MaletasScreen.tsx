@@ -533,7 +533,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
   },
   filterChipActive: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   filterChipText: {
     fontSize: 14,
@@ -574,7 +574,7 @@ const styles = StyleSheet.create({
     borderRadius: 0,
   },
   swipeEdit: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   swipeDelete: {
     backgroundColor: '#FF3B30',
@@ -729,7 +729,7 @@ const styles = StyleSheet.create({
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 8,
@@ -765,7 +765,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: 16,
     right: 16,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 50,
     padding: 15,
     shadowColor: '#000',

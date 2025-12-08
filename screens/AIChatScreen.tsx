@@ -585,7 +585,7 @@ const styles = StyleSheet.create({
     minWidth: 60,
   },
   userBubble: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   aiBubble: {
     // backgroundColor se aplica dinámicamente
@@ -636,7 +636,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     justifyContent: 'center',
     alignItems: 'center',
   },

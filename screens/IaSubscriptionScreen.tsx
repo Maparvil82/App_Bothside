@@ -68,7 +68,7 @@ export const IaSubscriptionScreen = () => {
         return (
             <SafeAreaView style={styles.container}>
                 <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
+                    <ActivityIndicator size="large" color="#000" />
                     <Text style={styles.loadingText}>{t('ia_sub_loading')}</Text>
                 </View>
             </SafeAreaView>
@@ -206,7 +206,7 @@ const styles = StyleSheet.create({
     creditsValue: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#007AFF',
+        color: '#000',
     },
     progressBarContainer: {
         height: 12,
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#007AFF',
+        backgroundColor: '#000',
         borderRadius: 6,
     },
     renewalText: {
@@ -235,7 +235,7 @@ const styles = StyleSheet.create({
     button: {
         width: '100%',
         height: 50,
-        backgroundColor: '#007AFF',
+        backgroundColor: '#000',
         borderRadius: 12,
         justifyContent: 'center',
         alignItems: 'center',

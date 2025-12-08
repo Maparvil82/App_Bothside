@@ -145,7 +145,7 @@ export const PricingScreen: React.FC = () => {
         <View style={styles.featuresBlock}>
           {commonFeatures.map((feature, index) => (
             <View key={index} style={styles.featureRow}>
-              <Ionicons name="checkmark-circle" size={20} color="#007AFF" />
+              <Ionicons name="checkmark-circle" size={20} color="#000" />
               <Text style={styles.featureText}>{feature}</Text>
             </View>
           ))}
@@ -305,7 +305,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   selectedPlan: {
-    borderColor: '#007AFF',
+    borderColor: '#000',
     backgroundColor: '#f8f9ff',
     borderWidth: 2,
   },
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -12,
     right: 20,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
@@ -348,13 +348,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   radioButtonSelected: {
-    borderColor: '#007AFF',
+    borderColor: '#000',
   },
   radioButtonInner: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
   },
   planTitle: {
     fontSize: 18,
@@ -407,12 +407,12 @@ const styles = StyleSheet.create({
     color: '#155724',
   },
   subscribeButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: '#000',
     borderRadius: 14,
     paddingVertical: 18,
     alignItems: 'center',
     marginBottom: 20,
-    shadowColor: '#007AFF',
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 8,
@@ -434,7 +434,7 @@ const styles = StyleSheet.create({
   },
   loginLinkText: {
     fontSize: 16,
-    color: '#007AFF',
+    color: '#000',
     fontWeight: '600',
   },
   footerLinks: {
