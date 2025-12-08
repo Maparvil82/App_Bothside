@@ -76,18 +76,13 @@ export const ProfileScreen: React.FC = () => {
   };
 
   const getInitials = () => {
-    if (!profile?.full_name) return user?.email?.charAt(0).toUpperCase() || 'U';
-    return profile.full_name
-      .split(' ')
-      .map((name: string) => name.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+    if (!profile?.username) return user?.email?.charAt(0).toUpperCase() || 'U';
+    return profile.username.substring(0, 2).toUpperCase();
   };
 
   const getDisplayName = () => {
+    if (profile?.username && profile.username.trim() !== '') return '@' + profile.username.trim();
     if (profile?.full_name && profile.full_name.trim() !== '') return profile.full_name.trim();
-    if (profile?.username && profile.username.trim() !== '') return profile.username.trim();
     if (user?.email) return user.email.split('@')[0];
     return t('common_user');
   };

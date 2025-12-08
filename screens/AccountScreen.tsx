@@ -171,14 +171,7 @@ export const AccountScreen: React.FC = () => {
 
                         {editField === 'name' && (
                             <>
-                                <Text style={[styles.label, { color: colors.text }]}>{t('account_label_full_name')}</Text>
-                                <TextInput
-                                    style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
-                                    value={fullName}
-                                    onChangeText={setFullName}
-                                    placeholder={t('account_placeholder_name')}
-                                    placeholderTextColor={colors.text + '80'}
-                                />
+
                                 <Text style={[styles.label, { color: colors.text, marginTop: 15 }]}>{t('account_label_username')}</Text>
                                 <TextInput
                                     style={[styles.input, { color: colors.text, borderColor: colors.border, backgroundColor: colors.background }]}
@@ -279,7 +272,7 @@ export const AccountScreen: React.FC = () => {
                                     <View>
                                         <Text style={[styles.menuItemLabel, { color: colors.text }]}>{t('account_section_name_username')}</Text>
                                         <Text style={[styles.menuItemValue, { color: colors.text, opacity: 0.6 }]}>
-                                            {profile?.full_name || t('account_default_no_name')} • @{profile?.username || t('account_default_username')}
+                                            @{profile?.username || t('account_default_username')}
                                         </Text>
                                     </View>
                                 </View>

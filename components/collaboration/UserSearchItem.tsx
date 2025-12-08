@@ -32,9 +32,7 @@ export const UserSearchItem: React.FC<UserSearchItemProps> = ({ user, onInvite, 
                 )}
                 <View style={styles.textContainer}>
                     <Text style={[styles.username, { color: colors.text }]}>{user.username || 'Unknown'}</Text>
-                    {user.full_name && (
-                        <Text style={[styles.fullName, { color: colors.text }]}>{user.full_name}</Text>
-                    )}
+
                 </View>
             </View>
 

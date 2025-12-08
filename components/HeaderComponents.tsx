@@ -41,13 +41,8 @@ export const HeaderAvatar = () => {
     );
 
     const getInitials = () => {
-        if (!profile?.full_name) return 'U';
-        return profile.full_name
-            .split(' ')
-            .map((name: string) => name.charAt(0))
-            .join('')
-            .toUpperCase()
-            .slice(0, 2);
+        if (!profile?.username) return 'U';
+        return profile.username.substring(0, 2).toUpperCase();
     };
 
     return (

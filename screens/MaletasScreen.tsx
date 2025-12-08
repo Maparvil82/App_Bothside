@@ -599,15 +599,15 @@ const styles = StyleSheet.create({
     minHeight: 80,
   },
   listThumbnail: {
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
     borderRadius: 0,
     marginRight: 15,
 
   },
   listThumbnailPlaceholder: {
-    width: 80,
-    height: 80,
+    width: 50,
+    height: 50,
     borderRadius: 0,
     backgroundColor: '#F0F0F0',
     justifyContent: 'center',
