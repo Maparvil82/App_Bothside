@@ -252,12 +252,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         <View style={styles.listInfo}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
             <Text style={[styles.listTitle, { color: colors.text }]}>{item.title}</Text>
-            {item.is_collaborative && (
-              <View style={[styles.collabBadge, { backgroundColor: '#E8EAF6' }]}>
-                <Ionicons name="people" size={12} color="#3F51B5" />
-                <Text style={[styles.collabBadgeText, { color: '#3F51B5' }]}>Collab</Text>
-              </View>
-            )}
+
           </View>
           {item.description && (
             <Text style={[styles.listDescription, { color: colors.text, opacity: 0.7 }]} numberOfLines={2}>
@@ -265,6 +260,12 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
             </Text>
           )}
           <View style={styles.listMeta}>
+            {item.is_collaborative && (
+              <View style={[styles.collabBadge, { backgroundColor: '#E8EAF6', marginLeft: 0, marginRight: 8 }]}>
+                <Ionicons name="people" size={12} color="#3F51B5" />
+                <Text style={[styles.collabBadgeText, { color: '#3F51B5' }]}>Collab</Text>
+              </View>
+            )}
             <View style={styles.avatarsRow}>
               {/* Owner Avatar (if not me) */}
               {item.owner && (
