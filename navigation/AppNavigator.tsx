@@ -256,7 +256,7 @@ const ProfileStack = () => (
       component={ProfileScreen}
       options={{
         title: 'Perfil',
-        headerShown: true,
+        headerShown: false,
         headerBackTitle: 'Atrás'
       }}
     />
@@ -420,7 +420,7 @@ const AppStack = () => {
         <>
           <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
 
-          <Stack.Screen name="Profile" component={ProfileStack} />
+          <Stack.Screen name="Profile" component={ProfileStack} options={{ title: 'Perfil' }} />
           <Stack.Screen
             name="AlbumDetail"
             component={AlbumDetailScreen}

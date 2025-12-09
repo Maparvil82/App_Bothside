@@ -252,13 +252,22 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Fake Tab Bar */}
+      <View style={[styles.fakeTabBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        <Ionicons name="disc-outline" size={24} color="gray" />
+        <Ionicons name="stats-chart-outline" size={24} color="gray" />
+        <Ionicons name="add" size={32} color="gray" />
+        <Ionicons name="bag-remove-outline" size={24} color="gray" />
+        <Ionicons name="diamond-outline" size={24} color="gray" />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f5f5f5' },
-  scrollContent: { paddingBottom: 40 },
+  scrollContent: { paddingBottom: 100 }, // Increased padding for tab bar
   profileInfo: { alignItems: 'center', paddingVertical: 10, backgroundColor: 'white', borderBottomWidth: 1, borderBottomColor: '#e0e0e0' },
   avatarContainer: { marginBottom: 10 },
   avatar: { width: 100, height: 100, borderRadius: 50, backgroundColor: AppColors.primary, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: '#e0e0e0' },
@@ -278,4 +287,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0'
   },
   menuItemText: { fontSize: 16, fontWeight: '600' },
+  fakeTabBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+    height: 80,
+    paddingBottom: 20, // Adjust for safe area if needed, or just visual padding
+    borderTopWidth: 1,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
 }); 
