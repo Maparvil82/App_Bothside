@@ -15,6 +15,7 @@ import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useTheme } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 interface AutoBagCreationModalProps {
     visible: boolean;
@@ -33,6 +34,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
 }) => {
     const { mode } = useThemeMode();
     const { colors } = useTheme();
+    const { t } = useTranslation();
     const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
 
     const [availableStyles, setAvailableStyles] = useState<string[]>([]);
@@ -105,7 +107,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
 
     const handleCreate = async () => {
         if (selectedStyles.length === 0) {
-            Alert.alert('Selecciona estilos', 'Por favor selecciona al menos un estilo para crear la maleta.');
+            Alert.alert(t('common_error'), t('autoBag_errorNoStyles'));
             return;
         }
 
@@ -114,7 +116,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
             await onCreateBag(selectedStyles, dontShowAgain);
         } catch (error) {
             console.error('Error creating bag:', error);
-            Alert.alert('Error', 'Ha ocurrido un error al crear la maleta.');
+            Alert.alert(t('common_error'), t('autoBag_toastError'));
         } finally {
             setLoading(false);
         }
@@ -137,14 +139,14 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
             <View style={styles.overlay}>
                 <View style={[styles.container, { backgroundColor: colors.card }]}>
                     <View style={styles.header}>
-                        <Text style={[styles.title, { color: colors.text }]}>¿Crear maleta para esta sesión?</Text>
+                        <Text style={[styles.title, { color: colors.text }]}>{t('autoBag_modalTitle')}</Text>
                         <Text style={[styles.subtitle, { color: colors.text }]}>
-                            Podemos crear una maleta con el nombre de esta sesión y añadir automáticamente 3 discos según los estilos que elijas.
+                            {t('autoBag_modalDescription')}
                         </Text>
-                        <Text style={[styles.sessionName, { color: primaryColor }]}>Sesión: {sessionName}</Text>
+                        <Text style={[styles.sessionName, { color: primaryColor }]}>{t('autoBag_sessionLabel')}: {sessionName}</Text>
                     </View>
 
-                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Selecciona estilos:</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('autoBag_selectStylesLabel')}:</Text>
 
                     {loadingStyles ? (
                         <ActivityIndicator size="small" color={primaryColor} style={{ marginVertical: 20 }} />
@@ -177,7 +179,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
                     )}
 
                     <View style={styles.optionRow}>
-                        <Text style={[styles.optionText, { color: colors.text }]}>No mostrar más esta sugerencia</Text>
+                        <Text style={[styles.optionText, { color: colors.text }]}>{t('autoBag_noMoreLabel')}</Text>
                         <Switch
                             value={dontShowAgain}
                             onValueChange={setDontShowAgain}
@@ -192,7 +194,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
                             onPress={handleCancel}
                             disabled={loading}
                         >
-                            <Text style={[styles.buttonText, { color: colors.text }]}>Ahora no</Text>
+                            <Text style={[styles.buttonText, { color: colors.text }]}>{t('autoBag_ctaCancel')}</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -203,7 +205,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
                             {loading ? (
                                 <ActivityIndicator size="small" color="#FFF" />
                             ) : (
-                                <Text style={[styles.buttonText, { color: '#FFF' }]}>Crear maleta</Text>
+                                <Text style={[styles.buttonText, { color: '#FFF' }]}>{t('autoBag_ctaCreate')}</Text>
                             )}
                         </TouchableOpacity>
                     </View>

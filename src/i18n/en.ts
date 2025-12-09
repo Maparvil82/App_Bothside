@@ -921,4 +921,15 @@ export const en = {
     youtube_player_footer_subtext: "Use video controls to pause/play",
 
 
+    // Auto Bag Creation
+    autoBag_modalTitle: "Create a bag for this session?",
+    autoBag_modalDescription: "We can create a bag with this session’s name and automatically add 3 records based on the styles or genres you choose.",
+    autoBag_sessionLabel: "Session",
+    autoBag_selectStylesLabel: "Select styles or genres",
+    autoBag_noMoreLabel: "Don't show this again",
+    autoBag_ctaCreate: "Create bag",
+    autoBag_ctaCancel: "Not now",
+    autoBag_toastSuccess: "Bag created with 3 records for this session.",
+    autoBag_toastError: "An error occurred while creating the bag. Please try again.",
+    autoBag_errorNoStyles: "Select at least one style or genre.",
 };

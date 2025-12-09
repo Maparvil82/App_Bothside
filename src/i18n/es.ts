@@ -921,4 +921,15 @@ export const es = {
     youtube_player_footer_subtext: "Usa los controles del video para pausar/reproducir",
 
 
+    // Auto Bag Creation
+    autoBag_modalTitle: "¿Crear una maleta para esta sesión?",
+    autoBag_modalDescription: "Podemos crear una maleta con el nombre de esta sesión y añadir automáticamente 3 discos según los estilos o géneros que elijas.",
+    autoBag_sessionLabel: "Sesión",
+    autoBag_selectStylesLabel: "Selecciona estilos o géneros",
+    autoBag_noMoreLabel: "No mostrar más esta sugerencia",
+    autoBag_ctaCreate: "Crear maleta",
+    autoBag_ctaCancel: "Ahora no",
+    autoBag_toastSuccess: "Maleta creada con 3 discos para esta sesión.",
+    autoBag_toastError: "Ha ocurrido un error al crear la maleta. Inténtalo de nuevo.",
+    autoBag_errorNoStyles: "Selecciona al menos un estilo o género.",
 };

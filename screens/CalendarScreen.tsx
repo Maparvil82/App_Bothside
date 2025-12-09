@@ -13,6 +13,7 @@ import { UserMaletaService, ProfileService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useTranslation } from '../src/i18n/useTranslation';
 import TimePicker from '../components/TimePicker';
 import SessionsListView from '../components/SessionsListView';
 import {
@@ -24,7 +25,6 @@ import {
   scheduleSnoozeNotification,
 } from '../services/notifications';
 import { getColorForTag } from '../src/utils/getColorForTag';
-import { useTranslation } from '../src/i18n/useTranslation';
 import { activeLocale as currentLanguage } from '../src/i18n';
 
 const { width } = Dimensions.get('window');
@@ -1657,12 +1657,12 @@ export default function CalendarScreen() {
             setIsAutoBagModalVisible(false);
             setCreatedSessionForBag(null);
             Alert.alert(
-              'Maleta creada',
-              `Se ha creado la maleta "${createdSessionForBag.name}" con ${result.albumsAdded} discos.`
+              t('common_success'),
+              t('autoBag_toastSuccess').replace('3', result.albumsAdded.toString())
             );
           } catch (error) {
             console.error('Error creating auto bag:', error);
-            Alert.alert('Error', 'No se pudo crear la maleta automáticamente.');
+            Alert.alert(t('common_error'), t('autoBag_toastError'));
           }
         }}
         onDontShowAgain={async () => {
