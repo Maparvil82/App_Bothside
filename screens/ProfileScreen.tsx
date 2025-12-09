@@ -171,7 +171,11 @@ export const ProfileScreen: React.FC = () => {
             )}
           </TouchableOpacity>
           <Text style={[styles.changeAvatarText, { color: primaryColor }]}>{t('profile_change_avatar')}</Text>
-          <Text style={[styles.displayName, { color: colors.text }]}>{getDisplayName()}</Text>
+          {loading ? (
+            <View style={{ height: 24, width: 150, backgroundColor: colors.border, borderRadius: 4, marginBottom: 5, opacity: 0.3 }} />
+          ) : (
+            <Text style={[styles.displayName, { color: colors.text }]}>{getDisplayName()}</Text>
+          )}
         </View>
 
         {/* Configuración */}
