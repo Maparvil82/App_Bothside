@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute, useTheme } from '@react-navigation/native';
+import { HeaderBackButton } from '@react-navigation/elements';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -112,7 +113,7 @@ const GemsStack = () => {
           title: 'Bothside',
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
             </TouchableOpacity>
           ),
           headerRight: () => <HeaderAvatar />,
@@ -141,7 +142,7 @@ const MaletasStack = () => {
           title: 'Bothside',
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
             </TouchableOpacity>
           ),
           headerRight: () => <HeaderAvatar />,
@@ -188,7 +189,7 @@ const DashboardStack = () => {
           title: 'Bothside',
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
             </TouchableOpacity>
           ),
           headerRight: () => <HeaderAvatar />,
@@ -239,7 +240,7 @@ const AddDiscStack = () => {
           title: 'Bothside',
           headerLeft: () => (
             <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
-              <Ionicons name="arrow-back" size={24} color={colors.text} />
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
             </TouchableOpacity>
           ),
           headerRight: () => <HeaderAvatar />,
@@ -254,20 +255,20 @@ const ProfileStack = () => (
     <Stack.Screen
       name="ProfileScreen"
       component={ProfileScreen}
-      options={{
+      options={({ navigation }) => ({
         title: 'Perfil',
         headerShown: true,
         headerTintColor: '#000',
         headerBackTitle: '',
-        headerLeft: () => {
-          const navigation = useNavigation();
-          return (
-            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 16 }}>
-              <Ionicons name="arrow-back" size={24} color="#000" />
-            </TouchableOpacity>
-          );
-        }
-      }}
+        headerLeft: (props) => (
+          <HeaderBackButton
+            {...props}
+            onPress={() => navigation.goBack()}
+            tintColor="#000"
+            label=""
+          />
+        )
+      })}
     />
     <Stack.Screen
       name="Admin"
