@@ -256,14 +256,27 @@ const ProfileStack = () => (
       component={ProfileScreen}
       options={{
         title: 'Perfil',
-        headerShown: false,
-        headerBackTitle: 'Atrás'
+        headerShown: true,
+        headerTintColor: '#000',
+        headerBackTitle: '',
+        headerLeft: () => {
+          const navigation = useNavigation();
+          return (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginLeft: 16 }}>
+              <Ionicons name="arrow-back" size={24} color="#000" />
+            </TouchableOpacity>
+          );
+        }
       }}
     />
     <Stack.Screen
       name="Admin"
       component={AdminScreen}
-      options={{ title: 'Administración' }}
+      options={{
+        title: 'Administración',
+        headerTintColor: '#000',
+        headerBackTitle: '',
+      }}
     />
     <Stack.Screen
       name="Legal"
@@ -271,7 +284,8 @@ const ProfileStack = () => (
       options={{
         title: 'Información Legal',
         headerShown: true,
-        headerBackTitle: 'Atrás'
+        headerTintColor: '#000',
+        headerBackTitle: '',
       }}
     />
     <Stack.Screen
@@ -280,7 +294,8 @@ const ProfileStack = () => (
       options={{
         title: 'Feedback',
         headerShown: true,
-        headerBackTitle: 'Atrás'
+        headerTintColor: '#000',
+        headerBackTitle: '',
       }}
     />
     <Stack.Screen
@@ -289,7 +304,8 @@ const ProfileStack = () => (
       options={{
         title: 'Cuenta',
         headerShown: true,
-        headerBackTitle: 'Atrás'
+        headerTintColor: '#000',
+        headerBackTitle: '',
       }}
     />
     <Stack.Screen
@@ -298,7 +314,8 @@ const ProfileStack = () => (
       options={{
         title: 'Invitaciones',
         headerShown: true,
-        headerBackTitle: 'Atrás'
+        headerTintColor: '#000',
+        headerBackTitle: '',
       }}
     />
   </Stack.Navigator>
@@ -420,7 +437,7 @@ const AppStack = () => {
         <>
           <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
 
-          <Stack.Screen name="Profile" component={ProfileStack} options={{ title: 'Perfil' }} />
+          <Stack.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
           <Stack.Screen
             name="AlbumDetail"
             component={AlbumDetailScreen}
