@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useMyInvitations } from '../hooks/useCollaboration';
+import { BothsideLoader } from '../components/BothsideLoader';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -153,7 +154,11 @@ export const ProfileScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <View style={[styles.profileInfo, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
           <TouchableOpacity style={styles.avatarContainer} onPress={handleChangeAvatar}>
-            {profile?.avatar_url ? (
+            {loading ? (
+              <View style={[styles.avatar, { borderColor: colors.border, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center' }]}>
+                <BothsideLoader size="small" fullscreen={false} />
+              </View>
+            ) : profile?.avatar_url ? (
               <Image
                 source={{ uri: `${profile.avatar_url}?t=${profile?.updated_at || Date.now()}` }}
                 style={[styles.avatar, { borderColor: colors.border, backgroundColor: primaryColor }]}
