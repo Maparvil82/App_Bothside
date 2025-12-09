@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { signInWithGoogle } from '../src/auth/googleAuth';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -62,6 +63,18 @@ export const LoginScreen: React.FC = () => {
     return null;
   };
 
+  const handleGoogleAuth = async () => {
+    try {
+      setLoading(true);
+      await signInWithGoogle();
+      // The redirection happens automatically via deep linking
+    } catch (err: any) {
+      console.error('Google Auth Error:', err);
+      Alert.alert(t('common_error'), 'Hubo un problema al iniciar sesión con Google');
+      setLoading(false);
+    }
+  };
+
   const handleAuth = async () => {
     if (!email || !password) {
       Alert.alert(t('common_error'), t('auth_validation_all_fields_required'));
@@ -77,16 +90,22 @@ export const LoginScreen: React.FC = () => {
     }
 
     setLoading(true);
+    console.log('LoginScreen: Starting auth...');
     try {
       if (isSignUp) {
+        console.log('LoginScreen: Attempting sign up...');
         await signUp(email, password, username.trim());
+        console.log('LoginScreen: Sign up successful');
         // Alert.alert('Éxito', 'Cuenta creada. Revisa tu email para confirmar.');
       } else {
+        console.log('LoginScreen: Attempting sign in...');
         await signIn(email, password);
+        console.log('LoginScreen: Sign in successful');
       }
 
       // Verificar si hay plan seleccionado para navegar a PrePurchase
       if (route.params?.selectedPlan) {
+        console.log('LoginScreen: Navigating to PrePurchase...');
         // Obtener el usuario actual directamente de supabase ya que el contexto puede tardar en actualizarse
         const { data: { user: authUser } } = await supabase.auth.getUser();
 
@@ -98,8 +117,10 @@ export const LoginScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
+      console.error('LoginScreen: Auth error:', error);
       Alert.alert(t('common_error'), error.message);
     } finally {
+      console.log('LoginScreen: Auth finished, stopping loading');
       setLoading(false);
     }
   };
@@ -187,6 +208,15 @@ export const LoginScreen: React.FC = () => {
             <Text style={styles.buttonText}>
               {loading ? t('common_loading') : isSignUp ? t('auth_create_account') : t('auth_login')}
             </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.googleButton, loading && styles.buttonDisabled]}
+            onPress={handleGoogleAuth}
+            disabled={loading}
+          >
+            <Ionicons name="logo-google" size={20} color="#000" style={styles.googleIcon} />
+            <Text style={styles.googleButtonText}>Continuar con Google</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -287,5 +317,24 @@ const styles = StyleSheet.create({
     color: '#3A6BFF',
     fontSize: 15,
     fontWeight: '500',
+  },
+  googleButton: {
+    backgroundColor: '#ffffff',
+    height: 52,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#E5E5E5',
+    flexDirection: 'row',
+  },
+  googleButtonText: {
+    color: '#000000',
+    fontSize: 17,
+    fontWeight: '600',
+  },
+  googleIcon: {
+    marginRight: 10,
   },
 });

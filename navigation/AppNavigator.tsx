@@ -51,6 +51,7 @@ import { UserMaletaService } from '../services/database';
 import { PrePurchaseScreen } from '../screens/PrePurchaseScreen';
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
+import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -399,6 +400,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
         Profile: 'profile',
         Account: 'account',
         AudioScan: 'audio-scan',
+        AuthCallback: 'auth/callback',
       },
     },
   };
@@ -529,6 +531,7 @@ const AppStack = () => {
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal' }} />
+          <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} options={{ headerShown: false }} />
         </>
       )}
 
