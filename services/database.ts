@@ -1177,6 +1177,125 @@ export const UserMaletaService = {
 
     if (error) throw error;
     return data;
+  },
+
+  // Crear maleta para sesión con discos aleatorios
+  async createBagForSession(
+    userId: string,
+    sessionName: string,
+    sessionId: string,
+    styles: string[]
+  ) {
+    console.log('Creating bag for session:', { userId, sessionName, sessionId, styles });
+
+    // 1. Crear la maleta
+    const { data: maleta, error: maletaError } = await supabase
+      .from('user_maletas')
+      .insert([{
+        user_id: userId,
+        title: sessionName,
+        is_public: false,
+        is_collaborative: false
+      }])
+      .select()
+      .single();
+
+    if (maletaError) {
+      console.error('Error creating maleta for session:', maletaError);
+      throw maletaError;
+    }
+
+    // 2. Buscar 3 discos aleatorios que coincidan con los estilos
+    // Primero obtenemos los IDs de los estilos
+    const { data: styleIdsData, error: stylesError } = await supabase
+      .from('styles')
+      .select('id')
+      .in('name', styles);
+
+    if (stylesError) {
+      console.error('Error fetching style IDs:', stylesError);
+      // Si falla, seguimos sin añadir discos
+      return { maleta, albumsAdded: 0 };
+    }
+
+    const styleIds = styleIdsData?.map(s => s.id) || [];
+
+    if (styleIds.length === 0) {
+      return { maleta, albumsAdded: 0 };
+    }
+
+    // Buscamos discos del usuario que tengan esos estilos
+    // Esta query es compleja, así que la simplificamos:
+    // 1. Obtener discos de la colección del usuario
+    // 2. Filtrar por estilos (esto es mejor hacerlo en JS si no hay muchos, o con una query más compleja)
+    // Para simplificar y dado que Supabase JS client tiene limitaciones con joins complejos y random:
+    // Vamos a usar una RPC si fuera necesario, pero intentaremos con queries encadenadas.
+
+    // Opción: Obtener álbumes del usuario que tengan esos estilos.
+    // user_collection -> albums -> album_styles -> styles
+    // Esto es difícil de hacer eficiente con una sola query simple en el cliente sin RPC.
+    // Vamos a intentar obtener una lista de álbumes candidatos.
+
+    // Query: Obtener album_ids de album_styles donde style_id IN styleIds
+    // Y que estén en user_collection del usuario.
+
+    // Paso A: Obtener todos los album_ids que tienen esos estilos
+    const { data: albumsWithStyles, error: albumStylesError } = await supabase
+      .from('album_styles')
+      .select('album_id')
+      .in('style_id', styleIds);
+
+    if (albumStylesError) {
+      console.error('Error fetching albums with styles:', albumStylesError);
+      return { maleta, albumsAdded: 0 };
+    }
+
+    const candidateAlbumIds = [...new Set(albumsWithStyles?.map(a => a.album_id) || [])];
+
+    if (candidateAlbumIds.length === 0) {
+      return { maleta, albumsAdded: 0 };
+    }
+
+    // Paso B: Filtrar los que están en la colección del usuario
+    const { data: userAlbums, error: userAlbumsError } = await supabase
+      .from('user_collection')
+      .select('album_id')
+      .eq('user_id', userId)
+      .in('album_id', candidateAlbumIds);
+
+    if (userAlbumsError) {
+      console.error('Error fetching user albums:', userAlbumsError);
+      return { maleta, albumsAdded: 0 };
+    }
+
+    let finalAlbumIds = userAlbums?.map(ua => ua.album_id) || [];
+
+    // Paso C: Seleccionar 3 aleatorios
+    // Shuffle array
+    finalAlbumIds = finalAlbumIds.sort(() => 0.5 - Math.random());
+    // Take first 3
+    const selectedAlbumIds = finalAlbumIds.slice(0, 3);
+
+    // 3. Insertar en maleta_albums
+    if (selectedAlbumIds.length > 0) {
+      const maletaAlbumsInserts = selectedAlbumIds.map(albumId => ({
+        maleta_id: maleta.id,
+        album_id: albumId,
+        added_by: userId,
+        added_at: new Date().toISOString()
+      }));
+
+      const { error: insertAlbumsError } = await supabase
+        .from('maleta_albums')
+        .insert(maletaAlbumsInserts);
+
+      if (insertAlbumsError) {
+        console.error('Error adding albums to maleta:', insertAlbumsError);
+        // No lanzamos error, ya se creó la maleta
+      }
+    }
+
+    return { maleta, albumsAdded: selectedAlbumIds.length };
   }
 };
 
@@ -1187,6 +1306,7 @@ export interface UserProfile {
   username?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
+  show_auto_bag_suggestion_on_session_create?: boolean;
 }
 
 // Utilidad: convertir base64 (sin prefijo) a Uint8Array sin usar atob/Buffer

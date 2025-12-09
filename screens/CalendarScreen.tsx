@@ -2,12 +2,14 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated, DeviceEventEmitter } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme, useNavigation } from '@react-navigation/native';
+import { useTheme, useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppColors } from '../src/theme/colors';
 import { supabase } from '../lib/supabase';
+import { AutoBagCreationModal } from '../components/AutoBagCreationModal';
+import { UserMaletaService, ProfileService } from '../services/database';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
 import { useThemeMode } from '../contexts/ThemeContext';
@@ -151,14 +153,18 @@ export default function CalendarScreen() {
     try {
       const { data, error } = await supabase
         .from('sessions')
-        .select('name')
+        .select('name, tag') // Select both name and tag
         .ilike('name', `%${query}%`)
         .limit(5);
 
       if (!error && data) {
         // Unique names
-        const names = Array.from(new Set(data.map(item => item.name)));
+        const names = Array.from(new Set(data.map((item: { name: string }) => item.name)));
         setFilteredNames(names);
+
+        // Unique tags from the same query
+        const uniqueTags = Array.from(new Set(data.map((item: { tag?: string }) => item.tag).filter((tag): tag is string => tag !== null && tag !== undefined)));
+        setExistingTags(uniqueTags); // Assuming existingTags is the state for available tags
       }
     } catch (error) {
       console.error('Error fetching name suggestions:', error);
@@ -698,6 +704,16 @@ export default function CalendarScreen() {
         }
         handleCloseModal();
         await loadSessions();
+
+        // Verificar preferencia de usuario para sugerir maleta
+        if (user?.id) {
+          const profile = await ProfileService.getUserProfile(user.id);
+          // Por defecto es true si es undefined
+          if (profile?.show_auto_bag_suggestion_on_session_create !== false) {
+            setCreatedSessionForBag({ id: insertedData.id, name: insertedData.name });
+            setIsAutoBagModalVisible(true);
+          }
+        }
       }
     } catch (error) {
       console.error('Error al crear sesión:', error);
@@ -1032,11 +1048,16 @@ export default function CalendarScreen() {
     };
   }, []);
 
-  // Cargar sesiones del mes desde Supabase
-  useEffect(() => {
-    loadSessions();
-    loadNotesBySession();
-  }, [currentDate, user?.id]);
+  const [isAutoBagModalVisible, setIsAutoBagModalVisible] = useState(false);
+  const [createdSessionForBag, setCreatedSessionForBag] = useState<{ id: string; name: string } | null>(null);
+
+  // Cargar sesiones al montar
+  useFocusEffect(
+    React.useCallback(() => {
+      loadSessions();
+      loadNotesBySession();
+    }, [currentDate, user?.id])
+  );
 
   // Generar la cuadrícula de días del calendario
   const generateCalendarDays = (): CalendarDay[] => {
@@ -1609,6 +1630,49 @@ export default function CalendarScreen() {
         </View>
       </Modal>
 
+      <AutoBagCreationModal
+        visible={isAutoBagModalVisible}
+        sessionName={createdSessionForBag?.name || ''}
+        onClose={() => {
+          setIsAutoBagModalVisible(false);
+          setCreatedSessionForBag(null);
+        }}
+        onCreateBag={async (styles, dontShowAgain) => {
+          if (!user?.id || !createdSessionForBag) return;
+
+          try {
+            const result = await UserMaletaService.createBagForSession(
+              user.id,
+              createdSessionForBag.name,
+              createdSessionForBag.id,
+              styles
+            );
+
+            if (dontShowAgain) {
+              await ProfileService.updateUserProfile(user.id, {
+                show_auto_bag_suggestion_on_session_create: false
+              });
+            }
+
+            setIsAutoBagModalVisible(false);
+            setCreatedSessionForBag(null);
+            Alert.alert(
+              'Maleta creada',
+              `Se ha creado la maleta "${createdSessionForBag.name}" con ${result.albumsAdded} discos.`
+            );
+          } catch (error) {
+            console.error('Error creating auto bag:', error);
+            Alert.alert('Error', 'No se pudo crear la maleta automáticamente.');
+          }
+        }}
+        onDontShowAgain={async () => {
+          if (user?.id) {
+            await ProfileService.updateUserProfile(user.id, {
+              show_auto_bag_suggestion_on_session_create: false
+            });
+          }
+        }}
+      />
     </SafeAreaView>
   );
 }
