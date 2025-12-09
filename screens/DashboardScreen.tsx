@@ -17,6 +17,7 @@ import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { useStats } from '../contexts/StatsContext';
 import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { AudioNotesSection } from '../components/AudioNotesSection';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { TopItemsLineChart } from '../components/TopItemsLineChart';
@@ -84,6 +85,8 @@ export default function DashboardScreen() {
   const [userPosition, setUserPosition] = useState<number | null>(null);
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
   const { t } = useTranslation();
 
@@ -646,7 +649,7 @@ export default function DashboardScreen() {
 
         {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
-          <View style={styles.valueCard}>
+          <View style={[styles.valueCard, { backgroundColor: primaryColor }]}>
             <Text style={styles.valueCardTitle}>{t('dashboard_collection_value_title')}</Text>
             <Text style={styles.valueCardAmount}>
               {stats.collectionValue.toFixed(2)} €
@@ -683,7 +686,7 @@ export default function DashboardScreen() {
             <Text style={[styles.shelfStatText, { color: colors.text }]}>{t('dashboard_shelves_created')}</Text>
           </View>
           <TouchableOpacity
-            style={styles.configButton}
+            style={[styles.configButton, { backgroundColor: primaryColor }]}
             onPress={() => (navigation as any).navigate('ShelvesList')}
           >
             <Ionicons name="grid-outline" size={20} color="#fff" />
@@ -723,7 +726,7 @@ export default function DashboardScreen() {
                     {album.price ? `${album.price.toFixed(2)} €` : t('dashboard_price_unavailable')}
                   </Text>
                 </View>
-                <View style={styles.albumRank}>
+                <View style={[styles.albumRank, { backgroundColor: primaryColor }]}>
                   <Text style={styles.albumRankText}>#{index + 1}</Text>
                 </View>
               </TouchableOpacity>
@@ -772,7 +775,7 @@ export default function DashboardScreen() {
                     {t('dashboard_ratio_want')} {album.want} • {t('dashboard_ratio_have')} {album.have}
                   </Text>
                 </View>
-                <View style={styles.albumRank}>
+                <View style={[styles.albumRank, { backgroundColor: primaryColor }]}>
                   <Text style={styles.albumRankText}>#{index + 1}</Text>
                 </View>
               </TouchableOpacity>
@@ -919,7 +922,7 @@ export default function DashboardScreen() {
                   <Text style={styles.albumArtist}>{album.artist}</Text>
                   <Text style={styles.albumYear}>{album.year}</Text>
                 </View>
-                <Text style={styles.albumDate}>{album.addedAt}</Text>
+                <Text style={[styles.albumDate, { color: primaryColor }]}>{album.addedAt}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -964,7 +967,7 @@ export default function DashboardScreen() {
 
       {/* Botón flotante de IA */}
       <TouchableOpacity
-        style={styles.floatingAIButton}
+        style={[styles.floatingAIButton, { backgroundColor: primaryColor }]}
         onPress={() => (navigation as any).navigate('AIChat')}
         activeOpacity={0.8}
       >

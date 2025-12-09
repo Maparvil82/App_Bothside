@@ -9,6 +9,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 type RootStackParamList = {
   ShelfView: { shelfId: string, shelfName: string };
@@ -28,6 +29,8 @@ export default function ShelvesListScreen() {
   const { user } = useAuth();
   const navigation = useNavigation<ShelvesListNavigationProp>();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -148,7 +151,7 @@ export default function ShelvesListScreen() {
         contentContainerStyle={{ flexGrow: 1 }}
       />
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
         onPress={() => navigation.navigate('ShelfEdit')}
       >
         <Ionicons name="add" size={30} color="#fff" />

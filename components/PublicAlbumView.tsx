@@ -13,6 +13,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { AppColors } from '../src/theme/colors';
 import { YouTubeWebViewPlayer } from './YouTubeWebViewPlayer';
 
@@ -29,6 +30,8 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
 }) => {
     const { colors } = useTheme();
     const { t } = useTranslation();
+    const { mode } = useThemeMode();
+    const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
     const [showYoutubePlayer, setShowYoutubePlayer] = useState(false);
     const [currentYoutubeUrl, setCurrentYoutubeUrl] = useState<string | null>(null);
 
@@ -173,7 +176,7 @@ export const PublicAlbumView: React.FC<PublicAlbumViewProps> = ({
             {/* Botón flotante de YouTube */}
             {album_youtube_urls && album_youtube_urls.length > 0 && (
                 <TouchableOpacity
-                    style={[styles.floatingPlayButton, styles.youtubeButton]}
+                    style={[styles.floatingPlayButton, styles.youtubeButton, { shadowColor: primaryColor }]}
                     onPress={handlePlayYouTubeDirect}
                     activeOpacity={0.8}
                 >

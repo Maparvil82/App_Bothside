@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useCameraPermissions } from 'expo-camera';
 import { useNavigation, useTheme } from '@react-navigation/native';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { CameraComponent } from '../components/CameraComponent';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
@@ -50,6 +51,8 @@ export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<'search' | 'manual' | 'camera'>('search');
   const [query, setQuery] = useState('');
@@ -1024,7 +1027,7 @@ Progressive Rock`;
         </Text>
       </View>
       <TouchableOpacity
-        style={[styles.addButton, addingDisc && styles.addButtonDisabled]}
+        style={[styles.addButton, { backgroundColor: primaryColor }, addingDisc && styles.addButtonDisabled]}
         onPress={() => addToCollection(item)}
         disabled={addingDisc}
       >
@@ -1057,7 +1060,7 @@ Progressive Rock`;
         </Text>
       </View>
       <TouchableOpacity
-        style={[styles.addButton, addingDisc && styles.addButtonDisabled]}
+        style={[styles.addButton, { backgroundColor: primaryColor }, addingDisc && styles.addButtonDisabled]}
         onPress={() => addDiscogsReleaseToCollection(item)}
         disabled={addingDisc}
       >
@@ -1204,6 +1207,7 @@ Progressive Rock`;
           <TouchableOpacity
             style={[
               styles.manualSearchButton,
+              { backgroundColor: primaryColor },
               (!artistQuery.trim() || !albumQuery.trim()) && styles.manualSearchButtonDisabled
             ]}
             onPress={searchDiscogsManual}
@@ -1312,7 +1316,7 @@ Progressive Rock`;
                 }}
               >
                 <Ionicons name="refresh" size={20} color="#000" />
-                <Text style={styles.capturedImageButtonText}>{t('add_disc_button_new_photo')}</Text>
+                <Text style={[styles.capturedImageButtonText, { color: primaryColor }]}>{t('add_disc_button_new_photo')}</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.capturedImageButton, ocrLoading && styles.capturedImageButtonDisabled]}
@@ -1320,7 +1324,7 @@ Progressive Rock`;
                 disabled={ocrLoading}
               >
                 <Ionicons name="text" size={20} color={ocrLoading ? "#ccc" : "#000"} />
-                <Text style={[styles.capturedImageButtonText, ocrLoading && styles.capturedImageButtonTextDisabled]}>
+                <Text style={[styles.capturedImageButtonText, { color: primaryColor }, ocrLoading && styles.capturedImageButtonTextDisabled]}>
                   {ocrLoading ? t('add_disc_button_analyzing') : t('add_disc_button_analyze_text')}
                 </Text>
               </TouchableOpacity>
@@ -1367,7 +1371,7 @@ Progressive Rock`;
               </Text>
             )}
             <TouchableOpacity
-              style={styles.cameraOpenButton}
+              style={[styles.cameraOpenButton, { backgroundColor: primaryColor }]}
               onPress={openCamera}
               disabled={permission?.status !== 'granted'}
             >
@@ -1385,43 +1389,43 @@ Progressive Rock`;
       {/* Tabs */}
       <View style={[styles.tabContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'search' && { borderBottomColor: colors.primary }]}
+          style={[styles.tab, activeTab === 'search' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
           onPress={() => setActiveTab('search')}
         >
           <Ionicons
             name={activeTab === 'search' ? 'search' : 'search-outline'}
             size={20}
-            color={activeTab === 'search' ? colors.primary : colors.text}
+            color={activeTab === 'search' ? primaryColor : colors.text}
           />
-          <Text style={[styles.tabText, { color: activeTab === 'search' ? colors.primary : colors.text }]}>
+          <Text style={[styles.tabText, { color: activeTab === 'search' ? primaryColor : colors.text }]}>
             {t('add_disc_tab_search')}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'manual' && { borderBottomColor: colors.primary }]}
+          style={[styles.tab, activeTab === 'manual' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
           onPress={() => setActiveTab('manual')}
         >
           <Ionicons
             name={activeTab === 'manual' ? 'create' : 'create-outline'}
             size={20}
-            color={activeTab === 'manual' ? colors.primary : colors.text}
+            color={activeTab === 'manual' ? primaryColor : colors.text}
           />
-          <Text style={[styles.tabText, { color: activeTab === 'manual' ? colors.primary : colors.text }]}>
+          <Text style={[styles.tabText, { color: activeTab === 'manual' ? primaryColor : colors.text }]}>
             {t('add_disc_tab_manual')}
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'camera' && { borderBottomColor: colors.primary }]}
+          style={[styles.tab, activeTab === 'camera' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
           onPress={() => setActiveTab('camera')}
         >
           <Ionicons
             name={activeTab === 'camera' ? 'camera' : 'camera-outline'}
             size={20}
-            color={activeTab === 'camera' ? colors.primary : colors.text}
+            color={activeTab === 'camera' ? primaryColor : colors.text}
           />
-          <Text style={[styles.tabText, { color: activeTab === 'camera' ? colors.primary : colors.text }]}>
+          <Text style={[styles.tabText, { color: activeTab === 'camera' ? primaryColor : colors.text }]}>
             {t('add_disc_tab_camera')}
           </Text>
         </TouchableOpacity>
@@ -1434,7 +1438,7 @@ Progressive Rock`;
 
       {/* Botón flotante de IA */}
       <TouchableOpacity
-        style={styles.floatingAIButton}
+        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
         onPress={() => (navigation as any).navigate('AIChat')}
         activeOpacity={0.8}
       >

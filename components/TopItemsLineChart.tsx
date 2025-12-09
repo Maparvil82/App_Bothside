@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Dimensions } from 'react-native';
 import { LineChart } from 'react-native-chart-kit';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 
@@ -26,6 +27,8 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
   icon
 }) => {
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
 
   if (!data || data.length === 0) {
     return null;
@@ -52,7 +55,7 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
       case 'calendar': // Décadas
         return '#34D399'; // Verde esmeralda
       default:
-        return AppColors.primary; // Azul por defecto
+        return primaryColor; // Azul por defecto
     }
   };
 
@@ -67,7 +70,7 @@ export const TopItemsLineChart: React.FC<TopItemsLineChartProps> = ({
       case 'calendar':
         return { from: '#34D399', to: '#6EE7B7' };
       default:
-        return { from: AppColors.primary, to: '#4DA3FF' };
+        return { from: primaryColor, to: '#4DA3FF' };
     }
   };
 

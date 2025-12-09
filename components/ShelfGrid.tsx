@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface ShelfGridProps {
   rows: number;
@@ -11,6 +12,8 @@ interface ShelfGridProps {
 }
 
 const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, highlightColumn }) => {
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const screenWidth = Dimensions.get('window').width;
   const containerPadding = 32; // Padding total (16 * 2)
   const gridGap = 12; // Espaciado unificado
@@ -25,7 +28,7 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({ rows, columns, highlightRow, high
       for (let j = 0; j < columns; j++) {
         const isHighlighted = (i + 1) === highlightRow && (j + 1) === highlightColumn;
         rowCells.push(
-          <View key={`${i}-${j}`} style={[styles.cell, { width: cellWidth, height: cellWidth }, isHighlighted && styles.highlightedCell]}>
+          <View key={`${i}-${j}`} style={[styles.cell, { width: cellWidth, height: cellWidth }, isHighlighted && [styles.highlightedCell, { backgroundColor: primaryColor }]]}>
             {isHighlighted && <Ionicons name="disc" size={cellWidth * 0.6} color="white" />}
           </View>
         );

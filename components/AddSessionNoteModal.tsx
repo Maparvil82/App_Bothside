@@ -11,6 +11,7 @@ import {
 import { BothsideLoader } from './BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 
@@ -29,6 +30,8 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
 }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [noteText, setNoteText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -76,7 +79,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
   return (
     <Modal visible={visible} transparent animationType="fade">
       <View style={[styles.container, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
-        <View style={[styles.modalContent, { backgroundColor: '#fff' }]}>
+        <View style={[styles.modalContent, { backgroundColor: '#fff', shadowColor: primaryColor }]}>
           <Text style={[styles.title, { color: '#000' }]}>{t('session_note_title')}</Text>
           <Text style={[styles.subtitle, { color: '#000' }]}>
             {t('session_note_subtitle')}
@@ -101,7 +104,7 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
             editable={!isSaving}
           />
 
-          <Text style={[styles.charCount, { color: AppColors.primary }]}>
+          <Text style={[styles.charCount, { color: primaryColor }]}>
             {noteText.length}/500
           </Text>
 
@@ -111,11 +114,11 @@ export const AddSessionNoteModal: React.FC<AddSessionNoteModalProps> = ({
               onPress={handleCancel}
               disabled={isSaving}
             >
-              <Text style={[styles.buttonText, { color: AppColors.primary }]}>{t('common_cancel')}</Text>
+              <Text style={[styles.buttonText, { color: primaryColor }]}>{t('common_cancel')}</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.saveButton, { backgroundColor: AppColors.primary }]}
+              style={[styles.button, styles.saveButton, { backgroundColor: primaryColor }]}
               onPress={handleSave}
               disabled={isSaving}
             >

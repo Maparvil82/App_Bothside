@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 // TODO: Migrar a la nueva API de filesystem cuando se reescriba el flujo de notas de audio
 import * as FileSystem from 'expo-file-system/legacy';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,6 +32,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   albumTitle,
 }) => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -304,7 +307,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             <View style={styles.controlsContainer}>
               {!isRecording && !recordingUri ? (
                 <TouchableOpacity
-                  style={styles.recordButton}
+                  style={[styles.recordButton, { backgroundColor: primaryColor }]}
                   onPress={startRecording}
                 >
                   <Ionicons name="mic" size={32} color="white" />
@@ -321,7 +324,7 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
               ) : (
                 <View style={styles.playbackContainer}>
                   <TouchableOpacity
-                    style={styles.playButton}
+                    style={[styles.playButton, { backgroundColor: primaryColor }]}
                     onPress={isPlaying ? stopPlaying : playRecording}
                   >
                     <Ionicons

@@ -17,6 +17,7 @@ import { AppColors } from '../src/theme/colors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigation, useTheme } from '@react-navigation/native';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { GeminiService } from '../services/gemini';
 import { useTranslation } from '../src/i18n/useTranslation';
@@ -42,6 +43,8 @@ export default function AIChatScreen() {
   const navigation = useNavigation();
 
   const { colors, dark } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
   const isLightMode = !dark;
   const [messages, setMessages] = useState<Message[]>([]);
@@ -408,7 +411,7 @@ export default function AIChatScreen() {
               <View
                 style={[
                   styles.messageBubble,
-                  message.isUser ? styles.userBubble : [styles.aiBubble, { backgroundColor: colors.card }],
+                  message.isUser ? [styles.userBubble, { backgroundColor: primaryColor }] : [styles.aiBubble, { backgroundColor: colors.card }],
                 ]}
               >
                 <Text
@@ -506,6 +509,7 @@ export default function AIChatScreen() {
             <TouchableOpacity
               style={[
                 styles.sendButton,
+                { backgroundColor: primaryColor },
                 isLoading && [
                   styles.sendButtonDisabled,
                   { backgroundColor: isLightMode ? '#E5E5EA' : colors.text + '20' },

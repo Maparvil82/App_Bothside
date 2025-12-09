@@ -18,6 +18,7 @@ import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -29,6 +30,8 @@ export const LoginScreen: React.FC = () => {
 
   const { signIn, signUp } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
 
@@ -177,7 +180,7 @@ export const LoginScreen: React.FC = () => {
           </View>
 
           <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled]}
+            style={[styles.button, loading && styles.buttonDisabled, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
             onPress={handleAuth}
             disabled={loading}
           >

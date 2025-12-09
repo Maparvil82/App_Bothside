@@ -18,6 +18,7 @@ import {
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
@@ -55,6 +56,8 @@ export const SearchScreen: React.FC = () => {
   const { refreshStats } = useStats();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
   const searchInputRef = useRef<TextInput>(null);
   const cameraRef = useRef<CameraView>(null);
@@ -651,7 +654,7 @@ export const SearchScreen: React.FC = () => {
           <Text style={[styles.emptyStateSubtitle, { color: colors.text }]}>
             {t('search_empty_subtitle')}
           </Text>
-          <TouchableOpacity style={styles.createButton} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
+          <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
             <Ionicons name="add" size={20} color="white" />
             <Text style={styles.createButtonText}>{t('search_empty_button')}</Text>
           </TouchableOpacity>
@@ -1651,7 +1654,7 @@ export const SearchScreen: React.FC = () => {
         </Text>
       </View>
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { backgroundColor: primaryColor }]}
         onPress={() => addToCollection(item)}
       >
         <Text style={styles.addButtonText}>+</Text>
@@ -1663,7 +1666,7 @@ export const SearchScreen: React.FC = () => {
   const renderSwipeActions = (rowData: any, rowMap: any) => (
     <View style={styles.swipeActionsContainer}>
       <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeOptions]}
+        style={[styles.swipeAction, styles.swipeOptions, { backgroundColor: primaryColor }]}
         onPress={() => handleSwipeOptions(rowMap, rowData.item.id)}
         activeOpacity={0.8}
       >
@@ -1780,7 +1783,7 @@ export const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  !filterByStyle && styles.filterChipActive
+                  !filterByStyle && [styles.filterChipActive, { backgroundColor: primaryColor }]
                 ]}
                 onPress={() => setFilterByStyle('')}
               >
@@ -1794,7 +1797,7 @@ export const SearchScreen: React.FC = () => {
                   key={style}
                   style={[
                     styles.filterChip,
-                    filterByStyle === style && styles.filterChipActive
+                    filterByStyle === style && [styles.filterChipActive, { backgroundColor: primaryColor }]
                   ]}
                   onPress={() => setFilterByStyle(style)}
                 >
@@ -1814,7 +1817,7 @@ export const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  !filterByYear && styles.filterChipActive
+                  !filterByYear && [styles.filterChipActive, { backgroundColor: primaryColor }]
                 ]}
                 onPress={() => setFilterByYear('')}
               >
@@ -1828,7 +1831,7 @@ export const SearchScreen: React.FC = () => {
                   key={year}
                   style={[
                     styles.filterChip,
-                    filterByYear === year && styles.filterChipActive
+                    filterByYear === year && [styles.filterChipActive, { backgroundColor: primaryColor }]
                   ]}
                   onPress={() => setFilterByYear(year)}
                 >
@@ -1848,7 +1851,7 @@ export const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  !filterByLabel && styles.filterChipActive
+                  !filterByLabel && [styles.filterChipActive, { backgroundColor: primaryColor }]
                 ]}
                 onPress={() => setFilterByLabel('')}
               >
@@ -1862,7 +1865,7 @@ export const SearchScreen: React.FC = () => {
                   key={label}
                   style={[
                     styles.filterChip,
-                    filterByLabel === label && styles.filterChipActive
+                    filterByLabel === label && [styles.filterChipActive, { backgroundColor: primaryColor }]
                   ]}
                   onPress={() => setFilterByLabel(label)}
                 >
@@ -1882,7 +1885,7 @@ export const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  !filterByLocation && styles.filterChipActive
+                  !filterByLocation && [styles.filterChipActive, { backgroundColor: primaryColor }]
                 ]}
                 onPress={() => setFilterByLocation('')}
               >
@@ -1896,7 +1899,7 @@ export const SearchScreen: React.FC = () => {
                   key={location}
                   style={[
                     styles.filterChip,
-                    filterByLocation === location && styles.filterChipActive
+                    filterByLocation === location && [styles.filterChipActive, { backgroundColor: primaryColor }]
                   ]}
                   onPress={() => setFilterByLocation(location)}
                 >
@@ -1916,7 +1919,7 @@ export const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  !filterByAudioNotes && styles.filterChipActive
+                  !filterByAudioNotes && [styles.filterChipActive, { backgroundColor: primaryColor }]
                 ]}
                 onPress={() => setFilterByAudioNotes(false)}
               >
@@ -1928,7 +1931,7 @@ export const SearchScreen: React.FC = () => {
               <TouchableOpacity
                 style={[
                   styles.filterChip,
-                  filterByAudioNotes && styles.filterChipActive
+                  filterByAudioNotes && [styles.filterChipActive, { backgroundColor: primaryColor }]
                 ]}
                 onPress={() => setFilterByAudioNotes(true)}
               >
@@ -2017,7 +2020,7 @@ export const SearchScreen: React.FC = () => {
         onRequestClose={() => setShowAddToShelfModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, shadowColor: primaryColor }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {t('search_modal_add_to_shelf_title').replace('{0}', selectedAlbum?.albums?.title || '')}
@@ -2042,7 +2045,7 @@ export const SearchScreen: React.FC = () => {
                   onPress={() => setShowCreateShelfForm(true)}
                 >
                   <Ionicons name="add-circle-outline" size={24} color="#000" />
-                  <Text style={styles.createNewShelfText}>{t('search_action_create_shelf')}</Text>
+                  <Text style={[styles.createNewShelfText, { color: primaryColor }]}>{t('search_action_create_shelf')}</Text>
                 </TouchableOpacity>
 
                 <Text style={styles.shelfListTitle}>{t('search_subtitle_existing_shelves')}</Text>
@@ -2112,7 +2115,7 @@ export const SearchScreen: React.FC = () => {
                     >
                       <View style={[
                         styles.toggleTrack,
-                        { backgroundColor: newShelfIsPublic ? AppColors.primary : '#ccc' }
+                        { backgroundColor: newShelfIsPublic ? primaryColor : '#ccc' }
                       ]}>
                         <View style={[
                           styles.toggleThumb,
@@ -2142,7 +2145,7 @@ export const SearchScreen: React.FC = () => {
                   <TouchableOpacity
                     style={[
                       styles.formCreateButton,
-                      { opacity: newShelfTitle.trim() ? 1 : 0.5 }
+                      { opacity: newShelfTitle.trim() ? 1 : 0.5, backgroundColor: primaryColor }
                     ]}
                     onPress={createNewShelf}
                     disabled={!newShelfTitle.trim()}
@@ -2164,7 +2167,7 @@ export const SearchScreen: React.FC = () => {
         onRequestClose={() => setShowLocationModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, shadowColor: primaryColor }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {t('search_modal_assign_location_title').replace('{0}', selectedAlbumForLocation?.albums?.title || '')}
@@ -2190,7 +2193,7 @@ export const SearchScreen: React.FC = () => {
                     {t('search_empty_locations_subtitle')}
                   </Text>
                   <TouchableOpacity
-                    style={styles.createShelfButton}
+                    style={[styles.createShelfButton, { backgroundColor: primaryColor }]}
                     onPress={() => {
                       setShowLocationModal(false);
                       navigation.navigate('ShelvesList');
@@ -2237,7 +2240,7 @@ export const SearchScreen: React.FC = () => {
         onRequestClose={() => setShowEditionsModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, shadowColor: primaryColor }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                 {t('search_modal_change_version_title').replace('{0}', selectedAlbumForEdit?.albums?.title || '')}
@@ -2328,7 +2331,7 @@ export const SearchScreen: React.FC = () => {
 
       {/* Botón flotante de IA */}
       <TouchableOpacity
-        style={styles.floatingAIButton}
+        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
         onPress={() => navigation.navigate('AIChat')}
         activeOpacity={0.8}
       >
@@ -2391,8 +2394,8 @@ export const SearchScreen: React.FC = () => {
 
             <ScrollView style={styles.modalBody}>
               {recognizedAlbum && (
-                <View style={styles.extractedTextContainer}>
-                  <Text style={[styles.extractedTextLabel, { color: colors.text }]}>
+                <View style={[styles.extractedTextContainer, { borderLeftColor: primaryColor }]}>
+                  <Text style={[styles.extractedTextLabel, { color: primaryColor }]}>
                     {t('search_label_recognized_album')}
                   </Text>
                   <Text style={[styles.extractedText, { color: colors.text }]}>

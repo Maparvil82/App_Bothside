@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { useFocusEffect } from '@react-navigation/native';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface UserAvatarProps {
   size?: number;
@@ -17,6 +18,8 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   showBorder = true
 }) => {
   const { user } = useAuth();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageFailed, setImageFailed] = useState(false);
@@ -65,7 +68,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
     height: size,
     borderRadius: size / 2,
     borderWidth: showBorder ? 2 : 0,
-    borderColor: showBorder ? AppColors.primary : 'transparent',
+    borderColor: showBorder ? primaryColor : 'transparent',
   } as const;
 
   if (loading) {
@@ -90,7 +93,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
           }}
         />
       ) : (
-        <View style={[styles.avatarPlaceholder, avatarStyle]}>
+        <View style={[styles.avatarPlaceholder, avatarStyle, { backgroundColor: primaryColor }]}>
           <Text style={[styles.avatarText, { fontSize: size * 0.4 }]}>
             {getInitials()}
           </Text>

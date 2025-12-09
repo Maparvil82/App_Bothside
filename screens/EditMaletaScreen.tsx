@@ -14,6 +14,7 @@ import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService } from '../services/database';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface EditListScreenProps {
   navigation: any;
@@ -23,6 +24,8 @@ interface EditListScreenProps {
 const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { list } = route.params;
 
   const [title, setTitle] = useState(list.title || '');
@@ -135,7 +138,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
         <TouchableOpacity
           onPress={handleSaveChanges}
           disabled={loading || !title.trim()}
-          style={[styles.saveButton, (!title.trim() || loading) && styles.saveButtonDisabled]}
+          style={[styles.saveButton, (!title.trim() || loading) && styles.saveButtonDisabled, { backgroundColor: (!title.trim() || loading) ? '#E5E5E5' : primaryColor }]}
         >
           <Text style={[styles.saveButtonText, (!title.trim() || loading) && styles.saveButtonTextDisabled]}>
             {loading ? t('common_saving') : t('common_save')}
@@ -192,7 +195,7 @@ const EditListScreen: React.FC<EditListScreenProps> = ({ navigation, route }) =>
             <Switch
               value={isPublic}
               onValueChange={setIsPublic}
-              trackColor={{ false: '#E5E5E5', true: AppColors.primary }}
+              trackColor={{ false: '#E5E5E5', true: primaryColor }}
               thumbColor={isPublic ? '#FFFFFF' : '#FFFFFF'}
             />
           </View>

@@ -4,6 +4,7 @@ import { BothsideLoader } from './BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { CameraView, CameraType, FlashMode, useCameraPermissions } from 'expo-camera';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import { GeminiService } from '../services/gemini';
 import { supabase } from '../lib/supabase';
@@ -20,6 +21,8 @@ interface CameraComponentProps {
 
 export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onClose, onOCRResult }) => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [permission, requestPermission] = useCameraPermissions();
   const [isLoading, setIsLoading] = useState(false);
   const [isAIProcessing, setIsAIProcessing] = useState(false);
@@ -338,7 +341,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           </Text>
         </View>
         <TouchableOpacity
-          style={[styles.addButton, isSaving && styles.addButtonDisabled]}
+          style={[styles.addButton, isSaving && styles.addButtonDisabled, { backgroundColor: primaryColor }]}
           onPress={() => saveDiscogsRelease(item)}
           disabled={isSaving}
         >
@@ -425,7 +428,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
           <View style={styles.bottomControls}>
             {/* Botón de captura principal */}
             <TouchableOpacity
-              style={[styles.captureButton, (isLoading || isAIProcessing) && styles.captureButtonDisabled]}
+              style={[styles.captureButton, (isLoading || isAIProcessing) && styles.captureButtonDisabled, { shadowColor: primaryColor }]}
               onPress={handleCapture}
               disabled={isLoading || isAIProcessing}
             >
@@ -433,7 +436,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
                 {isAIProcessing ? (
                   <BothsideLoader size="small" fullscreen={false} />
                 ) : (
-                  <View style={styles.captureButtonIcon} />
+                  <View style={[styles.captureButtonIcon, { backgroundColor: primaryColor }]} />
                 )}
               </View>
             </TouchableOpacity>
@@ -502,7 +505,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
             {/* Overlay de carga cuando se está guardando */}
             {isSaving && (
               <View style={styles.savingOverlay}>
-                <View style={styles.savingContainer}>
+                <View style={[styles.savingContainer, { shadowColor: primaryColor }]}>
                   <BothsideLoader />
                   <Text style={styles.savingText}>{t('camera_saving')}</Text>
                 </View>

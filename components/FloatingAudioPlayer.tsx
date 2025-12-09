@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import YoutubePlayer from "react-native-youtube-iframe";
 
@@ -28,6 +29,8 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
   albumTitle,
   onClose,
 }) => {
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -198,12 +201,13 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
         {
           transform: [{ translateY: slideAnim.interpolate({ inputRange: [0, 1], outputRange: [100, 0] }) }],
           opacity: slideAnim,
+          shadowColor: primaryColor,
         },
       ]}
     >
       {/* YouTube Player */}
       {isYouTube && videoId && (
-        <View style={isMinimized ? styles.hiddenVideo : styles.videoContainer}>
+        <View style={[isMinimized ? styles.hiddenVideo : styles.videoContainer, { backgroundColor: primaryColor }]}>
           <YoutubePlayer
             height={isMinimized ? 1 : 180}
             width={isMinimized ? 1 : 300}
@@ -252,7 +256,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
                 <Ionicons
                   name={isMinimized ? 'chevron-up' : 'chevron-down'}
                   size={24}
-                  color={AppColors.primary}
+                  color={primaryColor}
                 />
               </TouchableOpacity>
 
@@ -260,7 +264,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
               {!isYouTube && (
                 <View style={styles.progressContainer}>
                   <View style={styles.progressBar}>
-                    <View style={[styles.progressFill, { width: `${duration > 0 ? position / duration * 100 : 0}%` }]} />
+                    <View style={[styles.progressFill, { width: `${duration > 0 ? position / duration * 100 : 0}%`, backgroundColor: primaryColor }]} />
                   </View>
                   <Text style={styles.timeText}>
                     {formatTime(position)} / {formatTime(duration)}

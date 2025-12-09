@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +29,8 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
 }) => {
   const navigation = useNavigation();
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -128,7 +131,7 @@ export const CustomHeader: React.FC<CustomHeaderProps> = ({
                   resizeMode="cover"
                 />
               ) : (
-                <View style={[styles.avatarPlaceholder, { borderColor: colors.border }]}>
+                <View style={[styles.avatarPlaceholder, { borderColor: colors.border, backgroundColor: primaryColor }]}>
                   <Text style={styles.avatarText}>{getInitials()}</Text>
                 </View>
               )}

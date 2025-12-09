@@ -1,6 +1,7 @@
 import React from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { View, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 
 interface ShelfGridSelectableProps {
@@ -18,6 +19,8 @@ const ShelfGridSelectable: React.FC<ShelfGridSelectableProps> = ({
   selectedRow,
   selectedColumn,
 }) => {
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const screenWidth = Dimensions.get('window').width;
   const containerPadding = 16 * 2;
   const gridGap = 8;
@@ -37,7 +40,8 @@ const ShelfGridSelectable: React.FC<ShelfGridSelectableProps> = ({
             style={[
               styles.cell,
               { width: cellWidth, height: cellWidth },
-              isSelected && styles.selectedCell,
+              { width: cellWidth, height: cellWidth },
+              isSelected && [styles.selectedCell, { backgroundColor: primaryColor }],
             ]}
             onPress={() => onSelectCell(i, j)}
           />

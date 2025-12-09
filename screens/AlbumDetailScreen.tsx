@@ -121,6 +121,7 @@ export default function AlbumDetailScreen() {
   const { isGem, addGem, removeGem, refreshGems, updateGemStatus } = useGems();
   const { colors } = useTheme();
   const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
   const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
 
@@ -1097,7 +1098,7 @@ export default function AlbumDetailScreen() {
       <View style={styles.errorContainer}>
         <Ionicons name="alert-circle" size={48} color="#dc3545" />
         <Text style={styles.errorText}>{error || t('album_detail_not_found')}</Text>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.errorButton}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.errorButton, { backgroundColor: primaryColor }]}>
           <Text style={styles.errorButtonText}>{t('common_back')}</Text>
         </TouchableOpacity>
       </View>
@@ -1221,7 +1222,7 @@ export default function AlbumDetailScreen() {
             <View style={styles.catalogCountryContainer}>
               {album.albums.catalog_no && (
                 <>
-                  <Text style={[styles.catalog, { color: colors.text }]}>{album.albums.catalog_no}</Text>
+                  <Text style={[styles.catalog, { color: primaryColor }]}>{album.albums.catalog_no}</Text>
                   {album.albums.country && <Text style={[styles.separator, { color: colors.text }]}> • </Text>}
                 </>
               )}
@@ -1269,7 +1270,7 @@ export default function AlbumDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: LIGHT_BG_COLOR },
+                { backgroundColor: LIGHT_BG_COLOR, shadowColor: primaryColor },
                 isGem(album.albums.id) && styles.actionButtonActive
               ]}
               onPress={handleToggleGem}
@@ -1293,7 +1294,7 @@ export default function AlbumDetailScreen() {
             <TouchableOpacity
               style={[
                 styles.actionButton,
-                { backgroundColor: (album.user_list_items && album.user_list_items.length > 0) ? '#e0f2fe' : LIGHT_BG_COLOR },
+                { backgroundColor: (album.user_list_items && album.user_list_items.length > 0) ? '#e0f2fe' : LIGHT_BG_COLOR, shadowColor: primaryColor },
                 (album.user_list_items && album.user_list_items.length > 0) && { borderColor: '#0284c7', borderWidth: 1 }
               ]}
               onPress={async () => {
@@ -1539,10 +1540,10 @@ export default function AlbumDetailScreen() {
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={[styles.playAudioButton]}
+                  style={[styles.playAudioButton, { shadowColor: primaryColor }]}
                   onPress={() => handlePlayAudio(album.audio_note!)}
                 >
-                  <Ionicons name="play-circle" size={24} color={colors.primary} />
+                  <Ionicons name="play-circle" size={24} color={primaryColor} />
                   <Text style={[styles.playAudioButtonText]}>{t('album_detail_play_audio_note')}</Text>
                 </TouchableOpacity>
               </>
@@ -1556,10 +1557,10 @@ export default function AlbumDetailScreen() {
                   </View>
                 </View>
                 <TouchableOpacity
-                  style={[styles.recordAudioButton]}
+                  style={[styles.recordAudioButton, { shadowColor: primaryColor }]}
                   onPress={() => handleRecordAudio()}
                 >
-                  <Ionicons name="mic" size={24} />
+                  <Ionicons name="mic" size={24} color={primaryColor} />
                   <Text style={[styles.recordAudioButtonText]}>{t('album_detail_record_audio_note')}</Text>
                 </TouchableOpacity>
               </>
@@ -1647,7 +1648,7 @@ export default function AlbumDetailScreen() {
                     }}
                   >
                     <View style={styles.typeFormQuestionHeader}>
-                      <Text style={[styles.typeFormQuestionNumber, { color: colors.primary }]}>
+                      <Text style={[styles.typeFormQuestionNumber, { color: primaryColor }]}>
                         {index + 1}
                       </Text>
                       <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
@@ -1684,7 +1685,7 @@ export default function AlbumDetailScreen() {
               {similarAlbums.map((item, index) => (
                 <TouchableOpacity
                   key={item.id}
-                  style={[styles.similarAlbumCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  style={[styles.similarAlbumCard, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: primaryColor }]}
                   onPress={() => {
                     // Navegar al álbum similar
                     (navigation as any).navigate('AlbumDetail', { albumId: item.id });
@@ -1755,7 +1756,7 @@ export default function AlbumDetailScreen() {
         onRequestClose={() => setShowListsModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { shadowColor: primaryColor }]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>{t('album_detail_select_bag')}</Text>
               <TouchableOpacity
@@ -1798,7 +1799,7 @@ export default function AlbumDetailScreen() {
 
             <View style={styles.modalFooter}>
               <TouchableOpacity
-                style={styles.createListButton}
+                style={[styles.createListButton, { backgroundColor: primaryColor }]}
                 onPress={handleCreateNewList}
               >
                 <Ionicons name="cube-outline" size={20} color="#fff" />
@@ -1817,7 +1818,7 @@ export default function AlbumDetailScreen() {
         onRequestClose={() => setShowRatioModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, { shadowColor: primaryColor }]}>
             {currentRatioData && (
               <>
                 <View style={styles.modalHeader}>
@@ -1905,7 +1906,7 @@ export default function AlbumDetailScreen() {
                       style={[
                         styles.trackItem,
                         { borderBottomColor: colors.border },
-                        typeFormAnswers[0] === track.title && styles.trackItemSelected
+                        typeFormAnswers[0] === track.title && [styles.trackItemSelected, { borderColor: primaryColor }]
                       ]}
                       onPress={() => handleTypeFormAnswer(track.title)}
                     >
@@ -1914,7 +1915,7 @@ export default function AlbumDetailScreen() {
                         <Text style={[
                           styles.trackTitle,
                           { color: colors.text },
-                          typeFormAnswers[0] === track.title && styles.trackTitleSelected
+                          typeFormAnswers[0] === track.title && [styles.trackTitleSelected, { color: primaryColor }]
                         ]}>
                           {track.title}
                         </Text>
@@ -1946,7 +1947,8 @@ export default function AlbumDetailScreen() {
               <TouchableOpacity
                 style={[
                   styles.typeFormSaveButton,
-                  !typeFormAnswers[currentQuestion].trim() && styles.typeFormSaveButtonDisabled
+                  !typeFormAnswers[currentQuestion].trim() && styles.typeFormSaveButtonDisabled,
+                  { backgroundColor: primaryColor }
                 ]}
                 onPress={handleSaveQuestion}
                 disabled={!typeFormAnswers[currentQuestion].trim()}

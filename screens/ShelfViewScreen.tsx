@@ -8,6 +8,7 @@ import { supabase } from '../lib/supabase';
 import ShelfGrid from '../components/ShelfGrid';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 type RootStackParamList = {
   ShelfEdit: { shelf: Shelf };
@@ -28,6 +29,8 @@ export default function ShelfViewScreen() {
   const route = useRoute<RouteProp<{ params: { shelfId: string, shelfName: string } }, 'params'>>();
   const { shelfId, shelfName } = route.params;
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
 
   const [shelf, setShelf] = useState<Shelf | null>(null);
   const [loading, setLoading] = useState(true);
@@ -65,11 +68,11 @@ export default function ShelfViewScreen() {
           style={{ marginRight: 15 }}
           disabled={!shelf}
         >
-          <Ionicons name="create-outline" size={24} color={shelf ? AppColors.primary : "#D1D1D6"} />
+          <Ionicons name="create-outline" size={24} color={shelf ? primaryColor : "#D1D1D6"} />
         </TouchableOpacity>
       ),
     });
-  }, [navigation, shelf]);
+  }, [navigation, shelf, primaryColor]);
 
 
   if (loading) {

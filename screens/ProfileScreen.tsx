@@ -26,6 +26,7 @@ export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigation = useNavigation();
   const { mode, setMode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { colors } = useTheme();
   const { t } = useTranslation();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -155,16 +156,16 @@ export const ProfileScreen: React.FC = () => {
             {profile?.avatar_url ? (
               <Image
                 source={{ uri: `${profile.avatar_url}?t=${profile?.updated_at || Date.now()}` }}
-                style={[styles.avatar, { borderColor: colors.border }]}
+                style={[styles.avatar, { borderColor: colors.border, backgroundColor: primaryColor }]}
                 resizeMode="cover"
               />
             ) : (
-              <View style={[styles.avatar, { borderColor: colors.border }]}>
+              <View style={[styles.avatar, { borderColor: colors.border, backgroundColor: primaryColor }]}>
                 <Text style={styles.avatarText}>{getInitials()}</Text>
               </View>
             )}
           </TouchableOpacity>
-          <Text style={[styles.changeAvatarText, { color: colors.primary }]}>{t('profile_change_avatar')}</Text>
+          <Text style={[styles.changeAvatarText, { color: primaryColor }]}>{t('profile_change_avatar')}</Text>
           <Text style={[styles.displayName, { color: colors.text }]}>{getDisplayName()}</Text>
         </View>
 

@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
 
@@ -30,6 +31,9 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
   onClose,
 }) => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
+  const textColor = mode === 'dark' ? '#000' : '#fff';
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUrlIndex, setCurrentUrlIndex] = useState(0);
@@ -128,7 +132,7 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: '#000' }]}>
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -154,9 +158,9 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
         </View>
 
         {/* WebView Container */}
-        <View style={styles.webViewContainer}>
+        <View style={[styles.webViewContainer, { backgroundColor: '#000' }]}>
           {error ? (
-            <View style={styles.errorContainer}>
+            <View style={[styles.errorContainer, { backgroundColor: '#000' }]}>
               <Ionicons name="warning" size={48} color="#dc3545" />
               <Text style={styles.errorTitle}>{t('youtube_player_error_title')}</Text>
               <Text style={styles.errorMessage}>{error}</Text>
@@ -178,19 +182,19 @@ export const YouTubeWebViewPlayer: React.FC<YouTubeWebViewPlayerProps> = ({
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity
-                  style={styles.retryButton}
+                  style={[styles.retryButton, { backgroundColor: primaryColor }]}
                   onPress={handleRetry}
                 >
-                  <Ionicons name="refresh" size={20} color="#fff" />
-                  <Text style={styles.retryButtonText}>{t('youtube_player_retry')}</Text>
+                  <Ionicons name="refresh" size={20} color={textColor} />
+                  <Text style={[styles.retryButtonText, { color: textColor }]}>{t('youtube_player_retry')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <>
               {isLoading && (
-                <View style={styles.loadingContainer}>
-                  <Ionicons name="musical-notes" size={48} color="#000" />
+                <View style={[styles.loadingContainer, { backgroundColor: '#000' }]}>
+                  <Ionicons name="musical-notes" size={48} color="#fff" />
                   <Text style={styles.loadingText}>{t('youtube_player_loading')}</Text>
                 </View>
               )}

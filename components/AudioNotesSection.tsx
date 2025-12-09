@@ -11,6 +11,7 @@ import {
 import { BothsideLoader } from './BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { FloatingAudioPlayer } from './FloatingAudioPlayer';
 import { useTranslation } from '../src/i18n/useTranslation';
@@ -32,6 +33,8 @@ interface AudioNotesSectionProps {
 export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [albumsWithAudio, setAlbumsWithAudio] = useState<AudioNoteAlbum[]>([]);
   const [loading, setLoading] = useState(true);
   const [showFloatingPlayer, setShowFloatingPlayer] = useState(false);
@@ -72,14 +75,17 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
         return;
       }
 
-      const albumsData: AudioNoteAlbum[] = (collection || []).map(item => ({
-        id: item.id,
-        title: item.albums?.title || t('common_untitled'),
-        artist: item.albums?.artist || t('common_unknown_artist'),
-        cover_url: item.albums?.cover_url,
-        audio_note: item.audio_note,
-        added_at: item.added_at,
-      }));
+      const albumsData: AudioNoteAlbum[] = (collection || []).map(item => {
+        const albumData = Array.isArray(item.albums) ? item.albums[0] : item.albums;
+        return {
+          id: item.id,
+          title: albumData?.title || t('common_untitled'),
+          artist: albumData?.artist || t('common_unknown_artist'),
+          cover_url: albumData?.cover_url,
+          audio_note: item.audio_note,
+          added_at: item.added_at,
+        };
+      });
 
       setAlbumsWithAudio(albumsData);
       console.log('🎤 Albums with audio loaded:', albumsData.length);
@@ -116,7 +122,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="mic" size={20} color="#000" />
+          <Ionicons name="mic" size={20} color={primaryColor} />
           <Text style={styles.title}>{t('audio_notes_title')}</Text>
         </View>
         <View style={styles.loadingContainer}>
@@ -131,7 +137,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
     return (
       <View style={styles.container}>
         <View style={styles.header}>
-          <Ionicons name="mic" size={20} color="#000" />
+          <Ionicons name="mic" size={20} color={primaryColor} />
           <Text style={styles.title}>{t('audio_notes_title')}</Text>
         </View>
         <View style={styles.emptyContainer}>
@@ -146,7 +152,7 @@ export const AudioNotesSection: React.FC<AudioNotesSectionProps> = ({ onPress })
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="mic" size={20} color="#000" />
+        <Ionicons name="mic" size={20} color={primaryColor} />
         <Text style={styles.title}>{t('audio_notes_title')} ({albumsWithAudio.length})</Text>
       </View>
 

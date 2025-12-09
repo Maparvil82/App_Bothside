@@ -4,6 +4,7 @@ import { BarChart } from 'react-native-chart-kit';
 import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface TopStyle {
   style: string;
@@ -18,6 +19,8 @@ const { width } = Dimensions.get('window');
 
 export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   if (!data || data.length === 0) {
     return null;
   }
@@ -40,7 +43,7 @@ export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
     backgroundGradientTo: '#ffffff',
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    labelColor: (opacity = 1) => mode === 'dark' ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
     style: {
       borderRadius: 16,
     },
@@ -50,7 +53,7 @@ export const TopStylesChart: React.FC<TopStylesChartProps> = ({ data }) => {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Ionicons name="musical-notes" size={20} color={AppColors.primary} />
+        <Ionicons name="musical-notes" size={20} color={primaryColor} />
         <Text style={styles.title}>{t('top_styles_title')}</Text>
       </View>
 

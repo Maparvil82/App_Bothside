@@ -1,4 +1,5 @@
 import React from 'react';
+import { ThemeProvider } from './contexts/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet, Alert } from 'react-native';
 import { BothsideLoader } from './components/BothsideLoader';
@@ -48,12 +49,14 @@ export default function App() {
 
   return (
     <AuthProvider>
-      <SessionNoteProvider>
-        <GemsProvider>
-          <StatusBar style="auto" />
-          <AppWithModal />
-        </GemsProvider>
-      </SessionNoteProvider>
+      <ThemeProvider>
+        <SessionNoteProvider>
+          <GemsProvider>
+            <StatusBar style="auto" />
+            <AppWithModal />
+          </GemsProvider>
+        </SessionNoteProvider>
+      </ThemeProvider>
     </AuthProvider>
   );
 }

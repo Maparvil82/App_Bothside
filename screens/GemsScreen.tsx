@@ -19,6 +19,7 @@ import { UserCollectionService } from '../services/database';
 import { useGems } from '../contexts/GemsContext';
 import { useTheme, useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 export default function GemsScreen() {
   const { user } = useAuth();
@@ -26,6 +27,8 @@ export default function GemsScreen() {
   const { colors } = useTheme();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
 
 
 
@@ -87,7 +90,7 @@ export default function GemsScreen() {
       <TouchableOpacity
         style={styles.gemItem}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.id })}
+        onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: item.id })}
       >
         <Image
           source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
@@ -168,7 +171,7 @@ export default function GemsScreen() {
 
       {/* Botón flotante de IA */}
       <TouchableOpacity
-        style={styles.floatingAIButton}
+        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
         onPress={() => (navigation as any).navigate('AIChat')}
         activeOpacity={0.8}
       >

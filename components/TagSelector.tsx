@@ -12,6 +12,7 @@ import { BothsideLoader } from './BothsideLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { getColorForTag } from '../src/utils/getColorForTag';
@@ -32,6 +33,8 @@ export default function TagSelector({
 }: TagSelectorProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [existingTags, setExistingTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchText, setSearchText] = useState('');
@@ -159,9 +162,9 @@ export default function TagSelector({
           <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.headerTitle}>{t('tag_selector_title')}</Text>
+              <Text style={[styles.headerTitle, { color: primaryColor }]}>{t('tag_selector_title')}</Text>
               <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-                <Ionicons name="close" size={24} color="#000" />
+                <Ionicons name="close" size={24} color={primaryColor} />
               </TouchableOpacity>
             </View>
 
@@ -169,7 +172,7 @@ export default function TagSelector({
             <View style={styles.searchContainer}>
               <Ionicons name="search" size={20} color="#999" style={styles.searchIcon} />
               <TextInput
-                style={styles.searchInput}
+                style={[styles.searchInput, { color: primaryColor }]}
                 value={searchText}
                 onChangeText={setSearchText}
                 placeholder={t('tag_selector_placeholder')}
@@ -187,12 +190,12 @@ export default function TagSelector({
             {/* Opción "Crear nuevo tag" */}
             {isNewTag && (
               <TouchableOpacity
-                style={styles.createNewTagButton}
+                style={[styles.createNewTagButton, { borderColor: primaryColor }]}
                 onPress={handleCreateNewTag}
                 activeOpacity={0.7}
               >
-                <Ionicons name="add-circle" size={24} color="#000" />
-                <Text style={styles.createNewTagText}>
+                <Ionicons name="add-circle" size={24} color={primaryColor} />
+                <Text style={[styles.createNewTagText, { color: primaryColor }]}>
                   {t('tag_selector_create_new')} <Text style={styles.createNewTagValue}>{searchText.trim()}</Text>
                 </Text>
               </TouchableOpacity>

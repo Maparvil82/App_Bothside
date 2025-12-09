@@ -8,6 +8,7 @@ import {
 import { BothsideLoader } from './BothsideLoader';
 import { LineChart } from 'react-native-chart-kit';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useStats } from '../contexts/StatsContext';
 
@@ -19,6 +20,8 @@ const { width } = Dimensions.get('window');
 
 export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress }) => {
   const { stylePriceData, loading } = useStats();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
 
   const formatPrice = (price: number) => {
     if (price >= 1000) {
@@ -64,14 +67,14 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
     backgroundGradientTo: '#ffffff',
     decimalPlaces: 0,
     color: (opacity = 1) => `rgba(0, 122, 255, ${opacity})`,
-    labelColor: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
+    labelColor: (opacity = 1) => mode === 'dark' ? `rgba(255, 255, 255, ${opacity})` : `rgba(0, 0, 0, ${opacity})`,
     style: {
       borderRadius: 16,
     },
     propsForDots: {
       r: '4',
       strokeWidth: '2',
-      stroke: AppColors.primary,
+      stroke: primaryColor,
     },
   };
 
@@ -87,7 +90,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { shadowColor: primaryColor }]}>
       <View style={styles.header}>
         <Ionicons name="trending-up" size={20} color="#000" />
         <Text style={styles.title}>Valor Total por Estilo</Text>
@@ -121,7 +124,7 @@ export const PriceByStyleChart: React.FC<PriceByStyleChartProps> = ({ onPress })
               <Text style={styles.styleName}>{item.style}</Text>
               <Text style={styles.albumCount}>{item.albumCount} álbumes</Text>
             </View>
-            <Text style={styles.averagePrice}>
+            <Text style={[styles.averagePrice, { color: primaryColor }]}>
               {formatPrice(item.totalValue)}
             </Text>
           </View>

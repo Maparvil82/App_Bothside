@@ -5,6 +5,7 @@ import { GamificationService, CollectorRank } from '../services/gamification';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface CollectorRankCardProps {
   totalAlbums: number;
@@ -25,6 +26,8 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
 export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue, onPress, userPosition }) => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [tierShare, setTierShare] = useState<number | null>(null);
 
   const rank = GamificationService.computeCollectorRank(totalAlbums, collectionValue);
@@ -94,7 +97,7 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         <View style={styles.headerIcons}>
           <View style={styles.rankingContainer}>
             {userPosition && (
-              <Text style={styles.positionNumber}>#{userPosition}</Text>
+              <Text style={[styles.positionNumber, { color: primaryColor }]}>#{userPosition}</Text>
             )}
             <Text style={styles.rankingText}>{t('collector_rank_ranking')}</Text>
           </View>

@@ -14,10 +14,13 @@ import { DiscogsService } from '../services/discogs';
 import { AlbumService } from '../services/database';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 export const AdminScreen: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [loading, setLoading] = useState(false);
   const [updatingStats, setUpdatingStats] = useState(false);
   const [stats, setStats] = useState<any>(null);
@@ -170,7 +173,7 @@ export const AdminScreen: React.FC = () => {
         <Text style={styles.sectionTitle}>{t('admin_section_stats')}</Text>
 
         <TouchableOpacity
-          style={styles.button}
+          style={[styles.button, { backgroundColor: primaryColor }]}
           onPress={checkAlbumStats}
           disabled={loading}
         >

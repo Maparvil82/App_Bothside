@@ -6,12 +6,15 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 export default function ShelfEditScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
   const route = useRoute();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { shelf } = (route.params as { shelf?: any }) || {};
 
   const [name, setName] = useState(shelf?.name || '');
@@ -111,7 +114,7 @@ export default function ShelfEditScreen() {
       />
 
       <TouchableOpacity
-        style={[styles.button, saving && styles.buttonDisabled]}
+        style={[styles.button, saving && styles.buttonDisabled, { backgroundColor: primaryColor }]}
         onPress={handleSave}
         disabled={saving}
       >

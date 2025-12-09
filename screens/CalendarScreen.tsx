@@ -10,6 +10,7 @@ import { AppColors } from '../src/theme/colors';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useSessionNoteModal } from '../contexts/SessionNoteContext';
+import { useThemeMode } from '../contexts/ThemeContext';
 import TimePicker from '../components/TimePicker';
 import SessionsListView from '../components/SessionsListView';
 import {
@@ -51,6 +52,8 @@ interface Session {
 export default function CalendarScreen() {
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { user } = useAuth();
   const navigation = useNavigation();
   const { openSessionNoteModal } = useSessionNoteModal();
@@ -1110,7 +1113,7 @@ export default function CalendarScreen() {
         <TouchableOpacity
           style={[
             styles.viewToggleButton,
-            viewMode === 'calendar' && styles.viewToggleButtonActive,
+            viewMode === 'calendar' && [styles.viewToggleButtonActive, { backgroundColor: primaryColor }],
           ]}
           onPress={() => setViewMode('calendar')}
         >
@@ -1133,7 +1136,7 @@ export default function CalendarScreen() {
         <TouchableOpacity
           style={[
             styles.viewToggleButton,
-            viewMode === 'list' && styles.viewToggleButtonActive,
+            viewMode === 'list' && [styles.viewToggleButtonActive, { backgroundColor: primaryColor }],
           ]}
           onPress={() => setViewMode('list')}
         >
@@ -1254,7 +1257,7 @@ export default function CalendarScreen() {
                             <Text style={[styles.dayNumber, styles.dayNumberSelected]}>{calendarDay.day}</Text>
                           </View>
                         ) : isToday ? (
-                          <View style={styles.todayCircle}>
+                          <View style={[styles.todayCircle, { backgroundColor: primaryColor }]}>
                             <Text style={[styles.dayNumber, styles.dayNumberToday]}>{calendarDay.day}</Text>
                           </View>
                         ) : (
@@ -1326,7 +1329,7 @@ export default function CalendarScreen() {
               {/* Encabezado */}
               <View style={styles.modalHeaderNew}>
                 <View style={styles.modalTitleContainer}>
-                  <Text style={styles.modalTitleNew}>
+                  <Text style={[styles.modalTitleNew, { color: primaryColor }]}>
                     {selectedSession ? t('planner_modal_title_edit') : t('planner_modal_title_new')}
                   </Text>
                   {(() => {
@@ -1352,8 +1355,8 @@ export default function CalendarScreen() {
 
                     return (
                       <>
-                        <Text style={styles.modalDateSeparator}> · </Text>
-                        <Text style={styles.modalDateText}>{formattedDate}</Text>
+                        <Text style={[styles.modalDateSeparator, { color: primaryColor }]}> · </Text>
+                        <Text style={[styles.modalDateText, { color: primaryColor }]}>{formattedDate}</Text>
                       </>
                     );
                   })()}
@@ -1370,7 +1373,7 @@ export default function CalendarScreen() {
               >
                 {/* Nombre */}
                 <View style={styles.formGroupNew}>
-                  <Text style={styles.labelNew}>{t('planner_label_name')} <Text style={styles.requiredAsterisk}>*</Text></Text>
+                  <Text style={[styles.labelNew, { color: primaryColor }]}>{t('planner_label_name')} <Text style={styles.requiredAsterisk}>*</Text></Text>
                   <TextInput
                     style={[
                       styles.inputNew,
@@ -1504,7 +1507,7 @@ export default function CalendarScreen() {
                         key={type}
                         style={[
                           styles.paymentOptionNew,
-                          formPaymentType === type && styles.paymentOptionSelectedNew,
+                          formPaymentType === type && [styles.paymentOptionSelectedNew, { backgroundColor: primaryColor, borderColor: primaryColor }],
                         ]}
                         onPress={() => setFormPaymentType(type)}
                       >
@@ -1559,7 +1562,7 @@ export default function CalendarScreen() {
                   <>
                     <TouchableOpacity
                       style={[
-                        styles.buttonPrimaryNew,
+                        [styles.buttonPrimaryNew, { backgroundColor: primaryColor }],
                         isSaving || Object.keys(validationErrors).length > 0
                           ? styles.buttonDisabledNew
                           : null,
@@ -1585,7 +1588,7 @@ export default function CalendarScreen() {
                 ) : (
                   <TouchableOpacity
                     style={[
-                      styles.buttonPrimaryNew,
+                      [styles.buttonPrimaryNew, { backgroundColor: primaryColor }],
                       isSaving || !formName.trim()
                         ? styles.buttonDisabledNew
                         : null,

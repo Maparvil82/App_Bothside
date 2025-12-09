@@ -9,6 +9,7 @@ import {
 import { BothsideLoader } from './BothsideLoader';
 import { Audio } from 'expo-av';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 
 interface AudioPlayerProps {
@@ -22,6 +23,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   title,
   onError,
 }) => {
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [sound, setSound] = useState<Audio.Sound | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,7 +130,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
           <Ionicons name="alert-circle" size={24} color="#dc3545" />
           <Text style={styles.errorText}>Error al cargar el audio</Text>
           <Text style={styles.errorDetails}>{error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadAudio}>
+          <TouchableOpacity style={[styles.retryButton, { backgroundColor: primaryColor }]} onPress={loadAudio}>
             <Text style={styles.retryButtonText}>Reintentar</Text>
           </TouchableOpacity>
         </View>
@@ -147,7 +150,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 
         <View style={styles.controlsContainer}>
           <TouchableOpacity
-            style={styles.playButton}
+            style={[styles.playButton, { backgroundColor: primaryColor }]}
             onPress={togglePlayPause}
             disabled={isLoading}
           >
@@ -167,7 +170,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
               <View
                 style={[
                   styles.progressFill,
-                  { width: `${getProgressPercentage()}%` }
+                  { width: `${getProgressPercentage()}%`, backgroundColor: primaryColor }
                 ]}
               />
             </View>

@@ -22,6 +22,7 @@ import { useTheme } from '@react-navigation/native';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 const { width } = Dimensions.get('window');
 const MALETA_SIZE = width * 0.25;
@@ -36,6 +37,8 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridMaletas();
   const { colors } = useTheme();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [refreshing, setRefreshing] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -220,7 +223,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const renderSwipeActions = (rowData: any, rowMap: any) => (
     <View style={styles.swipeActionsContainer}>
       <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeEdit]}
+        style={[styles.swipeAction, styles.swipeEdit, { backgroundColor: primaryColor }]}
         onPress={() => handleSwipeEdit(rowMap, rowData.item.id)}
         activeOpacity={0.8}
       >
@@ -317,7 +320,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       <Text style={styles.emptyStateSubtitle}>
         {t('maletas_empty_subtitle')}
       </Text>
-      <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
+      <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={handleOpenCreateModal}>
         <Ionicons name="add" size={20} color="white" />
         <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
       </TouchableOpacity>
@@ -342,7 +345,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
         <View style={styles.headerActions}>
 
           <TouchableOpacity style={styles.createMaletaButton} onPress={handleOpenCreateModal}>
-            <Ionicons name="add" size={24} color={colors.primary} />
+            <Ionicons name="add" size={24} color={primaryColor} />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.headerButton, { marginRight: 8 }]}
@@ -367,7 +370,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
             <Text style={[styles.filterSectionTitle, { color: colors.text }]}>{t('maletas_filter_type')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
-                style={[styles.filterChip, filterType === 'all' && styles.filterChipActive]}
+                style={[styles.filterChip, filterType === 'all' && [styles.filterChipActive, { backgroundColor: primaryColor }]]}
                 onPress={() => setFilterType('all')}
               >
                 <Text style={[styles.filterChipText, filterType === 'all' && styles.filterChipTextActive]}>
@@ -375,7 +378,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterChip, filterType === 'mine' && styles.filterChipActive]}
+                style={[styles.filterChip, filterType === 'mine' && [styles.filterChipActive, { backgroundColor: primaryColor }]]}
                 onPress={() => setFilterType('mine')}
               >
                 <Text style={[styles.filterChipText, filterType === 'mine' && styles.filterChipTextActive]}>
@@ -383,7 +386,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
                 </Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.filterChip, filterType === 'collab' && styles.filterChipActive]}
+                style={[styles.filterChip, filterType === 'collab' && [styles.filterChipActive, { backgroundColor: primaryColor }]]}
                 onPress={() => setFilterType('collab')}
               >
                 <Text style={[styles.filterChipText, filterType === 'collab' && styles.filterChipTextActive]}>
@@ -418,7 +421,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <Text style={styles.emptyStateSubtitle}>
             {t('maletas_empty_subtitle')}
           </Text>
-          <TouchableOpacity style={styles.createButton} onPress={handleOpenCreateModal}>
+          <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={handleOpenCreateModal}>
             <Ionicons name="bag-remove-outline" size={20} color="white" />
             <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
           </TouchableOpacity>
@@ -443,7 +446,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {/* Botón flotante de IA */}
       <TouchableOpacity
-        style={styles.floatingAIButton}
+        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
         onPress={() => (navigation as any).navigate('AIChat')}
         activeOpacity={0.8}
       >

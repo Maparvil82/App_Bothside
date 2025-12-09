@@ -12,6 +12,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useNavigation } from '@react-navigation/native';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../src/i18n/useTranslation';
@@ -36,6 +37,8 @@ export const PricingScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user, setUser } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
 
   const commonFeatures = [
     t('pricing_feature_scan'),
@@ -131,7 +134,7 @@ export const PricingScreen: React.FC = () => {
         {/* Logo */}
         <Image
           source={require('../assets/logo-onboarding.png')}
-          style={styles.logo}
+          style={[styles.logo, { tintColor: primaryColor }]}
         />
 
         {/* Header */}
@@ -159,22 +162,22 @@ export const PricingScreen: React.FC = () => {
               key={plan.id}
               style={[
                 styles.planCard,
-                selectedPlan === plan.id && styles.selectedPlan,
+                selectedPlan === plan.id && [styles.selectedPlan, { borderColor: primaryColor }],
                 plan.popular && styles.popularPlanCard,
               ]}
               onPress={() => setSelectedPlan(plan.id)}
               activeOpacity={0.9}
             >
               {plan.popular && (
-                <View style={styles.popularBadge}>
+                <View style={[styles.popularBadge, { backgroundColor: primaryColor }]}>
                   <Text style={styles.popularText}>{t('pricing_popular')}</Text>
                 </View>
               )}
 
               <View style={styles.cardContent}>
                 <View style={styles.cardLeft}>
-                  <View style={[styles.radioButton, selectedPlan === plan.id && styles.radioButtonSelected]}>
-                    {selectedPlan === plan.id && <View style={styles.radioButtonInner} />}
+                  <View style={[styles.radioButton, selectedPlan === plan.id && [styles.radioButtonSelected, { borderColor: primaryColor }]]}>
+                    {selectedPlan === plan.id && <View style={[styles.radioButtonInner, { backgroundColor: primaryColor }]} />}
                   </View>
                   <View>
                     <Text style={styles.planTitle}>{plan.title}</Text>
@@ -203,7 +206,7 @@ export const PricingScreen: React.FC = () => {
 
         {/* CTA */}
         <TouchableOpacity
-          style={[styles.subscribeButton, isLoading && styles.subscribeButtonDisabled]}
+          style={[styles.subscribeButton, isLoading && styles.subscribeButtonDisabled, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
           onPress={handleSubscribe}
           disabled={isLoading}
         >
@@ -214,7 +217,7 @@ export const PricingScreen: React.FC = () => {
 
         {/* Login Link */}
         <TouchableOpacity style={styles.loginLink} onPress={handleLogin}>
-          <Text style={styles.loginLinkText}>{t('pricing_link_login')}</Text>
+          <Text style={[styles.loginLinkText, { color: primaryColor }]}>{t('pricing_link_login')}</Text>
         </TouchableOpacity>
 
         {/* Footer Links */}

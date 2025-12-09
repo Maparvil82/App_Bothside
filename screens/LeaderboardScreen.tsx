@@ -15,6 +15,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface CollectorData {
   id: string;
@@ -31,6 +32,8 @@ export default function LeaderboardScreen() {
   const navigation = useNavigation();
   const { user } = useAuth();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [collectors, setCollectors] = useState<CollectorData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -120,7 +123,7 @@ export default function LeaderboardScreen() {
     return (
       <View style={[
         styles.collectorItem,
-        isCurrentUser && styles.currentUserItem
+        isCurrentUser && [styles.currentUserItem, { borderLeftColor: primaryColor }]
       ]}>
         <View style={styles.rankContainer}>
           <Text style={[
@@ -134,7 +137,7 @@ export default function LeaderboardScreen() {
         <View style={styles.collectorInfo}>
           <Text style={[
             styles.collectorName,
-            isCurrentUser && styles.currentUserText
+            isCurrentUser && [styles.currentUserText, { color: primaryColor }]
           ]}>
             {item.full_name}
             {isCurrentUser && ` ${t('leaderboard_you_suffix')}`}

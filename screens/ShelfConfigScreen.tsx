@@ -6,11 +6,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 export default function ShelfConfigScreen() {
   const { user } = useAuth();
   const navigation = useNavigation();
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [rows, setRows] = useState('');
   const [columns, setColumns] = useState('');
   const [loading, setLoading] = useState(true);
@@ -116,7 +119,7 @@ export default function ShelfConfigScreen() {
       </View>
 
       <TouchableOpacity
-        style={[styles.button, saving && styles.buttonDisabled]}
+        style={[styles.button, { backgroundColor: primaryColor }, saving && styles.buttonDisabled]}
         onPress={handleSave}
         disabled={saving}
       >

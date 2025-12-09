@@ -13,11 +13,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 const { width, height } = Dimensions.get('window');
 
 export const OnboardingScreen: React.FC = () => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [currentStep, setCurrentStep] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<any>();
@@ -42,7 +45,7 @@ export const OnboardingScreen: React.FC = () => {
       title: t('onboarding_step3_title'),
       subtitle: t('onboarding_step3_subtitle'),
       image: require('../assets/videoframe_8000.png'),
-      color: AppColors.primary,
+      color: primaryColor,
     },
     {
       id: 4,
@@ -141,7 +144,7 @@ export const OnboardingScreen: React.FC = () => {
               key={index}
               style={[
                 styles.dot,
-                currentStep === index && styles.activeDot,
+                currentStep === index && [styles.activeDot, { backgroundColor: primaryColor }],
               ]}
               onPress={() => handleDotPress(index)}
             />
@@ -149,7 +152,7 @@ export const OnboardingScreen: React.FC = () => {
         </View>
 
         {/* Next button */}
-        <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+        <TouchableOpacity style={[styles.nextButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]} onPress={handleNext}>
           <Ionicons
             name={currentStep === onboardingSteps.length - 1 ? "checkmark" : "arrow-forward"}
             size={24}
@@ -162,7 +165,7 @@ export const OnboardingScreen: React.FC = () => {
       <View style={styles.accountSection}>
         <Text style={styles.accountText}>{t('onboarding_has_account')}</Text>
         <TouchableOpacity onPress={handleLogin}>
-          <Text style={styles.loginLink}>{t('auth_login')}</Text>
+          <Text style={[styles.loginLink, { color: primaryColor }]}>{t('auth_login')}</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

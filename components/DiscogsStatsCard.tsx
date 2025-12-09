@@ -3,6 +3,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 
 interface DiscogsStatsCardProps {
   album: {
@@ -20,6 +21,8 @@ interface DiscogsStatsCardProps {
 
 export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => {
   const { t } = useTranslation();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   // Verificar si hay datos de Discogs
   const stats = album.album_stats;
   const hasDiscogsData = stats && (
@@ -40,7 +43,7 @@ export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => 
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { shadowColor: primaryColor }]}>
       <Text style={styles.title}>{t('discogs_stats_title')}</Text>
 
       {/* Precio medio destacado */}
@@ -58,12 +61,12 @@ export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => 
         <View style={styles.column}>
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>{t('discogs_stats_have')}</Text>
-            <Text style={styles.statValue}>{stats?.have || 0}</Text>
+            <Text style={[styles.statValue, { color: primaryColor }]}>{stats?.have || 0}</Text>
           </View>
 
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>{t('discogs_stats_want')}</Text>
-            <Text style={styles.statValue}>{stats?.want || 0}</Text>
+            <Text style={[styles.statValue, { color: primaryColor }]}>{stats?.want || 0}</Text>
           </View>
         </View>
 
@@ -71,21 +74,21 @@ export const DiscogsStatsCard: React.FC<DiscogsStatsCardProps> = ({ album }) => 
         <View style={styles.column}>
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>{t('discogs_stats_last_sold')}</Text>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: primaryColor }]}>
               {DiscogsStatsService.formatLastSoldDate(stats?.last_sold || '')}
             </Text>
           </View>
 
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>{t('discogs_stats_low')}</Text>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: primaryColor }]}>
               {DiscogsStatsService.formatPrice(stats?.low_price || 0)}
             </Text>
           </View>
 
           <View style={styles.statRow}>
             <Text style={styles.statLabel}>{t('discogs_stats_high')}</Text>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: primaryColor }]}>
               {DiscogsStatsService.formatPrice(stats?.high_price || 0)}
             </Text>
           </View>

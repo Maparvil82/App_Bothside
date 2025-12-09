@@ -20,6 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useTheme } from '@react-navigation/native';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { useRealtimeMaletaAlbums } from '../hooks/useRealtimeMaletaAlbums';
@@ -105,6 +106,8 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   const { user } = useAuth();
   const { t } = useTranslation();
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
+  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { maletaId, listTitle } = route.params;
   const { isCollaborator, status: collaboratorStatus } = useIsCollaborator(maletaId);
   const { collaborators, refresh: refreshCollaborators } = useMaletaCollaborators(maletaId);
@@ -384,7 +387,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       <Text style={styles.emptyStateSubtitle}>
         {t('view_maleta_empty_text')}
       </Text>
-      <TouchableOpacity style={styles.addButton} onPress={handleAddAlbum}>
+      <TouchableOpacity style={[styles.addButton, { backgroundColor: primaryColor }]} onPress={handleAddAlbum}>
         <Ionicons name="add" size={20} color="white" />
         <Text style={styles.addButtonText}>{t('view_maleta_action_add')}</Text>
       </TouchableOpacity>
@@ -540,7 +543,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       {list.is_collaborative && list.user_id === user?.id && (
         <View style={[styles.footerContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
           <TouchableOpacity
-            style={styles.inviteButton}
+            style={[styles.inviteButton, { backgroundColor: primaryColor }]}
             onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}
           >
 
@@ -565,7 +568,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             <View style={styles.modalContent}>
               {/* Header */}
               <View style={styles.modalHeaderNew}>
-                <Text style={styles.modalTitleNew}>{t('view_maleta_modal_title')}</Text>
+                <Text style={[styles.modalTitleNew, { color: primaryColor }]}>{t('view_maleta_modal_title')}</Text>
                 <TouchableOpacity onPress={handleCloseAddModal} style={styles.modalCloseButtonNew}>
                   <Ionicons name="close" size={28} color="#000" />
                 </TouchableOpacity>
@@ -628,7 +631,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                               <Ionicons
                                 name={isSelected ? 'checkmark-circle' : 'ellipse-outline'}
                                 size={24}
-                                color={isSelected ? AppColors.primary : '#CCC'}
+                                color={isSelected ? primaryColor : '#CCC'}
                               />
                             </View>
                           </View>
@@ -658,6 +661,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
                   style={[
                     styles.buttonPrimaryNew,
                     (selectedAlbums.size === 0 || addingAlbums) && styles.buttonDisabledNew,
+                    { backgroundColor: primaryColor }
                   ]}
                   onPress={handleAddSelectedAlbums}
                   disabled={selectedAlbums.size === 0 || addingAlbums}

@@ -3,12 +3,15 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, ActivityIn
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 
 export const IaSubscriptionScreen = () => {
     const { user } = useAuth();
+    const { mode } = useThemeMode();
+    const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
     const navigation = useNavigation();
     const { t } = useTranslation();
     const [subscription, setSubscription] = useState<any>(null);
@@ -112,11 +115,11 @@ export const IaSubscriptionScreen = () => {
                 <View style={styles.card}>
                     <View style={styles.creditsHeader}>
                         <Text style={styles.cardLabel}>{t('ia_sub_label_remaining_credits')}</Text>
-                        <Text style={styles.creditsValue}>{remainingCredits} / {totalCredits}</Text>
+                        <Text style={[styles.creditsValue, { color: primaryColor }]}>{remainingCredits} / {totalCredits}</Text>
                     </View>
 
                     <View style={styles.progressBarContainer}>
-                        <View style={[styles.progressBarFill, { width: `${progressPercentage}%` }]} />
+                        <View style={[styles.progressBarFill, { width: `${progressPercentage}%`, backgroundColor: primaryColor }]} />
                     </View>
 
                     <Text style={styles.renewalText}>
@@ -132,7 +135,7 @@ export const IaSubscriptionScreen = () => {
                 </Text>
 
                 {/* Bloque 4 — Botón para ver gestión de suscripción */}
-                <TouchableOpacity style={styles.button} onPress={handleManageSubscription}>
+                <TouchableOpacity style={[styles.button, { backgroundColor: primaryColor }]} onPress={handleManageSubscription}>
                     <Text style={styles.buttonText}>{t('ia_sub_button_manage')}</Text>
                 </TouchableOpacity>
 

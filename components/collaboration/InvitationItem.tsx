@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '@react-navigation/native';
 import { AppColors } from '../../src/theme/colors';
+import { useThemeMode } from '../../contexts/ThemeContext';
 
 interface InvitationItemProps {
     invitation: any; // Using any for now to avoid complex type imports, but should be typed properly
@@ -12,6 +13,8 @@ interface InvitationItemProps {
 
 export const InvitationItem: React.FC<InvitationItemProps> = ({ invitation, onAccept, onReject }) => {
     const { colors } = useTheme();
+    const { mode } = useThemeMode();
+    const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
     const { maleta, inviter } = invitation;
 
     return (
@@ -42,7 +45,7 @@ export const InvitationItem: React.FC<InvitationItemProps> = ({ invitation, onAc
                     <Text style={styles.rejectText}>Reject</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.button, styles.acceptButton]}
+                    style={[styles.button, styles.acceptButton, { backgroundColor: primaryColor }]}
                     onPress={() => onAccept(invitation.id)}
                 >
                     <Text style={styles.acceptText}>Accept</Text>

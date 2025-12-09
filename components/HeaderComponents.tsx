@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
 import { useNavigation, useFocusEffect, useTheme } from '@react-navigation/native';
 import { AppColors } from '../src/theme/colors';
+import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
@@ -10,6 +11,8 @@ import { usePendingInvitationsCount } from '../hooks/useCollaboration';
 export const HeaderAvatar = () => {
     const navigation = useNavigation();
     const { colors } = useTheme();
+    const { mode } = useThemeMode();
+    const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
     const { user } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
@@ -59,7 +62,7 @@ export const HeaderAvatar = () => {
                     resizeMode="cover"
                 />
             ) : (
-                <View style={[styles.avatarPlaceholder, { borderColor: colors.border }]}>
+                <View style={[styles.avatarPlaceholder, { borderColor: colors.border, backgroundColor: primaryColor }]}>
                     <Text style={styles.avatarText}>{getInitials()}</Text>
                 </View>
             )}
