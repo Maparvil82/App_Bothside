@@ -21,8 +21,7 @@ interface AutoBagCreationModalProps {
     visible: boolean;
     sessionName: string;
     onClose: () => void;
-    onCreateBag: (styles: string[], dontShowAgain: boolean) => Promise<void>;
-    onDontShowAgain: () => Promise<void>;
+    onCreateBag: (styles: string[]) => Promise<void>;
 }
 
 export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
@@ -30,7 +29,6 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
     sessionName,
     onClose,
     onCreateBag,
-    onDontShowAgain,
 }) => {
     const { mode } = useThemeMode();
     const { colors } = useTheme();
@@ -39,7 +37,6 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
 
     const [availableStyles, setAvailableStyles] = useState<string[]>([]);
     const [selectedStyles, setSelectedStyles] = useState<string[]>([]);
-    const [dontShowAgain, setDontShowAgain] = useState(false);
     const [loading, setLoading] = useState(false);
     const [loadingStyles, setLoadingStyles] = useState(true);
 
@@ -47,7 +44,6 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
         if (visible) {
             loadUserStyles();
             setSelectedStyles([]);
-            setDontShowAgain(false);
         }
     }, [visible]);
 
@@ -113,7 +109,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
 
         setLoading(true);
         try {
-            await onCreateBag(selectedStyles, dontShowAgain);
+            await onCreateBag(selectedStyles);
         } catch (error) {
             console.error('Error creating bag:', error);
             Alert.alert(t('common_error'), t('autoBag_toastError'));
@@ -123,9 +119,6 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
     };
 
     const handleCancel = async () => {
-        if (dontShowAgain) {
-            await onDontShowAgain();
-        }
         onClose();
     };
 
@@ -177,16 +170,6 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
                             )}
                         </ScrollView>
                     )}
-
-                    <View style={styles.optionRow}>
-                        <Text style={[styles.optionText, { color: colors.text }]}>{t('autoBag_noMoreLabel')}</Text>
-                        <Switch
-                            value={dontShowAgain}
-                            onValueChange={setDontShowAgain}
-                            trackColor={{ false: '#767577', true: primaryColor }}
-                            thumbColor={dontShowAgain ? '#fff' : '#f4f3f4'}
-                        />
-                    </View>
 
                     <View style={styles.footer}>
                         <TouchableOpacity

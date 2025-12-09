@@ -932,4 +932,5 @@ export const en = {
     autoBag_toastSuccess: "Bag created with 3 records for this session.",
     autoBag_toastError: "An error occurred while creating the bag. Please try again.",
     autoBag_errorNoStyles: "Select at least one style or genre.",
+    autoBag_createSwitchLabel: "Create bag for this session",
 };

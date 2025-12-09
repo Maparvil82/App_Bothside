@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated, DeviceEventEmitter } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ScrollView, Modal, TextInput, Alert, KeyboardAvoidingView, Platform, ToastAndroid, Animated, DeviceEventEmitter, Switch } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme, useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -705,14 +705,14 @@ export default function CalendarScreen() {
         handleCloseModal();
         await loadSessions();
 
-        // Verificar preferencia de usuario para sugerir maleta
-        if (user?.id) {
-          const profile = await ProfileService.getUserProfile(user.id);
-          // Por defecto es true si es undefined
-          if (profile?.show_auto_bag_suggestion_on_session_create !== false) {
-            setCreatedSessionForBag({ id: insertedData.id, name: insertedData.name });
-            setIsAutoBagModalVisible(true);
-          }
+        // Verificar si el switch de crear maleta estaba activo
+        if (createBagEnabled) {
+          setCreatedSessionForBag({
+            id: insertedData.id,
+            name: insertedData.name,
+            description: formQuickNote // Usamos la nota rápida como descripción
+          });
+          setIsAutoBagModalVisible(true);
         }
       }
     } catch (error) {
@@ -1049,7 +1049,8 @@ export default function CalendarScreen() {
   }, []);
 
   const [isAutoBagModalVisible, setIsAutoBagModalVisible] = useState(false);
-  const [createdSessionForBag, setCreatedSessionForBag] = useState<{ id: string; name: string } | null>(null);
+  const [createdSessionForBag, setCreatedSessionForBag] = useState<{ id: string; name: string; description?: string } | null>(null);
+  const [createBagEnabled, setCreateBagEnabled] = useState(true);
 
   // Cargar sesiones al montar
   useFocusEffect(
@@ -1484,7 +1485,18 @@ export default function CalendarScreen() {
                   />
                 </View>
 
-                {/* Tag */}
+                {/* Switch para crear maleta automática */}
+                <View style={[styles.switchContainer, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1, borderRadius: 12, padding: 12, marginTop: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
+                  <Text style={[styles.label, { color: colors.text, marginBottom: 0 }]}>{t('autoBag_createSwitchLabel')}</Text>
+                  <Switch
+                    value={createBagEnabled}
+                    onValueChange={setCreateBagEnabled}
+                    trackColor={{ false: '#767577', true: primaryColor }}
+                    thumbColor={createBagEnabled ? '#fff' : '#f4f3f4'}
+                  />
+                </View>
+
+                {/* Tag 
                 <View style={styles.formGroupNew}>
                   <Text style={styles.labelNew}>{t('planner_label_tag')}</Text>
                   <TextInput
@@ -1496,7 +1508,7 @@ export default function CalendarScreen() {
                     autoCapitalize="none"
                     autoCorrect={false}
                   />
-                  {/* Autocomplete de tags */}
+                  {/* Autocomplete de tags 
                   {filteredTags.length > 0 && formTag.length > 0 && (
                     <View style={styles.autocompleteContainer}>
                       {filteredTags.map((tag, index) => (
@@ -1518,7 +1530,7 @@ export default function CalendarScreen() {
                     </View>
                   )}
                 </View>
-
+                */}
                 {/* Tipo de pago */}
                 <View style={styles.formGroupNew}>
                   <Text style={styles.labelNew}>{t('planner_label_payment_type')}</Text>
@@ -1637,7 +1649,7 @@ export default function CalendarScreen() {
           setIsAutoBagModalVisible(false);
           setCreatedSessionForBag(null);
         }}
-        onCreateBag={async (styles, dontShowAgain) => {
+        onCreateBag={async (styles) => {
           if (!user?.id || !createdSessionForBag) return;
 
           try {
@@ -1645,17 +1657,15 @@ export default function CalendarScreen() {
               user.id,
               createdSessionForBag.name,
               createdSessionForBag.id,
-              styles
+              styles,
+              createdSessionForBag.description
             );
-
-            if (dontShowAgain) {
-              await ProfileService.updateUserProfile(user.id, {
-                show_auto_bag_suggestion_on_session_create: false
-              });
-            }
 
             setIsAutoBagModalVisible(false);
             setCreatedSessionForBag(null);
+            // Reset switch to default true for next time
+            setCreateBagEnabled(true);
+
             Alert.alert(
               t('common_success'),
               t('autoBag_toastSuccess').replace('3', result.albumsAdded.toString())
@@ -1663,13 +1673,6 @@ export default function CalendarScreen() {
           } catch (error) {
             console.error('Error creating auto bag:', error);
             Alert.alert(t('common_error'), t('autoBag_toastError'));
-          }
-        }}
-        onDontShowAgain={async () => {
-          if (user?.id) {
-            await ProfileService.updateUserProfile(user.id, {
-              show_auto_bag_suggestion_on_session_create: false
-            });
           }
         }}
       />
@@ -2176,6 +2179,16 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: '#1B1B1B',
     flex: 1,
+  },
+  switchContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginTop: 10,
+    marginBottom: 20,
   },
 });
 

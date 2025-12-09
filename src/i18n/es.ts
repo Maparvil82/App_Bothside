@@ -932,4 +932,5 @@ export const es = {
     autoBag_toastSuccess: "Maleta creada con 3 discos para esta sesión.",
     autoBag_toastError: "Ha ocurrido un error al crear la maleta. Inténtalo de nuevo.",
     autoBag_errorNoStyles: "Selecciona al menos un estilo o género.",
+    autoBag_createSwitchLabel: "Crear maleta para esta sesión",
 };

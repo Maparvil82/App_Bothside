@@ -1184,9 +1184,10 @@ export const UserMaletaService = {
     userId: string,
     sessionName: string,
     sessionId: string,
-    styles: string[]
+    styles: string[],
+    description?: string
   ) {
-    console.log('Creating bag for session:', { userId, sessionName, sessionId, styles });
+    console.log('Creating bag for session:', { userId, sessionName, sessionId, styles, description });
 
     // 1. Crear la maleta
     const { data: maleta, error: maletaError } = await supabase
@@ -1194,6 +1195,7 @@ export const UserMaletaService = {
       .insert([{
         user_id: userId,
         title: sessionName,
+        description: description || null,
         is_public: false,
         is_collaborative: false
       }])
