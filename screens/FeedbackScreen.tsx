@@ -203,7 +203,7 @@ export const FeedbackScreen: React.FC = () => {
               style={[
                 styles.submitButton,
                 {
-                  backgroundColor: isSubmitting ? colors.border : colors.primary,
+                  backgroundColor: isSubmitting ? '#000' : '#000',
                 }
               ]}
               onPress={handleSubmit}
@@ -304,6 +304,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
+    backgroundColor: '#000',
   },
   submitButtonText: {
     color: '#fff',

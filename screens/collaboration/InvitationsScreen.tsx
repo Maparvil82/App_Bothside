@@ -36,12 +36,7 @@ const InvitationsScreen: React.FC<InvitationsScreenProps> = ({ navigation }) => 
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
-            <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>{t('maletas_collaborative_invitationsTitle')}</Text>
-            </View>
+
 
             {loading ? (
                 <View style={styles.loadingContainer}>
