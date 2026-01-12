@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { User } from '@supabase/supabase-js';
@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadUserSubscriptionAndCredits = async (userId: string) => {
+  const loadUserSubscriptionAndCredits = useCallback(async (userId: string) => {
     try {
       console.log('🔄 Loading subscription and credits for:', userId);
 
@@ -47,11 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq("user_id", userId)
         .single();
 
-      // (c) Guardar en el estado global del usuario
+      // (c) Guardar en el estado global del usuario SOLO si hay cambios
       setUser(prev => {
         if (!prev) return null;
-        return {
-          ...prev,
+
+        const newData = {
           planType: subscription?.plan_type || null,
           isPremium: subscription?.status === 'active' || subscription?.status === 'trialing',
           creditsTotal: credits?.credits_total || 0,
@@ -59,13 +59,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           creditsRemaining: credits ? (credits.credits_total || 0) - (credits.credits_used || 0) : 0,
           renewalDate: subscription?.current_period_end || null,
         };
+
+        // Comparación simple para evitar actualizaciones innecesarias
+        if (
+          prev.planType === newData.planType &&
+          prev.isPremium === newData.isPremium &&
+          prev.creditsTotal === newData.creditsTotal &&
+          prev.creditsUsed === newData.creditsUsed &&
+          prev.creditsRemaining === newData.creditsRemaining &&
+          prev.renewalDate === newData.renewalDate
+        ) {
+          return prev;
+        }
+
+        return {
+          ...prev,
+          ...newData
+        };
       });
 
       console.log('✅ Subscription data loaded');
     } catch (error) {
       console.error('❌ Error loading subscription data:', error);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // Verificar sesión actual
@@ -96,7 +113,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (currentUser) {
           // Set basic user
-          setUser(currentUser as AppUser);
+          setUser(prev => {
+            // Si el usuario básico es el mismo (por ID), mantenemos la referencia 'prev' si es posible,
+            // o actualizamos solo campos básicos.
+            // Sin embargo, session.user puede traer token refrescado.
+            // Para simplificar, actualizamos si cambia ID o email, pero
+            // lo mejor es confiar en que si session cambia, actualizamos.
+            return currentUser as AppUser;
+          });
+
           // Load extra data
           await loadUserSubscriptionAndCredits(currentUser.id);
         } else {
@@ -119,9 +144,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadUserSubscriptionAndCredits]);
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = useCallback(async (email: string, password: string) => {
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
@@ -133,9 +158,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during sign in:', error);
       throw error;
     }
-  };
+  }, [loadUserSubscriptionAndCredits]);
 
-  const signUp = async (email: string, password: string, username: string) => {
+  const signUp = useCallback(async (email: string, password: string, username: string) => {
     try {
       // First create the auth user
       const { data, error } = await supabase.auth.signUp({
@@ -198,9 +223,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during sign up:', error);
       throw error;
     }
-  };
+  }, [loadUserSubscriptionAndCredits]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
@@ -209,10 +234,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Error during sign out:', error);
       throw error;
     }
-  };
+  }, []);
+
+  const value = React.useMemo(() => ({
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    setUser,
+    loadUserSubscriptionAndCredits
+  }), [user, loading, signIn, signUp, signOut, loadUserSubscriptionAndCredits]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut, setUser, loadUserSubscriptionAndCredits }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
