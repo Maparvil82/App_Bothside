@@ -18,7 +18,8 @@
       "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrarte lo que hay cerca."
+        "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrarte lo correcto.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para funcionar correctamente."
       }
     },
     "android": {
