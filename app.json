@@ -17,7 +17,8 @@
       "bundleIdentifier": "com.manuelparra.bothside",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrarte lo que hay cerca."
       }
     },
     "android": {
