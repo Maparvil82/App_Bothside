@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "App_Bothside",
-    "slug": "App_Bothside",
+    "name": "AppBothside",
+    "slug": "AppBothside",
     "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -18,8 +18,10 @@
       "buildNumber": "1",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrarte lo correcto.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación para funcionar correctamente."
+        "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrar...",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación...",
+        "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para tomar fotos y escanear códigos QR.",
+        "NSMicrophoneUsageDescription": "Esta app necesita acceso al micrófono para grabar videos."
       }
     },
     "android": {
@@ -27,6 +29,10 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
+      ],
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -34,12 +40,15 @@
     },
     "plugins": [
       "expo-localization",
-      "@react-native-community/datetimepicker"
-    ],
-    "extra": {
-      "eas": {
-        "projectId": "bd7a98b7-4549-492e-81c6-9317d2aecf39"
-      }
-    }
+      "@react-native-community/datetimepicker",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true
+        }
+      ]
+    ]
   }
 }
