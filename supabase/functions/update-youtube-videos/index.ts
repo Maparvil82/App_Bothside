@@ -1,13 +1,29 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+interface RequestBody {
+  albumId?: string;
+  discogsId?: string;
+}
+
+interface Video {
+  uri?: string;
+  title?: string;
+  id?: string | number;
+}
+
+interface DiscogsRelease {
+  videos?: Video[];
+  [key: string]: any;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS"
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Manejar preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -20,11 +36,11 @@ serve(async (req) => {
     const discogsToken = Deno.env.get("DISCOGS_TOKEN");
 
     if (!supabaseUrl || !supabaseServiceRoleKey) {
-      console.error("Missing environment variables:", { 
-        supabaseUrl: !!supabaseUrl, 
-        serviceRoleKey: !!supabaseServiceRoleKey 
+      console.error("Missing environment variables:", {
+        supabaseUrl: !!supabaseUrl,
+        serviceRoleKey: !!supabaseServiceRoleKey
       });
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: "Configuración del servidor incorrecta",
         details: "Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY"
       }), {
@@ -35,7 +51,7 @@ serve(async (req) => {
 
     if (!discogsToken) {
       console.error("Missing DISCOGS_TOKEN environment variable");
-      return new Response(JSON.stringify({ 
+      return new Response(JSON.stringify({
         error: "Token de Discogs no configurado",
         details: "Missing DISCOGS_TOKEN environment variable"
       }), {
@@ -47,19 +63,19 @@ serve(async (req) => {
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     // Parsear el body de la request
-    let body = {};
+    let body: RequestBody = {};
     const contentType = req.headers.get("content-type");
-    
+
     if (contentType && contentType.includes("application/json")) {
       try {
         const rawBody = await req.text();
         if (rawBody.trim()) {
           body = JSON.parse(rawBody);
         }
-      } catch (e) {
+      } catch (e: unknown) {
         console.error("Error parsing JSON body:", e);
-        return new Response(JSON.stringify({ 
-          error: "Invalid JSON in request body" 
+        return new Response(JSON.stringify({
+          error: "Invalid JSON in request body"
         }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -67,12 +83,12 @@ serve(async (req) => {
       }
     }
 
-    const { albumId, discogsId } = body as { albumId?: string; discogsId?: string };
+    const { albumId, discogsId } = body;
 
     // Validar parámetros para álbum específico
     if (req.method === "POST" && (!albumId || !discogsId)) {
-      return new Response(JSON.stringify({ 
-        error: "Parámetros requeridos: albumId y discogsId" 
+      return new Response(JSON.stringify({
+        error: "Parámetros requeridos: albumId y discogsId"
       }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -83,7 +99,7 @@ serve(async (req) => {
       let currentAlbumId = albumId; // Variable mutable para poder actualizarla
       // Procesar un álbum específico
       console.log(`Procesando álbum específico: ${currentAlbumId} (Discogs ID: ${discogsId})`);
-      
+
       try {
         // Verificar que el álbum existe en la base de datos
         let { data: albumExists, error: albumError } = await supabaseAdmin
@@ -94,17 +110,17 @@ serve(async (req) => {
 
         if (albumError || !albumExists) {
           console.error(`Álbum no encontrado en BD: ${currentAlbumId}`, albumError?.message || albumError);
-          
+
           // Intentar buscar por discogs_id como alternativa
           const { data: albumByDiscogs, error: discogsError } = await supabaseAdmin
             .from('albums')
             .select('id, title, artist, discogs_id')
             .eq('discogs_id', discogsId)
             .single();
-            
+
           if (discogsError || !albumByDiscogs) {
             console.error(`Álbum tampoco encontrado por discogs_id ${discogsId}:`, discogsError?.message || discogsError);
-            return new Response(JSON.stringify({ 
+            return new Response(JSON.stringify({
               error: `Álbum no encontrado: ${currentAlbumId} ni por discogs_id: ${discogsId}`,
               success: false
             }), {
@@ -133,8 +149,8 @@ serve(async (req) => {
         if (!releaseResponse.ok) {
           const errorText = await releaseResponse.text();
           console.error(`❌ Error obteniendo release ${discogsId}: ${releaseResponse.status} - ${errorText}`);
-          
-          return new Response(JSON.stringify({ 
+
+          return new Response(JSON.stringify({
             error: `Error obteniendo release de Discogs: ${releaseResponse.status}`,
             details: errorText,
             success: false
@@ -144,18 +160,18 @@ serve(async (req) => {
           });
         }
 
-        const releaseData = await releaseResponse.json();
+        const releaseData = await releaseResponse.json() as DiscogsRelease;
         const videos = releaseData.videos || [];
 
         console.log(`🎬 Encontrados ${videos.length} videos en el release`);
 
         if (videos.length > 0) {
           // Filtrar videos de YouTube con validación mejorada
-          const youtubeVideos = videos.filter((video: any) => {
+          const youtubeVideos = videos.filter((video) => {
             if (!video || typeof video.uri !== 'string') {
               return false;
             }
-            
+
             const uri = video.uri.toLowerCase();
             return uri.includes('youtube.com') || uri.includes('youtu.be');
           });
@@ -176,8 +192,8 @@ serve(async (req) => {
 
             // Preparar datos para inserción con validación
             const urlsToInsert = youtubeVideos
-              .filter((video: any) => video.uri) // Filtrar videos sin URI
-              .map((video: any) => ({
+              .filter((video) => video.uri) // Filtrar videos sin URI
+              .map((video) => ({
                 album_id: currentAlbumId,
                 url: video.uri,
                 title: video.title || `Video para ${albumExists.title}`,
@@ -203,7 +219,7 @@ serve(async (req) => {
 
             if (insertError) {
               console.error(`Error insertando videos:`, insertError);
-              return new Response(JSON.stringify({ 
+              return new Response(JSON.stringify({
                 error: `Error insertando videos: ${insertError.message}`,
                 details: insertError
               }), {
@@ -240,11 +256,12 @@ serve(async (req) => {
           });
         }
 
-      } catch (error) {
+      } catch (error: unknown) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
         console.error("Error procesando álbum específico:", error);
-        return new Response(JSON.stringify({ 
-          error: `Error procesando álbum: ${error.message}`,
-          details: error.toString()
+        return new Response(JSON.stringify({
+          error: `Error procesando álbum: ${errorMsg}`,
+          details: String(error)
         }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" }
@@ -253,7 +270,7 @@ serve(async (req) => {
     } else {
       // Procesar todos los álbumes (comportamiento original)
       console.log("Procesando todos los álbumes...");
-      
+
       const { data: albums, error: albumsError } = await supabaseAdmin
         .from('albums')
         .select('id, discogs_id, title, artist')
@@ -262,7 +279,7 @@ serve(async (req) => {
 
       if (albumsError) {
         console.error("Error obteniendo álbumes:", albumsError);
-        return new Response(JSON.stringify({ 
+        return new Response(JSON.stringify({
           error: "Error obteniendo álbumes",
           details: albumsError
         }), {
@@ -296,16 +313,16 @@ serve(async (req) => {
             continue;
           }
 
-          const releaseData = await releaseResponse.json();
+          const releaseData = await releaseResponse.json() as DiscogsRelease;
           const videos = releaseData.videos || [];
 
           if (videos.length > 0) {
             // Filtrar videos de YouTube
-            const youtubeVideos = videos.filter((video: any) => {
+            const youtubeVideos = videos.filter((video) => {
               if (!video || typeof video.uri !== 'string') {
                 return false;
               }
-              
+
               const uri = video.uri.toLowerCase();
               return uri.includes('youtube.com') || uri.includes('youtu.be');
             });
@@ -319,8 +336,8 @@ serve(async (req) => {
 
               // Insertar nuevos videos
               const urlsToInsert = youtubeVideos
-                .filter((video: any) => video.uri)
-                .map((video: any) => ({
+                .filter((video) => video.uri)
+                .map((video) => ({
                   album_id: album.id,
                   url: video.uri,
                   title: video.title || `Video para ${album.title}`,
@@ -347,10 +364,11 @@ serve(async (req) => {
           // Esperar entre requests para no sobrecargar la API
           await new Promise(resolve => setTimeout(resolve, 1000));
 
-        } catch (error) {
+        } catch (error: unknown) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
           console.error(`Error procesando álbum ${album.title}:`, error);
           errorCount++;
-          errors.push(`${album.title}: ${error.message}`);
+          errors.push(`${album.title}: ${errorMsg}`);
         }
       }
 
@@ -365,14 +383,15 @@ serve(async (req) => {
       });
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
+    const errorMsg = error instanceof Error ? error.message : String(error);
     console.error("Error en update-youtube-videos:", error);
     return new Response(JSON.stringify({
-      error: error.message || "Error interno del servidor",
-      details: error.toString()
+      error: errorMsg || "Error interno del servidor",
+      details: String(error)
     }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
-}); 
+});
