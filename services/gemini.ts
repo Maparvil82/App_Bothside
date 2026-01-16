@@ -58,77 +58,94 @@ export class GeminiService {
     collectionContext: string,
     collectionData?: CollectionAlbum[]
   ): Promise<string> {
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+
+    // Buscar información web (solo un intento, ya que WebSearchService debe manejar sus propios errores)
+    let webInfo = '';
     try {
-      // Buscar información web adicional usando discogs_id si está disponible
-      let webInfo = '';
       if (collectionData && collectionData.length > 0) {
         webInfo = await WebSearchService.enrichResponseWithCollection(userMessage, collectionData);
       } else {
         webInfo = await WebSearchService.enrichResponse(userMessage, collectionContext);
       }
-
-      const systemPrompt = `Eres un asistente experto en música y colecciones de discos con acceso completo a toda la información de la colección del usuario, como si fueras Gemini Web.
-      
-      INSTRUCCIONES IMPORTANTES:
-      - Tienes acceso completo a todos los datos de la colección (171 álbumes, 144 artistas, 28 estilos) listados en el "CATÁLOGO COMPLETO DE ÁLBUMES".
-      - ADEMÁS, tienes acceso a "HISTORIAS Y NOTAS PERSONALES" que el usuario ha escrito sobre algunos discos.
-      - Responde de manera amigable y útil en español.
-      - Sé específico y detallado con los datos de la colección.
-      - Si te preguntan sobre un artista específico, menciona TODOS sus álbumes con detalles.
-      - Si te preguntan sobre un estilo musical, menciona ejemplos específicos de álbumes.
-      - Si te preguntan sobre precios, usa los valores exactos de la colección.
-      - Si te preguntan sobre sellos discográficos, menciona los álbumes específicos.
-      - Proporciona análisis detallados y respuestas completas.
-      - Puedes hacer comparaciones entre artistas, estilos, años, etc.
-      - Termina tus respuestas de manera natural, no las cortes abruptamente.
-      - Usa la información completa disponible para dar respuestas precisas.
-      - Si hay información web adicional, úsala para enriquecer tu respuesta con datos históricos, biográficos o técnicos.
-      - Combina la información de la colección con los datos web y las historias personales para dar respuestas más completas y personalizadas.
-      
-      INFORMACIÓN COMPLETA DE LA COLECCIÓN:
-      ${collectionContext}
-      
-      ${webInfo ? `INFORMACIÓN ADICIONAL DE LA WEB:\n${webInfo}` : ''}`;
-
-      const fullPrompt = `${systemPrompt}\n\nUsuario: ${userMessage}`;
-
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000);
-      const response = await fetch(`${this.API_URL}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'x-goog-api-key': this.API_KEY,
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: fullPrompt
-            }]
-          }]
-        }),
-        signal: controller.signal,
-      });
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`Error de API: ${response.status}`);
-      }
-
-      const data: GeminiResponse = await response.json();
-
-      if (!data.candidates || data.candidates.length === 0) {
-        throw new Error('No se recibió respuesta de la API');
-      }
-
-      return data.candidates[0].content.parts[0].text;
-    } catch (error) {
-      console.error('Error al generar respuesta con Gemini:', error);
-      throw new Error('No se pudo generar una respuesta. Inténtalo de nuevo.');
+    } catch (e) {
+      console.warn('⚠️ Web search failed, continuing without it:', e);
     }
+
+    const systemPrompt = `Eres un asistente experto en música y colecciones de discos con acceso completo a toda la información de la colección del usuario, como si fueras Gemini Web.
+    
+    INSTRUCCIONES IMPORTANTES:
+    - Tienes acceso completo a todos los datos de la colección (171 álbumes, 144 artistas, 28 estilos) listados en el "CATÁLOGO COMPLETO DE ÁLBUMES".
+    - ADEMÁS, tienes acceso a "HISTORIAS Y NOTAS PERSONALES" que el usuario ha escrito sobre algunos discos.
+    - Responde de manera amigable y útil en español.
+    - Sé específico y detallado con los datos de la colección.
+    - Termina tus respuestas de manera natural.
+    
+    INFORMACIÓN COMPLETA DE LA COLECCIÓN:
+    ${collectionContext}
+    
+    ${webInfo ? `INFORMACIÓN ADICIONAL DE LA WEB:\n${webInfo}` : ''}`;
+
+    const fullPrompt = `${systemPrompt}\n\nUsuario: ${userMessage}`;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`💬 Generando respuesta de Chat... (Intento ${attempt}/${maxRetries})`);
+
+        const controller = new AbortController();
+        const timeoutDuration = 15000 + (attempt * 5000); // 15s, 20s, 25s
+        const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
+
+        const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{
+                text: fullPrompt
+              }]
+            }]
+          }),
+          signal: controller.signal,
+        });
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`❌ Chat API Error (Intento ${attempt}): ${response.status} - ${errorText}`);
+
+          if (response.status === 429) {
+            await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+            throw new Error(`Rate limit exceeded (429)`);
+          }
+
+          throw new Error(`Error de API: ${response.status}`);
+        }
+
+        const data: GeminiResponse = await response.json();
+
+        if (!data.candidates || data.candidates.length === 0) {
+          throw new Error('No se recibió respuesta de la API');
+        }
+
+        return data.candidates[0].content.parts[0].text;
+
+      } catch (error: any) {
+        lastError = error;
+        console.error(`⚠️ Fallo en chat (Intento ${attempt}):`, error.message);
+
+        if (attempt < maxRetries) {
+          const waitTime = 1000 * Math.pow(2, attempt - 1);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+        }
+      }
+    }
+
+    throw new Error('No se pudo generar una respuesta después de varios intentos. Verifique su conexión.');
   }
 
   static async analyzeAlbumImage(imageBase64: string): Promise<{ artist: string; album: string }> {
@@ -141,26 +158,26 @@ export class GeminiService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔍 Analizando imagen de álbum con Gemini Vision... (Intento ${attempt}/${maxRetries})`);
+        console.log('🔑 API Key used for Vision:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'UNDEFINED');
 
-        // PROMPT OPTIMIZADO: Más estricto y claro para JSON
+        // PROMPT OPTIMIZADO: Equilibrado entre precisión y flexibilidad
         const prompt = `Eres un experto musicólogo y catalogador de discos.
         ANALIZA la imagen de la portada del álbum proporcionada.
         
         IDENTIFICA:
-        1. "artist": El nombre exacto del artista o banda.
-        2. "album": El título exacto del álbum.
+        1. "artist": El nombre del artista o banda (haz tu mejor estimación basada en texto e imagen).
+        2. "album": El título del álbum (haz tu mejor estimación).
         
-        REGLAS CRÍTICAS:
+        REGLAS:
         - Responde SOLO con un objeto JSON válido.
-        - NO uses bloques de código markdown (\`\`\`json).
-        - NO incluyas texto adicional fuera del JSON.
-        - Si no puedes identificar con certeza, usa "DESCONOCIDO".
-        - Si la imagen no es una portada de disco, responde con "DESCONOCIDO".
+        - NO uses bloques de código markdown.
+        - Si la imagen es borrosa o difícil, intenta inferir el álbum por el arte.
+        - Solo usa "DESCONOCIDO" si es imposible determinar que es una portada de música.
         
-        FORMATO DE RESPUESTA ESPERADO:
+        FORMATO DE RESPUESTA:
         {
-          "artist": "Nombre Exacto",
-          "album": "Título Exacto"
+          "artist": "Nombre Estimado",
+          "album": "Título Estimado"
         }`;
 
         // Timeout progresivo: más tiempo en cada reintento
@@ -169,12 +186,12 @@ export class GeminiService {
         const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
         try {
-          const response = await fetch(`${this.VISION_API_URL}`, {
+          // Cambiamos a pasar la key en la URL, que es más seguro para evitar problemas de headers
+          const response = await fetch(`${this.VISION_API_URL}?key=${this.API_KEY}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json',
-              'x-goog-api-key': this.API_KEY,
             },
             body: JSON.stringify({
               contents: [{
@@ -189,10 +206,10 @@ export class GeminiService {
                 ]
               }],
               generationConfig: {
-                temperature: 0.1, // Baja temperatura para mayor precisión
-                topK: 1,
+                temperature: 0.3, // Aumentado de 0.1 a 0.3 para permitir más flexibilidad
+                topK: 32,
                 topP: 0.95,
-                maxOutputTokens: 256, // Limitamos tokens para forzar respuesta concisa
+                maxOutputTokens: 1024, // Aumentado para no cortar respuestas complejas
                 responseMimeType: "application/json"
               }
             }),

@@ -85,6 +85,18 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
         // Por ahora, solo logueamos el tamaño
       }
 
+      // Check for credits BEFORE calling API
+      if (user && (user.creditsRemaining === null || user.creditsRemaining <= 0)) {
+        Alert.alert(
+          t('common_error'),
+          "Sin créditos disponibles. Por favor recarga para continuar.",
+          [{ text: "OK" }]
+        );
+        setIsAIProcessing(false);
+        setIsLoading(false);
+        return;
+      }
+
       const geminiStart = Date.now();
       console.log('📤 Enviando imagen a Gemini Vision...');
 
@@ -98,6 +110,9 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
             p_user_id: user.id,
             p_amount: 5
           });
+          // Reload credits in background to keep UI fresh
+          // We can't easily access loadUserSubscriptionAndCredits from here unless passed via context, 
+          // but optimistic update or just letting it sync on next focus is acceptable for now.
         } catch (err) {
           console.error("Error consumiendo crédito IA (portada):", err);
         }
