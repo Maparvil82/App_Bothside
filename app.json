@@ -4,6 +4,7 @@
     "slug": "AppBothside",
     "version": "1.0.3",
     "orientation": "portrait",
+    "scheme": "appbothside",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
