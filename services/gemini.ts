@@ -49,8 +49,8 @@ interface AlbumStory {
 }
 
 export class GeminiService {
-  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent';
-  private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash-lite:generateContent';
+  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
   private static readonly API_KEY = ENV.GEMINI_API_KEY;
 
   static async generateResponse(
@@ -143,38 +143,19 @@ export class GeminiService {
         const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
 
         // PROMPT DE EXPERTO EN MÚSICA para análisis completo del disco
-        const prompt = `Eres un EXPERTO EN MÚSICA y DISCOGRAFÍA con 30 años de experiencia. Analiza esta imagen de un álbum con la precisión de un profesional.
+        const prompt = `Eres un EXPERTO EN MÚSICA y DISCOGRAFÍA. Analiza esta imagen de portada de álbum.
+        
+        Tu tarea es identificar con precisión:
+        1. El nombre del ARTISTA.
+        2. El título del ÁLBUM.
 
-ANÁLISIS REQUERIDO:
-1. **TEXTO VISIBLE**: Lee exactamente el nombre del artista y título del álbum
-2. **DISEÑO VISUAL**: Observa colores, tipografías, estilo gráfico
-3. **ELEMENTOS DISTINTIVOS**: Logos, sellos discográficos, años, códigos
-4. **COMPOSICIÓN**: Layout, posicionamiento de elementos
-5. **ESTILO ARTÍSTICO**: Género musical sugerido por la estética
+        Responde ÚNICAMENTE con un objeto JSON válido con esta estructura:
+        {
+          "artist": "Nombre del Artista",
+          "album": "Título del Álbum"
+        }
 
-REGLAS DE EXPERTO:
-- Identifica al artista REAL, no variaciones o nombres similares
-- Distingue entre "Bill Spoon" y "Bill Brandon" como artistas completamente diferentes
-- Si ves "The Beatles" NO lo confundas con "The Beats" o similar
-- Si ves "Pink Floyd" NO lo confundas con "Pink" o "Floyd"
-- Analiza el contexto visual completo, no solo texto
-- Si hay elementos únicos (logos, sellos, años), úsalos para confirmar identidad
-
-CRITERIOS DE VALIDACIÓN:
-- El artista debe coincidir EXACTAMENTE con lo visible
-- El título debe ser el que aparece en la portada
-- Si hay dudas sobre la identidad, escribe "DESCONOCIDO"
-- NO uses conocimiento previo para "corregir" lo que ves
-- NO confundas artistas con nombres parecidos
-
-IMPORTANTE: Como experto, tu reputación depende de la precisión. Si no puedes identificar con 100% de certeza, escribe "DESCONOCIDO".
-
-Responde ÚNICAMENTE en este formato:
-
-ARTISTA: [nombre exacto del artista o DESCONOCIDO]
-ALBUM: [título exacto del álbum o DESCONOCIDO]
-
-Sin explicaciones adicionales.`;
+        Si no puedes identificarlo, usa "DESCONOCIDO" como valor.`;
 
         // Crear AbortController para timeout más generoso
         const controller = new AbortController();
@@ -202,12 +183,13 @@ Sin explicaciones adicionales.`;
                   }
                 ]
               }],
-              // CONFIGURACIÓN OPTIMIZADA para precisión
+              // CONFIGURACIÓN OPTIMIZADA para JSON
               generationConfig: {
-                temperature: 0.0,        // Máxima precisión, sin creatividad
-                topK: 1,                // Solo la mejor respuesta
-                topP: 0.1,              // Respuestas más concisas
-                maxOutputTokens: 100,   // Suficiente para nombres completos
+                temperature: 0.1,
+                topK: 1,
+                topP: 0.95,
+                maxOutputTokens: 1024,
+                responseMimeType: "application/json"
               }
             }),
             signal: controller.signal
@@ -228,25 +210,27 @@ Sin explicaciones adicionales.`;
           }
 
           const responseText = data.candidates[0].content.parts[0].text;
-          console.log('📝 Respuesta de Gemini Vision:', responseText);
+          console.log('📝 Respuesta JSON de Gemini Vision:', responseText);
 
-          // Extraer artista y álbum de la respuesta
-          const artistMatch = responseText.match(/ARTISTA:\s*(.+)/i);
-          const albumMatch = responseText.match(/ALBUM:\s*(.+)/i);
-
-          if (!artistMatch || !albumMatch) {
-            throw new Error('Formato de respuesta inesperado de Gemini Vision');
+          // Parsear JSON
+          let parsedData;
+          try {
+            parsedData = JSON.parse(responseText);
+          } catch (e) {
+            console.error('Error parseando JSON:', e);
+            // Intentar limpiar bloques de código si existen
+            const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+            parsedData = JSON.parse(cleanJson);
           }
 
-          const artist = artistMatch[1].trim();
-          const album = albumMatch[1].trim();
+          const { artist, album } = parsedData;
 
-          // Validar que no sean respuestas vacías o genéricas
+          // Validar campos
           if (!artist || !album || artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
-            throw new Error('No se pudo identificar completamente el álbum');
+            throw new Error('No se pudo identificar completamente el álbum (valores DESCONOCIDO)');
           }
 
-          // Validar que no sean respuestas demasiado genéricas
+          // Validar longitud
           if (artist.length < 2 || album.length < 2) {
             throw new Error('Nombres de artista o álbum demasiado cortos');
           }
@@ -264,9 +248,8 @@ Sin explicaciones adicionales.`;
             console.log(`❌ Error en intento ${attempt}:`, fetchError.message);
           }
 
-          // Si no es el último intento, esperar un poco antes de reintentar
           if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Espera progresiva
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
           }
         }
 
@@ -274,16 +257,15 @@ Sin explicaciones adicionales.`;
         lastError = error as Error;
         console.error(`Error al analizar imagen con Gemini Vision (intento ${attempt}):`, error);
 
-        // Si no es el último intento, esperar un poco antes de reintentar
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Espera progresiva
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
 
     // Si llegamos aquí, todos los intentos fallaron
     console.error('❌ Todos los intentos de análisis fallaron');
-    throw new Error('No se pudo analizar la imagen del álbum después de varios intentos. Intenta con otra foto o verifica tu conexión.');
+    throw new Error('No se pudo analizar la imagen del álbum. ' + (lastError?.message || 'Inténtalo de nuevo.'));
   }
 
   static formatCollectionContext(collectionData: any[], albumStories: AlbumStory[] = []): string {

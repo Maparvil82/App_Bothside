@@ -5,20 +5,20 @@ export const ENV = {
   // Supabase - Obtén estos valores de tu proyecto en Supabase > Settings > API
   SUPABASE_URL: 'https://jbzafvoavdbcwfgoyrzl.supabase.co', // Reemplaza con tu Project URL
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiemFmdm9hdmRiY3dmZ295cnpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjAwNDcsImV4cCI6MjA1ODA5NjA0N30.NJbOMzab6whafcIRiMru6O7zyABwKkD6UL9_8ENOfqY', // Reemplaza con tu anon key
-  
+
   // Google Gemini API Key
-  GEMINI_API_KEY: 'AIzaSyCUJgdcsQeQAHVSVzNp2CzmhuFRkTi4luU', // Reemplaza con tu API key
-  
+  GEMINI_API_KEY: 'AIzaSyBmf1m7gvVkiLLvVJq6j_C9AoiMkgR-33Y', // Reemplaza con tu API key
+
   // YouTube Data API v3 - Obtén tu API key en https://console.cloud.google.com/apis/credentials
   YOUTUBE_API_KEY: 'AIzaSyBYRCnHzRbje2AX0c14d9TunkOTWidZfn0',
-  
+
   // Discogs API - Configurado con las credenciales proporcionadas
   DISCOGS_TOKEN: 'EgtwXHcqDecFYsPbrDSxiCtRXVdrrlnNDABZdAfw',
 
   // Google Cloud Vision API Key
   GOOGLE_VISION_API_KEY: 'AIzaSyAMP6C2Ec9cYlYJp6ZK5I2evgnxNTlCGZs',
 
-  
+
   // App
   APP_NAME: 'Bothside',
   APP_VERSION: '1.0.0',
@@ -54,7 +54,7 @@ export const validateEnv = () => {
   }
 
   return true;
-}; 
+};
 
 
 
