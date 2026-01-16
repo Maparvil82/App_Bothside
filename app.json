@@ -20,7 +20,9 @@
         "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrar...",
         "NSLocationAlwaysAndWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación...",
         "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para tomar fotos y escanear códigos QR.",
-        "NSMicrophoneUsageDescription": "Esta app necesita acceso al micrófono para grabar videos."
+        "NSMicrophoneUsageDescription": "Esta app necesita acceso al micrófono para grabar videos.",
+        "NSPhotoLibraryUsageDescription": "Esta app necesita acceso a tu galería para guardar o seleccionar fotos.",
+        "NSPhotoLibraryAddUsageDescription": "Esta app necesita permiso para guardar fotos en tu galería."
       }
     },
     "android": {
