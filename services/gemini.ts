@@ -132,34 +132,41 @@ export class GeminiService {
   }
 
   static async analyzeAlbumImage(imageBase64: string): Promise<{ artist: string; album: string }> {
-    const maxRetries = 2;
+    const maxRetries = 3;
     let lastError: Error | null = null;
+
+    // Clean base64 string once
+    const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔍 Analizando imagen de álbum con Gemini Vision... (Intento ${attempt}/${maxRetries})`);
 
-        // Remover el prefijo data:image/jpeg;base64, si está presente
-        const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
-
-        // PROMPT DE EXPERTO EN MÚSICA para análisis completo del disco
-        const prompt = `Eres un EXPERTO EN MÚSICA y DISCOGRAFÍA. Analiza esta imagen de portada de álbum.
+        // PROMPT OPTIMIZADO: Más estricto y claro para JSON
+        const prompt = `Eres un experto musicólogo y catalogador de discos.
+        ANALIZA la imagen de la portada del álbum proporcionada.
         
-        Tu tarea es identificar con precisión:
-        1. El nombre del ARTISTA.
-        2. El título del ÁLBUM.
-
-        Responde ÚNICAMENTE con un objeto JSON válido con esta estructura:
+        IDENTIFICA:
+        1. "artist": El nombre exacto del artista o banda.
+        2. "album": El título exacto del álbum.
+        
+        REGLAS CRÍTICAS:
+        - Responde SOLO con un objeto JSON válido.
+        - NO uses bloques de código markdown (\`\`\`json).
+        - NO incluyas texto adicional fuera del JSON.
+        - Si no puedes identificar con certeza, usa "DESCONOCIDO".
+        - Si la imagen no es una portada de disco, responde con "DESCONOCIDO".
+        
+        FORMATO DE RESPUESTA ESPERADO:
         {
-          "artist": "Nombre del Artista",
-          "album": "Título del Álbum"
-        }
+          "artist": "Nombre Exacto",
+          "album": "Título Exacto"
+        }`;
 
-        Si no puedes identificarlo, usa "DESCONOCIDO" como valor.`;
-
-        // Crear AbortController para timeout más generoso
+        // Timeout progresivo: más tiempo en cada reintento
+        const timeoutDuration = 15000 + (attempt * 5000);
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 segundos timeout
+        const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
         try {
           const response = await fetch(`${this.VISION_API_URL}`, {
@@ -172,9 +179,7 @@ export class GeminiService {
             body: JSON.stringify({
               contents: [{
                 parts: [
-                  {
-                    text: prompt
-                  },
+                  { text: prompt },
                   {
                     inline_data: {
                       mime_type: 'image/jpeg',
@@ -183,12 +188,11 @@ export class GeminiService {
                   }
                 ]
               }],
-              // CONFIGURACIÓN OPTIMIZADA para JSON
               generationConfig: {
-                temperature: 0.1,
+                temperature: 0.1, // Baja temperatura para mayor precisión
                 topK: 1,
                 topP: 0.95,
-                maxOutputTokens: 1024,
+                maxOutputTokens: 256, // Limitamos tokens para forzar respuesta concisa
                 responseMimeType: "application/json"
               }
             }),
@@ -199,73 +203,73 @@ export class GeminiService {
 
           if (!response.ok) {
             const errorText = await response.text();
-            console.error(`Error en Gemini Vision (intento ${attempt}):`, errorText);
+            console.error(`❌ Error HTTP Gemini (Intento ${attempt}): ${response.status} - ${errorText}`);
+
+            // Si es error 429 (Too Many Requests), esperar más
+            if (response.status === 429) {
+              await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
+              throw new Error(`Rate limit exceeded (429)`);
+            }
+
             throw new Error(`Error de API Vision: ${response.status}`);
           }
 
           const data: GeminiResponse = await response.json();
 
           if (!data.candidates || data.candidates.length === 0) {
+            console.warn(`⚠️ Respuesta vacía de candidatos (Intento ${attempt})`);
             throw new Error('No se recibió respuesta de la API Vision');
           }
 
-          const responseText = data.candidates[0].content.parts[0].text;
-          console.log('📝 Respuesta JSON de Gemini Vision:', responseText);
+          let responseText = data.candidates[0].content.parts[0].text;
+          console.log('📝 Respuesta raw Gemini:', responseText.substring(0, 100) + '...');
 
-          // Parsear JSON
+          // Limpieza agresiva de JSON
+          responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
+
           let parsedData;
           try {
             parsedData = JSON.parse(responseText);
           } catch (e) {
-            console.error('Error parseando JSON:', e);
-            // Intentar limpiar bloques de código si existen
-            const cleanJson = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-            parsedData = JSON.parse(cleanJson);
+            console.error('❌ Error parseando JSON:', e, 'Texto:', responseText);
+            throw new Error('Formato de respuesta inválido');
           }
 
           const { artist, album } = parsedData;
 
-          // Validar campos
-          if (!artist || !album || artist === 'DESCONOCIDO' || album === 'DESCONOCIDO') {
-            throw new Error('No se pudo identificar completamente el álbum (valores DESCONOCIDO)');
+          // Validación estricta
+          if (!artist || !album ||
+            artist.toUpperCase() === 'DESCONOCIDO' ||
+            album.toUpperCase() === 'DESCONOCIDO') {
+            throw new Error('Álbum no identificado (DESCONOCIDO)');
           }
 
-          // Validar longitud
           if (artist.length < 2 || album.length < 2) {
-            throw new Error('Nombres de artista o álbum demasiado cortos');
+            throw new Error('Nombres detectados demasiado cortos/inválidos');
           }
 
-          console.log('✅ Álbum identificado:', { artist, album });
+          console.log('✅ Álbum identificado exitosamente:', { artist, album });
           return { artist, album };
 
         } catch (fetchError: any) {
           clearTimeout(timeoutId);
-          if (fetchError.name === 'AbortError') {
-            lastError = new Error('Timeout: La API tardó demasiado en responder');
-            console.log(`⏰ Timeout en intento ${attempt}, ${attempt < maxRetries ? 'reintentando...' : 'agotados todos los intentos'}`);
-          } else {
-            lastError = fetchError;
-            console.log(`❌ Error en intento ${attempt}:`, fetchError.message);
-          }
-
-          if (attempt < maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
-          }
+          throw fetchError; // Re-lanzar para manejar en el catch externo del loop
         }
 
-      } catch (error) {
-        lastError = error as Error;
-        console.error(`Error al analizar imagen con Gemini Vision (intento ${attempt}):`, error);
+      } catch (error: any) {
+        lastError = error;
+        console.error(`⚠️ Fallo en intento ${attempt}:`, error.message);
 
         if (attempt < maxRetries) {
-          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          const waitTime = 1000 * Math.pow(2, attempt - 1); // Exponential backoff: 1s, 2s, 4s...
+          console.log(`⏳ Esperando ${waitTime}ms antes del siguiente intento...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         }
       }
     }
 
-    // Si llegamos aquí, todos los intentos fallaron
-    console.error('❌ Todos los intentos de análisis fallaron');
-    throw new Error('No se pudo analizar la imagen del álbum. ' + (lastError?.message || 'Inténtalo de nuevo.'));
+    console.error('❌ Todos los intentos de análisis fallaron. Último error:', lastError);
+    throw new Error('No se pudo identificar el álbum después de varios intentos. Por favor, intenta mejorar la iluminación o el ángulo.');
   }
 
   static formatCollectionContext(collectionData: any[], albumStories: AlbumStory[] = []): string {
