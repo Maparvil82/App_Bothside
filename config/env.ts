@@ -7,7 +7,8 @@ export const ENV = {
   SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiemFmdm9hdmRiY3dmZ295cnpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjAwNDcsImV4cCI6MjA1ODA5NjA0N30.NJbOMzab6whafcIRiMru6O7zyABwKkD6UL9_8ENOfqY', // Reemplaza con tu anon key
 
   // Google Gemini API Key
-  GEMINI_API_KEY: 'AIzaSyDk91h3hzkEZNu7ESfV6rpKlwVFJcP_FbI',
+  // Google Gemini API Key
+  GEMINI_API_KEY: 'AIzaSyBuCCWq0v6ZrecMzrNxA50XtbbOcQQNG7A',
 
   // YouTube Data API v3 - Obtén tu API key en https://console.cloud.google.com/apis/credentials
   YOUTUBE_API_KEY: 'AIzaSyBYRCnHzRbje2AX0c14d9TunkOTWidZfn0',

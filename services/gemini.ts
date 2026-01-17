@@ -49,9 +49,10 @@ interface AlbumStory {
 }
 
 export class GeminiService {
-  private static readonly API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
-  private static readonly VISION_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
+  // Google Gemini API Key
   private static readonly API_KEY = ENV.GEMINI_API_KEY;
+  // Modelo estándar y estable
+  private static readonly MODEL_NAME = 'gemini-1.5-flash';
 
   static async generateResponse(
     userMessage: string,
@@ -89,6 +90,9 @@ export class GeminiService {
 
     const fullPrompt = `${systemPrompt}\n\nUsuario: ${userMessage}`;
 
+    // URL directa al modelo estable
+    const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/${this.MODEL_NAME}:generateContent`;
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`💬 Generando respuesta de Chat... (Intento ${attempt}/${maxRetries})`);
@@ -97,7 +101,7 @@ export class GeminiService {
         const timeoutDuration = 15000 + (attempt * 5000); // 15s, 20s, 25s
         const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
-        const response = await fetch(`${this.API_URL}?key=${this.API_KEY}`, {
+        const response = await fetch(`${modelUrl}?key=${this.API_KEY}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -151,142 +155,88 @@ export class GeminiService {
   static async analyzeAlbumImage(imageBase64: string): Promise<{ artist: string; album: string }> {
     const maxRetries = 3;
     let lastError: Error | null = null;
-
-    // Clean base64 string once
     const base64Data = imageBase64.includes(',') ? imageBase64.split(',')[1] : imageBase64;
+
+    console.log('🔍 Iniciando análisis con MODELO ESTÁNDAR (gemini-1.5-flash).');
+
+    // Log de seguridad para verificar la key (oculta)
+    const keyMasked = this.API_KEY ? `${this.API_KEY.substring(0, 5)}...${this.API_KEY.substring(this.API_KEY.length - 4)}` : 'UNDEFINED';
+    console.log(`🔑 Key en uso: ${keyMasked}`);
+
+    const modelUrl = `https://generativelanguage.googleapis.com/v1beta/models/${this.MODEL_NAME}:generateContent`;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`🔍 Analizando imagen de álbum con Gemini Vision... (Intento ${attempt}/${maxRetries})`);
-        console.log('🔑 API Key used for Vision:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'UNDEFINED');
+        console.log(`🚀 Intento ${attempt}/${maxRetries} conectando a Gemini...`);
 
-        // PROMPT OPTIMIZADO: Equilibrado entre precisión y flexibilidad
-        const prompt = `Eres un experto musicólogo y catalogador de discos.
-        ANALIZA la imagen de la portada del álbum proporcionada.
-        
-        IDENTIFICA:
-        1. "artist": El nombre del artista o banda (haz tu mejor estimación basada en texto e imagen).
-        2. "album": El título del álbum (haz tu mejor estimación).
-        
-        REGLAS:
-        - Responde SOLO con un objeto JSON válido.
-        - NO uses bloques de código markdown.
-        - Si la imagen es borrosa o difícil, intenta inferir el álbum por el arte.
-        - Solo usa "DESCONOCIDO" si es imposible determinar que es una portada de música.
-        
-        FORMATO DE RESPUESTA:
-        {
-          "artist": "Nombre Estimado",
-          "album": "Título Estimado"
-        }`;
-
-        // Timeout progresivo: más tiempo en cada reintento
-        const timeoutDuration = 15000 + (attempt * 5000);
         const controller = new AbortController();
+        const timeoutDuration = 25000;
         const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
-        try {
-          // Cambiamos a pasar la key en la URL, que es más seguro para evitar problemas de headers
-          const response = await fetch(`${this.VISION_API_URL}?key=${this.API_KEY}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  {
-                    inline_data: {
-                      mime_type: 'image/jpeg',
-                      data: base64Data
-                    }
+        const prompt = `Identify the music album in this image. Return strictly JSON: {"artist": "Name", "album": "Title"}. Nothing else.`;
+
+        const response = await fetch(`${modelUrl}?key=${this.API_KEY}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                {
+                  inline_data: {
+                    mime_type: 'image/jpeg',
+                    data: base64Data
                   }
-                ]
-              }],
-              generationConfig: {
-                temperature: 0.3, // Aumentado de 0.1 a 0.3 para permitir más flexibilidad
-                topK: 32,
-                topP: 0.95,
-                maxOutputTokens: 1024, // Aumentado para no cortar respuestas complejas
-                responseMimeType: "application/json"
-              }
-            }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`❌ Error HTTP Gemini (Intento ${attempt}): ${response.status} - ${errorText}`);
-
-            // Si es error 429 (Too Many Requests), esperar más
-            if (response.status === 429) {
-              await new Promise(resolve => setTimeout(resolve, 2000 * attempt));
-              throw new Error(`Rate limit exceeded (429)`);
+                }
+              ]
+            }],
+            generationConfig: {
+              temperature: 0.1, // Baja temperatura para precisión
+              responseMimeType: "application/json"
             }
+          }),
+          signal: controller.signal
+        });
 
-            throw new Error(`Error de API Vision: ${response.status}`);
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(`❌ Error API (${response.status}): ${errorText}`);
+          if (response.status === 400 && errorText.includes('API key')) throw new Error('API Key inválida o rechazada por Google.');
+          if (response.status === 429) {
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            continue; // Retry
           }
-
-          const data: GeminiResponse = await response.json();
-
-          if (!data.candidates || data.candidates.length === 0) {
-            console.warn(`⚠️ Respuesta vacía de candidatos (Intento ${attempt})`);
-            throw new Error('No se recibió respuesta de la API Vision');
-          }
-
-          let responseText = data.candidates[0].content.parts[0].text;
-          console.log('📝 Respuesta raw Gemini:', responseText.substring(0, 100) + '...');
-
-          // Limpieza agresiva de JSON
-          responseText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
-
-          let parsedData;
-          try {
-            parsedData = JSON.parse(responseText);
-          } catch (e) {
-            console.error('❌ Error parseando JSON:', e, 'Texto:', responseText);
-            throw new Error('Formato de respuesta inválido');
-          }
-
-          const { artist, album } = parsedData;
-
-          // Validación estricta
-          if (!artist || !album ||
-            artist.toUpperCase() === 'DESCONOCIDO' ||
-            album.toUpperCase() === 'DESCONOCIDO') {
-            throw new Error('Álbum no identificado (DESCONOCIDO)');
-          }
-
-          if (artist.length < 2 || album.length < 2) {
-            throw new Error('Nombres detectados demasiado cortos/inválidos');
-          }
-
-          console.log('✅ Álbum identificado exitosamente:', { artist, album });
-          return { artist, album };
-
-        } catch (fetchError: any) {
-          clearTimeout(timeoutId);
-          throw fetchError; // Re-lanzar para manejar en el catch externo del loop
+          throw new Error(`Error del servidor (${response.status})`);
         }
+
+        const data: GeminiResponse = await response.json();
+
+        if (!data.candidates || data.candidates.length === 0) {
+          throw new Error('Respuesta vacía de Google');
+        }
+
+        const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '').trim();
+        const { artist, album } = JSON.parse(text);
+
+        if (!artist || !album) throw new Error('No se detectó artista/álbum válido');
+
+        console.log('✅ Reconocido:', artist, '-', album);
+        return { artist, album };
 
       } catch (error: any) {
         lastError = error;
-        console.error(`⚠️ Fallo en intento ${attempt}:`, error.message);
-
-        if (attempt < maxRetries) {
-          const waitTime = 1000 * Math.pow(2, attempt - 1); // Exponential backoff: 1s, 2s, 4s...
-          console.log(`⏳ Esperando ${waitTime}ms antes del siguiente intento...`);
-          await new Promise(resolve => setTimeout(resolve, waitTime));
-        }
+        console.error(`⚠️ Error intento ${attempt}:`, error.message);
+        if (error.message.includes('API Key')) throw error; // No reintentar si la key es mala
+        await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
 
-    console.error('❌ Todos los intentos de análisis fallaron. Último error:', lastError);
-    throw new Error('No se pudo identificar el álbum después de varios intentos. Por favor, intenta mejorar la iluminación o el ángulo.');
+    throw new Error(lastError?.message || 'Fallo de conexión');
   }
 
   static formatCollectionContext(collectionData: any[], albumStories: AlbumStory[] = []): string {

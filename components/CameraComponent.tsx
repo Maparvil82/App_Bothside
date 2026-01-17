@@ -156,9 +156,10 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
       console.error('❌ Error en reconocimiento de IA:', error);
       setAiResult('❌ No se pudo reconocer el álbum');
 
+      const errorMessage = (error as any).message || 'Error desconocido';
       Alert.alert(
         t('camera_error_recognition_title'),
-        t('camera_error_recognition_message'),
+        `${t('camera_error_recognition_message')}\n\nDetalle: ${errorMessage}`,
         [{ text: 'OK' }]
       );
     } finally {
@@ -380,7 +381,7 @@ export const CameraComponent: React.FC<CameraComponentProps> = ({ onCapture, onC
     try {
       // OPTIMIZACIÓN: Capturar con balance entre calidad y velocidad
       const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.6,        // ← Calidad balanceada para velocidad
+        quality: 0.4,        // ← Calidad reducida para asegurar payload ligero (< 3MB)
         base64: true,        // ← Base64 directo (sin conversiones)
         skipProcessing: true, // ← Saltar procesamiento para velocidad
         exif: false,         // ← Sin metadatos EXIF para reducir tamaño
