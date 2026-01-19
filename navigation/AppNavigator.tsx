@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { View } from 'react-native';
 import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute, useTheme } from '@react-navigation/native';
 import { HeaderBackButton } from '@react-navigation/elements';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -50,6 +51,8 @@ import { UserMaletaService } from '../services/database';
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
+import { ChatModal } from '../components/ChatModal';
+import { FloatingChatButton } from '../components/FloatingChatButton';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -426,11 +429,22 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
 };
 
 // Wrapper para las pantallas principales con StatsProvider
-const MainAppWrapper = () => (
-  <StatsProvider>
-    <TabNavigator />
-  </StatsProvider>
-);
+const MainAppWrapper = () => {
+  const [isChatVisible, setIsChatVisible] = useState(false);
+
+  return (
+    <StatsProvider>
+      <View style={{ flex: 1 }}>
+        <TabNavigator />
+        <FloatingChatButton onPress={() => setIsChatVisible(true)} />
+        <ChatModal
+          visible={isChatVisible}
+          onClose={() => setIsChatVisible(false)}
+        />
+      </View>
+    </StatsProvider>
+  );
+};
 
 // ... imports
 // Removed PricingScreen and PrePurchaseScreen imports

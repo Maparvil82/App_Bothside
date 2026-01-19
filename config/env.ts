@@ -8,7 +8,7 @@ export const ENV = {
 
   // Google Gemini API Key
   // Google Gemini API Key
-  GEMINI_API_KEY: 'AIzaSyBuCCWq0v6ZrecMzrNxA50XtbbOcQQNG7A',
+  GEMINI_API_KEY: 'AIzaSyCIY4jlCy-YK8Xei3FdvxVij7yzfVVcDVQ',
 
   // YouTube Data API v3 - Obtén tu API key en https://console.cloud.google.com/apis/credentials
   YOUTUBE_API_KEY: 'AIzaSyBYRCnHzRbje2AX0c14d9TunkOTWidZfn0',

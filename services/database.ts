@@ -485,6 +485,7 @@ export const UserCollectionService = {
         *,
         albums (
           *,
+          album_stats (*),
           album_styles (
             styles (*)
           )
