@@ -1,0 +1,193 @@
+import React, { useState, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { GeminiService } from '../services/GeminiService';
+import { AppColors } from '../src/theme/colors';
+
+export const CameraScanScreen = () => {
+    const navigation = useNavigation<any>();
+    const [permission, requestPermission] = useCameraPermissions();
+    const cameraRef = useRef<CameraView>(null);
+    const [scanning, setScanning] = useState(false);
+
+    if (!permission) {
+        // Camera permissions are still loading.
+        return <View />;
+    }
+
+    if (!permission.granted) {
+        // Camera permissions are not granted yet.
+        return (
+            <View style={styles.container}>
+                <Text style={styles.message}>Necesitamos permiso para usar la cámara</Text>
+                <TouchableOpacity onPress={requestPermission} style={styles.button}>
+                    <Text style={styles.text}>Dar Permiso</Text>
+                </TouchableOpacity>
+            </View>
+        );
+    }
+
+    const takePicture = async () => {
+        if (cameraRef.current && !scanning) {
+            setScanning(true);
+            try {
+                const photo = await cameraRef.current.takePictureAsync({
+                    base64: true,
+                    quality: 0.5, // Reduce size for faster upload
+                    skipProcessing: true // Faster
+                });
+
+                if (photo?.base64) {
+                    console.log('📸 Imagen capturada, analizando con Gemini...');
+                    const result = await GeminiService.identifyAlbumFromImage(photo.base64);
+                    console.log('🤖 Gemini Vision Resultado:', result);
+
+                    if (result.artist && result.title) {
+                        // Navigate back to AddDiscScreen with params for MANUAL search
+                        navigation.navigate('AddDisc', {
+                            initialArtist: result.artist,
+                            initialAlbum: result.title,
+                            autoManualSearch: true
+                        });
+                    } else {
+                        Alert.alert('No identificado', 'No pudimos identificar el álbum. Intenta acercarte más o mejorar la luz.');
+                        setScanning(false);
+                    }
+                }
+            } catch (error) {
+                console.error('Error scanning:', error);
+                Alert.alert('Error', 'Hubo un problema al analizar la imagen.');
+                setScanning(false);
+            }
+        }
+    };
+
+    return (
+        <View style={styles.container}>
+            <CameraView style={styles.camera} ref={cameraRef} facing="back">
+                <SafeAreaView style={styles.overlay}>
+                    <View style={styles.header}>
+                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
+                            <Ionicons name="close" size={30} color="white" />
+                        </TouchableOpacity>
+                        <Text style={styles.title}>Escanear Portada</Text>
+                    </View>
+
+                    <View style={styles.guideFrame}>
+                        <View style={[styles.corner, styles.tl]} />
+                        <View style={[styles.corner, styles.tr]} />
+                        <View style={[styles.corner, styles.bl]} />
+                        <View style={[styles.corner, styles.br]} />
+                    </View>
+
+                    <View style={styles.footer}>
+                        {scanning ? (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color="#fff" />
+                                <Text style={styles.loadingText}>Analizando portada...</Text>
+                            </View>
+                        ) : (
+                            <TouchableOpacity style={styles.captureButton} onPress={takePicture}>
+                                <View style={styles.captureInner} />
+                            </TouchableOpacity>
+                        )}
+                    </View>
+                </SafeAreaView>
+            </CameraView>
+        </View>
+    );
+};
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: 'black',
+    },
+    message: {
+        textAlign: 'center',
+        paddingBottom: 10,
+        color: 'white'
+    },
+    camera: {
+        flex: 1,
+    },
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.3)',
+        justifyContent: 'space-between',
+    },
+    header: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 20,
+    },
+    closeButton: {
+        padding: 5,
+    },
+    title: {
+        color: 'white',
+        fontSize: 18,
+        fontWeight: '600',
+        marginLeft: 20,
+    },
+    button: {
+        alignSelf: 'center',
+        padding: 10,
+        backgroundColor: AppColors.primary,
+        borderRadius: 5
+    },
+    text: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 18
+    },
+    guideFrame: {
+        width: 300,
+        height: 300,
+        alignSelf: 'center',
+        backgroundColor: 'transparent',
+        position: 'relative'
+    },
+    corner: {
+        position: 'absolute',
+        width: 40,
+        height: 40,
+        borderColor: 'white',
+        borderWidth: 4
+    },
+    tl: { top: 0, left: 0, borderRightWidth: 0, borderBottomWidth: 0 },
+    tr: { top: 0, right: 0, borderLeftWidth: 0, borderBottomWidth: 0 },
+    bl: { bottom: 0, left: 0, borderRightWidth: 0, borderTopWidth: 0 },
+    br: { bottom: 0, right: 0, borderLeftWidth: 0, borderTopWidth: 0 },
+    footer: {
+        padding: 40,
+        alignItems: 'center',
+        justifyContent: 'center'
+    },
+    captureButton: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        backgroundColor: 'rgba(255,255,255,0.3)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: 'white'
+    },
+    captureInner: {
+        width: 70,
+        height: 70,
+        borderRadius: 35,
+        backgroundColor: 'white'
+    },
+    loadingContainer: {
+        alignItems: 'center'
+    },
+    loadingText: {
+        color: 'white',
+        marginTop: 10,
+        fontWeight: '600'
+    }
+});

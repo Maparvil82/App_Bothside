@@ -14,7 +14,7 @@ import {
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
-import { useNavigation, useTheme } from '@react-navigation/native';
+import { useNavigation, useTheme, useRoute } from '@react-navigation/native';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
@@ -47,6 +47,7 @@ const normalize = (str: string) =>
 export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
+  const route = useRoute<any>(); // Add useRoute
   const { colors } = useTheme();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
@@ -96,6 +97,42 @@ export const AddDiscScreen: React.FC = () => {
     }
   }, [debouncedQuery, searchAlbums]);
 
+  // Handle params from CameraScan
+  useEffect(() => {
+    // Legacy single query support could be kept or removed. Prioritizing the new manual split.
+    if (route.params?.initialArtist && route.params?.initialAlbum) {
+      console.log('📸 Auto-filling Manual Search:', route.params.initialArtist, route.params.initialAlbum);
+
+      // 1. Switch directly to manual tab
+      setActiveTab('manual');
+
+      // 2. Set state
+      setArtistQuery(route.params.initialArtist);
+      setAlbumQuery(route.params.initialAlbum);
+
+      // 3. Trigger search automatically (needs small delay for state or direct call)
+      // We will duplicate the search logic slightly or extract it to avoid stale state issues, 
+      // or simply pass values to a robust search function.
+      // Let's call a specialized internal function or `searchDiscogsManual` with params if we refactor it.
+      // To keep it simple and robust, we'll invoke the search logic directly with the params here.
+
+      // Need to invoke search AFTER state likely updates or pass explicit vals.
+      // Let's refactor searchDiscogsManual to take optional args to avoid state dependency issues.
+      performManualSearch(route.params.initialArtist, route.params.initialAlbum);
+
+      // 4. Clean params
+      navigation.setParams({
+        initialArtist: undefined,
+        initialAlbum: undefined,
+        autoManualSearch: undefined
+      });
+    } else if (route.params?.initialSearchQuery) {
+      // Fallback for text search if ever used
+      setQuery(route.params.initialSearchQuery);
+      navigation.setParams({ initialSearchQuery: undefined });
+    }
+  }, [route.params?.initialArtist, route.params?.initialAlbum, route.params?.initialSearchQuery]);
+
 
   // Función para extraer artista del título
   const extractArtistFromTitle = (title: string): string | null => {
@@ -142,14 +179,17 @@ export const AddDiscScreen: React.FC = () => {
     return title;
   };
 
-  // Función para buscar en Discogs manualmente
-  const searchDiscogsManual = async () => {
-    if (!artistQuery.trim() || !albumQuery.trim()) {
+  // Función para buscar en Discogs manualmente (Reusable)
+  const performManualSearch = async (artist: string, album: string) => {
+    if (!artist.trim() || !album.trim()) {
       Alert.alert(t('common_error'), t('add_disc_error_manual_input'));
       return;
     }
 
     setManualLoading(true);
+    // Ensure we are on the manual tab view
+    if (activeTab !== 'manual') setActiveTab('manual');
+
     try {
       // Primero probar la conexión con Discogs
       console.log('🧪 Probando conexión con Discogs antes de buscar...');
@@ -160,20 +200,10 @@ export const AddDiscScreen: React.FC = () => {
         return;
       }
 
-      const searchTerm = `${artistQuery} ${albumQuery}`;
-      console.log('🔍 Buscando en Discogs:', searchTerm);
+      const searchTerm = `${artist} ${album}`;
+      console.log('🔍 Buscando en Discogs (Manual):', searchTerm);
 
       const response = await DiscogsService.searchReleases(searchTerm);
-      console.log('📦 Respuesta completa de Discogs:', response);
-      console.log('📊 Total de resultados:', response?.results ? response.results.length : 0);
-
-      // Mostrar todos los formatos disponibles para debugging
-      if (response?.results && response.results.length > 0) {
-        console.log('🎵 Formatos disponibles:');
-        response.results.forEach((release: any, index: number) => {
-          console.log(`${index + 1}. "${release.title}" - Formato: "${release.format}" - Año: ${release.year}`);
-        });
-      }
 
       // Filtrar solo versiones en vinilo y con artista y álbum exactos
       const vinylReleases = response?.results?.filter((release: any) => {
@@ -182,8 +212,8 @@ export const AddDiscScreen: React.FC = () => {
         const releaseArtist = titleParts?.[0]?.toLowerCase().trim();
         const releaseAlbum = titleParts?.[1]?.toLowerCase().trim();
 
-        const searchArtist = artistQuery.toLowerCase().trim();
-        const searchAlbum = albumQuery.toLowerCase().trim();
+        const searchArtist = artist.toLowerCase().trim();
+        const searchAlbum = album.toLowerCase().trim();
 
         // Verificar coincidencia del artista (más flexible)
         const artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
@@ -202,7 +232,6 @@ export const AddDiscScreen: React.FC = () => {
         }
 
         const isVinyl = format.includes('vinyl') || format.includes('lp') || format.includes('12"') || format.includes('7"') || format.includes('10"');
-        console.log(`🎵 "${release.title}" - Artista extraído: "${releaseArtist || 'N/A'}" - Álbum extraído: "${releaseAlbum || 'N/A'}" - Coincide artista: ${artistMatches} - Coincide álbum: ${albumMatches} - Formato: "${release.format}" - Es vinilo: ${isVinyl}`);
         return artistMatches && albumMatches && isVinyl;
       }) || [];
 
@@ -215,6 +244,11 @@ export const AddDiscScreen: React.FC = () => {
     } finally {
       setManualLoading(false);
     }
+  };
+
+  // Wrapper para el botón de búsqueda manual que usa el estado actual
+  const searchDiscogsManual = () => {
+    performManualSearch(artistQuery, albumQuery);
   };
 
   // Función para añadir un release de Discogs a la colección
@@ -1129,6 +1163,19 @@ export const AddDiscScreen: React.FC = () => {
           <Text style={[styles.tabText, { color: activeTab === 'manual' ? primaryColor : colors.text }]}>
             {t('add_disc_tab_manual')}
           </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 15,
+            borderLeftWidth: 1,
+            borderLeftColor: colors.border,
+          }}
+          onPress={() => navigation.navigate('CameraScan')}
+        >
+          <Ionicons name="camera" size={24} color={colors.text} />
         </TouchableOpacity>
 
       </View>

@@ -161,4 +161,44 @@ Instrucciones:
         const response = await result.response;
         return response.text();
     }
+    /**
+     * Identifies an album from a base64 image.
+     * Returns a JSON string with { artist, title } or throws an error.
+     */
+    static async identifyAlbumFromImage(base64Image: string): Promise<{ artist: string; title: string }> {
+        this.initialize();
+
+        const prompt = `
+Identifica el álbum de vinilo en esta imagen.
+Responde SOLAMENTE con un objeto JSON válido (sin markdown, sin texto extra) con el siguiente formato:
+{
+  "artist": "Nombre del Artista",
+  "title": "Título del Álbum"
+}
+Si no puedes identificar el álbum con certeza, responde con un JSON con campos vacíos o null.
+`;
+
+        const imagePart = {
+            inlineData: {
+                data: base64Image,
+                mimeType: "image/jpeg",
+            },
+        };
+
+        try {
+            // Note: Use gemini-1.5-flash for best vision performance if available, otherwise current model
+            // For now reusing the instance model (gemini-2.0-flash-lite should be multimodal)
+            const result = await this.model.generateContent([prompt, imagePart]);
+            const response = await result.response;
+            const text = response.text();
+
+            // Clean markdown if present
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(jsonStr);
+            return data;
+        } catch (error) {
+            console.error('❌ GeminiService: Error identifying image:', error);
+            throw error;
+        }
+    }
 }

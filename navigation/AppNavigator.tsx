@@ -47,6 +47,7 @@ import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService } from '../services/database';
+import { CameraScanScreen } from '../screens/CameraScanScreen';
 
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
@@ -330,6 +331,11 @@ const AddDiscStack = () => {
           ),
           headerRight: () => <HeaderAvatar />,
         })}
+      />
+      <Stack.Screen
+        name="CameraScan"
+        component={CameraScanScreen}
+        options={{ headerShown: false }}
       />
       {ProfileScreensGroup()}
     </Stack.Navigator>
