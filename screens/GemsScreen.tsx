@@ -169,14 +169,6 @@ export default function GemsScreen() {
         />
       )}
 
-      {/* Botón flotante de IA */}
-      <TouchableOpacity
-        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
-        onPress={() => (navigation as any).navigate('AIChat')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="sparkles" size={24} color="#fff" />
-      </TouchableOpacity>
     </View>
   );
 }

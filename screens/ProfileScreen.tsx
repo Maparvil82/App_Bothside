@@ -262,14 +262,6 @@ export const ProfileScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Fake Tab Bar */}
-      <View style={[styles.fakeTabBar, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
-        <Ionicons name="disc-outline" size={24} color="gray" />
-        <Ionicons name="stats-chart-outline" size={24} color="gray" />
-        <Ionicons name="add" size={32} color="gray" />
-        <Ionicons name="bag-remove-outline" size={24} color="gray" />
-        <Ionicons name="diamond-outline" size={24} color="gray" />
-      </View>
     </SafeAreaView>
   );
 };
@@ -296,16 +288,4 @@ const styles = StyleSheet.create({
     borderBottomColor: '#f0f0f0'
   },
   menuItemText: { fontSize: 16, fontWeight: '600' },
-  fakeTabBar: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    height: 80,
-    paddingBottom: 20, // Adjust for safe area if needed, or just visual padding
-    borderTopWidth: 1,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-  },
-}); 
+});

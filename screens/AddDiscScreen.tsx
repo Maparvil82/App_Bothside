@@ -14,10 +14,8 @@ import {
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
-import { useCameraPermissions } from 'expo-camera';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { useThemeMode } from '../contexts/ThemeContext';
-import { CameraComponent } from '../components/CameraComponent';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService } from '../services/database';
 import { supabase } from '../lib/supabase';
@@ -46,7 +44,6 @@ const normalize = (str: string) =>
     ?.replace(/\(.*?\)/g, "") // quitar info entre paréntesis tipo (Remastered), (2011)
     ?.replace(/[^a-z0-9]/g, "") // quitar símbolos
     ?.trim();
-
 export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
@@ -54,7 +51,7 @@ export const AddDiscScreen: React.FC = () => {
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<'search' | 'manual' | 'camera'>('search');
+  const [activeTab, setActiveTab] = useState<'search' | 'manual'>('search');
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,17 +63,6 @@ export const AddDiscScreen: React.FC = () => {
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
   const [manualLoading, setManualLoading] = useState(false);
   const [addingDisc, setAddingDisc] = useState(false);
-
-  // Estados para la pestaña cámara
-  const [permission, requestPermission] = useCameraPermissions();
-  const [cameraType, setCameraType] = useState<string>('back');
-  const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [showCamera, setShowCamera] = useState(false);
-
-  // Estados para OCR
-  const [ocrLoading, setOcrLoading] = useState(false);
-  const [ocrResults, setOcrResults] = useState<any[]>([]);
-  const [extractedText, setExtractedText] = useState<string>('');
 
   const searchAlbums = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -110,12 +96,6 @@ export const AddDiscScreen: React.FC = () => {
     }
   }, [debouncedQuery, searchAlbums]);
 
-  // Solicitar permisos de cámara
-  useEffect(() => {
-    if (!permission) {
-      requestPermission();
-    }
-  }, [permission, requestPermission]);
 
   // Función para extraer artista del título
   const extractArtistFromTitle = (title: string): string | null => {
@@ -857,221 +837,6 @@ export const AddDiscScreen: React.FC = () => {
     }
   };
 
-  // Funciones para la cámara
-  const openCamera = () => {
-    setShowCamera(true);
-  };
-
-  const closeCamera = () => {
-    setShowCamera(false);
-    setCapturedImage(null);
-  };
-
-  const takePicture = async (cameraRef: any) => {
-    if (cameraRef) {
-      try {
-        const photo = await cameraRef.takePictureAsync();
-        setCapturedImage(photo.uri);
-        setShowCamera(false);
-        console.log('📸 Foto capturada:', photo.uri);
-      } catch (error) {
-        console.error('Error taking picture:', error);
-        Alert.alert(t('common_error'), t('add_disc_error_camera_capture'));
-      }
-    }
-  };
-
-  // Función para realizar OCR en la imagen
-  const performOCR = async (imageUri: string) => {
-    if (!imageUri) return;
-
-    setOcrLoading(true);
-    setExtractedText('');
-    setOcrResults([]);
-
-    try {
-      console.log('🔍 Iniciando OCR simulado en imagen:', imageUri);
-
-      // Simular procesamiento de OCR
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Texto simulado extraído de una imagen de álbum
-      const simulatedText = `The Dark Side of the Moon
-Pink Floyd
-1973
-Harvest Records
-Progressive Rock`;
-
-      setExtractedText(simulatedText);
-      console.log('📝 Texto extraído (simulado):', simulatedText);
-
-      // Extraer artista y álbum del texto
-      const { artist, album } = extractArtistAndAlbum(simulatedText);
-
-      if (artist && album) {
-        console.log('🎵 Artista extraído:', artist);
-        console.log('💿 Álbum extraído:', album);
-
-        // Buscar en Discogs API
-        await searchDiscogsFromOCR(artist, album);
-      } else {
-        Alert.alert('OCR', t('add_disc_error_ocr_extraction'));
-      }
-
-    } catch (error) {
-      console.error('❌ Error en OCR:', error);
-      Alert.alert(t('common_error'), t('add_disc_error_ocr_processing'));
-    } finally {
-      setOcrLoading(false);
-    }
-  };
-
-  // Función para extraer artista y álbum del texto OCR
-  const extractArtistAndAlbum = (text: string): { artist: string | null; album: string | null } => {
-    const lines = text.split('\n').filter(line => line.trim().length > 0);
-
-    // Buscar patrones comunes en portadas de álbumes
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim();
-
-      // Patrón: "Artista - Álbum"
-      const dashPattern = line.match(/^(.+?)\s*-\s*(.+)$/);
-      if (dashPattern) {
-        return {
-          artist: dashPattern[1].trim(),
-          album: dashPattern[2].trim()
-        };
-      }
-
-      // Patrón: "Artista" en una línea, "Álbum" en la siguiente
-      if (i < lines.length - 1) {
-        const nextLine = lines[i + 1].trim();
-        if (line.length > 0 && nextLine.length > 0 && !line.includes('-')) {
-          return {
-            artist: line,
-            album: nextLine
-          };
-        }
-      }
-    }
-
-    // Si no encontramos patrones específicos, tomar las primeras dos líneas
-    if (lines.length >= 2) {
-      return {
-        artist: lines[0].trim(),
-        album: lines[1].trim()
-      };
-    }
-
-    return { artist: null, album: null };
-  };
-
-  // Función para buscar en Discogs API usando datos del OCR
-  const searchDiscogsFromOCR = async (artist: string, album: string) => {
-    try {
-      console.log('🔍 Buscando en Discogs:', artist, '-', album);
-
-      const results = await DiscogsService.searchReleases(`${artist} ${album}`);
-
-      if (results && results.results && results.results.length > 0) {
-        // Filtrar solo versiones en vinilo
-        const vinylResults = results.results.filter((release: any) => {
-          const formats = release.format;
-
-          // Manejar diferentes tipos de formato
-          let formatString = '';
-          if (Array.isArray(formats)) {
-            formatString = formats.join(',').toLowerCase();
-          } else if (typeof formats === 'string') {
-            formatString = formats.toLowerCase();
-          } else {
-            formatString = '';
-          }
-
-          return formatString.includes('vinyl') ||
-            formatString.includes('lp') ||
-            formatString.includes('12"') ||
-            formatString.includes('7"');
-        });
-
-        console.log('💿 Versiones en vinilo encontradas:', vinylResults.length);
-        return vinylResults;
-      } else {
-        Alert.alert(t('common_search'), t('add_disc_error_no_results_discogs'));
-        return [];
-      }
-    } catch (error) {
-      console.error('❌ Error buscando en Discogs:', error);
-      Alert.alert(t('common_error'), t('add_disc_error_search_generic'));
-      return [];
-    }
-  };
-
-  const renderAlbum = ({ item }: { item: Album }) => (
-    <View style={styles.albumItem}>
-      <Image
-        source={{ uri: item.cover_url || 'https://via.placeholder.com/80' }}
-        style={styles.albumThumbnail}
-      />
-      <View style={styles.albumInfo}>
-        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
-          {item.title}
-        </Text>
-        <Text style={styles.albumArtist}>
-          {item.artist}
-        </Text>
-        <Text style={styles.albumDetails}>
-          {item.release_year && `${item.release_year} • `}
-          {item.label && `${item.label} • `}
-          {item.genre || item.styles}
-        </Text>
-      </View>
-      <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: primaryColor }, addingDisc && styles.addButtonDisabled]}
-        onPress={() => addToCollection(item)}
-        disabled={addingDisc}
-      >
-        {addingDisc ? (
-          <BothsideLoader size="small" fullscreen={false} />
-        ) : (
-          <Ionicons name="add" size={24} color="white" />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderDiscogsRelease = ({ item }: { item: any }) => (
-    <View style={styles.albumItem}>
-      <Image
-        source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/80' }}
-        style={styles.albumThumbnail}
-      />
-      <View style={styles.albumInfo}>
-        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
-          {extractAlbumTitle(item.title)}
-        </Text>
-        <Text style={styles.albumArtist}>
-          {item.artists?.[0]?.name || item.artist || extractArtistFromTitle(item.title) || 'Unknown Artist'}
-        </Text>
-        <Text style={styles.albumDetails}>
-          {item.year && `${item.year} • `}
-          {item.label && `${Array.isArray(item.label) ? item.label[0] : item.label} • `}
-          {item.catno && `${item.catno}`}
-        </Text>
-      </View>
-      <TouchableOpacity
-        style={[styles.addButton, { backgroundColor: primaryColor }, addingDisc && styles.addButtonDisabled]}
-        onPress={() => addDiscogsReleaseToCollection(item)}
-        disabled={addingDisc}
-      >
-        {addingDisc ? (
-          <BothsideLoader size="small" fullscreen={false} />
-        ) : (
-          <Ionicons name="add" size={24} color="white" />
-        )}
-      </TouchableOpacity>
-    </View>
-  );
 
   const renderSearchTab = () => (
     <View style={styles.tabContent}>
@@ -1141,6 +906,72 @@ Progressive Rock`;
           }
         />
       )}
+    </View>
+  );
+
+  const renderAlbum = ({ item }: { item: Album }) => (
+    <View style={styles.albumItem}>
+      <Image
+        source={{ uri: item.cover_url || 'https://via.placeholder.com/80' }}
+        style={styles.albumThumbnail}
+      />
+      <View style={styles.albumInfo}>
+        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
+          {item.title}
+        </Text>
+        <Text style={styles.albumArtist}>
+          {item.artist}
+        </Text>
+        <Text style={styles.albumDetails}>
+          {item.release_year && `${item.release_year} • `}
+          {item.label && `${item.label} • `}
+          {item.genre || item.styles}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.addButton, { backgroundColor: primaryColor }, addingDisc && styles.addButtonDisabled]}
+        onPress={() => addToCollection(item)}
+        disabled={addingDisc}
+      >
+        {addingDisc ? (
+          <BothsideLoader size="small" fullscreen={false} />
+        ) : (
+          <Ionicons name="add" size={24} color="white" />
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderDiscogsRelease = ({ item }: { item: any }) => (
+    <View style={styles.albumItem}>
+      <Image
+        source={{ uri: item.cover_image || item.thumb || 'https://via.placeholder.com/80' }}
+        style={styles.albumThumbnail}
+      />
+      <View style={styles.albumInfo}>
+        <Text style={styles.albumTitle} numberOfLines={1} ellipsizeMode="tail">
+          {extractAlbumTitle(item.title)}
+        </Text>
+        <Text style={styles.albumArtist}>
+          {item.artists?.[0]?.name || item.artist || extractArtistFromTitle(item.title) || 'Unknown Artist'}
+        </Text>
+        <Text style={styles.albumDetails}>
+          {item.year && `${item.year} • `}
+          {item.label && `${Array.isArray(item.label) ? item.label[0] : item.label} • `}
+          {item.catno && `${item.catno}`}
+        </Text>
+      </View>
+      <TouchableOpacity
+        style={[styles.addButton, { backgroundColor: primaryColor }, addingDisc && styles.addButtonDisabled]}
+        onPress={() => addDiscogsReleaseToCollection(item)}
+        disabled={addingDisc}
+      >
+        {addingDisc ? (
+          <BothsideLoader size="small" fullscreen={false} />
+        ) : (
+          <Ionicons name="add" size={24} color="white" />
+        )}
+      </TouchableOpacity>
     </View>
   );
 
@@ -1268,122 +1099,6 @@ Progressive Rock`;
     </View>
   );
 
-  const renderCameraTab = () => {
-    if (showCamera) {
-      return (
-        <View style={styles.cameraContainer}>
-          <CameraComponent
-            onCapture={(imageUri) => {
-              setCapturedImage(imageUri);
-              closeCamera();
-            }}
-            onClose={closeCamera}
-            onOCRResult={async (artist, album) => {
-              console.log('🎵 OCR Result:', { artist, album });
-              if (artist && album) {
-                setOcrLoading(true);
-                try {
-                  const results = await searchDiscogsFromOCR(artist, album);
-                  setOcrResults(results || []);
-                } catch (error) {
-                  console.error('Error searching Discogs from OCR:', error);
-                  Alert.alert(t('common_error'), t('add_disc_error_ocr_search'));
-                  setOcrResults([]);
-                } finally {
-                  setOcrLoading(false);
-                }
-              }
-            }}
-          />
-        </View>
-      );
-    }
-
-    return (
-      <View style={styles.tabContent}>
-        {capturedImage ? (
-          <View style={styles.capturedImageContainer}>
-            <Image source={{ uri: capturedImage }} style={styles.capturedImage} />
-
-            {/* Botones de acción */}
-            <View style={styles.capturedImageButtons}>
-              <TouchableOpacity
-                style={styles.capturedImageButton}
-                onPress={() => {
-                  setCapturedImage(null);
-                  setOcrResults([]);
-                  setExtractedText('');
-                }}
-              >
-                <Ionicons name="refresh" size={20} color="#000" />
-                <Text style={[styles.capturedImageButtonText, { color: primaryColor }]}>{t('add_disc_button_new_photo')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.capturedImageButton, ocrLoading && styles.capturedImageButtonDisabled]}
-                onPress={() => performOCR(capturedImage)}
-                disabled={ocrLoading}
-              >
-                <Ionicons name="text" size={20} color={ocrLoading ? "#ccc" : "#000"} />
-                <Text style={[styles.capturedImageButtonText, { color: primaryColor }, ocrLoading && styles.capturedImageButtonTextDisabled]}>
-                  {ocrLoading ? t('add_disc_button_analyzing') : t('add_disc_button_analyze_text')}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Texto extraído por OCR */}
-            {extractedText && (
-              <View style={styles.extractedTextContainer}>
-                <Text style={styles.extractedTextTitle}>{t('add_disc_text_recognized')}</Text>
-                <Text style={styles.extractedText}>{extractedText}</Text>
-              </View>
-            )}
-
-            {/* Resultados de búsqueda en Discogs */}
-            {ocrLoading ? (
-              <View style={styles.loadingContainer}>
-                <BothsideLoader size="small" fullscreen={false} />
-                <Text style={styles.loadingText}>{t('add_disc_analyzing_image')}</Text>
-              </View>
-            ) : ocrResults.length > 0 ? (
-              <View style={styles.ocrResultsContainer}>
-                <Text style={styles.ocrResultsTitle}>{t('add_disc_results_title')}</Text>
-                <FlatList
-                  data={ocrResults}
-                  renderItem={renderDiscogsRelease}
-                  keyExtractor={(item) => item.id.toString()}
-                  showsVerticalScrollIndicator={false}
-                />
-              </View>
-            ) : null}
-          </View>
-        ) : (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="camera-outline" size={48} color="#ccc" />
-            <Text style={styles.emptyText}>
-              {t('add_disc_camera_title')}
-            </Text>
-            <Text style={styles.emptySubtext}>
-              {t('add_disc_camera_subtitle')}
-            </Text>
-            {permission?.status !== 'granted' && (
-              <Text style={styles.permissionText}>
-                {t('add_disc_camera_permission')}
-              </Text>
-            )}
-            <TouchableOpacity
-              style={[styles.cameraOpenButton, { backgroundColor: primaryColor }]}
-              onPress={openCamera}
-              disabled={permission?.status !== 'granted'}
-            >
-              <Ionicons name="camera" size={24} color="white" />
-              <Text style={styles.cameraOpenButtonText}>{t('add_disc_button_open_camera')}</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
-    );
-  };
-
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Tabs */}
@@ -1416,37 +1131,15 @@ Progressive Rock`;
           </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'camera' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
-          onPress={() => setActiveTab('camera')}
-        >
-          <Ionicons
-            name={activeTab === 'camera' ? 'camera' : 'camera-outline'}
-            size={20}
-            color={activeTab === 'camera' ? primaryColor : colors.text}
-          />
-          <Text style={[styles.tabText, { color: activeTab === 'camera' ? primaryColor : colors.text }]}>
-            {t('add_disc_tab_camera')}
-          </Text>
-        </TouchableOpacity>
       </View>
 
       {/* Tab Content */}
       {activeTab === 'search' && renderSearchTab()}
       {activeTab === 'manual' && renderManualTab()}
-      {activeTab === 'camera' && renderCameraTab()}
-
-      {/* Botón flotante de IA */}
-      <TouchableOpacity
-        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
-        onPress={() => (navigation as any).navigate('AIChat')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="sparkles" size={24} color="#fff" />
-      </TouchableOpacity>
     </SafeAreaView>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

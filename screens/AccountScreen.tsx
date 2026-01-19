@@ -16,7 +16,7 @@ import { useNavigation, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { supabase } from '../lib/supabase';
-import { IaSubscriptionScreen } from './IaSubscriptionScreen';
+
 import { useTranslation } from '../src/i18n/useTranslation';
 
 export const AccountScreen: React.FC = () => {
@@ -314,16 +314,7 @@ export const AccountScreen: React.FC = () => {
                         {/* Sección: Zona de Peligro */}
                         <View style={[styles.section, { backgroundColor: colors.card, marginTop: 40 }]}>
 
-                            <TouchableOpacity
-                                style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                                onPress={() => navigation.navigate("IaSubscriptionScreen")}
-                            >
-                                <View style={styles.menuItemContent}>
-                                    <Ionicons name="sparkles-outline" size={22} color={colors.primary} />
-                                    <Text style={[styles.menuItemText, { color: colors.text, marginLeft: 12 }]}>{t('account_section_ai_subscription')}</Text>
-                                </View>
-                                <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
-                            </TouchableOpacity>
+
 
                             <TouchableOpacity
                                 style={[styles.menuItem, { borderBottomWidth: 0 }]}

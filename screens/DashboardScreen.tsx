@@ -966,13 +966,7 @@ export default function DashboardScreen() {
       </ScrollView>
 
       {/* Botón flotante de IA */}
-      <TouchableOpacity
-        style={[styles.floatingAIButton, { backgroundColor: primaryColor }]}
-        onPress={() => (navigation as any).navigate('AIChat')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="sparkles" size={24} color="#fff" />
-      </TouchableOpacity>
+
     </SafeAreaView>
   );
 }
@@ -1297,19 +1291,7 @@ const styles = StyleSheet.create({
   paginationDotInactive: {
     backgroundColor: '#E5E5E5',
   },
-  floatingAIButton: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: AppColors.primary,
-    borderRadius: 50,
-    padding: 15,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-  },
+
   audioScanContainer: {
     marginHorizontal: 16,
     marginTop: 24,

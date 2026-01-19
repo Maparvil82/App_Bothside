@@ -445,13 +445,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       )}
 
       {/* Botón flotante de IA */}
-      <TouchableOpacity
-        style={[styles.floatingAIButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
-        onPress={() => (navigation as any).navigate('AIChat')}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="sparkles" size={24} color="#fff" />
-      </TouchableOpacity>
+
       {/* Edit Maleta Modal */}
       <CreateMaletaModal
         visible={isEditModalVisible}
@@ -765,19 +759,7 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
-  floatingAIButton: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    backgroundColor: AppColors.primary,
-    borderRadius: 50,
-    padding: 15,
-    shadowColor: AppColors.primary,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-    elevation: 5,
-  },
+
   errorText: {
     fontSize: 16,
     color: '#666',

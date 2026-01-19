@@ -26,7 +26,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { GemsProvider } from '../contexts/GemsContext';
 import { StatsProvider } from '../contexts/StatsContext';
 import AlbumDetailScreen from '../screens/AlbumDetailScreen';
-import AIChatScreen from '../screens/AIChatScreen';
 import ShelfConfigScreen from '../screens/ShelfConfigScreen';
 import ShelvesListScreen from '../screens/ShelvesListScreen';
 import ShelfEditScreen from '../screens/ShelfEditScreen';
@@ -35,20 +34,19 @@ import SelectCellScreen from '../screens/SelectCellScreen';
 import LeaderboardScreen from '../screens/LeaderboardScreen';
 import { OnboardingScreen } from '../screens/OnboardingScreen';
 import { LoginScreen } from '../screens/LoginScreen';
-import { PricingScreen } from '../screens/PricingScreen';
+
 import { FeedbackScreen } from '../screens/FeedbackScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import { LegalScreen } from '../screens/LegalScreen';
 import { AccountScreen } from '../screens/AccountScreen';
 import { AudioScanScreen } from '../screens/AudioScanScreen';
-import { IaSubscriptionScreen } from '../screens/IaSubscriptionScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService } from '../services/database';
-import { PrePurchaseScreen } from '../screens/PrePurchaseScreen';
+
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
@@ -69,6 +67,85 @@ const AppDarkTheme: Theme = {
     notification: '#FF453A',
   },
 };
+
+// ... (previous imports)
+
+// Group of screens accessible from Profile (to keep them in the current Tab Stack)
+const ProfileScreensGroup = () => {
+  const { colors } = useTheme();
+  return (
+    <>
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={({ navigation }) => ({
+          title: 'Perfil',
+          headerShown: true,
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+          headerLeft: (props) => (
+            <HeaderBackButton
+              {...props}
+              onPress={() => navigation.goBack()}
+              tintColor={colors.text}
+              label=""
+            />
+          )
+        })}
+      />
+      <Stack.Screen
+        name="Admin"
+        component={AdminScreen}
+        options={{
+          title: 'Administración',
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+        }}
+      />
+      <Stack.Screen
+        name="Legal"
+        component={LegalScreen}
+        options={{
+          title: 'Información Legal',
+          headerShown: true,
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+        }}
+      />
+      <Stack.Screen
+        name="Feedback"
+        component={FeedbackScreen}
+        options={{
+          title: 'Feedback',
+          headerShown: true,
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+        }}
+      />
+      <Stack.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{
+          title: 'Cuenta',
+          headerShown: true,
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+        }}
+      />
+      <Stack.Screen
+        name="Invitations"
+        component={InvitationsScreen}
+        options={{
+          title: 'Invitaciones',
+          headerShown: true,
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+        }}
+      />
+    </>
+  );
+};
+
 
 const SearchStack = () => {
   const { colors } = useTheme();
@@ -91,6 +168,7 @@ const SearchStack = () => {
           headerRight: () => <HeaderAvatar />,
         }}
       />
+      {ProfileScreensGroup()}
     </Stack.Navigator>
   );
 };
@@ -120,6 +198,7 @@ const GemsStack = () => {
           headerRight: () => <HeaderAvatar />,
         })}
       />
+      {ProfileScreensGroup()}
     </Stack.Navigator>
   );
 };
@@ -167,6 +246,7 @@ const MaletasStack = () => {
         component={InviteCollaboratorsScreen}
         options={{ title: 'Invitar Colaboradores' }}
       />
+      {ProfileScreensGroup()}
     </Stack.Navigator>
   );
 };
@@ -218,6 +298,7 @@ const DashboardStack = () => {
           title: route.params?.shelfName || 'Estantería'
         })}
       />
+      {ProfileScreensGroup()}
     </Stack.Navigator>
   );
 };
@@ -247,81 +328,10 @@ const AddDiscStack = () => {
           headerRight: () => <HeaderAvatar />,
         })}
       />
+      {ProfileScreensGroup()}
     </Stack.Navigator>
   );
 };
-
-const ProfileStack = () => (
-  <Stack.Navigator>
-    <Stack.Screen
-      name="ProfileScreen"
-      component={ProfileScreen}
-      options={({ navigation }) => ({
-        title: 'Perfil',
-        headerShown: true,
-        headerTintColor: '#000',
-        headerBackTitle: '',
-        headerLeft: (props) => (
-          <HeaderBackButton
-            {...props}
-            onPress={() => navigation.goBack()}
-            tintColor="#000"
-            label=""
-          />
-        )
-      })}
-    />
-    <Stack.Screen
-      name="Admin"
-      component={AdminScreen}
-      options={{
-        title: 'Administración',
-        headerTintColor: '#000',
-        headerBackTitle: '',
-      }}
-    />
-    <Stack.Screen
-      name="Legal"
-      component={LegalScreen}
-      options={{
-        title: 'Información Legal',
-        headerShown: true,
-        headerTintColor: '#000',
-        headerBackTitle: '',
-      }}
-    />
-    <Stack.Screen
-      name="Feedback"
-      component={FeedbackScreen}
-      options={{
-        title: 'Feedback',
-        headerShown: true,
-        headerTintColor: '#000',
-        headerBackTitle: '',
-      }}
-    />
-    <Stack.Screen
-      name="Account"
-      component={AccountScreen}
-      options={{
-        title: 'Cuenta',
-        headerShown: true,
-        headerTintColor: '#000',
-        headerBackTitle: '',
-      }}
-    />
-    <Stack.Screen
-      name="Invitations"
-      component={InvitationsScreen}
-      options={{
-        title: 'Invitaciones',
-        headerShown: true,
-        headerTintColor: '#000',
-        headerBackTitle: '',
-      }}
-    />
-  </Stack.Navigator>
-);
 
 const TabNavigator = () => (
   <Tab.Navigator
@@ -395,7 +405,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
 
         // Otras pantallas
         AlbumDetail: 'album/:albumId',
-        AIChat: 'ai-chat',
+
         Leaderboard: 'leaderboard',
         Profile: 'profile',
         Account: 'account',
@@ -422,6 +432,11 @@ const MainAppWrapper = () => (
   </StatsProvider>
 );
 
+// ... imports
+// Removed PricingScreen and PrePurchaseScreen imports
+
+// ... AppStack
+
 const AppStack = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -437,24 +452,16 @@ const AppStack = () => {
       }}
     >
       {user ? (
+        // ✅ USUARIO AUTENTICADO (Acceso Completo - App de Pago)
         <>
           <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
 
-          <Stack.Screen name="Profile" component={ProfileStack} options={{ headerShown: false }} />
           <Stack.Screen
             name="AlbumDetail"
             component={AlbumDetailScreen}
             options={{
               headerShown: true,
               title: 'Detalle del Álbum'
-            }}
-          />
-          <Stack.Screen
-            name="AIChat"
-            component={AIChatScreen}
-            options={{
-              headerShown: true,
-              title: 'Chat IA'
             }}
           />
           <Stack.Screen
@@ -465,6 +472,7 @@ const AppStack = () => {
               title: 'Ranking'
             }}
           />
+          {/* ViewMaleta moved to inside MaletasStack usually, but kept here for deep links if needed, duplicates ok */}
           <Stack.Screen
             name="ViewMaleta"
             component={ViewMaletaScreen}
@@ -482,6 +490,8 @@ const AppStack = () => {
               title: 'Editar Maleta'
             }}
           />
+
+          {/* Account screen kept in global stack for direct access if needed, but primarily accessed via profile inside tabs */}
           <Stack.Screen
             name="Account"
             component={AccountScreen}
@@ -490,14 +500,7 @@ const AppStack = () => {
               title: 'Cuenta'
             }}
           />
-          <Stack.Screen
-            name="IaSubscriptionScreen"
-            component={IaSubscriptionScreen}
-            options={{
-              headerShown: true,
-              title: 'IA y Suscripción'
-            }}
-          />
+
           <Stack.Screen
             name="Calendar"
             component={CalendarScreen}
@@ -529,16 +532,31 @@ const AppStack = () => {
         <>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Pricing" component={PricingScreen} options={{ headerShown: false }} />
+          {/* PricingScreen removed */}
           <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal' }} />
           <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} options={{ headerShown: false }} />
         </>
       )}
 
-      <Stack.Screen name="PrePurchase" component={PrePurchaseScreen} options={{ headerShown: false }} />
+      {/* Las pantallas fuera del bloque condicional usuario que siempre deben estar accesibles */}
+      {!user && (
+        null // Placeholder, ya están arriba
+      )}
+
+      {/* Admin Screen accessible if needed */}
+      <Stack.Screen
+        name="Admin"
+        component={AdminScreen}
+        options={{
+          title: 'Administración',
+          headerTintColor: colors.text,
+          headerBackTitle: '',
+        }}
+      />
     </Stack.Navigator>
   );
 };
+
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
