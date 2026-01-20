@@ -49,31 +49,46 @@ export const HeaderAvatar = () => {
         return profile.username.substring(0, 2).toUpperCase();
     };
 
+    const handleChatPress = () => {
+        if (!user) return;
+        navigation.navigate('Chat' as never);
+    };
+
     return (
-        <TouchableOpacity
-            style={styles.avatarContainer}
-            onPress={() => navigation.navigate('Profile' as never)}
-            disabled={loading}
-        >
-            {profile?.avatar_url ? (
-                <Image
-                    source={{ uri: `${profile.avatar_url}` }}
-                    style={[styles.avatarImage, { borderColor: colors.border }]}
-                    resizeMode="cover"
-                />
-            ) : (
-                <View style={[styles.avatarPlaceholder, { borderColor: colors.border, backgroundColor: primaryColor }]}>
-                    <Text style={styles.avatarText}>{getInitials()}</Text>
-                </View>
-            )}
-            {pendingInvites > 0 && (
-                <View style={styles.badge}>
-                    <Text style={styles.badgeText}>
-                        {pendingInvites > 9 ? '9+' : pendingInvites}
-                    </Text>
-                </View>
-            )}
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <TouchableOpacity
+                onPress={handleChatPress}
+                style={{ marginRight: 12, padding: 4 }}
+            >
+                <Ionicons name="flash" size={24} color={colors.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.avatarContainer}
+                onPress={() => navigation.navigate('Profile' as never)}
+                disabled={loading}
+            >
+                {/* ... existing avatar code ... */}
+                {profile?.avatar_url ? (
+                    <Image
+                        source={{ uri: `${profile.avatar_url}` }}
+                        style={[styles.avatarImage, { borderColor: colors.border }]}
+                        resizeMode="cover"
+                    />
+                ) : (
+                    <View style={[styles.avatarPlaceholder, { borderColor: colors.border, backgroundColor: primaryColor }]}>
+                        <Text style={styles.avatarText}>{getInitials()}</Text>
+                    </View>
+                )}
+                {pendingInvites > 0 && (
+                    <View style={styles.badge}>
+                        <Text style={styles.badgeText}>
+                            {pendingInvites > 9 ? '9+' : pendingInvites}
+                        </Text>
+                    </View>
+                )}
+            </TouchableOpacity>
+        </View>
     );
 };
 

@@ -39,7 +39,25 @@ export const ChatScreen: React.FC = () => {
     // Initialize chat when screen opens
     useEffect(() => {
         if (user) {
-            initializeChat();
+            if ((user.creditsRemaining || 0) <= 0) {
+                Alert.alert(
+                    'Sin Créditos AI',
+                    'Necesitas créditos para usar el asistente. ¿Quieres ir a la tienda?',
+                    [
+                        { text: 'Cancelar', onPress: () => navigation.goBack(), style: 'cancel' },
+                        {
+                            text: 'Ir a Tienda',
+                            onPress: () => {
+                                navigation.goBack();
+                                // navigate to store if possible, or just close
+                                // navigation.navigate('AICreditsStore'); 
+                            }
+                        }
+                    ]
+                );
+            } else {
+                initializeChat();
+            }
         }
     }, [user?.id]);
 

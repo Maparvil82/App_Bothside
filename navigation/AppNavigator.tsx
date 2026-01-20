@@ -53,7 +53,6 @@ import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
 import { ChatModal } from '../components/ChatModal';
-import { FloatingChatButton } from '../components/FloatingChatButton';
 import { ChatScreen } from '../screens/ChatScreen';
 
 const Tab = createBottomTabNavigator();
@@ -441,7 +440,6 @@ const MainAppWrapper = () => {
     <StatsProvider>
       <View style={{ flex: 1 }}>
         <TabNavigator />
-        <FloatingChatButton onPress={() => { }} />
       </View>
     </StatsProvider>
   );

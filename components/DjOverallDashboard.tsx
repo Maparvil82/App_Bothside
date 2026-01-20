@@ -5,7 +5,9 @@ import {
   StyleSheet,
   ViewStyle,
   StyleProp,
+  TouchableOpacity,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 
 interface CardMetricProps {
   value: string;
@@ -43,7 +45,7 @@ const CardMetric: React.FC<CardMetricProps> = ({ value, label }) => (
 
 const MiniCard: React.FC<MiniCardProps> = ({ value, label, icon }) => (
   <View style={styles.miniCard}>
-    
+
     <Text style={styles.miniValue}>{value}</Text>
     <Text style={styles.miniLabel}>{label}</Text>
   </View>
@@ -53,6 +55,8 @@ export const DjOverallDashboard: React.FC<DjOverallDashboardProps> = ({
   data,
   style,
 }) => {
+  const [showEarnings, setShowEarnings] = React.useState(false);
+
   const monthLabel = useMemo(() => {
     const formatter = new Intl.DateTimeFormat('es-ES', { month: 'long' });
     const name = formatter.format(new Date());
@@ -64,7 +68,7 @@ export const DjOverallDashboard: React.FC<DjOverallDashboardProps> = ({
     { value: data.sesionesRestantes, label: 'Sesiones restantes' },
     { value: data.horasPinchadas, label: 'Horas pinchadas' },
     { value: data.horasEstimadas, label: 'Horas estimadas' },
-    { value: data.promedioHora, label: 'Promedio €/h' },
+    { value: showEarnings ? data.promedioHora : '****', label: 'Promedio €/h' },
     { value: data.intervaloMasComun, label: 'Intervalo más común' },
   ];
 
@@ -72,15 +76,29 @@ export const DjOverallDashboard: React.FC<DjOverallDashboardProps> = ({
     <View style={[styles.container, style]}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Información {monthLabel}</Text>
-        
+        <TouchableOpacity onPress={() => setShowEarnings(!showEarnings)}>
+          <Ionicons
+            name={showEarnings ? "eye-outline" : "eye-off-outline"}
+            size={24}
+            color="rgba(255,255,255,0.8)"
+          />
+        </TouchableOpacity>
       </View>
 
       <View style={styles.metricsRow}>
-        <CardMetric value={data.ganadoMesActual} label="Ganado este mes" />
-        <CardMetric value={data.estimadoMesActual} label="Estimado del mes" />
+        <CardMetric
+          value={showEarnings ? data.ganadoMesActual : '****'}
+          label="Ganado este mes"
+        />
+        <CardMetric
+          value={showEarnings ? data.estimadoMesActual : '****'}
+          label="Estimado del mes"
+        />
       </View>
 
       <View style={styles.separator} />
+
+      {/* ... rest of component ... */}
 
       <View style={styles.miniGrid}>
         {miniCards.map((card) => (
@@ -93,7 +111,7 @@ export const DjOverallDashboard: React.FC<DjOverallDashboardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#323232',
     borderRadius: 8,
     padding: 20,
     width: '100%',
@@ -132,13 +150,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   metricLabel: {
-    color: '#A5A5A5',
+    color: '#E0E0E0',
     fontSize: 14,
     marginTop: 4,
   },
   separator: {
-    height: 6,
-    backgroundColor: '#2E2E2E',
+    height: 1,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderRadius: 4,
     marginBottom: 18,
   },
