@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
+import { CreditService } from '../services/CreditService';
 import { User } from '@supabase/supabase-js';
 
 // Extend Supabase User type
@@ -33,34 +34,76 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔄 Loading subscription and credits for:', userId);
 
-      // (a) Leer la tabla user_subscriptions
+      // (a) Read user_subscriptions
       const { data: subscription } = await supabase
         .from("user_subscriptions")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      // (b) Leer la tabla ia_credits
-      const { data: credits } = await supabase
+      // (b) Read ia_credits with limit(1) to handle duplicates
+      let creditsData = null;
+
+      const { data: creditsResponse, error: creditsError } = await supabase
         .from("ia_credits")
         .select("*")
         .eq("user_id", userId)
-        .single();
+        .limit(1);
 
-      // (c) Guardar en el estado global del usuario SOLO si hay cambios
+      if (creditsError && creditsError.code !== 'PGRST116') {
+        console.error('❌ Error fetching credits:', creditsError);
+      } else {
+        // Handle array result
+        if (Array.isArray(creditsResponse) && creditsResponse.length > 0) {
+          creditsData = creditsResponse[0];
+          // Trigger cleanup independently of this query result length (because we use limit(1))
+          // We call it in background to ensure data consistency
+          // Check if imports are correct (CreditService is imported)
+          CreditService.cleanupDuplicates(userId).then(cleaned => {
+            if (cleaned) console.log('🧹 Limpieza de duplicados realizada en background');
+          });
+        }
+      }
+
+      // If missing, initialize
+      if (!creditsData && (!creditsError || creditsError.code === 'PGRST116')) {
+        console.log('✨ User has no credits row. Initializing 50 credits...');
+        const { data: newCredits, error: insertError } = await supabase
+          .from('ia_credits')
+          .insert({
+            user_id: userId,
+            credits_total: 50,
+            credits_used: 0,
+            period_start: new Date().toISOString(),
+            period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          })
+          .select()
+          .single();
+
+        if (newCredits && !insertError) {
+          creditsData = newCredits;
+          console.log('✅ Credits initialized successfully.');
+        } else {
+          console.error('❌ Failed to auto-initialize credits:', insertError);
+        }
+      } else if (creditsData) {
+        console.log('💰 Credits Found:', creditsData);
+      }
+
+      // (c) Update global state
       setUser(prev => {
         if (!prev) return null;
 
         const newData = {
           planType: subscription?.plan_type || null,
           isPremium: subscription?.status === 'active' || subscription?.status === 'trialing',
-          creditsTotal: credits?.credits_total || 0,
-          creditsUsed: credits?.credits_used || 0,
-          creditsRemaining: credits ? (credits.credits_total || 0) - (credits.credits_used || 0) : 0,
+          creditsTotal: creditsData?.credits_total || 0,
+          creditsUsed: creditsData?.credits_used || 0,
+          creditsRemaining: creditsData ? (creditsData.credits_total || 0) - (creditsData.credits_used || 0) : 0,
           renewalDate: subscription?.current_period_end || null,
         };
 
-        // Comparación simple para evitar actualizaciones innecesarias
+        // Simple comparison to avoid unnecessary updates
         if (
           prev.planType === newData.planType &&
           prev.isPremium === newData.isPremium &&
@@ -214,6 +257,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         } else {
           console.log('✅ Profile updated successfully');
+        }
+
+        // Initialize AI Credits with 50 (Welcome Gift)
+        const { error: creditsError } = await supabase
+          .from('ia_credits')
+          .insert({
+            user_id: data.user.id,
+            credits_total: 50,
+            credits_used: 0,
+            period_start: new Date().toISOString(),
+            period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+          });
+
+        if (creditsError) {
+          console.error('Error initializing credits:', creditsError);
+          // Non-blocking, can function without it (will treat as 0) or logic in service checks.
+        } else {
+          console.log('✅ Initialized 50 AI credits for new user');
         }
 
         // Load initial empty subscription data

@@ -1,16 +1,42 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { GeminiService } from '../services/GeminiService';
 import { AppColors } from '../src/theme/colors';
+import { useAuth } from '../contexts/AuthContext';
+import { CreditService } from '../services/CreditService';
 
 export const CameraScanScreen = () => {
     const navigation = useNavigation<any>();
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<CameraView>(null);
     const [scanning, setScanning] = useState(false);
+
+    // Credit Logic
+    const { user, loadUserSubscriptionAndCredits } = useAuth();
+    const isFocused = useIsFocused();
+
+    useEffect(() => {
+        if (isFocused && user) {
+            if ((user.creditsRemaining || 0) <= 0) {
+                Alert.alert(
+                    'Sin Créditos AI',
+                    'Necesitas créditos para usar el Escáner Mágico. ¿Quieres adquirir un paquete?',
+                    [
+                        { text: 'Cancelar', onPress: () => navigation.goBack() },
+                        {
+                            text: 'Ir a la Tienda', onPress: () => {
+                                navigation.goBack();
+                                navigation.navigate('AICreditsStore');
+                            }
+                        }
+                    ]
+                );
+            }
+        }
+    }, [isFocused, user]);
 
     if (!permission) {
         // Camera permissions are still loading.
@@ -31,6 +57,13 @@ export const CameraScanScreen = () => {
 
     const takePicture = async () => {
         if (cameraRef.current && !scanning) {
+
+            // Check credits one last time before action
+            if ((user?.creditsRemaining || 0) <= 0) {
+                Alert.alert('Sin Créditos', 'No tienes créditos suficientes.');
+                return;
+            }
+
             setScanning(true);
             try {
                 const photo = await cameraRef.current.takePictureAsync({
@@ -45,7 +78,13 @@ export const CameraScanScreen = () => {
                     console.log('🤖 Gemini Vision Resultado:', result);
 
                     if (result.artist && result.title) {
-                        // Navigate back to AddDiscScreen with params for MANUAL search
+                        // SUCCESS: Deduct Credit
+                        if (user) {
+                            await CreditService.deductCredits(user.id, 1);
+                            await loadUserSubscriptionAndCredits(user.id); // Update local state
+                        }
+
+                        // Navigate back
                         navigation.navigate('AddDisc', {
                             initialArtist: result.artist,
                             initialAlbum: result.title,

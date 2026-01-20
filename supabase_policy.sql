@@ -1,0 +1,1 @@
+BEGIN; DROP POLICY IF EXISTS "Users can delete own credits" ON "public"."ia_credits"; CREATE POLICY "Users can delete own credits" ON "public"."ia_credits" FOR DELETE TO authenticated USING (auth.uid() = user_id); COMMIT;

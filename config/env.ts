@@ -2,22 +2,21 @@
 // Configuración real de la aplicación
 
 export const ENV = {
-  // Supabase - Obtén estos valores de tu proyecto en Supabase > Settings > API
-  SUPABASE_URL: 'https://jbzafvoavdbcwfgoyrzl.supabase.co', // Reemplaza con tu Project URL
-  SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiemFmdm9hdmRiY3dmZ295cnpsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MjAwNDcsImV4cCI6MjA1ODA5NjA0N30.NJbOMzab6whafcIRiMru6O7zyABwKkD6UL9_8ENOfqY', // Reemplaza con tu anon key
+  // Supabase
+  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL || '',
+  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '',
 
   // Google Gemini API Key
-  // Google Gemini API Key
-  GEMINI_API_KEY: 'AIzaSyCIY4jlCy-YK8Xei3FdvxVij7yzfVVcDVQ',
+  GEMINI_API_KEY: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
 
-  // YouTube Data API v3 - Obtén tu API key en https://console.cloud.google.com/apis/credentials
-  YOUTUBE_API_KEY: 'AIzaSyBYRCnHzRbje2AX0c14d9TunkOTWidZfn0',
+  // YouTube Data API v3
+  YOUTUBE_API_KEY: process.env.EXPO_PUBLIC_YOUTUBE_API_KEY || '',
 
-  // Discogs API - Configurado con las credenciales proporcionadas
-  DISCOGS_TOKEN: 'EgtwXHcqDecFYsPbrDSxiCtRXVdrrlnNDABZdAfw',
+  // Discogs API
+  DISCOGS_TOKEN: process.env.EXPO_PUBLIC_DISCOGS_TOKEN || '',
 
   // Google Cloud Vision API Key
-  GOOGLE_VISION_API_KEY: 'AIzaSyAMP6C2Ec9cYlYJp6ZK5I2evgnxNTlCGZs',
+  GOOGLE_VISION_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY || '',
 
 
   // App

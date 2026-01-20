@@ -48,12 +48,13 @@ import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService } from '../services/database';
 import { CameraScanScreen } from '../screens/CameraScanScreen';
-
+import { AICreditsStoreScreen } from '../screens/AICreditsStoreScreen';
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
 import { ChatModal } from '../components/ChatModal';
 import { FloatingChatButton } from '../components/FloatingChatButton';
+import { ChatScreen } from '../screens/ChatScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -436,17 +437,11 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
 
 // Wrapper para las pantallas principales con StatsProvider
 const MainAppWrapper = () => {
-  const [isChatVisible, setIsChatVisible] = useState(false);
-
   return (
     <StatsProvider>
       <View style={{ flex: 1 }}>
         <TabNavigator />
-        <FloatingChatButton onPress={() => setIsChatVisible(true)} />
-        <ChatModal
-          visible={isChatVisible}
-          onClose={() => setIsChatVisible(false)}
-        />
+        <FloatingChatButton onPress={() => { }} />
       </View>
     </StatsProvider>
   );
@@ -571,6 +566,24 @@ const AppStack = () => {
           title: 'Administración',
           headerTintColor: colors.text,
           headerBackTitle: '',
+        }}
+      />
+
+      <Stack.Screen
+        name="Chat"
+        component={ChatScreen}
+        options={{
+          title: 'Asistente AI',
+          headerShown: true
+        }}
+      />
+
+      <Stack.Screen
+        name="AICreditsStore"
+        component={AICreditsStoreScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false
         }}
       />
     </Stack.Navigator>
