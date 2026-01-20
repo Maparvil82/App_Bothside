@@ -87,7 +87,7 @@ export default function DashboardScreen() {
   const { colors } = useTheme();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
-  const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
+  const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(false);
   const { t } = useTranslation();
 
   const handleAudioScan = () => {
@@ -576,7 +576,7 @@ export default function DashboardScreen() {
     (async () => {
       try {
         const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
-        setShowSessionEarnings(earningsPref !== 'false'); // Por defecto true
+        setShowSessionEarnings(earningsPref === 'true'); // Default false
       } catch (error) {
         console.error('Error loading session earnings setting:', error);
       }
@@ -596,7 +596,7 @@ export default function DashboardScreen() {
       (async () => {
         try {
           const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
-          setShowSessionEarnings(earningsPref !== 'false');
+          setShowSessionEarnings(earningsPref === 'true');
         } catch (error) {
           console.error('Error loading session earnings setting:', error);
         }
@@ -648,8 +648,9 @@ export default function DashboardScreen() {
         {showSessionEarnings && <SessionEarningsSection />}
 
         {/* Valor de la colección */}
+        {/* Valor de la colección */}
         {stats.collectionValue > 0 && (
-          <View style={[styles.valueCard, { backgroundColor: primaryColor }]}>
+          <View style={[styles.valueCard, { backgroundColor: '#0A84FF' }]}>
             <Text style={styles.valueCardTitle}>{t('dashboard_collection_value_title')}</Text>
             <Text style={styles.valueCardAmount}>
               {stats.collectionValue.toFixed(2)} €
