@@ -59,8 +59,9 @@ export const CameraScanScreen = () => {
         if (cameraRef.current && !scanning) {
 
             // Check credits one last time before action
-            if ((user?.creditsRemaining || 0) <= 0) {
-                Alert.alert('Sin Créditos', 'No tienes créditos suficientes.');
+            const COST_SCAN = 5;
+            if ((user?.creditsRemaining || 0) < COST_SCAN) {
+                Alert.alert('Créditos Insuficientes', `Necesitas ${COST_SCAN} créditos para escanear.`);
                 return;
             }
 
@@ -80,7 +81,7 @@ export const CameraScanScreen = () => {
                     if (result.artist && result.title) {
                         // SUCCESS: Deduct Credit
                         if (user) {
-                            await CreditService.deductCredits(user.id, 1);
+                            await CreditService.deductCredits(user.id, COST_SCAN);
                             await loadUserSubscriptionAndCredits(user.id); // Update local state
                         }
 
