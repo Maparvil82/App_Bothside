@@ -27,7 +27,7 @@ interface Message {
 }
 
 export const ChatScreen: React.FC = () => {
-    const { user } = useAuth();
+    const { user, loadUserSubscriptionAndCredits } = useAuth();
     const { colors } = useTheme();
     const navigation = useNavigation();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -118,6 +118,8 @@ export const ChatScreen: React.FC = () => {
             // SUCCESS: Deduct and Update
             if (user) {
                 await CreditService.deductCredits(user.id, 1);
+                // Update local state to reflect new balance immediately
+                await loadUserSubscriptionAndCredits(user.id);
             }
 
             const modelMessage: Message = {

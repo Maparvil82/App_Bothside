@@ -78,11 +78,22 @@ export const CameraScanScreen = () => {
                     const result = await GeminiService.identifyAlbumFromImage(photo.base64);
                     console.log('🤖 Gemini Vision Resultado:', result);
 
-                    if (result.artist && result.title) {
+                    const isValidResult = (str: string) => {
+                        if (!str) return false;
+                        const s = str.toLowerCase().trim();
+                        return s.length > 1 && !['unknown', 'desconocido', 'n/a', 'title', 'artist', 'null', 'undefined'].includes(s);
+                    };
+
+                    if (isValidResult(result.artist) && isValidResult(result.title)) {
                         // SUCCESS: Deduct Credit
                         if (user) {
-                            await CreditService.deductCredits(user.id, COST_SCAN);
-                            await loadUserSubscriptionAndCredits(user.id); // Update local state
+                            try {
+                                await CreditService.deductCredits(user.id, COST_SCAN);
+                                await loadUserSubscriptionAndCredits(user.id);
+                            } catch (err) {
+                                console.error('Error deducting credits:', err);
+                                // Optional: refund or alert? For now just log.
+                            }
                         }
 
                         // Navigate back
