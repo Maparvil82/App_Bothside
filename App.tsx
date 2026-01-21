@@ -1,7 +1,7 @@
 import React from 'react';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { StatusBar } from 'expo-status-bar';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, StyleSheet, Alert, Text } from 'react-native';
 import { BothsideLoader } from './components/BothsideLoader';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { GemsProvider } from './contexts/GemsContext';
@@ -37,15 +37,29 @@ const AppWithModal: React.FC = () => {
 };
 
 export default function App() {
+  const [isEnvValid, setIsEnvValid] = React.useState(true);
+
   React.useEffect(() => {
     if (!validateEnv()) {
-      Alert.alert(
-        'Error de Configuración',
-        'Por favor, configura las variables de entorno en config/env.ts antes de ejecutar la aplicación.',
-        [{ text: 'OK' }]
-      );
+      setIsEnvValid(false);
     }
   }, []);
+
+  if (!isEnvValid) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar style="auto" />
+        <View style={{ padding: 20, alignItems: 'center' }}>
+          <BothsideLoader />
+          <View style={{ height: 20 }} />
+          <Text style={{ fontSize: 18, fontWeight: 'bold', marginBottom: 10 }}>Error de Configuración</Text>
+          <Text style={{ textAlign: 'center', marginBottom: 20 }}>
+            No se han detectado las variables de entorno. Por favor, configura las credenciales en EAS Secrets o en tu archivo .env.
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <AuthProvider>

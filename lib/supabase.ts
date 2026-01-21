@@ -16,8 +16,8 @@ if (!ENV.SUPABASE_ANON_KEY || ENV.SUPABASE_ANON_KEY === 'your-anon-key-here') {
 }
 
 // Configuración de Supabase
-const supabaseUrl = ENV.SUPABASE_URL;
-const supabaseAnonKey = ENV.SUPABASE_ANON_KEY;
+const supabaseUrl = ENV.SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseAnonKey = ENV.SUPABASE_ANON_KEY || 'placeholder-key';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
