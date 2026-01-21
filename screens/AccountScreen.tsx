@@ -282,7 +282,7 @@ export const AccountScreen: React.FC = () => {
 
                         {/* Sección: AI & Créditos */}
                         <View style={[styles.section, { backgroundColor: colors.card }]}>
-                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Bothside AI</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('account_section_bothside_ai')}</Text>
 
                             <TouchableOpacity
                                 style={[styles.menuItem, { borderBottomWidth: 0 }]}
@@ -290,14 +290,14 @@ export const AccountScreen: React.FC = () => {
                             >
                                 <View style={styles.menuItemContent}>
                                     <View>
-                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>Créditos Disponibles</Text>
+                                        <Text style={[styles.menuItemLabel, { color: colors.text }]}>{t('account_label_available_credits')}</Text>
                                         <Text style={[styles.menuItemValue, { color: colors.primary, fontWeight: 'bold' }]}>
                                             {user?.creditsRemaining || 0} ⚡
                                         </Text>
                                     </View>
                                 </View>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={{ color: colors.primary, marginRight: 8, fontSize: 14 }}>Recargar</Text>
+                                    <Text style={{ color: colors.primary, marginRight: 8, fontSize: 14 }}>{t('account_action_recharge')}</Text>
                                     <Ionicons name="chevron-forward" size={20} color={colors.primary} />
                                 </View>
                             </TouchableOpacity>
@@ -336,22 +336,7 @@ export const AccountScreen: React.FC = () => {
 
                         {/* Sección: Zona de Peligro */}
                         <View style={[styles.section, { backgroundColor: colors.card, marginTop: 40 }]}>
-                            <TouchableOpacity
-                                style={[styles.menuItem, { borderBottomColor: colors.border }]}
-                                onPress={async () => {
-                                    setLoading(true);
-                                    const result = await import('../services/CreditService').then(m => m.CreditService.cleanupDuplicates(user!.id));
-                                    setLoading(false);
-                                    if (result) Alert.alert('Éxito', 'Se han eliminado los créditos duplicados.');
-                                    else Alert.alert('Información', 'No se encontraron duplicados o hubo un error.');
-                                }}
-                            >
-                                <View style={styles.menuItemContent}>
-                                    <Ionicons name="construct-outline" size={22} color={colors.text} />
-                                    <Text style={[styles.menuItemText, { color: colors.text, marginLeft: 12 }]}>Reparar Créditos Duplicados</Text>
-                                </View>
-                                <Ionicons name="chevron-forward" size={20} color={colors.text} opacity={0.5} />
-                            </TouchableOpacity>
+
 
 
                             <TouchableOpacity

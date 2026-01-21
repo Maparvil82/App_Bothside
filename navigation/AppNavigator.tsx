@@ -400,7 +400,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Configuración de deep linking
   const linking = {
-    prefixes: [Linking.createURL('/'), 'bothside://'],
+    prefixes: [Linking.createURL('/'), 'bothside://', 'appbothside://'],
     config: {
       screens: {
         Main: 'main',

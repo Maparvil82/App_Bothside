@@ -19,7 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
-import { signInWithGoogle } from '../src/auth/googleAuth';
+
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -63,17 +63,7 @@ export const LoginScreen: React.FC = () => {
     return null;
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      setLoading(true);
-      await signInWithGoogle();
-      // The redirection happens automatically via deep linking
-    } catch (err: any) {
-      console.error('Google Auth Error:', err);
-      Alert.alert(t('common_error'), 'Hubo un problema al iniciar sesión con Google');
-      setLoading(false);
-    }
-  };
+
 
   const handleAuth = async () => {
     if (!email || !password) {
@@ -210,14 +200,7 @@ export const LoginScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.googleButton, loading && styles.buttonDisabled]}
-            onPress={handleGoogleAuth}
-            disabled={loading}
-          >
-            <Ionicons name="logo-google" size={20} color="#000" style={styles.googleIcon} />
-            <Text style={styles.googleButtonText}>Continuar con Google</Text>
-          </TouchableOpacity>
+
 
           <TouchableOpacity
             style={styles.switchButton}

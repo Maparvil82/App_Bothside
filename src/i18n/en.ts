@@ -518,6 +518,9 @@ export const en = {
     account_section_delete_account: "Delete Account",
     account_modal_delete_title: "Delete Account",
     account_modal_delete_message: "Account deletion will be available soon. In the meantime, you can request it by writing to:",
+    account_section_bothside_ai: "Bothside AI",
+    account_label_available_credits: "Available Credits",
+    account_action_recharge: "Top up",
 
     // IA Subscription Screen
     ia_sub_error_loading: "Could not load subscription",
@@ -661,6 +664,21 @@ export const en = {
     edit_maleta_privacy_public_desc: "Any user can see this list",
     edit_maleta_privacy_private_desc: "Only you can see this list",
     edit_maleta_section_danger: "Dangerous Actions",
+
+    // Store Screen
+    store_title: "AI Store",
+    store_hero_title: "Boost your Collection",
+    store_hero_subtitle: "Get credits to use Gemini Chat and Magic Cover Scanner.",
+    store_current_balance: "Your Current Balance",
+    store_packages_title: "Available Packages",
+    store_package_starter: "Starter Pack",
+    store_package_pro: "Pro Pack",
+    store_package_master: "Master Pack",
+    store_credits_suffix: "AI Credits",
+    store_purchase_success_title: "Purchase Successful!",
+    store_purchase_success_message: "You received {0} AI credits.",
+    store_purchase_error: "There was a problem with the purchase. Please try again.",
+    store_disclaimer: "Credits do not expire. Payments processed securely.",
 
     // Feedback Screen
     feedback_error_empty_text: "Please write your feedback",

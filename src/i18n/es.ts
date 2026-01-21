@@ -518,6 +518,9 @@ export const es = {
     account_section_delete_account: "Eliminar Cuenta",
     account_modal_delete_title: "Eliminación de Cuenta",
     account_modal_delete_message: "La eliminación de cuenta estará disponible próximamente. Mientras tanto, puedes solicitarlo escribiendo a:",
+    account_section_bothside_ai: "Bothside AI",
+    account_label_available_credits: "Créditos Disponibles",
+    account_action_recharge: "Recargar",
 
     // IA Subscription Screen
     ia_sub_error_loading: "No se pudo cargar la suscripción",
@@ -661,6 +664,21 @@ export const es = {
     edit_maleta_privacy_public_desc: "Cualquier usuario puede ver esta lista",
     edit_maleta_privacy_private_desc: "Solo tú puedes ver esta lista",
     edit_maleta_section_danger: "Acciones Peligrosas",
+
+    // Store Screen
+    store_title: "Tienda AI",
+    store_hero_title: "Potencia tu Colección",
+    store_hero_subtitle: "Obtén créditos para usar el Chat con Gemini y el Escáner Mágico de portadas.",
+    store_current_balance: "Tu Saldo Actual",
+    store_packages_title: "Paquetes Disponibles",
+    store_package_starter: "Starter Pack",
+    store_package_pro: "Pro Pack",
+    store_package_master: "Master Pack",
+    store_credits_suffix: "Créditos AI",
+    store_purchase_success_title: "¡Compra Exitosa!",
+    store_purchase_success_message: "Has recibido {0} créditos AI.",
+    store_purchase_error: "Hubo un problema con la compra. Inténtalo de nuevo.",
+    store_disclaimer: "Los créditos no caducan. Pagos procesados de forma segura.",
 
     // Feedback Screen
     feedback_error_empty_text: "Por favor, escribe tu feedback",

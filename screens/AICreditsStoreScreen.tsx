@@ -6,11 +6,20 @@ import { AppColors } from '../src/theme/colors';
 import { useTheme } from '@react-navigation/native';
 import { CreditService } from '../services/CreditService';
 import { useAuth } from '../contexts/AuthContext';
+import { useTranslation, TxKeyPath } from '../src/i18n/useTranslation';
 
-const PACKAGES = [
-    { id: 'starter', credits: 50, price: '1.99€', amount: 50, name: 'Starter Pack' },
-    { id: 'pro', credits: 200, price: '5.99€', amount: 200, name: 'Pro Pack' },
-    { id: 'master', credits: 500, price: '12.99€', amount: 500, name: 'Master Pack' },
+interface Package {
+    id: string;
+    credits: number;
+    price: string;
+    amount: number;
+    nameKey: TxKeyPath;
+}
+
+const PACKAGES: Package[] = [
+    { id: 'starter', credits: 50, price: '1.99€', amount: 50, nameKey: 'store_package_starter' },
+    { id: 'pro', credits: 200, price: '5.99€', amount: 200, nameKey: 'store_package_pro' },
+    { id: 'master', credits: 500, price: '12.99€', amount: 500, nameKey: 'store_package_master' },
 ];
 
 export const AICreditsStoreScreen = () => {
@@ -18,12 +27,13 @@ export const AICreditsStoreScreen = () => {
     const { colors } = useTheme();
     const { user, loadUserSubscriptionAndCredits } = useAuth();
     const [loading, setLoading] = useState<string | null>(null);
+    const { t } = useTranslation();
 
-    const handlePurchase = async (pkg: typeof PACKAGES[0]) => {
+    const handlePurchase = async (pkg: Package) => {
         if (!user) return;
 
         setLoading(pkg.id);
-        console.log(`🛒 Simulating purchase of ${pkg.name}...`);
+        console.log(`🛒 Simulating purchase of ${t(pkg.nameKey)}...`);
 
         // Simulation of delay and success
         setTimeout(async () => {
@@ -31,10 +41,10 @@ export const AICreditsStoreScreen = () => {
 
             if (success) {
                 await loadUserSubscriptionAndCredits(user.id); // Refresh context
-                Alert.alert('¡Compra Exitosa!', `Has recibido ${pkg.credits} créditos AI.`);
+                Alert.alert(t('store_purchase_success_title'), t('store_purchase_success_message').replace('{0}', pkg.credits.toString()));
                 navigation.goBack();
             } else {
-                Alert.alert('Error', 'Hubo un problema con la compra. Inténtalo de nuevo.');
+                Alert.alert(t('common_error'), t('store_purchase_error'));
             }
             setLoading(null);
         }, 1500);
@@ -46,24 +56,24 @@ export const AICreditsStoreScreen = () => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
                     <Ionicons name="close" size={30} color={colors.text} />
                 </TouchableOpacity>
-                <Text style={[styles.title, { color: colors.text }]}>Tienda AI</Text>
+                <Text style={[styles.title, { color: colors.text }]}>{t('store_title')}</Text>
             </View>
 
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.hero}>
                     <Ionicons name="sparkles" size={60} color={AppColors.primary} />
-                    <Text style={[styles.heroTitle, { color: colors.text }]}>Potencia tu Colección</Text>
+                    <Text style={[styles.heroTitle, { color: colors.text }]}>{t('store_hero_title')}</Text>
                     <Text style={styles.heroSubtitle}>
-                        Obtén créditos para usar el Chat con Gemini y el Escáner Mágico de portadas.
+                        {t('store_hero_subtitle')}
                     </Text>
 
                     <View style={styles.balanceContainer}>
-                        <Text style={styles.balanceLabel}>Tu Saldo Actual</Text>
+                        <Text style={styles.balanceLabel}>{t('store_current_balance')}</Text>
                         <Text style={styles.balanceValue}>{user?.creditsRemaining || 0} ⚡</Text>
                     </View>
                 </View>
 
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>Paquetes Disponibles</Text>
+                <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('store_packages_title')}</Text>
 
                 {PACKAGES.map((pkg) => (
                     <TouchableOpacity
@@ -73,8 +83,8 @@ export const AICreditsStoreScreen = () => {
                         disabled={!!loading}
                     >
                         <View style={styles.packageInfo}>
-                            <Text style={[styles.packageName, { color: colors.text }]}>{pkg.name}</Text>
-                            <Text style={styles.packageCredits}>{pkg.credits} Créditos AI</Text>
+                            <Text style={[styles.packageName, { color: colors.text }]}>{t(pkg.nameKey)}</Text>
+                            <Text style={styles.packageCredits}>{pkg.credits} {t('store_credits_suffix')}</Text>
                         </View>
 
                         <View style={styles.priceButton}>
@@ -88,7 +98,7 @@ export const AICreditsStoreScreen = () => {
                 ))}
 
                 <Text style={styles.disclaimer}>
-                    Los créditos no caducan. Pagos procesados de forma segura.
+                    {t('store_disclaimer')}
                 </Text>
 
             </ScrollView>
