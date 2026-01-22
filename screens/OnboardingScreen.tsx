@@ -14,6 +14,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -21,9 +22,11 @@ export const OnboardingScreen: React.FC = () => {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
+
   const [currentStep, setCurrentStep] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
   const navigation = useNavigation<any>();
+  const { setHasSeenOnboarding } = useSubscription();
 
   const onboardingSteps = [
     {
@@ -58,10 +61,23 @@ export const OnboardingScreen: React.FC = () => {
       id: 5,
       title: t('onboarding_step5_title'),
       subtitle: t('onboarding_step5_subtitle'),
-      image: require('../assets/images/dj-onboarding.png'),
-      color: '#9b59b6',
+      image: require('../assets/image.png'), // Placeholder, reusing existing until user provides new
+      color: '#e74c3c',
     },
+    {
+      id: 6,
+      title: t('onboarding_step6_title'),
+      subtitle: t('onboarding_step6_subtitle'),
+      image: require('../assets/image.png'), // Placeholder
+      color: '#8e44ad',
+    }
   ];
+
+  const finishOnboarding = async () => {
+    // Mark onboarding as seen.
+    // The AppNavigator will automatically switch to Paywall (if not subscribed) or Login/Main
+    await setHasSeenOnboarding(true);
+  };
 
   const handleNext = () => {
     if (currentStep < onboardingSteps.length - 1) {
@@ -72,18 +88,18 @@ export const OnboardingScreen: React.FC = () => {
         animated: true,
       });
     } else {
-      // Ir a la pantalla de login
-      navigation.navigate('Login');
+      finishOnboarding();
     }
   };
 
   const handleSkip = () => {
-    // Ir directamente a la pantalla de login
-    navigation.navigate('Login');
+    finishOnboarding();
   };
 
   const handleLogin = () => {
-    // Ir directamente a la pantalla de login
+    // If user clicks "I have an account", go to Login directly.
+    // Do NOT set hasSeenOnboarding=true manually.
+    // If login is successful, context will set seen=true automatically.
     navigation.navigate('Login');
   };
 
@@ -98,13 +114,7 @@ export const OnboardingScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
 
-      {/* Logo Header */}
-      <View style={styles.logoContainer}>
-        <Image
-          source={require('../assets/logo-onboarding.png')}
-          style={styles.logo}
-        />
-      </View>
+
       {/* Main content */}
       <ScrollView
         ref={scrollViewRef}
@@ -161,7 +171,16 @@ export const OnboardingScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Account section */}
+      {/* Account section - REMOVED or changed behavior? 
+          Reqs say "Start" on last step.
+          If we keep this "Have account? Login", it should behave consistent with new flow.
+          If I click Login here, I probably expect to go to Login screen.
+          But strict flow says Paywall first.
+          Let's assume "Login" here means "I already have a sub, let me in".
+          So going to Paywall (where Restore is) is technically correct, 
+          BUT users will be confused if they just want to Login to check something.
+          However, adhering to strict "Hard Paywall", blocking entry is the goal.
+      */}
       <View style={styles.accountSection}>
         <Text style={styles.accountText}>{t('onboarding_has_account')}</Text>
         <TouchableOpacity onPress={handleLogin}>
@@ -208,11 +227,10 @@ const styles = StyleSheet.create({
   },
 
   image: {
-
-    width: width - 40,
-    height: height * 0.4,
+    width: width - 20,
+    height: height * 0.5,
     resizeMode: 'cover',
-    borderRadius: 12,
+    borderRadius: 10,
   },
   textContainer: {
     flex: 1,
@@ -221,7 +239,7 @@ const styles = StyleSheet.create({
 
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'left',
@@ -291,15 +309,9 @@ const styles = StyleSheet.create({
     color: AppColors.primary,
     fontWeight: '500',
   },
-  logoContainer: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 20,
-
-  },
   logo: {
     width: 100,
     height: 50,
     resizeMode: 'contain',
   },
-}); 
+});

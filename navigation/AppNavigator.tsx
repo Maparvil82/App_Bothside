@@ -54,6 +54,8 @@ import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
 import { ChatModal } from '../components/ChatModal';
 import { ChatScreen } from '../screens/ChatScreen';
+import { PaywallScreen } from '../screens/PaywallScreen';
+import { SubscriptionProvider, useSubscription } from '../contexts/SubscriptionContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -453,7 +455,67 @@ const MainAppWrapper = () => {
 const AppStack = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
+  const { subscriptionStatus, hasSeenOnboarding, isLoading } = useSubscription();
 
+  console.log('🔄 AppStack Render:', { hasSeenOnboarding, subscriptionStatus, user: !!user });
+
+  if (isLoading) {
+    return <BothsideLoader />;
+  }
+
+  // 1. Onboarding Check
+  if (!hasSeenOnboarding) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        {/* We keep Login accessible just in case, but flow prefers finish->paywall */}
+        <Stack.Screen name="Login" component={LoginScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  // 2. Paywall Check (Hard Block)
+  // If no user OR user exists but has no subscription (and not in trial)
+  // Logic: 
+  // - If !user => Show Paywall (unless we want to allow login? But requirement says "Onboarding -> Paywall").
+  // - If user && sub='none' => Show Paywall.
+  // - If user && sub='trial'/'active' => Main App.
+
+  const showPaywall = (!user && subscriptionStatus === 'none') || (user && subscriptionStatus === 'none');
+
+  // Correction: If !user, subStatus is 'none' by default in context.
+  // So simply: if subscriptionStatus === 'none' -> Paywall.
+  // BUT: We need to allow routing to Login from Paywall? 
+  // The PaywallScreen I built pushes to 'Login' after trial start (which sets sub=trial).
+  // If I am on Paywall and I want to "Restore" or "Login", I need those routes available.
+  // The current PaywallScreen uses navigation.replace('Login').
+  // So 'Login' must be in the same stack or accessible.
+
+  if (subscriptionStatus === 'none') {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Paywall" component={PaywallScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal', headerShown: true }} />
+        <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  // 3. Auth Check (If in Trial but not logged in? Trial starts -> User creation usually happens after or during)
+  // In our flow: Start Trial -> Login/Register.
+  // If subStatus is 'trial' but !user -> Show Login.
+  if (!user) {
+    return (
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal', headerShown: true }} />
+        <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} />
+      </Stack.Navigator>
+    );
+  }
+
+  // 4. Main App (Authenticated & Subscribed/Trial)
   return (
     <Stack.Navigator
       screenOptions={{
@@ -464,97 +526,80 @@ const AppStack = () => {
         headerTitleStyle: { color: colors.text },
       }}
     >
-      {user ? (
-        // ✅ USUARIO AUTENTICADO (Acceso Completo - App de Pago)
-        <>
-          <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
+      {/* ✅ USUARIO AUTENTICADO (Acceso Completo - App de Pago) */}
+      <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
 
-          <Stack.Screen
-            name="AlbumDetail"
-            component={AlbumDetailScreen}
-            options={{
-              headerShown: true,
-              title: 'Detalle del Álbum'
-            }}
-          />
-          <Stack.Screen
-            name="Leaderboard"
-            component={LeaderboardScreen}
-            options={{
-              headerShown: true,
-              title: 'Ranking'
-            }}
-          />
-          {/* ViewMaleta moved to inside MaletasStack usually, but kept here for deep links if needed, duplicates ok */}
-          <Stack.Screen
-            name="ViewMaleta"
-            component={ViewMaletaScreen}
-            options={({ route }: any) => ({
-              headerShown: true,
-              title: route.params?.listTitle || 'Ver Maleta',
-              headerRight: () => <HeaderAvatar />,
-            })}
-          />
-          <Stack.Screen
-            name="EditMaleta"
-            component={EditMaletaScreen}
-            options={{
-              headerShown: true,
-              title: 'Editar Maleta'
-            }}
-          />
+      <Stack.Screen
+        name="AlbumDetail"
+        component={AlbumDetailScreen}
+        options={{
+          headerShown: true,
+          title: 'Detalle del Álbum'
+        }}
+      />
+      <Stack.Screen
+        name="Leaderboard"
+        component={LeaderboardScreen}
+        options={{
+          headerShown: true,
+          title: 'Ranking'
+        }}
+      />
+      {/* ViewMaleta moved to inside MaletasStack usually, but kept here for deep links if needed, duplicates ok */}
+      <Stack.Screen
+        name="ViewMaleta"
+        component={ViewMaletaScreen}
+        options={({ route }: any) => ({
+          headerShown: true,
+          title: route.params?.listTitle || 'Ver Maleta',
+          headerRight: () => <HeaderAvatar />,
+        })}
+      />
+      <Stack.Screen
+        name="EditMaleta"
+        component={EditMaletaScreen}
+        options={{
+          headerShown: true,
+          title: 'Editar Maleta'
+        }}
+      />
 
-          {/* Account screen kept in global stack for direct access if needed, but primarily accessed via profile inside tabs */}
-          <Stack.Screen
-            name="Account"
-            component={AccountScreen}
-            options={{
-              headerShown: true,
-              title: 'Cuenta'
-            }}
-          />
+      {/* Account screen kept in global stack for direct access if needed, but primarily accessed via profile inside tabs */}
+      <Stack.Screen
+        name="Account"
+        component={AccountScreen}
+        options={{
+          headerShown: true,
+          title: 'Cuenta'
+        }}
+      />
 
-          <Stack.Screen
-            name="Calendar"
-            component={CalendarScreen}
-            options={{
-              headerShown: true,
-              title: 'Calendario'
-            }}
-          />
-          {ENABLE_AUDIO_SCAN && (
-            <Stack.Screen
-              name="AudioScan"
-              component={AudioScanScreen}
-              options={{
-                headerShown: true,
-                title: 'Escaneo de Audio'
-              }}
-            />
-          )}
-          <Stack.Screen
-            name="SelectCell"
-            component={SelectCellScreen}
-            options={{
-              headerShown: true,
-              title: 'Ubicar Vinilo'
-            }}
-          />
-        </>
-      ) : (
-        <>
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} options={{ headerShown: false }} />
-          <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-          {/* PricingScreen removed */}
-          <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal' }} />
-          <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} options={{ headerShown: false }} />
-        </>
+      <Stack.Screen
+        name="Calendar"
+        component={CalendarScreen}
+        options={{
+          headerShown: true,
+          title: 'Calendario'
+        }}
+      />
+      {ENABLE_AUDIO_SCAN && (
+        <Stack.Screen
+          name="AudioScan"
+          component={AudioScanScreen}
+          options={{
+            headerShown: true,
+            title: 'Escaneo de Audio'
+          }}
+        />
       )}
-
-      {/* Las pantallas fuera del bloque condicional usuario que siempre deben estar accesibles */}
-      {!user && (
-        null // Placeholder, ya están arriba
-      )}
+      <Stack.Screen
+        name="SelectCell"
+        component={SelectCellScreen}
+        options={{
+          headerShown: true,
+          title: 'Ubicar Vinilo'
+        }}
+      />
 
       {/* Admin Screen accessible if needed */}
       <Stack.Screen
@@ -664,6 +709,13 @@ const AppNavigator = () => {
     return null; // O un componente de loading
   }
 
+  // NOTE: Moving SubscriptionProvider inside here or wrapping outside?
+  // It uses useAuth, so it must be inside AuthProvider (which is in App.tsx).
+  // AppNavigator is child of AuthProvider in App.tsx, so we can wrap here or in App.tsx.
+  // The plan said "Wrap app in SubscriptionProvider". 
+  // Let's do it in App.tsx to be cleaner, but I can do it here too.
+  // I will wrap here to minimize file edits.
+
   return (
     <CreateMaletaModalContext.Provider value={{
       isCreateMaletaVisible,
@@ -673,21 +725,23 @@ const AppNavigator = () => {
       setOnMaletaCreated
     }}>
       <ThemeProvider>
-        <ThemedNavigationContainer>
-          <GemsProvider>
-            <AppStack />
-            <DarkModeWIPModal />
+        <SubscriptionProvider>
+          <ThemedNavigationContainer>
+            <GemsProvider>
+              <AppStack />
+              <DarkModeWIPModal />
 
-            {/* Modal Global - Fuera del Stack Navigator */}
-            <CreateMaletaModal
-              visible={isCreateMaletaVisible}
-              onClose={() => setIsCreateMaletaVisible(false)}
-              onSubmit={handleCreateMaleta}
-              loading={creatingMaleta}
-              initialAlbumId={initialAlbumId ?? undefined}
-            />
-          </GemsProvider>
-        </ThemedNavigationContainer>
+              {/* Modal Global - Fuera del Stack Navigator */}
+              <CreateMaletaModal
+                visible={isCreateMaletaVisible}
+                onClose={() => setIsCreateMaletaVisible(false)}
+                onSubmit={handleCreateMaleta}
+                loading={creatingMaleta}
+                initialAlbumId={initialAlbumId ?? undefined}
+              />
+            </GemsProvider>
+          </ThemedNavigationContainer>
+        </SubscriptionProvider>
       </ThemeProvider>
     </CreateMaletaModalContext.Provider>
   );

@@ -7,6 +7,7 @@ import { useTheme } from '@react-navigation/native';
 import { CreditService } from '../services/CreditService';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation, TxKeyPath } from '../src/i18n/useTranslation';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 interface Package {
     id: string;
@@ -29,8 +30,19 @@ export const AICreditsStoreScreen = () => {
     const [loading, setLoading] = useState<string | null>(null);
     const { t } = useTranslation();
 
+    const { subscriptionStatus } = useSubscription();
+
     const handlePurchase = async (pkg: Package) => {
         if (!user) return;
+
+        // Business Rule: Disable extra credit purchase during Trial
+        if (subscriptionStatus === 'trial') {
+            Alert.alert(
+                t('store_trial_restriction_title') || 'Periodo de Prueba',
+                t('store_trial_restriction_message') || 'Espera a que se active tu suscripción completa para recargar créditos.'
+            );
+            return;
+        }
 
         setLoading(pkg.id);
         console.log(`🛒 Simulating purchase of ${t(pkg.nameKey)}...`);

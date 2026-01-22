@@ -19,6 +19,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
 
 
 export const LoginScreen: React.FC = () => {
@@ -30,6 +31,7 @@ export const LoginScreen: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const { signIn, signUp } = useAuth();
+  const { setHasSeenOnboarding } = useSubscription();
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
@@ -204,7 +206,17 @@ export const LoginScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.switchButton}
-            onPress={() => setIsSignUp(!isSignUp)}
+            onPress={() => {
+              console.log('🔘 Switch Button Pressed. isSignUp:', isSignUp);
+              if (isSignUp) {
+                // If in Sign Up mode, switch to Login
+                setIsSignUp(false);
+              } else {
+                console.log('🔄 Resetting Onboarding state to false');
+                // If in Login mode, "Create Account" -> Go to Onboarding (Restart Flow)
+                setHasSeenOnboarding(false);
+              }
+            }}
           >
             <Text style={styles.switchText}>
               {isSignUp ? t('auth_switch_to_login') : t('auth_switch_to_signup')}

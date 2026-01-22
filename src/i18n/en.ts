@@ -16,16 +16,18 @@ export const en = {
     auth_switch_to_signup: "Don't have an account? Create account",
 
     // Onboarding
-    onboarding_step1_title: "AI that understands your music",
-    onboarding_step1_subtitle: "Ask our AI about your collection and discover personalized recommendations",
-    onboarding_step2_title: "Organize your music physically",
-    onboarding_step2_subtitle: "Create physical locations to find your records quickly on your shelves",
-    onboarding_step3_title: "Your collection knows you best",
-    onboarding_step3_subtitle: "Discover unique insights about your music and find forgotten gems in your collection",
-    onboarding_step4_title: "Analyze your collection",
-    onboarding_step4_subtitle: "Know your records, artists, genres and collection market value in detail",
-    onboarding_step5_title: "Your personal DJ assistant",
-    onboarding_step5_subtitle: "Organize your sessions, track your earnings, plan events and improve as a DJ.",
+    onboarding_step1_title: "AI that understands your collection",
+    onboarding_step1_subtitle: "Prepare a bag for a 2-hour Rare Soul set or give me a detailed report of my collection.",
+    onboarding_step2_title: "Smart Recognition",
+    onboarding_step2_subtitle: "Integrates AI vision to identify vinyls from their covers. Just point the camera.",
+    onboarding_step3_title: "Real Physical Shelves",
+    onboarding_step3_subtitle: "Locate a physical record on your shelf; each vinyl is associated with its actual physical place when cataloged.",
+    onboarding_step4_title: "Voice Notes",
+    onboarding_step4_subtitle: "Leave personal recordings, ideas for a set, or even memories linked to that record.",
+    onboarding_step5_title: "Advanced Metadata",
+    onboarding_step5_subtitle: "Bothside connects to Discogs, and AI analyzes that data to offer advanced metrics.",
+    onboarding_step6_title: "DJ Planner",
+    onboarding_step6_subtitle: "Organize your sessions, track earnings, plan events, and improve as a DJ.",
     onboarding_has_account: "Do you have a Bothside account?",
 
     // Dashboard
@@ -679,6 +681,8 @@ export const en = {
     store_purchase_success_message: "You received {0} AI credits.",
     store_purchase_error: "There was a problem with the purchase. Please try again.",
     store_disclaimer: "Credits do not expire. Payments processed securely.",
+    store_trial_restriction_title: "Trial Period",
+    store_trial_restriction_message: "Wait for your full subscription to activate before recharging credits.",
 
     // Feedback Screen
     feedback_error_empty_text: "Please write your feedback",

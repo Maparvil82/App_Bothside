@@ -16,16 +16,18 @@ export const es = {
     auth_switch_to_signup: "¿No tienes cuenta? Crear cuenta",
 
     // Onboarding
-    onboarding_step1_title: "IA que entiende tu música",
-    onboarding_step1_subtitle: "Pregunta a nuestra IA sobre tu colección y descubre recomendaciones personalizadas",
-    onboarding_step2_title: "Organiza tu música físicamente",
-    onboarding_step2_subtitle: "Crea ubicaciones físicas para encontrar tus discos rápidamente en tus estanterías",
-    onboarding_step3_title: "Tu colección te conoce mejor que nadie",
-    onboarding_step3_subtitle: "Descubre insights únicos sobre tu música y encuentra joyas olvidadas en tu colección",
-    onboarding_step4_title: "Analiza tu colección",
-    onboarding_step4_subtitle: "Conoce en detalle tus discos, artistas, géneros y el valor de tu colección en el mercado",
-    onboarding_step5_title: "Tu asistente DJ personal",
-    onboarding_step5_subtitle: "Organiza tus sesiones, controla tus ganancias, planifica eventos y mejora como DJ.",
+    onboarding_step1_title: "IA que entiende tu colección",
+    onboarding_step1_subtitle: "Prepárame una maleta para un set de 2 horas de Rare Soul o " + "Dame un informe detallado de mi colección.",
+    onboarding_step2_title: "Reconocimiento inteligente",
+    onboarding_step2_subtitle: "Integra visión por inteligencia artificial para identificar vinilos a partir de sus portadas. Solo necesita apuntar con la cámara.",
+    onboarding_step3_title: "Estanterías físicas reales",
+    onboarding_step3_subtitle: "Localiza un disco físico de tu estantería, cada vinilo se asocia a su lugar físico real en el momento de catalogarlo.",
+    onboarding_step4_title: "Notas de voz",
+    onboarding_step4_subtitle: "Puedes dejar grabaciones personales, ideas para un set,o incluso recuerdos vinculados a ese disco.",
+    onboarding_step5_title: "Metadatos avanzados",
+    onboarding_step5_subtitle: "Bothside se conecta a Discogs, la inteligencia artificial analiza esos datos para ofrecer métricas avanzadas",
+    onboarding_step6_title: "DJ Planner",
+    onboarding_step6_subtitle: "Organiza tus sesiones, controla tus ganancias, planifica eventos y mejora como DJ.",
     onboarding_has_account: "¿Tiene una cuenta en Bothside?",
 
     // Dashboard
@@ -679,6 +681,9 @@ export const es = {
     store_purchase_success_message: "Has recibido {0} créditos AI.",
     store_purchase_error: "Hubo un problema con la compra. Inténtalo de nuevo.",
     store_disclaimer: "Los créditos no caducan. Pagos procesados de forma segura.",
+
+    store_trial_restriction_title: "Periodo de Prueba",
+    store_trial_restriction_message: "Espera a que se active tu suscripción completa para recargar créditos.",
 
     // Feedback Screen
     feedback_error_empty_text: "Por favor, escribe tu feedback",
