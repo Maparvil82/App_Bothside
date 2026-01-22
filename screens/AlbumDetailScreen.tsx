@@ -16,6 +16,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,6 +31,7 @@ import { AudioMiniPlayer } from '../components/AudioMiniPlayer';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { UserCollectionService, AlbumService, UserMaletaService } from '../services/database';
+import { SessionService, Session } from '../services/SessionService';
 import { needsDiscogsRefresh, hoursSinceCache } from '../utils/cache';
 import ShelfGrid from '../components/ShelfGrid';
 import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
@@ -200,6 +202,12 @@ export default function AlbumDetailScreen() {
   // ESTADO STRICT MODE
   const [collectionStatus, setCollectionStatus] = useState<'loading' | 'in_collection' | 'not_in_collection'>('loading');
   const [isInCollection, setIsInCollection] = useState(false);
+
+  // Estados para Sesiones (Played In)
+  const [linkedSessions, setLinkedSessions] = useState<any[]>([]);
+  const [availableSessions, setAvailableSessions] = useState<Session[]>([]);
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [loadingSessions, setLoadingSessions] = useState(false);
 
 
   const { albumId } = route.params as { albumId: string };
@@ -1037,7 +1045,83 @@ export default function AlbumDetailScreen() {
     }
   };
 
-  // Función para crear nueva lista
+  // ========== SESIONES / PLAYED IN LOGIC ==========
+
+  const loadSessionsData = useCallback(async () => {
+    // Use album.id which corresponds to user_collection.id, required by FK
+    if (!album?.id || !isInCollection) return;
+
+    setLoadingSessions(true);
+    try {
+      // Run both in parallel and independently using Promise.allSettled
+      // This ensures that if one fails (e.g. linked sessions), the other (dropdown list) still loads
+      const [linkedResult, allResult] = await Promise.allSettled([
+        SessionService.getSessionsForAlbum(album.id),
+        SessionService.getAllSessions()
+      ]);
+
+      if (linkedResult.status === 'fulfilled') {
+        setLinkedSessions(linkedResult.value || []);
+      } else {
+        console.error('Error loading linked sessions:', linkedResult.reason);
+      }
+
+      if (allResult.status === 'fulfilled') {
+        setAvailableSessions(allResult.value || []);
+      } else {
+        console.error('Error loading available sessions:', allResult.reason);
+      }
+    } catch (e) {
+      console.error('Error strictly in loadSessionsData wrapper:', e);
+    } finally {
+      setLoadingSessions(false);
+    }
+  }, [album?.id, isInCollection]);
+
+  const handleAddSession = async (sessionId: string) => {
+    if (!album?.id) return;
+    try {
+      await SessionService.addAlbumToSession(album.id, sessionId);
+      Alert.alert(t('common_success'), t('album_detail_session_added'));
+      setShowSessionModal(false);
+      loadSessionsData();
+    } catch (e) {
+      console.error('Error adding session:', e);
+      Alert.alert(t('common_error'), t('album_detail_session_error_adding'));
+    }
+  };
+
+  const handleRemoveSession = async (sessionId: string) => {
+    if (!album?.id) return;
+    try {
+      Alert.alert(
+        t('album_detail_remove_session_title'),
+        t('album_detail_remove_session_message'),
+        [
+          { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: t('common_delete'),
+            style: 'destructive',
+            onPress: async () => {
+              await SessionService.removeAlbumFromSession(album.id, sessionId);
+              loadSessionsData();
+            }
+          }
+        ]
+      );
+    } catch (e) {
+      console.error('Error removing session:', e);
+      Alert.alert(t('common_error'), t('album_detail_session_error_removing'));
+    }
+  };
+
+  // Load sessions when entering collection mode
+  useEffect(() => {
+    if (isInCollection) {
+      loadSessionsData();
+    }
+  }, [isInCollection, loadSessionsData]);
+
   const handleCreateNewList = async () => {
     try {
       setShowListsModal(false);
@@ -1415,7 +1499,54 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Sección de Tracks */}
+        {/* Sección de Sesiones (Played In) */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>{t('album_detail_played_in') || 'Sesiones'}</Text>
+              <TouchableOpacity
+                onPress={() => setShowSessionModal(true)}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Ionicons name="add-circle" size={24} color={primaryColor} />
+                <Text style={{ color: primaryColor, marginLeft: 4, fontWeight: '600' }}>
+                  {t('common_add') || 'Añadir'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {loadingSessions ? (
+              <ActivityIndicator size="small" color={primaryColor} />
+            ) : linkedSessions.length > 0 ? (
+              linkedSessions.map((session, index) => (
+                <View key={session.id || index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: LIGHT_BG_COLOR,
+                  padding: 12,
+                  borderRadius: 12,
+                  marginBottom: 8
+                }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>{session.name}</Text>
+                    <Text style={{ color: colors.text, opacity: 0.7, fontSize: 13 }}>
+                      {new Date(session.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleRemoveSession(session.id)} style={{ padding: 8 }}>
+                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              ))
+            ) : (
+              <Text style={{ color: colors.text, opacity: 0.6, fontStyle: 'italic', marginLeft: 4 }}>
+                {t('album_detail_no_sessions') || 'No has asignado ninguna sesión.'}
+              </Text>
+            )}
+          </View>
+        )}
+
         {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_tracks')}</Text>
@@ -1977,6 +2108,70 @@ export default function AlbumDetailScreen() {
           />
         </View>
       )}
+
+      {/* Modal de selección de Sesión */}
+      <Modal
+        visible={showSessionModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowSessionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '80%', backgroundColor: colors.card, shadowColor: primaryColor }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {t('album_detail_select_session') || 'Seleccionar Sesión'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowSessionModal(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {availableSessions.length > 0 ? (
+                availableSessions.map((session) => {
+                  // Check if already linked
+                  const isLinked = linkedSessions.some(ls => ls.id === session.id);
+                  return (
+                    <TouchableOpacity
+                      key={session.id}
+                      style={{
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        backgroundColor: LIGHT_BG_COLOR,
+                        marginBottom: 8,
+                        padding: 12,
+                        borderRadius: 12,
+                        opacity: isLinked ? 0.5 : 1
+                      }}
+                      disabled={isLinked}
+                      onPress={() => handleAddSession(session.id)}
+                    >
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>{session.name}</Text>
+                        <Text style={{ fontSize: 13, color: colors.text, opacity: 0.7 }}>{new Date(session.date).toLocaleDateString()}</Text>
+                      </View>
+                      {isLinked ? (
+                        <Ionicons name="checkmark-circle" size={24} color={primaryColor} />
+                      ) : (
+                        <Ionicons name="add-circle-outline" size={24} color={colors.text} />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })
+              ) : (
+                <View style={{ padding: 20, alignItems: 'center' }}>
+                  <Ionicons name="calendar-outline" size={48} color={colors.border} />
+                  <Text style={{ textAlign: 'center', marginTop: 12, color: colors.text }}>
+                    {t('album_detail_no_available_sessions') || 'No hay sesiones disponibles. Crea una en el calendario.'}
+                  </Text>
+                </View>
+              )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
 
       {/* Audio Mini Player (Fixed Bottom) */}
       <AudioMiniPlayer

@@ -954,4 +954,16 @@ export const es = {
     autoBag_toastError: "Ha ocurrido un error al crear la maleta. Inténtalo de nuevo.",
     autoBag_errorNoStyles: "Selecciona al menos un estilo o género.",
     autoBag_createSwitchLabel: "Crear maleta para esta sesión",
+
+    // Session Linked Albums
+    album_detail_played_in: 'Sesiones donde lo pinchaste',
+    album_detail_no_sessions: 'No has asignado ninguna sesión a este disco aún.',
+    album_detail_select_session: 'Selecciona una Sesión',
+    album_detail_no_available_sessions: 'No hay sesiones disponibles. Crea una en el calendario.',
+    album_detail_session_added: 'Álbum añadido a la sesión correctamente.',
+    album_detail_session_error_adding: 'Error al añadir el álbum a la sesión.',
+    album_detail_remove_session_title: 'Quitar de la sesión',
+    album_detail_remove_session_message: '¿Estás seguro de que quieres quitar este álbum de esta sesión?',
+    album_detail_session_error_removing: 'Error al quitar el álbum de la sesión.',
+    common_add: 'Añadir',
 };

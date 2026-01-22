@@ -954,4 +954,16 @@ export const en = {
     autoBag_toastError: "An error occurred while creating the bag. Please try again.",
     autoBag_errorNoStyles: "Select at least one style or genre.",
     autoBag_createSwitchLabel: "Create bag for this session",
+
+    // Session Linked Albums
+    album_detail_played_in: 'Played In Sessions',
+    album_detail_no_sessions: 'No sessions assigned to this album yet.',
+    album_detail_select_session: 'Select a Session',
+    album_detail_no_available_sessions: 'No available sessions. Create one in the calendar.',
+    album_detail_session_added: 'Album added to session successfully.',
+    album_detail_session_error_adding: 'Error adding album to session.',
+    album_detail_remove_session_title: 'Remove from Session',
+    album_detail_remove_session_message: 'Are you sure you want to remove this album from this session?',
+    album_detail_session_error_removing: 'Error removing album from session.',
+    common_add: 'Add',
 };
