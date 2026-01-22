@@ -1,36 +1,55 @@
 import { getLocales } from 'expo-localization';
 import { es } from './es';
 import { en } from './en';
+import { fr } from './fr';
+import { it } from './it';
+import { de } from './de';
+import { ja } from './ja';
 
 // Detección del idioma del dispositivo
 const deviceLanguage = getLocales()[0]?.languageCode ?? 'en';
-const isSpanish = deviceLanguage.includes('es');
 
-// Idioma activo
-export const activeLocale = isSpanish ? 'es' : 'en';
+// Idioma activo (Fallback a EN si no es uno de los soportados)
+// Supported: es, en, fr, it, de, ja
+let detectedLocale = 'en';
+if (deviceLanguage.startsWith('es')) detectedLocale = 'es';
+else if (deviceLanguage.startsWith('fr')) detectedLocale = 'fr';
+else if (deviceLanguage.startsWith('it')) detectedLocale = 'it';
+else if (deviceLanguage.startsWith('de')) detectedLocale = 'de';
+else if (deviceLanguage.startsWith('ja')) detectedLocale = 'ja';
+else detectedLocale = 'en';
+
+export const activeLocale = detectedLocale;
 
 // Diccionarios
 export const translations = {
     es,
     en,
+    fr,
+    it,
+    de,
+    ja,
 };
 
 // Función de traducción simple
 export const translate = (key: keyof typeof es, options?: Record<string, string | number>) => {
     const lang = activeLocale;
     // @ts-ignore
-    let text = translations[lang][key];
+    let text = translations[lang]?.[key];
 
-    // Fallback a ES si falta en EN (o viceversa, pero ES es la base)
-    if (!text && lang === 'en') {
-        // @ts-ignore
-        text = translations['es'][key];
-    }
+    // Fallback logic
+    if (!text) {
+        // Fallback to ES if active is not ES (Since ES is base)
+        if (lang !== 'es') {
+            // @ts-ignore
+            text = translations['es']?.[key];
+        }
 
-    // Fallback a EN si falta en ES (caso raro si ES es base)
-    if (!text && lang === 'es') {
-        // @ts-ignore
-        text = translations['en'][key];
+        // If still empty (e.g. creating new keys in EN but missing in ES), try EN
+        if (!text && lang !== 'en') {
+            // @ts-ignore
+            text = translations['en']?.[key];
+        }
     }
 
     if (text && options) {
