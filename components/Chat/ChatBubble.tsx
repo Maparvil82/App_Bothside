@@ -76,7 +76,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12, // Added outer padding
     },
     containerUser: {
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
         flexDirection: 'row-reverse',
     },
     containerModel: {
@@ -100,7 +100,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#ccc'
     },
     bubble: {
-        maxWidth: '75%', // Reduced max width to avoid edge crowding
+        maxWidth: '85%', // Reduced max width to avoid edge crowding
         padding: 12,
         borderRadius: 20,
     },
