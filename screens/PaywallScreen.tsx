@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, SafeAreaView, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useTheme } from '@react-navigation/native';
 import { translate } from '../src/i18n';
+import { ENV } from '../config/env';
 
 // Compatibility alias to match the code style I just wrote
 const i18n = { t: translate };
@@ -35,6 +36,15 @@ export const PaywallScreen = () => {
 
     const handleRestore = () => {
         Alert.alert(i18n.t('pricing_alert_restore_title'), i18n.t('pricing_alert_restore_message'));
+    };
+
+    const openLink = async (url: string) => {
+        const supported = await Linking.canOpenURL(url);
+        if (supported) {
+            await Linking.openURL(url);
+        } else {
+            Alert.alert("Error", "No se pudo abrir el enlace: " + url);
+        }
     };
 
     return (
@@ -93,11 +103,11 @@ export const PaywallScreen = () => {
                             <Text style={styles.link}>{i18n.t('pricing_restore_short')}</Text>
                         </TouchableOpacity>
                         <Text style={styles.divider}>•</Text>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={() => openLink(ENV.TERMS_URL)}>
                             <Text style={styles.link}>{i18n.t('pricing_terms')}</Text>
                         </TouchableOpacity>
                         <Text style={styles.divider}>•</Text>
-                        <TouchableOpacity>
+                        <TouchableOpacity onPress={() => openLink(ENV.PRIVACY_URL)}>
                             <Text style={styles.link}>{i18n.t('pricing_privacy')}</Text>
                         </TouchableOpacity>
                     </View>

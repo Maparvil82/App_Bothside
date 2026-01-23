@@ -19,7 +19,10 @@ export const ENV = {
   GOOGLE_VISION_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY || '',
 
 
-  // App
+  // Legal
+  TERMS_URL: 'https://www.notion.so/Legal-Information-2b1f3ade92a9807ca71fd65dcf7feeab?source=copy_link',
+  PRIVACY_URL: 'https://www.notion.so/Privacy-Policy-2b1f3ade92a98073992ae670f5082882?source=copy_link',
+
   APP_NAME: 'Bothside',
   APP_VERSION: '1.0.0',
   // Modo de test para notificaciones: si true, las notificaciones se programan rápidamente (ej. 30s/60s)
