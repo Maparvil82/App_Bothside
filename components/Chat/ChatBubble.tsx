@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { useTheme } from '@react-navigation/native';
 import Markdown from 'react-native-markdown-display';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,9 +9,10 @@ interface ChatBubbleProps {
     text: string;
     sender: 'user' | 'model';
     timestamp?: Date;
+    avatarUrl?: string | null;
 }
 
-export const ChatBubble: React.FC<ChatBubbleProps> = ({ text, sender, timestamp }) => {
+export const ChatBubble: React.FC<ChatBubbleProps> = ({ text, sender, timestamp, avatarUrl }) => {
     const { colors, dark } = useTheme();
 
     return (
@@ -26,9 +27,17 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ text, sender, timestamp 
                         <Ionicons name="sparkles" size={16} color={AppColors.primary} />
                     </View>
                 ) : (
-                    <View style={[styles.avatar, { backgroundColor: AppColors.primary }]}>
-                        <Ionicons name="person" size={16} color="#fff" />
-                    </View>
+                    // User Avatar
+                    avatarUrl ? (
+                        <Image
+                            source={{ uri: avatarUrl }}
+                            style={styles.avatarImage}
+                        />
+                    ) : (
+                        <View style={[styles.avatar, { backgroundColor: AppColors.primary }]}>
+                            <Ionicons name="person" size={16} color="#fff" />
+                        </View>
+                    )
                 )}
             </View>
 
@@ -64,6 +73,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         marginBottom: 16,
         width: '100%',
+        paddingHorizontal: 12, // Added outer padding
     },
     containerUser: {
         justifyContent: 'flex-end',
@@ -77,22 +87,30 @@ const styles = StyleSheet.create({
         justifyContent: 'flex-end',
     },
     avatar: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 36, // Slightly larger
+        height: 36,
+        borderRadius: 18,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    bubble: {
-        maxWidth: '80%',
-        padding: 12,
+    avatarImage: {
+        width: 36,
+        height: 36,
         borderRadius: 18,
+        backgroundColor: '#ccc'
+    },
+    bubble: {
+        maxWidth: '75%', // Reduced max width to avoid edge crowding
+        padding: 12,
+        borderRadius: 20,
     },
     bubbleUser: {
         borderBottomRightRadius: 4,
+        marginRight: 4, // Extra margin from avatar
     },
     bubbleModel: {
         borderBottomLeftRadius: 4,
+        marginLeft: 4, // Extra margin from avatar
     },
     userText: {
         color: '#fff',

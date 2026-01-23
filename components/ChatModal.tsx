@@ -47,7 +47,11 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
 
     // Initialize chat when modal opens
     useEffect(() => {
-        console.log('🔄 ChatModal: Effect triggered. Visible:', visible, 'User:', user?.id);
+        console.log('🔄 ChatModal: Effect triggered. Visible:', visible, 'User ID:', user?.id);
+        if (user?.user_metadata) {
+            console.log('👤 User Metadata:', JSON.stringify(user.user_metadata, null, 2));
+            console.log('🖼️ Avatar URL:', user.user_metadata.avatar_url);
+        }
         if (visible && user) {
             initializeChat();
         }
@@ -189,6 +193,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
                                 text={item.text}
                                 sender={item.sender}
                                 timestamp={item.timestamp}
+                                avatarUrl={item.sender === 'user' ? user?.avatarUrl : undefined}
                             />
                         )}
                         ListFooterComponent={loading ? <TypingIndicator /> : null}
@@ -240,7 +245,7 @@ const styles = StyleSheet.create({
         paddingBottom: 32,
     },
     messageBubble: {
-        maxWidth: '80%',
+        maxWidth: '85%',
         padding: 12,
         borderRadius: 20,
         marginBottom: 12,

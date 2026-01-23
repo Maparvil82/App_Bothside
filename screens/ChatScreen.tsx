@@ -189,6 +189,7 @@ export const ChatScreen: React.FC = () => {
                                 text={item.text}
                                 sender={item.sender}
                                 timestamp={item.timestamp}
+                                avatarUrl={item.sender === 'user' ? user?.avatarUrl : undefined}
                             />
                         )}
                         ListFooterComponent={loading ? <TypingIndicator /> : null}

@@ -12,6 +12,10 @@ export type AppUser = User & {
   creditsUsed: number | null;
   creditsRemaining: number | null;
   renewalDate: string | null;
+  // Profile data
+  username?: string;
+  fullName?: string;
+  avatarUrl?: string; // Add explicit field
 };
 
 interface AuthContextType {
@@ -90,6 +94,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('💰 Credits Found:', creditsData);
       }
 
+      // (c) Read Profile Data (avatar, username)
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('username, full_name, avatar_url')
+        .eq('id', userId)
+        .single();
+
       // (c) Update global state
       setUser(prev => {
         if (!prev) return null;
@@ -101,6 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           creditsUsed: creditsData?.credits_used || 0,
           creditsRemaining: creditsData ? (creditsData.credits_total || 0) - (creditsData.credits_used || 0) : 0,
           renewalDate: subscription?.current_period_end || null,
+          username: profileData?.username || prev.user_metadata?.username,
+          fullName: profileData?.full_name || prev.user_metadata?.full_name,
+          avatarUrl: profileData?.avatar_url || prev.user_metadata?.avatar_url,
         };
 
         // Simple comparison to avoid unnecessary updates
@@ -110,7 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           prev.creditsTotal === newData.creditsTotal &&
           prev.creditsUsed === newData.creditsUsed &&
           prev.creditsRemaining === newData.creditsRemaining &&
-          prev.renewalDate === newData.renewalDate
+          prev.renewalDate === newData.renewalDate &&
+          prev.avatarUrl === newData.avatarUrl
         ) {
           return prev;
         }
