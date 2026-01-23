@@ -5,6 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useTheme } from '@react-navigation/native';
+import { translate } from '../src/i18n';
+
+// Compatibility alias to match the code style I just wrote
+const i18n = { t: translate };
 
 const { width } = Dimensions.get('window');
 
@@ -23,14 +27,14 @@ export const PaywallScreen = () => {
             // For now, let's assume AppNavigator handles it properly or we push to Login
             navigation.replace('Login', { isSignUp: true });
         } catch (error) {
-            Alert.alert('Error', 'No se pudo iniciar la prueba. Inténtalo de nuevo.');
+            Alert.alert(i18n.t('pricing_error_title'), i18n.t('pricing_error_trial'));
         } finally {
             setLoading(false);
         }
     };
 
     const handleRestore = () => {
-        Alert.alert('Restaurar', 'Buscando suscripciones activas...');
+        Alert.alert(i18n.t('pricing_alert_restore_title'), i18n.t('pricing_alert_restore_message'));
     };
 
     return (
@@ -47,27 +51,27 @@ export const PaywallScreen = () => {
 
             <SafeAreaView style={styles.contentContainer}>
                 <View style={styles.header}>
-                    <Text style={styles.preTitle}>DESBLOQUEA TODO EL POTENCIAL</Text>
-                    <Text style={styles.title}>Bothside PRO</Text>
+                    <Text style={styles.preTitle}>{i18n.t('pricing_pre_title')}</Text>
+                    <Text style={styles.title}>{i18n.t('pricing_title_pro')}</Text>
                 </View>
 
                 <View style={styles.featuresContainer}>
-                    <FeatureItem icon="scan-outline" text="Escáner IA Ilimitado de Portadas" />
-                    <FeatureItem icon="analytics-outline" text="Estadísticas de DJ y Colección" />
-                    <FeatureItem icon="cloud-upload-outline" text="Sincronización en la Nube" />
-                    <FeatureItem icon="gift-outline" text="BONUS: 50 Créditos IA Incluidos" highlight />
+                    <FeatureItem icon="scan-outline" text={i18n.t('pricing_feature_unlimited_scan')} />
+                    <FeatureItem icon="analytics-outline" text={i18n.t('pricing_feature_stats')} />
+                    <FeatureItem icon="cloud-upload-outline" text={i18n.t('pricing_feature_cloud')} />
+                    <FeatureItem icon="gift-outline" text={i18n.t('pricing_feature_bonus')} highlight />
                 </View>
 
                 <View style={styles.offerCard}>
                     <View style={styles.badgeContainer}>
-                        <Text style={styles.badgeText}>MEJOR OPCIÓN</Text>
+                        <Text style={styles.badgeText}>{i18n.t('pricing_badge_best')}</Text>
                     </View>
-                    <Text style={styles.planTitle}>Anual</Text>
+                    <Text style={styles.planTitle}>{i18n.t('pricing_plan_annual_title')}</Text>
                     <View style={styles.priceContainer}>
-                        <Text style={styles.price}>14,99 €</Text>
-                        <Text style={styles.period}>/ año</Text>
+                        <Text style={styles.price}>{i18n.t('pricing_price_annual')}</Text>
+                        <Text style={styles.period}>{i18n.t('pricing_period_annual_slash')}</Text>
                     </View>
-                    <Text style={styles.trialText}>5 días de prueba GRATIS</Text>
+                    <Text style={styles.trialText}>{i18n.t('pricing_trial_text_5_days')}</Text>
                 </View>
 
                 <View style={styles.footer}>
@@ -77,33 +81,33 @@ export const PaywallScreen = () => {
                         disabled={loading}
                     >
                         <Text style={styles.buttonText}>
-                            {loading ? 'Iniciando...' : 'Comenzar Prueba de 5 Días Gratis'}
+                            {loading ? i18n.t('pricing_button_starting') : i18n.t('pricing_button_start_5_days')}
                         </Text>
                     </TouchableOpacity>
 
                     <Text style={styles.legalText}>
-                        Después 14,99 €/año. Cancela cuando quieras.
+                        {i18n.t('pricing_legal_annual')}
                     </Text>
 
                     <View style={styles.linksContainer}>
                         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
                             <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF' }]}>
-                                ¿Ya tienes cuenta? Iniciar Sesión
+                                {i18n.t('pricing_login_link')}
                             </Text>
                         </TouchableOpacity>
                     </View>
 
                     <View style={[styles.linksContainer, { marginTop: 20 }]}>
                         <TouchableOpacity onPress={handleRestore}>
-                            <Text style={styles.link}>Restaurar compras</Text>
+                            <Text style={styles.link}>{i18n.t('pricing_restore_short')}</Text>
                         </TouchableOpacity>
                         <Text style={styles.divider}>•</Text>
                         <TouchableOpacity>
-                            <Text style={styles.link}>Términos</Text>
+                            <Text style={styles.link}>{i18n.t('pricing_terms')}</Text>
                         </TouchableOpacity>
                         <Text style={styles.divider}>•</Text>
                         <TouchableOpacity>
-                            <Text style={styles.link}>Privacidad</Text>
+                            <Text style={styles.link}>{i18n.t('pricing_privacy')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>

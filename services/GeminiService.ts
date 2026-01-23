@@ -59,12 +59,12 @@ export class GeminiService {
         const topExpensive = [...processedCollection]
             .sort((a, b) => b.price - a.price)
             .slice(0, 5)
-            .map((item, index) => `${index + 1}. "${item.title}" (${item.price > 0 ? '$' + item.price : 'Sin precio'})`)
+            .map((item, index) => `${index + 1}. "${item.title}" (${item.price > 0 ? '$' + item.price.toFixed(2) : 'Sin precio'})`)
             .join('\n');
 
         // 3. Generar la lista completa
         const albumsList = processedCollection.map((img) => {
-            const priceText = img.price > 0 ? `$${img.price}` : 'Sin estimación';
+            const priceText = img.price > 0 ? `$${img.price.toFixed(2)}` : 'Sin estimación';
             return `- "${img.title}" de ${img.artist} (${img.year}) | Estilos: ${img.styles} | Valor Est.: ${priceText}`;
         }).join('\n');
 
@@ -84,7 +84,8 @@ Instrucciones:
 2. GÉNEROS/ESTILOS: Si preguntan qué estilos escucha, analiza los campos "Estilos" de la lista completa.
 3. RECOMENDACIONES: Basa tus recomendaciones en los estilos que predominan en su colección.
 4. CURIOSIDADES: Si ves discos raros o caros, coméntalo proactivamente.
-5. Responde siempre en Español con tono experto pero cercano.
+5. FORMATO DE PRECIOS: Muestra SIEMPRE los precios sin decimales
+6. Responde siempre en Español con tono experto pero cercano.
 `.trim();
     }
 
