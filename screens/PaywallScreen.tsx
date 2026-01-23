@@ -40,8 +40,9 @@ export const PaywallScreen = () => {
     return (
         <View style={styles.container}>
             {/* Background Image / Gradient */}
+            {/* Background Image / Gradient */}
             <Image
-                source={{ uri: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?q=80&w=2070&auto=format&fit=crop' }}
+                source={require('../assets/wall.png')}
                 style={styles.backgroundImage}
             />
             <LinearGradient
@@ -50,22 +51,12 @@ export const PaywallScreen = () => {
             />
 
             <SafeAreaView style={styles.contentContainer}>
-                <View style={styles.header}>
-                    <Text style={styles.preTitle}>{i18n.t('pricing_pre_title')}</Text>
-                    <Text style={styles.title}>{i18n.t('pricing_title_pro')}</Text>
-                </View>
 
-                <View style={styles.featuresContainer}>
-                    <FeatureItem icon="scan-outline" text={i18n.t('pricing_feature_unlimited_scan')} />
-                    <FeatureItem icon="analytics-outline" text={i18n.t('pricing_feature_stats')} />
-                    <FeatureItem icon="cloud-upload-outline" text={i18n.t('pricing_feature_cloud')} />
-                    <FeatureItem icon="gift-outline" text={i18n.t('pricing_feature_bonus')} highlight />
-                </View>
+
+
 
                 <View style={styles.offerCard}>
-                    <View style={styles.badgeContainer}>
-                        <Text style={styles.badgeText}>{i18n.t('pricing_badge_best')}</Text>
-                    </View>
+
                     <Text style={styles.planTitle}>{i18n.t('pricing_plan_annual_title')}</Text>
                     <View style={styles.priceContainer}>
                         <Text style={styles.price}>{i18n.t('pricing_price_annual')}</Text>

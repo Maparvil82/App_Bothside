@@ -33,21 +33,21 @@ export const OnboardingScreen: React.FC = () => {
       id: 1,
       title: t('onboarding_step1_title'),
       subtitle: t('onboarding_step1_subtitle'),
-      image: require('../assets/Gemini_Generated_Image_x5lylox5lylox5ly.png'),
+      image: require('../assets/1.png'),
       color: '#9b59b6',
     },
     {
       id: 2,
       title: t('onboarding_step2_title'),
       subtitle: t('onboarding_step2_subtitle'),
-      image: require('../assets/image.png'),
+      image: require('../assets/2.png'),
       color: '#28a745',
     },
     {
       id: 3,
       title: t('onboarding_step3_title'),
       subtitle: t('onboarding_step3_subtitle'),
-      image: require('../assets/videoframe_8000.png'),
+      image: require('../assets/3.png'),
       color: primaryColor,
     },
     {
@@ -68,7 +68,7 @@ export const OnboardingScreen: React.FC = () => {
       id: 6,
       title: t('onboarding_step6_title'),
       subtitle: t('onboarding_step6_subtitle'),
-      image: require('../assets/image.png'), // Placeholder
+      image: require('../assets/4.png'), // Placeholder
       color: '#8e44ad',
     }
   ];
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: -20,
   },
   illustrationContainer: {
     justifyContent: 'center',
@@ -227,19 +227,19 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: width - 20,
+    width: width - 40,
     height: height * 0.5,
     resizeMode: 'cover',
     borderRadius: 10,
   },
   textContainer: {
-    flex: 1,
+    flex: 2,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
 
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'left',
