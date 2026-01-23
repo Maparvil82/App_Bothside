@@ -13,7 +13,11 @@ import {
     SafeAreaView
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { ChatBubble } from '../components/Chat/ChatBubble';
+import { ChatInput } from '../components/Chat/ChatInput';
+import { TypingIndicator } from '../components/Chat/TypingIndicator';
 import { useAuth } from '../contexts/AuthContext';
+import { useCredits } from '../contexts/CreditsContext';
 import { GeminiService } from '../services/GeminiService';
 import { UserCollectionService } from '../services/database';
 import { CreditService } from '../services/CreditService';
@@ -27,7 +31,8 @@ interface Message {
 }
 
 export const ChatScreen: React.FC = () => {
-    const { user, loadUserSubscriptionAndCredits } = useAuth();
+    const { user } = useAuth();
+    const { credits, deductCredit } = useCredits();
     const { colors } = useTheme();
     const navigation = useNavigation();
     const [messages, setMessages] = useState<Message[]>([]);
@@ -39,7 +44,7 @@ export const ChatScreen: React.FC = () => {
     // Initialize chat when screen opens
     useEffect(() => {
         if (user) {
-            if ((user.creditsRemaining || 0) <= 0) {
+            if (credits <= 0) {
                 Alert.alert(
                     'Sin Créditos AI',
                     'Necesitas créditos para usar el asistente. ¿Quieres ir a la tienda?',
@@ -99,7 +104,8 @@ export const ChatScreen: React.FC = () => {
         if (!inputText.trim()) return;
 
         // CHECK CREDITS before sending
-        if (user && (user.creditsRemaining || 0) <= 0) {
+        // CHECK CREDITS before sending
+        if (credits <= 0) {
             Alert.alert(
                 'Sin Créditos',
                 'Te has quedado sin créditos.',
@@ -134,11 +140,7 @@ export const ChatScreen: React.FC = () => {
             const responseText = await GeminiService.sendMessage(userMessage.text);
 
             // SUCCESS: Deduct and Update
-            if (user) {
-                await CreditService.deductCredits(user.id, 1);
-                // Update local state to reflect new balance immediately
-                await loadUserSubscriptionAndCredits(user.id);
-            }
+            await deductCredit(1); // Use context method which manages state safely
 
             const modelMessage: Message = {
                 id: (Date.now() + 1).toString(),
@@ -183,50 +185,24 @@ export const ChatScreen: React.FC = () => {
                         contentContainerStyle={styles.messagesList}
                         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                         renderItem={({ item }) => (
-                            <View
-                                style={[
-                                    styles.messageBubble,
-                                    item.sender === 'user'
-                                        ? { alignSelf: 'flex-end', backgroundColor: colors.primary }
-                                        : { alignSelf: 'flex-start', backgroundColor: colors.card },
-                                ]}
-                            >
-                                <Text
-                                    style={[
-                                        styles.messageText,
-                                        { color: item.sender === 'user' ? '#fff' : colors.text }
-                                    ]}
-                                >
-                                    {item.text}
-                                </Text>
-                            </View>
+                            <ChatBubble
+                                text={item.text}
+                                sender={item.sender}
+                                timestamp={item.timestamp}
+                            />
                         )}
+                        ListFooterComponent={loading ? <TypingIndicator /> : null}
                     />
                 )}
 
                 {/* Input Area */}
-                <View style={[styles.inputContainer, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
-                    <TextInput
-                        style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
-                        placeholder="Escribe un mensaje..."
-                        placeholderTextColor="gray"
-                        value={inputText}
-                        onChangeText={setInputText}
-                        multiline
-                        maxLength={500}
-                    />
-                    <TouchableOpacity
-                        style={[styles.sendButton, { opacity: !inputText.trim() || loading ? 0.5 : 1 }]}
-                        onPress={handleSend}
-                        disabled={!inputText.trim() || loading}
-                    >
-                        {loading ? (
-                            <ActivityIndicator color={colors.primary} size="small" />
-                        ) : (
-                            <Ionicons name="send" size={24} color={colors.primary} />
-                        )}
-                    </TouchableOpacity>
-                </View>
+                <ChatInput
+                    value={inputText}
+                    onChangeText={setInputText}
+                    onSend={handleSend}
+                    loading={loading}
+                    placeholder="Escribe un mensaje..."
+                />
             </KeyboardAvoidingView>
         </SafeAreaView>
     );
@@ -246,35 +222,7 @@ const styles = StyleSheet.create({
         fontSize: 16,
     },
     messagesList: {
-        padding: 16,
-        paddingBottom: 32,
-    },
-    messageBubble: {
-        maxWidth: '80%',
-        padding: 12,
-        borderRadius: 20,
-        marginBottom: 12,
-    },
-    messageText: {
-        fontSize: 16,
-        lineHeight: 22,
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 12,
-        paddingBottom: Platform.OS === 'ios' ? 12 : 12,
-        borderTopWidth: 1,
-    },
-    input: {
-        flex: 1,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        borderRadius: 24,
-        marginRight: 10,
-        maxHeight: 100,
-    },
-    sendButton: {
-        padding: 8,
+        paddingVertical: 16,
+        paddingHorizontal: 0,
     },
 });

@@ -56,6 +56,7 @@ import { ChatModal } from '../components/ChatModal';
 import { ChatScreen } from '../screens/ChatScreen';
 import { PaywallScreen } from '../screens/PaywallScreen';
 import { SubscriptionProvider, useSubscription } from '../contexts/SubscriptionContext';
+import { CreditsProvider } from '../contexts/CreditsContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -728,17 +729,19 @@ const AppNavigator = () => {
         <SubscriptionProvider>
           <ThemedNavigationContainer>
             <GemsProvider>
-              <AppStack />
-              <DarkModeWIPModal />
+              <CreditsProvider>
+                <AppStack />
+                <DarkModeWIPModal />
 
-              {/* Modal Global - Fuera del Stack Navigator */}
-              <CreateMaletaModal
-                visible={isCreateMaletaVisible}
-                onClose={() => setIsCreateMaletaVisible(false)}
-                onSubmit={handleCreateMaleta}
-                loading={creatingMaleta}
-                initialAlbumId={initialAlbumId ?? undefined}
-              />
+                {/* Modal Global - Fuera del Stack Navigator */}
+                <CreateMaletaModal
+                  visible={isCreateMaletaVisible}
+                  onClose={() => setIsCreateMaletaVisible(false)}
+                  onSubmit={handleCreateMaleta}
+                  loading={creatingMaleta}
+                  initialAlbumId={initialAlbumId ?? undefined}
+                />
+              </CreditsProvider>
             </GemsProvider>
           </ThemedNavigationContainer>
         </SubscriptionProvider>

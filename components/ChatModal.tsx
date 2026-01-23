@@ -14,6 +14,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
+import { useCredits } from '../contexts/CreditsContext';
+import { ChatBubble } from './Chat/ChatBubble';
+import { ChatInput } from './Chat/ChatInput';
+import { TypingIndicator } from './Chat/TypingIndicator';
 import { GeminiService } from '../services/GeminiService';
 import { UserCollectionService, UserMaletaService } from '../services/database';
 import { CreditService } from '../services/CreditService';
@@ -32,7 +36,8 @@ interface ChatModalProps {
 }
 
 export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
-    const { user, loadUserSubscriptionAndCredits } = useAuth();
+    const { user } = useAuth();
+    const { credits, deductCredit } = useCredits(); // Use CreditsContext
     const { colors } = useTheme();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
@@ -49,6 +54,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
     }, [visible, user]);
 
     const initializeChat = async () => {
+        // Same initialization logic
         console.log('🚀 ChatModal: initializeChat started');
         setInitializing(true);
         try {
@@ -70,8 +76,6 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
             console.log('✅ ChatModal: Chat session started');
 
             // 4. Set initial greeting
-
-            // 4. Set initial greeting
             setMessages([
                 {
                     id: '1',
@@ -91,8 +95,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
     const handleSend = async () => {
         if (!inputText.trim()) return;
 
-        // CHECK CREDITS before sending (Double check)
-        if (user && (user.creditsRemaining || 0) <= 0) {
+        // CHECK CREDITS: Use context value
+        if (credits <= 0) {
             Alert.alert(
                 'Sin Créditos',
                 'Te has quedado sin créditos.',
@@ -101,9 +105,7 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
                     {
                         text: 'Recargar', onPress: () => {
                             onClose();
-                            // We need navigation here. If not available easily, just close.
-                            // But we can try to use a global ref or just let them find the store.
-                            // For now, simple alert.
+                            // Navigation logic to store
                         }
                     }
                 ]
@@ -125,19 +127,8 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
         try {
             const responseText = await GeminiService.sendMessage(userMessage.text);
 
-            // SUCCESS: Deduct and Update
-            if (user) {
-                await CreditService.deductCredits(user.id, 1);
-                // We assume AuthContext updates automatically or we trigger it?
-                // ChatModal uses `useAuth`, but we need to call `loadUserSubscriptionAndCredits`.
-                // Let's import the method from hook? 
-                // We'll trust the global state will update if we had the method key, 
-                // but local `useAuth` destructuring `loadUserSubscriptionAndCredits` wasn't in the original file view I saw.
-                // Ah, I need to check if `loadUserSubscriptionAndCredits` is available in `useAuth`.
-                // Looking at AuthContext view (Step 219), yes it is!
-                // checking ChatModal view (Step 250), it destructured { user }.
-                // I need to update the destructuring too.
-            }
+            // SUCCESS: Deduct using context (prevent crash)
+            await deductCredit(1);
 
             const modelMessage: Message = {
                 id: (Date.now() + 1).toString(),
@@ -162,77 +153,58 @@ export const ChatModal: React.FC<ChatModalProps> = ({ visible, onClose }) => {
     };
 
     return (
-        <KeyboardAvoidingView
-            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-            style={[styles.container, { backgroundColor: colors.background }]}
+        <Modal
+            visible={visible}
+            animationType="slide"
+            presentationStyle="pageSheet"
+            onRequestClose={onClose}
         >
-            {/* Header */}
-            <View style={[styles.header, { borderBottomColor: colors.border }]}>
-                <Text style={[styles.headerTitle, { color: colors.text }]}>Asistente Bothside</Text>
-                <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-                    <Ionicons name="close" size={24} color={colors.text} />
-                </TouchableOpacity>
-            </View>
-
-            {/* Chat Area */}
-            {initializing ? (
-                <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <Text style={[styles.loadingText, { color: colors.text }]}>Analizando tu colección...</Text>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                style={[styles.container, { backgroundColor: colors.background }]}
+            >
+                {/* Header */}
+                <View style={[styles.header, { borderBottomColor: colors.border }]}>
+                    <Text style={[styles.headerTitle, { color: colors.text }]}>Asistente Bothside</Text>
+                    <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                        <Ionicons name="close" size={24} color={colors.text} />
+                    </TouchableOpacity>
                 </View>
-            ) : (
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(item) => item.id}
-                    contentContainerStyle={styles.messagesList}
-                    onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-                    renderItem={({ item }) => (
-                        <View
-                            style={[
-                                styles.messageBubble,
-                                item.sender === 'user'
-                                    ? { alignSelf: 'flex-end', backgroundColor: colors.primary }
-                                    : { alignSelf: 'flex-start', backgroundColor: colors.card },
-                            ]}
-                        >
-                            <Text
-                                style={[
-                                    styles.messageText,
-                                    { color: item.sender === 'user' ? '#fff' : colors.text }
-                                ]}
-                            >
-                                {item.text}
-                            </Text>
-                        </View>
-                    )}
-                />
-            )}
 
-            {/* Input Area */}
-            <View style={[styles.inputContainer, { borderTopColor: colors.border, backgroundColor: colors.background }]}>
-                <TextInput
-                    style={[styles.input, { backgroundColor: colors.card, color: colors.text }]}
-                    placeholder="Escribe un mensaje..."
-                    placeholderTextColor="gray"
+                {/* Chat Area */}
+                {initializing ? (
+                    <View style={styles.centerContainer}>
+                        <ActivityIndicator size="large" color={colors.primary} />
+                        <Text style={[styles.loadingText, { color: colors.text }]}>Analizando tu colección...</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        ref={flatListRef}
+                        data={messages}
+                        keyExtractor={(item) => item.id}
+                        contentContainerStyle={styles.messagesList}
+                        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+                        renderItem={({ item }) => (
+                            <ChatBubble
+                                text={item.text}
+                                sender={item.sender}
+                                timestamp={item.timestamp}
+                            />
+                        )}
+                        ListFooterComponent={loading ? <TypingIndicator /> : null}
+                    />
+                )}
+
+                {/* Input Area */}
+                <ChatInput
                     value={inputText}
                     onChangeText={setInputText}
-                    multiline
-                    maxLength={500}
+                    onSend={handleSend}
+                    loading={loading}
+                    placeholder="Pregunta sobre tu música..."
                 />
-                <TouchableOpacity
-                    style={[styles.sendButton, { opacity: !inputText.trim() || loading ? 0.5 : 1 }]}
-                    onPress={handleSend}
-                    disabled={!inputText.trim() || loading}
-                >
-                    {loading ? (
-                        <ActivityIndicator color={colors.primary} size="small" />
-                    ) : (
-                        <Ionicons name="send" size={24} color={colors.primary} />
-                    )}
-                </TouchableOpacity>
-            </View>
-        </KeyboardAvoidingView>
+            </KeyboardAvoidingView>
+        </Modal>
     );
 };
 

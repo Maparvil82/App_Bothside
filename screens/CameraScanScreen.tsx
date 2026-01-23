@@ -6,6 +6,7 @@ import { useNavigation, useIsFocused } from '@react-navigation/native';
 import { GeminiService } from '../services/GeminiService';
 import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
+import { useCredits } from '../contexts/CreditsContext';
 import { CreditService } from '../services/CreditService';
 
 export const CameraScanScreen = () => {
@@ -15,12 +16,13 @@ export const CameraScanScreen = () => {
     const [scanning, setScanning] = useState(false);
 
     // Credit Logic
-    const { user, loadUserSubscriptionAndCredits } = useAuth();
+    const { user } = useAuth();
+    const { credits, deductCredit } = useCredits();
     const isFocused = useIsFocused();
 
     useEffect(() => {
         if (isFocused && user) {
-            if ((user.creditsRemaining || 0) <= 0) {
+            if (credits <= 0) {
                 Alert.alert(
                     'Sin Créditos AI',
                     'Necesitas créditos para usar el Escáner Mágico. ¿Quieres adquirir un paquete?',
@@ -60,7 +62,7 @@ export const CameraScanScreen = () => {
 
             // Check credits one last time before action
             const COST_SCAN = 5;
-            if ((user?.creditsRemaining || 0) < COST_SCAN) {
+            if (credits < COST_SCAN) {
                 Alert.alert('Créditos Insuficientes', `Necesitas ${COST_SCAN} créditos para escanear.`);
                 return;
             }
@@ -86,15 +88,7 @@ export const CameraScanScreen = () => {
 
                     if (isValidResult(result.artist) && isValidResult(result.title)) {
                         // SUCCESS: Deduct Credit
-                        if (user) {
-                            try {
-                                await CreditService.deductCredits(user.id, COST_SCAN);
-                                await loadUserSubscriptionAndCredits(user.id);
-                            } catch (err) {
-                                console.error('Error deducting credits:', err);
-                                // Optional: refund or alert? For now just log.
-                            }
-                        }
+                        await deductCredit(COST_SCAN);
 
                         // Navigate back
                         navigation.navigate('AddDisc', {
