@@ -14,6 +14,7 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { useAuth } from '../contexts/AuthContext';
+import { useCredits } from '../contexts/CreditsContext';
 import { ProfileService, UserProfile } from '../services/database';
 import { supabase } from '../lib/supabase';
 
@@ -23,6 +24,7 @@ export const AccountScreen: React.FC = () => {
     const navigation = useNavigation<any>();
     const { colors } = useTheme();
     const { user, signOut } = useAuth();
+    const { credits } = useCredits();
     const { t } = useTranslation();
 
     const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -292,7 +294,7 @@ export const AccountScreen: React.FC = () => {
                                     <View>
                                         <Text style={[styles.menuItemLabel, { color: colors.text }]}>{t('account_label_available_credits')}</Text>
                                         <Text style={[styles.menuItemValue, { color: colors.primary, fontWeight: 'bold' }]}>
-                                            {user?.creditsRemaining || 0} ⚡
+                                            {credits} ⚡
                                         </Text>
                                     </View>
                                 </View>

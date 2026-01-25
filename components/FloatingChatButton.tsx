@@ -9,19 +9,21 @@ interface FloatingChatButtonProps {
 }
 
 import { useAuth } from '../contexts/AuthContext';
+import { useCredits } from '../contexts/CreditsContext';
 import { useNavigation } from '@react-navigation/native';
 
 export const FloatingChatButton: React.FC<FloatingChatButtonProps> = ({ onPress, style }) => {
     const { colors } = useTheme();
     const [modalVisible, setModalVisible] = useState(false);
     const { user } = useAuth();
+    const { credits } = useCredits(); // Use real-time credits
     const navigation = useNavigation<any>();
 
     const handlePress = () => {
         if (!user) return;
 
         // Gating Check
-        if ((user.creditsRemaining || 0) <= 0) {
+        if (credits <= 0) {
             Alert.alert(
                 'Sin Créditos AI',
                 'Necesitas créditos para usar el asistente AI. ¿Quieres adquirir un paquete?',

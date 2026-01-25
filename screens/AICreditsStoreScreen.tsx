@@ -6,6 +6,7 @@ import { AppColors } from '../src/theme/colors';
 import { useTheme } from '@react-navigation/native';
 import { CreditService } from '../services/CreditService';
 import { useAuth } from '../contexts/AuthContext';
+import { useCredits } from '../contexts/CreditsContext';
 import { useTranslation, TxKeyPath } from '../src/i18n/useTranslation';
 import { useSubscription } from '../contexts/SubscriptionContext';
 
@@ -26,7 +27,8 @@ const PACKAGES: Package[] = [
 export const AICreditsStoreScreen = () => {
     const navigation = useNavigation();
     const { colors } = useTheme();
-    const { user, loadUserSubscriptionAndCredits } = useAuth();
+    const { user } = useAuth();
+    const { credits, refreshCredits } = useCredits(); // Use context for credits
     const [loading, setLoading] = useState<string | null>(null);
     const { t } = useTranslation();
 
@@ -52,7 +54,7 @@ export const AICreditsStoreScreen = () => {
             const success = await CreditService.addCredits(user.id, pkg.amount);
 
             if (success) {
-                await loadUserSubscriptionAndCredits(user.id); // Refresh context
+                await refreshCredits(); // Refresh credits context
                 Alert.alert(t('store_purchase_success_title'), t('store_purchase_success_message').replace('{0}', pkg.credits.toString()));
                 navigation.goBack();
             } else {
@@ -81,7 +83,7 @@ export const AICreditsStoreScreen = () => {
 
                     <View style={styles.balanceContainer}>
                         <Text style={styles.balanceLabel}>{t('store_current_balance')}</Text>
-                        <Text style={styles.balanceValue}>{user?.creditsRemaining || 0} ⚡</Text>
+                        <Text style={styles.balanceValue}>{credits} ⚡</Text>
                     </View>
                 </View>
 
