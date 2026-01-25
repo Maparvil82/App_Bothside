@@ -4,19 +4,21 @@ import { en } from './en';
 import { fr } from './fr';
 import { it } from './it';
 import { de } from './de';
+import { pt } from './pt';
 import { ja } from './ja';
 
 // Detección del idioma del dispositivo
 const deviceLanguage = getLocales()[0]?.languageCode ?? 'en';
 
 // Idioma activo (Fallback a EN si no es uno de los soportados)
-// Supported: es, en, fr, it, de, ja
+// Supported: es, en, fr, it, de, ja, pt
 let detectedLocale = 'en';
 if (deviceLanguage.startsWith('es')) detectedLocale = 'es';
 else if (deviceLanguage.startsWith('fr')) detectedLocale = 'fr';
 else if (deviceLanguage.startsWith('it')) detectedLocale = 'it';
 else if (deviceLanguage.startsWith('de')) detectedLocale = 'de';
 else if (deviceLanguage.startsWith('ja')) detectedLocale = 'ja';
+else if (deviceLanguage.startsWith('pt')) detectedLocale = 'pt';
 else detectedLocale = 'en';
 
 export const activeLocale = detectedLocale;
@@ -29,6 +31,7 @@ export const translations = {
     it,
     de,
     ja,
+    pt,
 };
 
 // Función de traducción simple

@@ -14,7 +14,6 @@ export const en = {
     auth_placeholder_password: "Password",
     auth_switch_to_login: "Already have an account? Log in",
     auth_switch_to_signup: "Don't have an account? Create account",
-
     // Onboarding
     onboarding_step1_title: "AI that understands your collection",
     onboarding_step1_subtitle: "Prepare a bag for a 2-hour Rare Soul set or give me a detailed report of my collection.",
@@ -29,7 +28,6 @@ export const en = {
     onboarding_step6_title: "DJ Planner",
     onboarding_step6_subtitle: "Organize your sessions, track earnings, plan events, and improve as a DJ.",
     onboarding_has_account: "Do you have a Bothside account?",
-
     // Dashboard
     dashboard_error_loading_stats: "Error loading stats",
     dashboard_collection_value_title: "Collection Value",
@@ -65,7 +63,6 @@ export const en = {
     dashboard_ratio_level_medium: "Medium",
     dashboard_ratio_level_low: "Low",
     dashboard_ratio_level_no_data: "No data",
-
     // Common
     common_no_image: "No image",
     common_untitled: "Untitled",
@@ -74,7 +71,6 @@ export const en = {
     common_warning: "Warning",
     common_info: "Info",
     common_notice: "Notice",
-
     common_success: "Success",
     common_error: "Error",
     common_save: "Save",
@@ -128,7 +124,6 @@ export const en = {
     common_sending: "Sending...",
     common_auth_error: "Authentication error",
     common_close: "Close",
-
     // Search / Collection
     search_error_loading_shelves: "Could not load shelves",
     search_alert_album_in_shelf: "This album is already in this shelf",
@@ -224,9 +219,7 @@ export const en = {
     search_subtitle_select_edition: "Select an edition to replace the current one:",
     search_modal_ai_results_title: "Albums Found",
     search_label_recognized_album: "Recognized Album:",
-
     search_subtitle_collection_results: "Results in your collection:",
-
     // Maletas (Shelves)
     maletas_success_updated: "Shelf updated successfully",
     maletas_error_updating: "Could not update shelf",
@@ -248,7 +241,6 @@ export const en = {
     maletas_filter_public: "Public",
     maletas_filter_private: "Private",
     maletas_loading: "Loading shelves...",
-
     // Profile
     profile_avatar_permission_message: "We need access to your gallery to change your profile picture.",
     profile_avatar_updated: "Profile picture updated successfully",
@@ -262,7 +254,6 @@ export const en = {
     profile_feedback: "Feedback",
     profile_legal: "Legal Information",
     profile_account: "Account",
-
     // AI Chat
     ai_question_valuable_albums: "Most valuable albums",
     ai_question_valuable_albums_query: "What are my most valuable albums and how much are they worth?",
@@ -284,7 +275,6 @@ export const en = {
     ai_empty_title: "Your collection knows you well",
     ai_empty_subtitle: "I have memorized every record on your shelf, it is wonderful, full of surprising data.",
     ai_placeholder_input: "Ask about your collection...",
-
     // Album Detail
     album_detail_error_no_id: "No album ID provided or user not authenticated.",
     album_detail_error_loading: "Error loading album",
@@ -394,7 +384,6 @@ export const en = {
     album_detail_no_videos: "No videos available for this album",
     album_detail_want_have: "Want / Have",
     album_detail_video_title: "Album Video",
-
     // Collector Rank
     collector_rank_title: "Collector Rank",
     collector_rank_novato: "Novice",
@@ -412,7 +401,6 @@ export const en = {
     collector_rank_global_stats: "{percent} of users (globally) are at this level",
     collector_rank_next_level: "Next level: {level}",
     collector_rank_ranking: "Ranking",
-
     // Add Disc Screen
     add_disc_error_manual_input: "Please enter both artist and album",
     add_disc_error_discogs_connection: "Could not connect to Discogs. Check your API token.",
@@ -458,7 +446,6 @@ export const en = {
     add_disc_tab_manual: "Manual",
     add_disc_tab_camera: "Camera",
     add_disc_error_ocr_search: "Could not search results on Discogs",
-
     // Pricing Screen
     pricing_feature_scan: "Smart AI cover scanning",
     pricing_feature_assistant: "Music and collection assistant",
@@ -506,7 +493,6 @@ export const en = {
     pricing_alert_restore_message: "Looking for active subscriptions...",
     pricing_error_title: "Error",
     pricing_error_trial: "Could not start trial. Please try again.",
-
     // Account Screen
     account_success_profile_updated: "Profile updated successfully",
     account_error_profile_update: "Could not update profile",
@@ -545,7 +531,6 @@ export const en = {
     account_section_bothside_ai: "Bothside AI",
     account_label_available_credits: "Available Credits",
     account_action_recharge: "Top up",
-
     // IA Subscription Screen
     ia_sub_error_loading: "Could not load subscription",
     ia_sub_alert_management_production: "Management available in production",
@@ -562,7 +547,6 @@ export const en = {
     ia_sub_description_3: "Your credits renew automatically every billing cycle.",
     ia_sub_button_manage: "Manage my subscription",
     ia_sub_footer_extra_credits: "Soon you will be able to buy extra AI credit packs.",
-
     // PrePurchase Screen
     pre_purchase_error_user_not_found: "User not found.",
     pre_purchase_error_trial_activation: "Could not activate free trial.",
@@ -571,7 +555,6 @@ export const en = {
     pre_purchase_status_preparing: "Preparing purchase...",
     pre_purchase_label_selected_plan: "Selected plan:",
     pre_purchase_plan_trial: "Free trial",
-
     // Planner / Calendar
     header_dj_planner: "DJ Planner",
     planner_view_calendar: "Calendar",
@@ -612,7 +595,6 @@ export const en = {
     planner_log_notification_response: "Notification response",
     planner_log_prepare_now: "Prepare now - Session",
     planner_log_post_session: "Post-session notification - Session",
-
     // Album Detail
     album_detail_header: "Album Detail",
     album_detail_tell_us: "Tell us about this album",
@@ -620,7 +602,6 @@ export const en = {
     // Account Screen (New)
     account_placeholder_new_email: "new@email.com",
     account_delete_modal_email_example: "maparvil@gmail.com",
-
     // Admin Screen
     admin_error_fetch_albums: "Could not fetch albums",
     admin_info_all_stats_present: "All albums already have stats",
@@ -637,7 +618,6 @@ export const en = {
     admin_stats_without: "Without stats:",
     admin_button_update_stats: "Update Stats",
     admin_loading_updating: "Updating stats... This may take several minutes.",
-
     // Audio Scan Screen
     audio_scan_error_analysis: "An error occurred while analyzing audio.",
     audio_scan_found_title: "Found!",
@@ -649,7 +629,6 @@ export const en = {
     audio_scan_idle_title: "What's playing?",
     audio_scan_idle_desc: "Press the button to start analyzing music.",
     audio_scan_button_start: "Start Scan",
-
     // DJ Stats Dashboard
     dj_stats_login_required: "Log in to see your DJ stats.",
     dj_stats_level_pro: "Pro Level",
@@ -660,7 +639,6 @@ export const en = {
     dj_stats_cta_title: "DJ Planner Pro",
     dj_stats_cta_description: "Bothside includes essential features to log your sessions...",
     dj_stats_cta_link: "DJ Planner Pro",
-
     // Edit Maleta Screen
     edit_maleta_error_title_required: "Title is required",
     edit_maleta_error_login_required: "You must log in to edit the list",
@@ -688,7 +666,6 @@ export const en = {
     edit_maleta_privacy_public_desc: "Any user can see this list",
     edit_maleta_privacy_private_desc: "Only you can see this list",
     edit_maleta_section_danger: "Dangerous Actions",
-
     // Store Screen
     store_title: "AI Store",
     store_hero_title: "Boost your Collection",
@@ -705,7 +682,6 @@ export const en = {
     store_disclaimer: "Credits do not expire. Payments processed securely.",
     store_trial_restriction_title: "Trial Period",
     store_trial_restriction_message: "Wait for your full subscription to activate before recharging credits.",
-
     // Feedback Screen
     feedback_error_empty_text: "Please write your feedback",
     feedback_error_empty_category: "Please select a category",
@@ -724,7 +700,6 @@ export const en = {
     feedback_section_text: "Your feedback",
     feedback_placeholder_text: "Tell us what you think...",
     feedback_button_send: "Send Feedback",
-
     // Gems Screen
     gems_removed_title: "Gem Removed",
     gems_removed_message_suffix: "removed from your Gems",
@@ -735,7 +710,6 @@ export const en = {
     gems_count_plural: "favorite albums",
     gems_empty_title: "You have no Gems yet",
     gems_empty_text: "Mark your favorite albums as Gems from the collection",
-
     // Leaderboard Screen
     rank_master: "Master Collector",
     rank_expert: "Expert Collector",
@@ -744,7 +718,6 @@ export const en = {
     rank_novice: "Novice Collector",
     rank_beginner: "Beginner",
     leaderboard_you_suffix: "(You)",
-
     // Legal Screen
     legal_version_text: "Bothside v1.0.0 (Beta)",
     legal_section_docs: "Legal Documents",
@@ -757,7 +730,6 @@ export const en = {
     legal_attr_gemini_title: "Google Gemini AI",
     legal_delete_account_title: "Delete Account",
     legal_delete_account_message: "Account deletion will be available soon. In the meantime, you can request it by writing to support.",
-
     // View Maleta Screen
     view_maleta_error_load: "Could not load list",
     view_maleta_success_update: "Shelf updated successfully",
@@ -781,13 +753,11 @@ export const en = {
     view_maleta_no_albums_found: "No albums found",
     view_maleta_adding: "Adding...",
     view_maleta_button_add_count: "Add ({0})",
-
     // Select Cell Screen
     select_cell_success_title: "Location Saved!",
     select_cell_error_save: "Could not save location.",
     select_cell_title: "Select Location",
     select_cell_subtitle: "You are locating in:",
-
     // Shelf Config Screen
     shelf_config_error_load: "Could not load shelf configuration.",
     shelf_config_error_invalid_dimensions: "Please enter a valid number of rows and columns.",
@@ -797,7 +767,6 @@ export const en = {
     shelf_config_subtitle: "Define the structure of your physical shelf (e.g. Kallax type).",
     shelf_config_placeholder_dimension: "Ex: 4",
     shelf_config_button_save: "Save Configuration",
-
     // Shelf Edit Screen
     shelf_edit_title_edit: "Edit Shelf",
     shelf_edit_title_create: "Create Shelf",
@@ -808,11 +777,9 @@ export const en = {
     shelf_edit_error_save: "Could not save shelf.",
     shelf_edit_label_name: "Shelf Name",
     shelf_edit_placeholder_name: "Ex: Main Kallax",
-
     // Shelf View Screen
     shelf_view_error_load: "Could not load shelf.",
     shelf_view_not_found: "Shelf not found.",
-
     // Shelves List Screen
     shelves_list_error_load: "Could not load shelves.",
     collection_delete_title: "Delete “{title}”",
@@ -825,7 +792,6 @@ export const en = {
     shelves_list_error_delete: "Could not delete shelf.",
     shelves_list_empty_title: "You have no shelves.",
     shelves_list_empty_text: "Create one to start organizing your vinyls!",
-
     // Components
     session_note_title: "How was your session?",
     session_note_subtitle: "Add a note to remember it later",
@@ -834,7 +800,6 @@ export const en = {
     session_note_error_session_user: "Could not identify session or user",
     session_note_success_save: "Note saved successfully",
     session_note_error_save: "Could not save note. Please try again.",
-
     audio_notes_title: "Audio Notes",
     audio_notes_loading: "Loading audio notes...",
     audio_notes_empty_title: "You have no audio notes",
@@ -842,10 +807,8 @@ export const en = {
     audio_notes_error_load: "Could not load albums with audio notes",
     audio_notes_error_process: "Could not process audio albums",
     audio_notes_error_play: "Could not play audio note",
-
     audio_recorder_title: "Audio note for {0}",
     audio_recorder_instructions: "Record an audio note of max 1 minute about this album",
-
     // Dark Mode Modal
     darkMode_modal_title: "Dark Mode in Development",
     darkMode_modal_message: "We are actively working on the dark version user interface to offer you the best experience.",
@@ -865,10 +828,8 @@ export const en = {
     audio_recorder_error_auth_login: "You must log in to save audio notes. Please go to the login screen.",
     audio_recorder_success_save: "Audio note saved successfully",
     audio_recorder_recording_progress_title: "Recording in progress",
-
     maletas_collaborative_youAreOwner: "You are the owner",
     audio_recorder_recording_progress_message: "Are you sure you want to close? The current recording will be lost.",
-
     // Maletas Collaborative
     maletas_collaborative_switchLabel: "Make suitcase collaborative",
     maletas_collaborative_switchDescription: "Invite other Bothside users to build this suitcase together. Each collaborator can add records from their own collection.",
@@ -894,7 +855,6 @@ export const en = {
     maletas_collaborative_removeMessage: "Are you sure you want to remove this collaborator?",
     maletas_collaborative_removeConfirm: "Remove",
     maletas_collaborative_errorRemoveFailed: "Could not remove collaborator",
-
     camera_permission_requesting: "Requesting camera permissions...",
     camera_permission_denied: "You do not have camera permissions",
     camera_permission_instruction: "Go to Settings and enable camera permissions",
@@ -920,7 +880,6 @@ export const en = {
     camera_error_save_collection: "Could not save album to collection",
     camera_error_unavailable: "Camera unavailable",
     camera_error_capture: "Could not capture photo",
-
     discogs_stats_title: "Stats",
     discogs_stats_avg_price: "Avg Price",
     discogs_stats_have: "Have:",
@@ -928,7 +887,6 @@ export const en = {
     discogs_stats_last_sold: "Last sold:",
     discogs_stats_low: "Low:",
     discogs_stats_high: "High:",
-
     session_earnings_title: "Earnings for {0}",
     session_earnings_loading: "Loading earnings...",
     session_earnings_empty_title: "No earnings recorded",
@@ -938,24 +896,18 @@ export const en = {
     session_earnings_view_stats: "View stats",
     session_earnings_error_load: "Could not load session earnings",
     session_earnings_error_process: "Could not process session earnings",
-
     sessions_list_no_name: "No name",
     sessions_list_empty: "No upcoming sessions",
-
     tag_selector_title: "Select Tag",
     tag_selector_placeholder: "Search or create new tag...",
     tag_selector_create_new: "Create new tag:",
     tag_selector_no_results: "No tags found",
     tag_selector_empty: "No saved tags",
-
     time_picker_select_hour: "Select hour",
     time_picker_select_minute: "Select minutes",
-
     top_artists_title: "Top 5 Artists",
     top_artists_albums_count: "{0} albums",
-
     top_styles_title: "Top 5 Styles",
-
     youtube_player_login_required: "This video requires signing in to YouTube",
     youtube_player_load_error: "Error loading video in app",
     youtube_player_open_error: "Could not open link",
@@ -966,8 +918,6 @@ export const en = {
     youtube_player_loading: "Loading video...",
     youtube_player_footer_text: "Playing from YouTube",
     youtube_player_footer_subtext: "Use video controls to pause/play",
-
-
     // Auto Bag Creation
     autoBag_modalTitle: "Create a bag for this session?",
     autoBag_modalDescription: "We can create a bag with this session’s name and automatically add 3 records based on the styles or genres you choose.",
@@ -980,7 +930,6 @@ export const en = {
     autoBag_toastError: "An error occurred while creating the bag. Please try again.",
     autoBag_errorNoStyles: "Select at least one style or genre.",
     autoBag_createSwitchLabel: "Create bag for this session",
-
     // Session Linked Albums
     album_detail_played_in: 'Played In Sessions',
     album_detail_no_sessions: 'No sessions assigned to this album yet.',

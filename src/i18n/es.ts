@@ -14,7 +14,6 @@ export const es = {
     auth_placeholder_password: "Contraseña",
     auth_switch_to_login: "¿Ya tienes cuenta? Inicia sesión",
     auth_switch_to_signup: "¿No tienes cuenta? Crear cuenta",
-
     // Onboarding
     onboarding_step1_title: "IA que entiende tu colección",
     onboarding_step1_subtitle: "Prepárame una maleta para un set de 2 horas de Rare Soul o " + "Dame un informe detallado de mi colección.",
@@ -29,7 +28,6 @@ export const es = {
     onboarding_step6_title: "DJ Planner",
     onboarding_step6_subtitle: "Organiza tus sesiones, controla tus ganancias, planifica eventos y mejora como DJ.",
     onboarding_has_account: "¿Tiene una cuenta en Bothside?",
-
     // Dashboard
     dashboard_error_loading_stats: "Error al cargar las estadísticas",
     dashboard_collection_value_title: "Valor de tu Colección",
@@ -65,7 +63,6 @@ export const es = {
     dashboard_ratio_level_medium: "Medio",
     dashboard_ratio_level_low: "Bajo",
     dashboard_ratio_level_no_data: "Sin datos",
-
     // Common
     common_no_image: "Sin imagen",
     common_untitled: "Sin título",
@@ -74,7 +71,6 @@ export const es = {
     common_warning: "Aviso",
     common_info: "Info",
     common_notice: "Aviso",
-
     common_success: "Éxito",
     common_error: "Error",
     common_save: "Guardar",
@@ -128,7 +124,6 @@ export const es = {
     common_sending: "Enviando...",
     common_auth_error: "Error de autenticación",
     common_close: "Cerrar",
-
     // Search / Collection
     search_error_loading_shelves: "No se pudieron cargar las estanterías",
     search_alert_album_in_shelf: "Este álbum ya está en esta estantería",
@@ -224,9 +219,7 @@ export const es = {
     search_subtitle_select_edition: "Selecciona una edición para reemplazar la actual:",
     search_modal_ai_results_title: "Discos Encontrados",
     search_label_recognized_album: "Álbum reconocido:",
-
     search_subtitle_collection_results: "Resultados en tu colección:",
-
     // Maletas (Shelves)
     maletas_success_updated: "Maleta actualizada correctamente",
     maletas_error_updating: "No se pudo actualizar la maleta",
@@ -248,7 +241,6 @@ export const es = {
     maletas_filter_public: "Públicas",
     maletas_filter_private: "Privadas",
     maletas_loading: "Cargando maletas...",
-
     // Profile
     profile_avatar_permission_message: "Necesitamos acceso a tu galería para cambiar la foto de perfil.",
     profile_avatar_updated: "Foto de perfil actualizada correctamente",
@@ -262,7 +254,6 @@ export const es = {
     profile_feedback: "Feedback",
     profile_legal: "Información Legal",
     profile_account: "Cuenta",
-
     // AI Chat
     ai_question_valuable_albums: "Álbumes más valiosos",
     ai_question_valuable_albums_query: "¿Cuáles son mis álbumes más valiosos y cuánto valen?",
@@ -284,7 +275,6 @@ export const es = {
     ai_empty_title: "Tu colección te conoce bien",
     ai_empty_subtitle: "He memorizado cada disco de tu estantería, es maravillosa, llena de datos sorprendentes.",
     ai_placeholder_input: "Pregunta sobre tu colección...",
-
     // Album Detail
     album_detail_error_no_id: "No se proporcionó un ID de álbum o el usuario no está autenticado.",
     album_detail_error_loading: "Error al cargar el álbum",
@@ -394,7 +384,6 @@ export const es = {
     album_detail_no_videos: "No hay videos disponibles para este álbum",
     album_detail_want_have: "Want / Have",
     album_detail_video_title: "Video del Álbum",
-
     // Collector Rank
     collector_rank_title: "Rango de Coleccionista",
     collector_rank_novato: "Novato",
@@ -412,7 +401,6 @@ export const es = {
     collector_rank_global_stats: "{percent} de usuarios (del total global) están en este nivel",
     collector_rank_next_level: "Siguiente nivel: {level}",
     collector_rank_ranking: "Ranking",
-
     // Add Disc Screen
     add_disc_error_manual_input: "Por favor ingresa tanto el artista como el álbum",
     add_disc_error_discogs_connection: "No se pudo conectar con Discogs. Verifica tu token de API.",
@@ -458,7 +446,6 @@ export const es = {
     add_disc_tab_manual: "Manual",
     add_disc_tab_camera: "Cámara",
     add_disc_error_ocr_search: "No se pudieron buscar resultados en Discogs",
-
     // Pricing Screen
     pricing_feature_scan: "Escaneo inteligente de portadas con IA",
     pricing_feature_assistant: "Assistant musical y de colección",
@@ -506,7 +493,6 @@ export const es = {
     pricing_alert_restore_message: "Buscando suscripciones activas...",
     pricing_error_title: "Error",
     pricing_error_trial: "No se pudo iniciar la prueba. Inténtalo de nuevo.",
-
     // Account Screen
     account_success_profile_updated: "Perfil actualizado correctamente",
     account_error_profile_update: "No se pudo actualizar el perfil",
@@ -545,7 +531,6 @@ export const es = {
     account_section_bothside_ai: "Bothside AI",
     account_label_available_credits: "Créditos Disponibles",
     account_action_recharge: "Recargar",
-
     // IA Subscription Screen
     ia_sub_error_loading: "No se pudo cargar la suscripción",
     ia_sub_alert_management_production: "Gestión disponible en producción",
@@ -562,7 +547,6 @@ export const es = {
     ia_sub_description_3: "Tus créditos se renuevan automáticamente en cada ciclo de facturación.",
     ia_sub_button_manage: "Gestionar mi suscripción",
     ia_sub_footer_extra_credits: "Pronto podrás comprar paquetes extra de créditos IA.",
-
     // PrePurchase Screen
     pre_purchase_error_user_not_found: "No se encontró el usuario.",
     pre_purchase_error_trial_activation: "No se pudo activar la prueba gratuita.",
@@ -571,7 +555,6 @@ export const es = {
     pre_purchase_status_preparing: "Preparando compra...",
     pre_purchase_label_selected_plan: "Plan seleccionado:",
     pre_purchase_plan_trial: "Prueba gratuita",
-
     // Planner / Calendar
     header_dj_planner: "DJ Planner",
     planner_view_calendar: "Calendario",
@@ -612,7 +595,6 @@ export const es = {
     planner_log_notification_response: "Respuesta a notificación",
     planner_log_prepare_now: "Preparar ahora - Sesión",
     planner_log_post_session: "Notificación post-sesión - Sesión",
-
     // Album Detail
     album_detail_header: "Detalle del Álbum",
     album_detail_tell_us: "Cuéntanos sobre este álbum",
@@ -620,7 +602,6 @@ export const es = {
     // Account Screen (New)
     account_placeholder_new_email: "nuevo@email.com",
     account_delete_modal_email_example: "maparvil@gmail.com",
-
     // Admin Screen
     admin_error_fetch_albums: "No se pudieron obtener los álbumes",
     admin_info_all_stats_present: "Todos los álbumes ya tienen estadísticas",
@@ -637,7 +618,6 @@ export const es = {
     admin_stats_without: "Sin estadísticas:",
     admin_button_update_stats: "Actualizar Estadísticas",
     admin_loading_updating: "Actualizando estadísticas... Esto puede tomar varios minutos.",
-
     // Audio Scan Screen
     audio_scan_error_analysis: "Ocurrió un error al analizar el audio.",
     audio_scan_found_title: "¡Encontrado!",
@@ -649,7 +629,6 @@ export const es = {
     audio_scan_idle_title: "¿Qué está sonando?",
     audio_scan_idle_desc: "Pulsa el botón para empezar a analizar la música.",
     audio_scan_button_start: "Iniciar escaneo",
-
     // DJ Stats Dashboard
     dj_stats_login_required: "Inicia sesión para ver tus estadísticas de DJ.",
     dj_stats_level_pro: "Nivel Pro",
@@ -660,7 +639,6 @@ export const es = {
     dj_stats_cta_title: "DJ Planner Pro",
     dj_stats_cta_description: "Bothside incluye funciones esenciales para registrar tus sesiones...",
     dj_stats_cta_link: "DJ Planner Pro",
-
     // Edit Maleta Screen
     edit_maleta_error_title_required: "El título es obligatorio",
     edit_maleta_error_login_required: "Debes iniciar sesión para editar la lista",
@@ -688,7 +666,6 @@ export const es = {
     edit_maleta_privacy_public_desc: "Cualquier usuario puede ver esta lista",
     edit_maleta_privacy_private_desc: "Solo tú puedes ver esta lista",
     edit_maleta_section_danger: "Acciones Peligrosas",
-
     // Store Screen
     store_title: "Tienda AI",
     store_hero_title: "Potencia tu Colección",
@@ -703,10 +680,8 @@ export const es = {
     store_purchase_success_message: "Has recibido {0} créditos AI.",
     store_purchase_error: "Hubo un problema con la compra. Inténtalo de nuevo.",
     store_disclaimer: "Los créditos no caducan. Pagos procesados de forma segura.",
-
     store_trial_restriction_title: "Periodo de Prueba",
     store_trial_restriction_message: "Espera a que se active tu suscripción completa para recargar créditos.",
-
     // Feedback Screen
     feedback_error_empty_text: "Por favor, escribe tu feedback",
     feedback_error_empty_category: "Por favor, selecciona una categoría",
@@ -725,7 +700,6 @@ export const es = {
     feedback_section_text: "Tu feedback",
     feedback_placeholder_text: "Cuéntanos qué piensas...",
     feedback_button_send: "Enviar Feedback",
-
     // Gems Screen
     gems_removed_title: "Gem Removido",
     gems_removed_message_suffix: "removido de tus Gems",
@@ -736,7 +710,6 @@ export const es = {
     gems_count_plural: "álbumes favoritos",
     gems_empty_title: "No tienes Gems aún",
     gems_empty_text: "Marca tus álbumes favoritos como Gems desde la colección",
-
     // Leaderboard Screen
     rank_master: "Maestro Coleccionista",
     rank_expert: "Coleccionista Experto",
@@ -745,7 +718,6 @@ export const es = {
     rank_novice: "Coleccionista Novato",
     rank_beginner: "Principiante",
     leaderboard_you_suffix: "(Tú)",
-
     // Legal Screen
     legal_version_text: "Bothside v1.0.0 (Beta)",
     legal_section_docs: "Documentos Legales",
@@ -758,7 +730,6 @@ export const es = {
     legal_attr_gemini_title: "Google Gemini AI",
     legal_delete_account_title: "Eliminación de Cuenta",
     legal_delete_account_message: "La eliminación de cuenta estará disponible próximamente. Mientras tanto, puedes solicitarlo escribiendo a soporte.",
-
     // View Maleta Screen
     view_maleta_error_load: "No se pudo cargar la lista",
     view_maleta_success_update: "Maleta actualizada correctamente",
@@ -782,13 +753,11 @@ export const es = {
     view_maleta_no_albums_found: "No se encontraron álbumes",
     view_maleta_adding: "Añadiendo...",
     view_maleta_button_add_count: "Añadir ({0})",
-
     // Select Cell Screen
     select_cell_success_title: "¡Ubicación Guardada!",
     select_cell_error_save: "No se pudo guardar la ubicación.",
     select_cell_title: "Selecciona la Ubicación",
     select_cell_subtitle: "Estás ubicando en:",
-
     // Shelf Config Screen
     shelf_config_error_load: "No se pudo cargar la configuración de la estantería.",
     shelf_config_error_invalid_dimensions: "Por favor, introduce un número válido de filas y columnas.",
@@ -798,7 +767,6 @@ export const es = {
     shelf_config_subtitle: "Define la estructura de tu estantería física (ej. tipo Kallax).",
     shelf_config_placeholder_dimension: "Ej: 4",
     shelf_config_button_save: "Guardar Configuración",
-
     // Shelf Edit Screen
     shelf_edit_title_edit: "Editar Estantería",
     shelf_edit_title_create: "Crear Estantería",
@@ -809,11 +777,9 @@ export const es = {
     shelf_edit_error_save: "No se pudo guardar la estantería.",
     shelf_edit_label_name: "Nombre de la Estantería",
     shelf_edit_placeholder_name: "Ej: Kallax Principal",
-
     // Shelf View Screen
     shelf_view_error_load: "No se pudo cargar la estantería.",
     shelf_view_not_found: "Estantería no encontrada.",
-
     // Shelves List Screen
     shelves_list_error_load: "No se pudieron cargar las estanterías.",
     collection_delete_title: "Eliminar  “{title}”",
@@ -826,7 +792,6 @@ export const es = {
     shelves_list_error_delete: "No se pudo eliminar la estantería.",
     shelves_list_empty_title: "No tienes ninguna estantería.",
     shelves_list_empty_text: "¡Crea una para empezar a organizar tus vinilos!",
-
     // Components
     session_note_title: "¿Cómo fue tu sesión?",
     session_note_subtitle: "Añade una nota para recordarlo más tarde",
@@ -835,7 +800,6 @@ export const es = {
     session_note_error_session_user: "No se pudo identificar la sesión o el usuario",
     session_note_success_save: "Nota guardada correctamente",
     session_note_error_save: "No se pudo guardar la nota. Intenta de nuevo.",
-
     audio_notes_title: "Notas de Audio",
     audio_notes_loading: "Cargando notas de audio...",
     audio_notes_empty_title: "No tienes notas de audio",
@@ -843,10 +807,8 @@ export const es = {
     audio_notes_error_load: "No se pudieron cargar los álbumes con notas de audio",
     audio_notes_error_process: "No se pudieron procesar los álbumes con audio",
     audio_notes_error_play: "No se pudo reproducir la nota de audio",
-
     audio_recorder_title: "Nota de audio para {0}",
     audio_recorder_instructions: "Graba una nota de audio de máximo 1 minuto sobre este álbum",
-
     // Dark Mode Modal
     darkMode_modal_title: "Modo Oscuro en Desarrollo",
     darkMode_modal_message: "Estamos trabajando activamente en la interfaz de usuario de la versión oscura para ofrecerte la mejor experiencia.",
@@ -866,10 +828,8 @@ export const es = {
     audio_recorder_error_auth_login: "Debes iniciar sesión para guardar notas de audio. Por favor, ve a la pantalla de login.",
     audio_recorder_success_save: "Nota de audio guardada correctamente",
     audio_recorder_recording_progress_title: "Grabación en progreso",
-
     maletas_collaborative_youAreOwner: "Eres el creador",
     audio_recorder_recording_progress_message: "¿Estás seguro de que quieres cerrar? Se perderá la grabación actual.",
-
     // Maletas Collaborative
     maletas_collaborative_switchLabel: "Hacer maleta colaborativa",
     maletas_collaborative_switchDescription: "Invita a otros usuarios de Bothside para crear esta maleta juntos. Cada colaborador puede añadir discos de su propia colección.",
@@ -895,7 +855,6 @@ export const es = {
     maletas_collaborative_removeMessage: "¿Estás seguro de que quieres eliminar a este colaborador?",
     maletas_collaborative_removeConfirm: "Eliminar",
     maletas_collaborative_errorRemoveFailed: "No se pudo eliminar al colaborador",
-
     camera_permission_requesting: "Solicitando permisos de cámara...",
     camera_permission_denied: "No tienes permisos de cámara",
     camera_permission_instruction: "Ve a Configuración y habilita los permisos de cámara",
@@ -921,7 +880,6 @@ export const es = {
     camera_error_save_collection: "No se pudo guardar el álbum en la colección",
     camera_error_unavailable: "Cámara no disponible",
     camera_error_capture: "No se pudo capturar la foto",
-
     discogs_stats_title: "Estadísticas",
     discogs_stats_avg_price: "Precio Medio",
     discogs_stats_have: "Lo tienen:",
@@ -929,7 +887,6 @@ export const es = {
     discogs_stats_last_sold: "Último vendido:",
     discogs_stats_low: "Bajo:",
     discogs_stats_high: "Alto:",
-
     session_earnings_title: "Ganancias de {0}",
     session_earnings_loading: "Cargando ganancias...",
     session_earnings_empty_title: "No hay ganancias registradas",
@@ -939,24 +896,18 @@ export const es = {
     session_earnings_view_stats: "Ver estadísticas",
     session_earnings_error_load: "No se pudieron cargar las ganancias de sesiones",
     session_earnings_error_process: "No se pudieron procesar las ganancias de sesiones",
-
     sessions_list_no_name: "Sin nombre",
     sessions_list_empty: "No hay sesiones próximas",
-
     tag_selector_title: "Seleccionar Tag",
     tag_selector_placeholder: "Buscar o crear nuevo tag...",
     tag_selector_create_new: "Crear nuevo tag:",
     tag_selector_no_results: "No se encontraron tags",
     tag_selector_empty: "No hay tags guardados",
-
     time_picker_select_hour: "Seleccionar hora",
     time_picker_select_minute: "Seleccionar minutos",
-
     top_artists_title: "Top 5 Artistas",
     top_artists_albums_count: "{0} álbumes",
-
     top_styles_title: "Top 5 Estilos",
-
     youtube_player_login_required: "Este video requiere iniciar sesión en YouTube",
     youtube_player_load_error: "Error al cargar el video en la app",
     youtube_player_open_error: "No se pudo abrir el enlace",
@@ -967,8 +918,6 @@ export const es = {
     youtube_player_loading: "Cargando video...",
     youtube_player_footer_text: "Reproduciendo desde YouTube",
     youtube_player_footer_subtext: "Usa los controles del video para pausar/reproducir",
-
-
     // Auto Bag Creation
     autoBag_modalTitle: "¿Crear una maleta para esta sesión?",
     autoBag_modalDescription: "Podemos crear una maleta con el nombre de esta sesión y añadir automáticamente 3 discos según los estilos o géneros que elijas.",
@@ -981,7 +930,6 @@ export const es = {
     autoBag_toastError: "Ha ocurrido un error al crear la maleta. Inténtalo de nuevo.",
     autoBag_errorNoStyles: "Selecciona al menos un estilo o género.",
     autoBag_createSwitchLabel: "Crear maleta para esta sesión",
-
     // Session Linked Albums
     album_detail_played_in: 'Sesiones donde lo pinchaste',
     album_detail_no_sessions: 'No has asignado ninguna sesión a este disco aún.',

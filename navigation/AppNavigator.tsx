@@ -541,10 +541,15 @@ const AppStack = () => {
       <Stack.Screen
         name="Leaderboard"
         component={LeaderboardScreen}
-        options={{
+        options={({ navigation }) => ({
           headerShown: true,
-          title: 'Ranking'
-        }}
+          title: 'Ranking',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
+        })}
       />
       {/* ViewMaleta moved to inside MaletasStack usually, but kept here for deep links if needed, duplicates ok */}
       <Stack.Screen
