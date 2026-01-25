@@ -52,8 +52,36 @@ class PurchaseService {
             }
             console.warn('⚠️ No current offering found in RevenueCat');
             return null;
-        } catch (e) {
+        } catch (e: any) {
             console.error('Error fetching offerings:', e);
+            // Check for Expo Go specific error
+            if (e.message && (e.message.includes('Invalid API key') || e.message.includes('native store is not available'))) {
+                console.log('⚠️ Detectado Expo Go sin configuración nativa. Usando Mock Offering.');
+                return {
+                    serverDescription: "Mock Offering",
+                    identifier: "default",
+                    availablePackages: [
+                        {
+                            identifier: "$rc_annual",
+                            packageType: "ANNUAL",
+                            product: {
+                                identifier: "mock_annual_product",
+                                description: "Annual Subscription (Mock)",
+                                title: "Annual Premium",
+                                price: 29.99,
+                                priceString: "$29.99",
+                                currencyCode: "USD",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "SUBSCRIPTION",
+                                productType: "SUBSCRIPTION",
+                                subscriptionPeriod: "P1Y",
+                            },
+                            offeringIdentifier: "default"
+                        } as any
+                    ]
+                } as PurchasesOffering;
+            }
             return null;
         }
     }
@@ -61,6 +89,47 @@ class PurchaseService {
     async purchasePackage(pkg: PurchasesPackage): Promise<{ customerInfo: CustomerInfo; method: 'purchase'; } | null> {
         try {
             await this.EnsureInitialized();
+
+            // Check for Mock Package
+            if (pkg.product.identifier === 'mock_annual_product') {
+                console.log('🛒 Realizando compra simulada (Mock Purchase)');
+                return {
+                    customerInfo: {
+                        entitlements: {
+                            active: {
+                                "premium": {
+                                    identifier: "premium",
+                                    isActive: true,
+                                    willRenew: true,
+                                    periodType: "NORMAL",
+                                    latestPurchaseDate: new Date().toISOString(),
+                                    originalPurchaseDate: new Date().toISOString(),
+                                    expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+                                    store: "APP_STORE",
+                                    productIdentifier: "mock_annual_product",
+                                    isSandbox: true,
+                                    unsubscribeDetectedAt: null,
+                                    billingIssueDetectedAt: null
+                                }
+                            },
+                            all: {}
+                        },
+                        allPurchaseDates: {},
+                        activeSubscriptions: ["mock_annual_product"],
+                        allPurchasedProductIdentifiers: ["mock_annual_product"],
+                        firstSeen: new Date().toISOString(),
+                        originalAppUserId: "mock_user",
+                        requestDate: new Date().toISOString(),
+                        latestExpirationDate: null,
+                        managementURL: null,
+                        nonSubscriptionTransactions: [],
+                        originalApplicationVersion: "1.0",
+                        originalPurchaseDate: new Date().toISOString()
+                    } as any,
+                    method: 'purchase'
+                };
+            }
+
             const { customerInfo } = await Purchases.purchasePackage(pkg);
             return { customerInfo, method: 'purchase' };
         } catch (e: any) {

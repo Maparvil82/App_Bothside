@@ -100,12 +100,31 @@ export const PaywallScreen = () => {
 
                 <View style={styles.footer}>
                     <TouchableOpacity
-                        style={[styles.button, (loading || !pkg) && styles.buttonDisabled]}
-                        onPress={handleSubscribe}
-                        disabled={loading || !pkg}
+                        style={[
+                            styles.button,
+                            (loading) && styles.buttonDisabled,
+                            (!pkg && !loading) && { backgroundColor: '#FF453A' } // Red for error/retry
+                        ]}
+                        onPress={!pkg ? () => {
+                            setLoading(true);
+                            PurchaseService.getOfferings().then((offerings) => {
+                                if (offerings && offerings.availablePackages.length > 0) {
+                                    setPkg(offerings.availablePackages[0]);
+                                } else {
+                                    Alert.alert('Error', 'No se pudieron cargar los planes. Verifica tu conexión.');
+                                }
+                                setLoading(false);
+                            });
+                        } : handleSubscribe}
+                        disabled={loading}
                     >
                         <Text style={styles.buttonText}>
-                            {loading ? i18n.t('pricing_button_starting') : i18n.t('pricing_button_start_5_days')}
+                            {loading
+                                ? i18n.t('pricing_button_starting')
+                                : pkg
+                                    ? i18n.t('pricing_button_start_5_days')
+                                    : 'Reintentar Cargar Plan'
+                            }
                         </Text>
                     </TouchableOpacity>
 

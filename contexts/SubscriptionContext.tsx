@@ -99,18 +99,36 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const checkSubscriptionStatus = async () => {
         if (!user) return;
+
+        // 1. Check Supabase Status (Unified Truth)
+        // If AuthContext says we are premium (from user_subscriptions), we trust it.
+        // We cast to any or check property safely because Typescript might not see isPremium on generic User
+        const isSupabasePremium = (user as any).isPremium === true;
+
+        if (isSupabasePremium) {
+            console.log('✅ SubscriptionContext: User is premium via Supabase');
+            setSubscriptionStatus('active');
+            // We still sync with RC in background if needed, but for now we grant access
+            return;
+        }
+
+        // 2. Check RevenueCat Status
         try {
             const info = await PurchaseService.getCustomerInfo();
             const activeEntitlements = info?.entitlements.active || {};
             const isActive = Object.keys(activeEntitlements).length > 0;
 
             if (isActive) {
+                console.log('✅ SubscriptionContext: User is premium via RevenueCat');
                 setSubscriptionStatus('active');
             } else {
+                console.log('ℹ️ SubscriptionContext: User is NOT premium');
                 setSubscriptionStatus('none');
             }
         } catch (e) {
             console.error('Error checking subscription status:', e);
+            // If API fails, we default to none, unless Supabase said yes (handled above)
+            setSubscriptionStatus('none');
         }
     };
 
