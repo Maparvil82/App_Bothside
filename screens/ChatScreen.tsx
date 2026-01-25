@@ -54,8 +54,7 @@ export const ChatScreen: React.FC = () => {
                             text: 'Ir a Tienda',
                             onPress: () => {
                                 navigation.goBack();
-                                // navigate to store if possible, or just close
-                                // navigation.navigate('AICreditsStore'); 
+                                (navigation as any).navigate('AICreditsStore');
                             }
                         }
                     ]
@@ -113,11 +112,7 @@ export const ChatScreen: React.FC = () => {
                     { text: 'Cancel', style: 'cancel' },
                     {
                         text: 'Recargar', onPress: () => {
-                            // Navigate to store
-                            // navigation.navigate('AICreditsStore'); // Assuming name
-                            // But for now just close or stay?
-                            // Ideally navigate to store if in stack
-                            // navigation.navigate('AICreditsStore');
+                            (navigation as any).navigate('AICreditsStore');
                         }
                     }
                 ]
