@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, SafeAreaView, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { PurchasesPackage } from 'react-native-purchases';
+import PurchaseService from '../services/PurchaseService';
 import { useTheme } from '@react-navigation/native';
 import { translate } from '../src/i18n';
 import { ENV } from '../config/env';
@@ -15,27 +17,45 @@ const { width } = Dimensions.get('window');
 
 export const PaywallScreen = () => {
     const { colors } = useTheme();
-    const navigation = useNavigation<any>(); // Typed as any for now to avoid stack discrepancies
-    const { startTrial } = useSubscription();
+    const navigation = useNavigation<any>();
+    const { purchasePackage, restorePurchases } = useSubscription();
     const [loading, setLoading] = useState(false);
+    const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+
+    useEffect(() => {
+        const loadOfferings = async () => {
+            const offerings = await PurchaseService.getOfferings();
+            if (offerings && offerings.availablePackages.length > 0) {
+                // Assuming the first package is the Annual one or the one we want to show
+                setPkg(offerings.availablePackages[0]);
+            }
+        };
+        loadOfferings();
+    }, []);
 
     const handleSubscribe = async () => {
+        if (!pkg) {
+            Alert.alert('Error', 'No se ha podido cargar la información del plan.');
+            return;
+        }
         setLoading(true);
         try {
-            await startTrial();
-            // After trial starts, the navigator should automatically switch naturally due to context change
-            // But we might need to navigate to Login manually if the state update isn't immediate in the structure
-            // For now, let's assume AppNavigator handles it properly or we push to Login
+            await purchasePackage(pkg);
+            // Context updates status to active, which should trigger navigation or we manually navigate
             navigation.replace('Login', { isSignUp: true });
-        } catch (error) {
-            Alert.alert(i18n.t('pricing_error_title'), i18n.t('pricing_error_trial'));
+        } catch (error: any) {
+            if (!error.userCancelled) {
+                Alert.alert(i18n.t('pricing_error_title'), error.message || i18n.t('pricing_error_trial'));
+            }
         } finally {
             setLoading(false);
         }
     };
 
-    const handleRestore = () => {
-        Alert.alert(i18n.t('pricing_alert_restore_title'), i18n.t('pricing_alert_restore_message'));
+    const handleRestore = async () => {
+        setLoading(true);
+        await restorePurchases();
+        setLoading(false);
     };
 
     const openLink = async (url: string) => {
@@ -46,6 +66,8 @@ export const PaywallScreen = () => {
             Alert.alert("Error", "No se pudo abrir el enlace: " + url);
         }
     };
+
+    const priceString = pkg?.product.priceString || i18n.t('pricing_price_annual');
 
     return (
         <View style={styles.container}>
@@ -69,7 +91,7 @@ export const PaywallScreen = () => {
 
                     <Text style={styles.planTitle}>{i18n.t('pricing_plan_annual_title')}</Text>
                     <View style={styles.priceContainer}>
-                        <Text style={styles.price}>{i18n.t('pricing_price_annual')}</Text>
+                        <Text style={styles.price}>{priceString}</Text>
                         <Text style={styles.period}>{i18n.t('pricing_period_annual_slash')}</Text>
                     </View>
                     <Text style={styles.trialText}>{i18n.t('pricing_trial_text_5_days')}</Text>
@@ -77,9 +99,9 @@ export const PaywallScreen = () => {
 
                 <View style={styles.footer}>
                     <TouchableOpacity
-                        style={[styles.button, loading && styles.buttonDisabled]}
+                        style={[styles.button, (loading || !pkg) && styles.buttonDisabled]}
                         onPress={handleSubscribe}
-                        disabled={loading}
+                        disabled={loading || !pkg}
                     >
                         <Text style={styles.buttonText}>
                             {loading ? i18n.t('pricing_button_starting') : i18n.t('pricing_button_start_5_days')}

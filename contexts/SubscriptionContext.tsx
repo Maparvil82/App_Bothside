@@ -9,7 +9,7 @@ interface SubscriptionContextType {
     hasSeenOnboarding: boolean;
     isLoading: boolean;
     setHasSeenOnboarding: (value: boolean) => Promise<void>;
-    startTrial: () => Promise<void>;
+    purchasePackage: (pkg: PurchasesPackage) => Promise<void>;
     checkSubscriptionStatus: () => Promise<void>;
     restorePurchases: () => Promise<void>;
 }
@@ -17,6 +17,9 @@ interface SubscriptionContextType {
 const SubscriptionContext = createContext<SubscriptionContextType>({} as SubscriptionContextType);
 
 export const useSubscription = () => useContext(SubscriptionContext);
+
+import { PurchasesPackage } from 'react-native-purchases';
+import PurchaseService from '../services/PurchaseService';
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
@@ -26,31 +29,22 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     // Load initial state
     useEffect(() => {
+        // Init RC
+        PurchaseService.init();
+    }, []);
+
+    useEffect(() => {
         loadState();
-    }, [user]); // Re-check when user changes (e.g. login)
+    }, [user]);
 
     const loadState = async () => {
         try {
             setIsLoading(true);
 
-            // 1. Onboarding Status
-            // LOGIC CHANGE: If user is logged in, valid, skip Onboarding (treat as seen).
-            // If user is NOT logged in, Force Onboarding (treat as not seen).
-            // This satisfies "Always appear if logged out".
-            // We do NOT read from AsyncStorage anymore for this flag.
-
             if (user) {
                 setHasSeenOnboardingState(true);
-
-                // 2. Subscription Status (Only relevant if user exists)
-                // TODO: Replace with real check
-                const isTrial = await AsyncStorage.getItem('isTrialActive');
-                if (isTrial === 'true') {
-                    setSubscriptionStatus('trial');
-                } else {
-                    // STRICT MODE: Existing users must also go through Paywall if not subscribed
-                    setSubscriptionStatus('none');
-                }
+                // Check RC status
+                await checkSubscriptionStatus();
             } else {
                 setHasSeenOnboardingState(false);
                 setSubscriptionStatus('none');
@@ -64,33 +58,60 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     const setHasSeenOnboarding = async (value: boolean) => {
-        // In-memory update only. 
-        // We do NOT persist to AsyncStorage so it resets on app restart/logout logic.
         console.log('📝 SubscriptionContext: setHasSeenOnboarding called with:', value);
         setHasSeenOnboardingState(value);
     };
 
-    const startTrial = async () => {
+    const purchasePackage = async (pkg: PurchasesPackage): Promise<void> => {
         try {
-            // 1. Logic to trigger StoreKit/RevenueCat purchase
-            // 2. Verify receipt
-            // 3. Update state
-            await AsyncStorage.setItem('isTrialActive', 'true');
-            setSubscriptionStatus('trial');
+            const result = await PurchaseService.purchasePackage(pkg);
+            // Check if purchase was successful and entitlement is active
+            // We check for ANY active entitlement for now as we don't know the exact ID
+            const activeEntitlements = result?.customerInfo?.entitlements.active || {};
+            const isActive = Object.keys(activeEntitlements).length > 0;
+
+            if (isActive) {
+                setSubscriptionStatus('active');
+            }
         } catch (e) {
-            console.error('Error starting trial:', e);
+            console.error('Error purchasing package:', e);
             throw e;
         }
     };
 
     const restorePurchases = async () => {
-        // Mock restore
-        alert('Funcionalidad de restaurar en desarrollo');
+        try {
+            const info = await PurchaseService.restorePurchases();
+            const activeEntitlements = info?.entitlements.active || {};
+            const isActive = Object.keys(activeEntitlements).length > 0;
+
+            if (isActive) {
+                setSubscriptionStatus('active');
+                alert('Compras restauradas con éxito');
+            } else {
+                alert('No se encontraron compras activas para restaurar');
+            }
+        } catch (e) {
+            console.error('Error restoring purchases:', e);
+            alert('Error al restaurar compras');
+        }
     };
 
     const checkSubscriptionStatus = async () => {
-        // Refresh status logic
-        await loadState();
+        if (!user) return;
+        try {
+            const info = await PurchaseService.getCustomerInfo();
+            const activeEntitlements = info?.entitlements.active || {};
+            const isActive = Object.keys(activeEntitlements).length > 0;
+
+            if (isActive) {
+                setSubscriptionStatus('active');
+            } else {
+                setSubscriptionStatus('none');
+            }
+        } catch (e) {
+            console.error('Error checking subscription status:', e);
+        }
     };
 
     return (
@@ -100,7 +121,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 hasSeenOnboarding,
                 isLoading,
                 setHasSeenOnboarding,
-                startTrial,
+                purchasePackage,
                 checkSubscriptionStatus,
                 restorePurchases,
             }}

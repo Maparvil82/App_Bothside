@@ -18,6 +18,10 @@ export const ENV = {
   // Google Cloud Vision API Key
   GOOGLE_VISION_API_KEY: process.env.EXPO_PUBLIC_GOOGLE_VISION_API_KEY || '',
 
+  // RevenueCat
+  REVENUECAT_API_KEY_IOS: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS || '',
+  REVENUECAT_API_KEY_ANDROID: process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_ANDROID || '',
+
 
   // Legal
   TERMS_URL: 'https://www.notion.so/Legal-Information-2b1f3ade92a9807ca71fd65dcf7feeab?source=copy_link',
