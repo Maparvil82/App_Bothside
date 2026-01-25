@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, SafeAreaView, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Linking } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -9,6 +9,7 @@ import PurchaseService from '../services/PurchaseService';
 import { useTheme } from '@react-navigation/native';
 import { translate } from '../src/i18n';
 import { ENV } from '../config/env';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 // Compatibility alias to match the code style I just wrote
 const i18n = { t: translate };

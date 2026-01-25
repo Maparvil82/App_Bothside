@@ -46,9 +46,11 @@ class PurchaseService {
         try {
             await this.EnsureInitialized();
             const offerings = await Purchases.getOfferings();
+            console.log('📦 RC Offerings:', JSON.stringify(offerings, null, 2));
             if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
                 return offerings.current;
             }
+            console.warn('⚠️ No current offering found in RevenueCat');
             return null;
         } catch (e) {
             console.error('Error fetching offerings:', e);
