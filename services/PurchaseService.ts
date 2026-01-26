@@ -86,6 +86,89 @@ class PurchaseService {
         }
     }
 
+    async getCreditsOfferings(): Promise<PurchasesOffering | null> {
+        try {
+            await this.EnsureInitialized();
+            const offerings = await Purchases.getOfferings();
+
+            // Look for 'credits' offering specifically
+            if (offerings.all['credits'] && offerings.all['credits'].availablePackages.length > 0) {
+                return offerings.all['credits'];
+            }
+
+            console.warn('⚠️ No credits offering found in RevenueCat');
+
+            // Mock for Expo Go or Sandbox if configured
+            if (__DEV__ || !offerings.all['credits']) {
+                return {
+                    serverDescription: "Mock Credits Offering",
+                    identifier: "credits",
+                    availablePackages: [
+                        {
+                            identifier: "$rc_credits_50",
+                            packageType: "CUSTOM",
+                            product: {
+                                identifier: "bothside_credits_50",
+                                description: "50 AI Credits",
+                                title: "Starter Pack",
+                                price: 1.99,
+                                priceString: "1,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "NON_SUBSCRIPTION",
+                                productType: "CONSUMABLE",
+                                subscriptionPeriod: null,
+                            },
+                            offeringIdentifier: "credits"
+                        },
+                        {
+                            identifier: "$rc_credits_200",
+                            packageType: "CUSTOM",
+                            product: {
+                                identifier: "bothside_credits_200",
+                                description: "200 AI Credits",
+                                title: "Pro Pack",
+                                price: 5.99,
+                                priceString: "5,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "NON_SUBSCRIPTION",
+                                productType: "CONSUMABLE",
+                                subscriptionPeriod: null,
+                            },
+                            offeringIdentifier: "credits"
+                        },
+                        {
+                            identifier: "$rc_credits_500",
+                            packageType: "CUSTOM",
+                            product: {
+                                identifier: "bothside_credits_master",
+                                description: "500 AI Credits",
+                                title: "Master Pack",
+                                price: 12.99,
+                                priceString: "12,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "NON_SUBSCRIPTION",
+                                productType: "CONSUMABLE",
+                                subscriptionPeriod: null,
+                            },
+                            offeringIdentifier: "credits"
+                        }
+                    ] as any
+                } as PurchasesOffering;
+            }
+
+            return null;
+        } catch (e) {
+            console.error('Error fetching credit offerings:', e);
+            return null;
+        }
+    }
+
     async purchasePackage(pkg: PurchasesPackage): Promise<{ customerInfo: CustomerInfo; method: 'purchase'; } | null> {
         try {
             await this.EnsureInitialized();

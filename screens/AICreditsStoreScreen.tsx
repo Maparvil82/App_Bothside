@@ -1,40 +1,45 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useTheme } from '@react-navigation/native';
 import { CreditService } from '../services/CreditService';
+import PurchaseService from '../services/PurchaseService';
 import { useAuth } from '../contexts/AuthContext';
 import { useCredits } from '../contexts/CreditsContext';
-import { useTranslation, TxKeyPath } from '../src/i18n/useTranslation';
+import { useTranslation } from '../src/i18n/useTranslation';
 import { useSubscription } from '../contexts/SubscriptionContext';
-
-interface Package {
-    id: string;
-    credits: number;
-    price: string;
-    amount: number;
-    nameKey: TxKeyPath;
-}
-
-const PACKAGES: Package[] = [
-    { id: 'starter', credits: 50, price: '1.99€', amount: 50, nameKey: 'store_package_starter' },
-    { id: 'pro', credits: 200, price: '5.99€', amount: 200, nameKey: 'store_package_pro' },
-    { id: 'master', credits: 500, price: '12.99€', amount: 500, nameKey: 'store_package_master' },
-];
+import { PurchasesPackage } from 'react-native-purchases';
 
 export const AICreditsStoreScreen = () => {
     const navigation = useNavigation();
     const { colors } = useTheme();
     const { user } = useAuth();
-    const { credits, refreshCredits } = useCredits(); // Use context for credits
+    const { credits, refreshCredits } = useCredits();
     const [loading, setLoading] = useState<string | null>(null);
+    const [pageLoading, setPageLoading] = useState(true);
+    const [packages, setPackages] = useState<PurchasesPackage[]>([]);
     const { t } = useTranslation();
-
     const { subscriptionStatus } = useSubscription();
 
-    const handlePurchase = async (pkg: Package) => {
+    useEffect(() => {
+        const loadPackages = async () => {
+            try {
+                const offerings = await PurchaseService.getCreditsOfferings();
+                if (offerings && offerings.availablePackages.length > 0) {
+                    setPackages(offerings.availablePackages);
+                }
+            } catch (e) {
+                console.error('Error loading credit packages:', e);
+            } finally {
+                setPageLoading(false);
+            }
+        };
+        loadPackages();
+    }, []);
+
+    const handlePurchase = async (pkg: PurchasesPackage) => {
         if (!user) return;
 
         // Business Rule: Disable extra credit purchase during Trial
@@ -46,23 +51,45 @@ export const AICreditsStoreScreen = () => {
             return;
         }
 
-        setLoading(pkg.id);
-        console.log(`🛒 Simulating purchase of ${t(pkg.nameKey)}...`);
+        setLoading(pkg.identifier);
+        try {
+            const purchaseResult = await PurchaseService.purchasePackage(pkg);
 
-        // Simulation of delay and success
-        setTimeout(async () => {
-            const success = await CreditService.addCredits(user.id, pkg.amount);
+            if (purchaseResult && purchaseResult.customerInfo) {
+                // Determine credit amount from product identifier
+                let amount = 0;
+                if (pkg.product.identifier.includes('50')) amount = 50;
+                else if (pkg.product.identifier.includes('200')) amount = 200;
+                else if (pkg.product.identifier.includes('master')) amount = 500; // Assuming master is 500
+                else amount = 50; // Fallback
 
-            if (success) {
-                await refreshCredits(); // Refresh credits context
-                Alert.alert(t('store_purchase_success_title'), t('store_purchase_success_message').replace('{0}', pkg.credits.toString()));
-                navigation.goBack();
-            } else {
-                Alert.alert(t('common_error'), t('store_purchase_error'));
+                // Update database
+                const success = await CreditService.addCredits(user.id, amount);
+
+                if (success) {
+                    await refreshCredits();
+                    Alert.alert(t('store_purchase_success_title'), t('store_purchase_success_message').replace('{0}', amount.toString()));
+                    navigation.goBack();
+                } else {
+                    Alert.alert('Error', 'Compra realizada pero hubo un error actualizando tu saldo. Contacta soporte.');
+                }
             }
+        } catch (e: any) {
+            if (!e.userCancelled) {
+                Alert.alert('Error', e.message || t('store_purchase_error'));
+            }
+        } finally {
             setLoading(null);
-        }, 1500);
+        }
     };
+
+    if (pageLoading) {
+        return (
+            <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={AppColors.primary} />
+            </View>
+        );
+    }
 
     return (
         <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -89,27 +116,31 @@ export const AICreditsStoreScreen = () => {
 
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('store_packages_title')}</Text>
 
-                {PACKAGES.map((pkg) => (
-                    <TouchableOpacity
-                        key={pkg.id}
-                        style={[styles.packageCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-                        onPress={() => handlePurchase(pkg)}
-                        disabled={!!loading}
-                    >
-                        <View style={styles.packageInfo}>
-                            <Text style={[styles.packageName, { color: colors.text }]}>{t(pkg.nameKey)}</Text>
-                            <Text style={styles.packageCredits}>{pkg.credits} {t('store_credits_suffix')}</Text>
-                        </View>
+                {packages.length === 0 ? (
+                    <Text style={{ textAlign: 'center', color: '#666', marginTop: 20 }}>No hay paquetes disponibles.</Text>
+                ) : (
+                    packages.map((pkg) => (
+                        <TouchableOpacity
+                            key={pkg.identifier}
+                            style={[styles.packageCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+                            onPress={() => handlePurchase(pkg)}
+                            disabled={!!loading}
+                        >
+                            <View style={styles.packageInfo}>
+                                <Text style={[styles.packageName, { color: colors.text }]}>{pkg.product.title}</Text>
+                                <Text style={styles.packageCredits}>{pkg.product.description}</Text>
+                            </View>
 
-                        <View style={styles.priceButton}>
-                            {loading === pkg.id ? (
-                                <ActivityIndicator color="white" size="small" />
-                            ) : (
-                                <Text style={styles.priceText}>{pkg.price}</Text>
-                            )}
-                        </View>
-                    </TouchableOpacity>
-                ))}
+                            <View style={styles.priceButton}>
+                                {loading === pkg.identifier ? (
+                                    <ActivityIndicator color="white" size="small" />
+                                ) : (
+                                    <Text style={styles.priceText}>{pkg.product.priceString}</Text>
+                                )}
+                            </View>
+                        </TouchableOpacity>
+                    ))
+                )}
 
                 <Text style={styles.disclaimer}>
                     {t('store_disclaimer')}
