@@ -112,10 +112,11 @@ export const LoginScreen: React.FC = () => {
         // para que el usuario vea el Paywall o entre a la app (si ya tiene sub)
         if (navigation.canGoBack()) {
           navigation.goBack();
-        } else {
-          // Fallback si no hay historial, intentamos ir a Paywall explícitamente si estamos en ese flujo
-          navigation.navigate('Paywall');
         }
+        // No need to manually navigate to Paywall. 
+        // The AppNavigator will automatically route to Paywall (or Main) 
+        // based on the updated User/Subscription state.
+        // Attempting to navigate here causes a race condition if the stack is replaced.
       }
     } catch (error: any) {
       console.error('LoginScreen: Auth error:', error);
