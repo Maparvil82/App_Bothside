@@ -82,7 +82,7 @@ class PurchaseService {
                     ]
                 } as PurchasesOffering;
             }
-            return null;
+            throw e;
         }
     }
 

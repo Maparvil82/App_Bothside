@@ -105,16 +105,20 @@ export const PaywallScreen = () => {
                             (loading) && styles.buttonDisabled,
                             (!pkg && !loading) && { backgroundColor: '#FF453A' } // Red for error/retry
                         ]}
-                        onPress={!pkg ? () => {
+                        onPress={!pkg ? async () => {
                             setLoading(true);
-                            PurchaseService.getOfferings().then((offerings) => {
+                            try {
+                                const offerings = await PurchaseService.getOfferings();
                                 if (offerings && offerings.availablePackages.length > 0) {
                                     setPkg(offerings.availablePackages[0]);
                                 } else {
-                                    Alert.alert('Error', 'No se pudieron cargar los planes. Verifica tu conexión.');
+                                    Alert.alert('Error', 'No se encontraron planes disponibles.');
                                 }
+                            } catch (e: any) {
+                                Alert.alert('Error Detalles', e.message || 'Error desconocido al cargar planes.');
+                            } finally {
                                 setLoading(false);
-                            });
+                            }
                         } : handleSubscribe}
                         disabled={loading}
                     >
