@@ -132,10 +132,10 @@ export const CreditService = {
      * Añade créditos (simulación de compra).
      */
     addCredits: async (userId: string, amount: number): Promise<{ success: boolean; error?: any }> => {
-        // 1. Obtener registro actual
+        // 1. Obtener registro actual completo
         const { data: current, error: fetchError } = await supabase
             .from('ia_credits')
-            .select('credits_total')
+            .select('*')
             .eq('user_id', userId)
             .single();
 
@@ -147,15 +147,26 @@ export const CreditService = {
         const currentTotal = current?.credits_total || 0;
         const newTotal = currentTotal + amount;
 
+        // Preparar valores para upsert
+        const now = new Date();
+        const oneYearLater = new Date(now);
+        oneYearLater.setFullYear(now.getFullYear() + 1);
+
+        const upsertPayload = {
+            user_id: userId,
+            credits_total: newTotal,
+            // Mantener valores existentes o usar defaults
+            credits_used: current?.credits_used || 0,
+            period_start: current?.period_start || now.toISOString(),
+            period_end: current?.period_end || oneYearLater.toISOString(),
+            updated_at: now.toISOString()
+        };
+
         try {
             // Upsert para crear o actualizar
             const { error } = await supabase
                 .from('ia_credits')
-                .upsert({
-                    user_id: userId,
-                    credits_total: newTotal,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' });
+                .upsert(upsertPayload, { onConflict: 'user_id' });
 
             if (error) throw error;
             console.log(`✅ Added ${amount} credits. New total: ${newTotal}`);
