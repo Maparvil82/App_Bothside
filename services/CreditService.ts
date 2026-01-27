@@ -131,7 +131,7 @@ export const CreditService = {
     /**
      * Añade créditos (simulación de compra).
      */
-    addCredits: async (userId: string, amount: number): Promise<boolean> => {
+    addCredits: async (userId: string, amount: number): Promise<{ success: boolean; error?: any }> => {
         // 1. Obtener registro actual
         const { data: current, error: fetchError } = await supabase
             .from('ia_credits')
@@ -141,7 +141,7 @@ export const CreditService = {
 
         if (fetchError && fetchError.code !== 'PGRST116') { // Ignorar error si no existe fila
             console.error('Error fetching for add:', fetchError);
-            return false;
+            return { success: false, error: fetchError };
         }
 
         const currentTotal = current?.credits_total || 0;
@@ -154,17 +154,15 @@ export const CreditService = {
                 .upsert({
                     user_id: userId,
                     credits_total: newTotal,
-                    // Si es nuevo, credits_used será default (0) si la DB lo tiene, 
-                    // o podemos forzarlo a 0 si quisiéramos, pero upsert solo actualiza lo que pasamos si existe.
-                    // Mejor asegurar que updated_at se actualice si existe esa columna
+                    updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id' });
 
             if (error) throw error;
             console.log(`✅ Added ${amount} credits. New total: ${newTotal}`);
-            return true;
+            return { success: true };
         } catch (error) {
             console.error('❌ Error adding credits:', error);
-            return false;
+            return { success: false, error };
         }
     }
 };
