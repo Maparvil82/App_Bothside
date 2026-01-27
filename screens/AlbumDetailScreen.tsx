@@ -1499,53 +1499,7 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
-        {/* Sección de Sesiones (Played In) */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>{t('album_detail_played_in') || 'Sesiones'}</Text>
-              <TouchableOpacity
-                onPress={() => setShowSessionModal(true)}
-                style={{ flexDirection: 'row', alignItems: 'center' }}
-              >
-                <Ionicons name="add-circle" size={24} color={primaryColor} />
-                <Text style={{ color: primaryColor, marginLeft: 4, fontWeight: '600' }}>
-                  {t('common_add') || 'Añadir'}
-                </Text>
-              </TouchableOpacity>
-            </View>
 
-            {loadingSessions ? (
-              <ActivityIndicator size="small" color={primaryColor} />
-            ) : linkedSessions.length > 0 ? (
-              linkedSessions.map((session, index) => (
-                <View key={session.id || index} style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: LIGHT_BG_COLOR,
-                  padding: 12,
-                  borderRadius: 12,
-                  marginBottom: 8
-                }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>{session.name}</Text>
-                    <Text style={{ color: colors.text, opacity: 0.7, fontSize: 13 }}>
-                      {new Date(session.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleRemoveSession(session.id)} style={{ padding: 8 }}>
-                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
-              ))
-            ) : (
-              <Text style={{ color: colors.text, opacity: 0.6, fontStyle: 'italic', marginLeft: 4 }}>
-                {t('album_detail_no_sessions') || 'No has asignado ninguna sesión.'}
-              </Text>
-            )}
-          </View>
-        )}
 
         {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -1657,49 +1611,6 @@ export default function AlbumDetailScreen() {
           )}
         </View>
 
-        {/* Nota de Audio */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_audio_note')}</Text>
-            {album.audio_note ? (
-              // Si existe nota de audio
-              <>
-                <View style={styles.audioSection}>
-                  <View style={styles.audioInfo}>
-                    <Ionicons name="mic" size={20} color={colors.primary} />
-                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_has_audio_note')}</Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={[styles.playAudioButton, { shadowColor: primaryColor }]}
-                  onPress={() => handlePlayAudio(album.audio_note!)}
-                >
-                  <Ionicons name="play-circle" size={24} color={primaryColor} />
-                  <Text style={[styles.playAudioButtonText]}>{t('album_detail_play_audio_note')}</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              // Si no existe nota de audio
-              <>
-                <View style={styles.audioSection}>
-                  <View style={styles.audioInfo}>
-                    <Ionicons name="mic-outline" size={20} color={colors.text} />
-                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_no_audio_note')}</Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={[styles.recordAudioButton, { shadowColor: primaryColor }]}
-                  onPress={() => handleRecordAudio()}
-                >
-                  <Ionicons name="mic" size={24} color={primaryColor} />
-                  <Text style={[styles.recordAudioButtonText]}>{t('album_detail_record_audio_note')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        )}
-
-
         {/* Nueva Sección de Ubicación RECONSTRUIDA */}
         {isInCollection && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -1748,6 +1659,101 @@ export default function AlbumDetailScreen() {
         )}
 
 
+        {/* Nota de Audio */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_audio_note')}</Text>
+            {album.audio_note ? (
+              // Si existe nota de audio
+              <>
+                <View style={styles.audioSection}>
+                  <View style={styles.audioInfo}>
+                    <Ionicons name="mic" size={20} color={colors.primary} />
+                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_has_audio_note')}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.playAudioButton, { shadowColor: primaryColor }]}
+                  onPress={() => handlePlayAudio(album.audio_note!)}
+                >
+                  <Ionicons name="play-circle" size={24} color={primaryColor} />
+                  <Text style={[styles.playAudioButtonText]}>{t('album_detail_play_audio_note')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              // Si no existe nota de audio
+              <>
+                <View style={styles.audioSection}>
+                  <View style={styles.audioInfo}>
+                    <Ionicons name="mic-outline" size={20} color={colors.text} />
+                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_no_audio_note')}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.recordAudioButton, { shadowColor: primaryColor }]}
+                  onPress={() => handleRecordAudio()}
+                >
+                  <Ionicons name="mic" size={24} color={primaryColor} />
+                  <Text style={[styles.recordAudioButtonText]}>{t('album_detail_record_audio_note')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+
+
+
+
+
+
+
+        {/* Sección de Sesiones (Played In) */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>{t('album_detail_played_in') || 'Sesiones'}</Text>
+              <TouchableOpacity
+                onPress={() => setShowSessionModal(true)}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Ionicons name="add-circle" size={24} color={primaryColor} />
+                <Text style={{ color: primaryColor, marginLeft: 4, fontWeight: '600' }}>
+                  {t('common_add') || 'Añadir'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {loadingSessions ? (
+              <ActivityIndicator size="small" color={primaryColor} />
+            ) : linkedSessions.length > 0 ? (
+              linkedSessions.map((session, index) => (
+                <View key={session.id || index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: LIGHT_BG_COLOR,
+                  padding: 12,
+                  borderRadius: 12,
+                  marginBottom: 8
+                }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>{session.name}</Text>
+                    <Text style={{ color: colors.text, opacity: 0.7, fontSize: 13 }}>
+                      {new Date(session.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleRemoveSession(session.id)} style={{ padding: 8 }}>
+                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              ))
+            ) : (
+              <Text style={{ color: colors.text, opacity: 0.6, fontStyle: 'italic', marginLeft: 4 }}>
+                {t('album_detail_no_sessions') || 'No has asignado ninguna sesión.'}
+              </Text>
+            )}
+          </View>
+        )}
 
         {/* Sección TypeForm */}
         {isInCollection && (
