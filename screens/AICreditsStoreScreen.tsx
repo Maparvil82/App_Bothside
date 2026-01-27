@@ -64,14 +64,15 @@ export const AICreditsStoreScreen = () => {
                 else amount = 50; // Fallback
 
                 // Update database
-                const success = await CreditService.addCredits(user.id, amount);
+                const result = await CreditService.addCredits(user.id, amount);
 
-                if (success) {
+                if (result.success) {
                     await refreshCredits();
                     Alert.alert(t('store_purchase_success_title'), t('store_purchase_success_message').replace('{0}', amount.toString()));
                     navigation.goBack();
                 } else {
-                    Alert.alert('Error', 'Compra realizada pero hubo un error actualizando tu saldo. Contacta soporte.');
+                    const errorMessage = result.error?.message || JSON.stringify(result.error) || 'Error desconocido';
+                    Alert.alert('Error actualizando saldo', `Detalle: ${errorMessage}\n\nContacta soporte con esta captura.`);
                 }
             }
         } catch (e: any) {
