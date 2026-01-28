@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Dimensions,
   ScrollView,
-  SafeAreaView,
   Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -112,7 +111,7 @@ export const OnboardingScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
 
 
       {/* Main content */}
@@ -187,7 +186,7 @@ export const OnboardingScreen: React.FC = () => {
           <Text style={[styles.loginLink, { color: primaryColor }]}>{t('auth_login')}</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -195,6 +194,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
+
   },
   skipButton: {
     position: 'absolute',
@@ -227,10 +227,10 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: width - 40,
-    height: height * 0.5,
+    width: width,
+    height: height * 0.55,
     resizeMode: 'cover',
-    borderRadius: 10,
+
   },
   textContainer: {
     flex: 2,
@@ -239,7 +239,7 @@ const styles = StyleSheet.create({
 
   },
   title: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#333',
     textAlign: 'left',
