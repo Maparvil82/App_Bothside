@@ -207,7 +207,7 @@ export const LoginScreen: React.FC = () => {
               disabled={loading}
             >
               <Text style={styles.buttonText}>
-                {loading ? t('common_loading') : isSignUp ? t('auth_create_account') : t('auth_login')}
+                {loading ? t('common_loading') : isSignUp ? t('auth_create_account') : t('auth_login_button')}
               </Text>
             </TouchableOpacity>
 
@@ -218,6 +218,12 @@ export const LoginScreen: React.FC = () => {
                   setIsSignUp(false);
                 } else {
                   setHasSeenOnboarding(false);
+                  try {
+                    navigation.navigate('Onboarding');
+                  } catch (e) {
+                    // Ignore navigation error if Onboarding is not in stack (will be handled by state change)
+                    console.log('Navigation to Onboarding failed (likely due to stack switch):', e);
+                  }
                 }
               }}
             >
@@ -283,14 +289,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700',
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 8,
     color: '#1a1a1a',
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 15,
-    textAlign: 'center',
+    textAlign: 'left',
     marginBottom: 32,
     color: '#888',
     fontWeight: '400',
