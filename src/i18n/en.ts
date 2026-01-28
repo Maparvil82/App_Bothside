@@ -164,6 +164,7 @@ export const en = {
     search_error_adding_to_collection: "Could not add album to collection",
     search_filter_no_location: "No location",
     search_alert_no_results_title: "No results",
+    search_current_location: "Located in: {0}",
     search_alert_no_editions_message: "No editions found for \"{0}\" by \"{1}\". Try a more specific search.",
     search_error_loading_editions: "Could not load editions. Check your internet connection and Discogs token.",
     search_alert_replace_title: "Confirm Replacement",

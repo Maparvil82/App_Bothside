@@ -168,6 +168,7 @@ export const pt = {
     search_action_go_to_collection: "Ir para coleção",
     search_error_adding_to_collection: "Não foi possível adicionar o disco à coleção",
     search_filter_no_location: "Sem localização",
+    search_current_location: "Localizado em: {0}",
     search_alert_no_results_title: "Sem resultados",
     search_alert_no_editions_message: "Nenhuma edição encontrada para \"{0}\" de \"{1}\". Tente uma busca mais específica.",
     search_error_loading_editions: "Não foi possível carregar as edições. Verifique sua conexão com a internet e o token do Discogs.",
@@ -973,4 +974,26 @@ export const pt = {
     album_detail_remove_session_message: 'Tem certeza de que deseja remover este álbum desta sessão?',
     album_detail_session_error_removing: 'Erro ao remover o álbum da sessão.',
     common_add: 'Adicionar',
+
+    // New Leaderboard Keys
+    rank_master: "Mestre Colecionador",
+    rank_expert: "Colecionador Especialista",
+    rank_advanced: "Colecionador Avançado",
+    rank_intermediate: "Colecionador Intermediário",
+    rank_novice: "Colecionador Novato",
+    rank_beginner: "Iniciante",
+    leaderboard_you_suffix: "(Você)",
+
+    // Legal Screen
+    legal_version_text: "Bothside v1.0.0 (Beta)",
+    legal_section_docs: "Documentos Legais",
+    legal_item_privacy: "Política de Privacidade",
+    legal_item_terms: "Termos e Condições",
+    legal_section_third_party: "Avisos de Terceiros",
+    legal_attr_discogs: "Esta aplicação usa a API do Discogs mas não é afiliada, patrocinada ou aprovada pelo Discogs. 'Discogs' é uma marca registrada da Zink Media, LLC.",
+    legal_attr_discogs_title: "API do Discogs",
+    legal_attr_gemini: "Bothside usa Google Gemini para funcionalidades de IA.",
+    legal_attr_gemini_title: "Google Gemini AI",
+    legal_delete_account_title: "Excluir Conta",
+    legal_delete_account_message: "A exclusão da conta estará disponível em breve. Enquanto isso, você pode solicitá-la escrevendo para o suporte.",
 };

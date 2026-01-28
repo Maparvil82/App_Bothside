@@ -519,6 +519,7 @@ export const de = {
     search_error_adding_to_collection: "Platte konnte nicht zur Sammlung hinzugefügt werden",
     search_filter_no_location: "Kein Standort",
     search_alert_no_results_title: "Keine Ergebnisse",
+    search_current_location: "Befindet sich in: {0}",
     search_alert_no_editions_message: "Keine Ausgaben für \"{0}\" von \"{1}\" gefunden. Versuchen Sie eine spezifischere Suche.",
     search_error_loading_editions: "Ausgaben konnten nicht geladen werden. Überprüfen Sie Ihre Internetverbindung und das Discogs-Token.",
     search_alert_replace_title: "Ersetzen bestätigen",
