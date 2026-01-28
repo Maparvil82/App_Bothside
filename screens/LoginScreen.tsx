@@ -8,8 +8,9 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   Image,
+  Dimensions,
+  StatusBar,
   ScrollView,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
@@ -21,6 +22,7 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 
+const { width, height } = Dimensions.get('window');
 
 export const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -34,7 +36,7 @@ export const LoginScreen: React.FC = () => {
   const { setHasSeenOnboarding } = useSubscription();
   const { t } = useTranslation();
   const { mode } = useThemeMode();
-  const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
+  const primaryColor = AppColors.primary; // Enforce brand color for premium feel
   const route = useRoute<any>();
   const navigation = useNavigation<any>();
 
@@ -65,8 +67,6 @@ export const LoginScreen: React.FC = () => {
     return null;
   };
 
-
-
   const handleAuth = async () => {
     if (!email || !password) {
       Alert.alert(t('common_error'), t('auth_validation_all_fields_required'));
@@ -82,25 +82,15 @@ export const LoginScreen: React.FC = () => {
     }
 
     setLoading(true);
-    console.log('LoginScreen: Starting auth...');
     try {
       if (isSignUp) {
-        console.log('LoginScreen: Attempting sign up...');
         await signUp(email, password, username.trim());
-        console.log('LoginScreen: Sign up successful');
-        // Alert.alert('Éxito', 'Cuenta creada. Revisa tu email para confirmar.');
       } else {
-        console.log('LoginScreen: Attempting sign in...');
         await signIn(email, password);
-        console.log('LoginScreen: Sign in successful');
       }
 
-      // Verificar si hay plan seleccionado para navegar a PrePurchase
       if (route.params?.selectedPlan) {
-        console.log('LoginScreen: Navigating to PrePurchase...');
-        // Obtener el usuario actual directamente de supabase ya que el contexto puede tardar en actualizarse
         const { data: { user: authUser } } = await supabase.auth.getUser();
-
         if (authUser) {
           navigation.navigate('PrePurchase', {
             user: authUser,
@@ -108,201 +98,237 @@ export const LoginScreen: React.FC = () => {
           });
         }
       } else {
-        // Si es login normal desde el Paywall o Onboarding, volvemos atrás
-        // para que el usuario vea el Paywall o entre a la app (si ya tiene sub)
         if (navigation.canGoBack()) {
           navigation.goBack();
         }
-        // No need to manually navigate to Paywall. 
-        // The AppNavigator will automatically route to Paywall (or Main) 
-        // based on the updated User/Subscription state.
-        // Attempting to navigate here causes a race condition if the stack is replaced.
       }
     } catch (error: any) {
       console.error('LoginScreen: Auth error:', error);
       Alert.alert(t('common_error'), error.message);
     } finally {
-      console.log('LoginScreen: Auth finished, stopping loading');
       setLoading(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" translucent backgroundColor="transparent" />
+
+      {/* Header Image */}
+      <View style={styles.headerImageContainer}>
+        <Image
+          source={require('../assets/1.png')}
+          style={styles.headerImage}
+          resizeMode="cover"
+        />
+        <View style={styles.overlay} />
+      </View>
+
+      {/* Login Form Card */}
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.formContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Logo */}
-          <Image
-            source={require('../assets/logo-onboarding.png')}
-            style={styles.logo}
-          />
+        <View style={styles.card}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          >
+            {/*<Image
+              source={require('../assets/logo-onboarding.png')}
+              style={styles.logo}
+            />
 
-          <Text style={styles.title}>
-            {isSignUp ? t('auth_create_account') : t('auth_login')}
-          </Text>
-          <Text style={styles.subtitle}>
-            {isSignUp
-              ? t('auth_signup_subtitle')
-              : t('auth_login_subtitle')}
-          </Text>
+            <Text style={styles.title}>
+              {isSignUp ? t('auth_create_account') : t('auth_login')}
+            </Text>
+            <Text style={styles.subtitle}>
+              {isSignUp ? t('auth_signup_subtitle') : t('auth_login_subtitle')}
+            </Text>*/}
 
-          {isSignUp && (
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                placeholder={t('auth_placeholder_username')}
-                placeholderTextColor="#B3B3B3"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-                autoCorrect={false}
-                maxLength={20}
-              />
+            <View style={styles.inputsWrapper}>
+              {isSignUp && (
+                <View style={styles.inputContainer}>
+                  <Ionicons name="person-outline" size={20} color="#666" style={styles.inputIcon} />
+                  <TextInput
+                    style={styles.input}
+                    placeholder={t('auth_placeholder_username')}
+                    placeholderTextColor="#999"
+                    value={username}
+                    onChangeText={setUsername}
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    maxLength={20}
+                  />
+                </View>
+              )}
+
+              <View style={styles.inputContainer}>
+                <Ionicons name="mail-outline" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={styles.input}
+                  placeholder={t('auth_placeholder_email')}
+                  placeholderTextColor="#999"
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Ionicons name="lock-closed-outline" size={20} color="#666" style={styles.inputIcon} />
+                <TextInput
+                  style={[styles.input, { paddingRight: 40 }]}
+                  placeholder={t('auth_placeholder_password')}
+                  placeholderTextColor="#999"
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry={!showPassword}
+                  autoCapitalize="none"
+                />
+                <TouchableOpacity
+                  style={styles.eyeIcon}
+                  onPress={() => setShowPassword(!showPassword)}
+                >
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color="#999"
+                  />
+                </TouchableOpacity>
+              </View>
             </View>
-          )}
 
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={styles.input}
-              placeholder={t('auth_placeholder_email')}
-              placeholderTextColor="#B3B3B3"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-          </View>
-
-          <View style={styles.inputContainer}>
-            <TextInput
-              style={[styles.input, { paddingRight: 50 }]}
-              placeholder={t('auth_placeholder_password')}
-              placeholderTextColor="#B3B3B3"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              autoCapitalize="none"
-            />
             <TouchableOpacity
-              style={styles.eyeIcon}
-              onPress={() => setShowPassword(!showPassword)}
+              style={[styles.button, loading && styles.buttonDisabled]}
+              onPress={handleAuth}
+              disabled={loading}
             >
-              <Ionicons
-                name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                size={24}
-                color="#B3B3B3"
-              />
+              <Text style={styles.buttonText}>
+                {loading ? t('common_loading') : isSignUp ? t('auth_create_account') : t('auth_login')}
+              </Text>
             </TouchableOpacity>
-          </View>
 
-          <TouchableOpacity
-            style={[styles.button, loading && styles.buttonDisabled, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
-            onPress={handleAuth}
-            disabled={loading}
-          >
-            <Text style={styles.buttonText}>
-              {loading ? t('common_loading') : isSignUp ? t('auth_create_account') : t('auth_login')}
-            </Text>
-          </TouchableOpacity>
-
-
-
-          <TouchableOpacity
-            style={styles.switchButton}
-            onPress={() => {
-              console.log('🔘 Switch Button Pressed. isSignUp:', isSignUp);
-              if (isSignUp) {
-                // If in Sign Up mode, switch to Login
-                setIsSignUp(false);
-              } else {
-                console.log('🔄 Resetting Onboarding state to false');
-                // If in Login mode, "Create Account" -> Go to Onboarding (Restart Flow)
-                setHasSeenOnboarding(false);
-              }
-            }}
-          >
-            <Text style={styles.switchText}>
-              {isSignUp ? t('auth_switch_to_login') : t('auth_switch_to_signup')}
-            </Text>
-          </TouchableOpacity>
-        </ScrollView>
+            <TouchableOpacity
+              style={styles.switchButton}
+              onPress={() => {
+                if (isSignUp) {
+                  setIsSignUp(false);
+                } else {
+                  setHasSeenOnboarding(false);
+                }
+              }}
+            >
+              <Text style={styles.switchText}>
+                {isSignUp ? t('auth_switch_to_login') : t('auth_switch_to_signup')}
+              </Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
+    backgroundColor: '#000', // Matches top area if image doesn't load or verify status bar
   },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    paddingBottom: 40,
+  headerImageContainer: {
+    height: height * 0.65,
+    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  headerImage: {
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.2)', // Slight dark overlay for premium feel/contrast
+  },
+  formContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 28,
+    paddingTop: 40,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 20,
   },
   logo: {
-    width: 120,
-    height: 40,
+    width: 140,
+    height: 45,
     resizeMode: 'contain',
     alignSelf: 'center',
-
-    marginBottom: 40,
-    tintColor: '#2f2f2fff',
+    marginBottom: 24,
+    tintColor: '#1a1a1a',
   },
   title: {
     fontSize: 28,
-    fontWeight: '600',
+    fontWeight: '700',
     textAlign: 'center',
     marginBottom: 8,
-    color: '#222',
+    color: '#1a1a1a',
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 15,
     textAlign: 'center',
     marginBottom: 32,
-    color: '#666',
+    color: '#888',
     fontWeight: '400',
+    lineHeight: 22,
+  },
+  inputsWrapper: {
+    gap: 16,
   },
   inputContainer: {
-    marginBottom: 14,
-    position: 'relative',
+    backgroundColor: '#F5F5F7', // Premium light grey input background
+    borderRadius: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    height: 56,
+    borderWidth: 1,
+    borderColor: 'transparent', // Can become colored on focus if needed
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
-    backgroundColor: '#fff',
-    height: 50,
-    borderRadius: 14,
-    borderWidth: 1.5,
-    borderColor: '#E3E3E3',
-    paddingHorizontal: 16,
+    flex: 1,
     fontSize: 16,
-    color: '#333',
+    color: '#1a1a1a',
+    height: '100%',
   },
   eyeIcon: {
-    position: 'absolute',
-    right: 16,
-    top: 13,
+    padding: 8,
   },
   button: {
     backgroundColor: AppColors.primary,
-    height: 52,
-    borderRadius: 16,
+    height: 56,
+    borderRadius: 16, // Modern pill/rounded rect
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: 32,
     shadowColor: AppColors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 8,
   },
   buttonDisabled: {
     backgroundColor: '#ccc',
@@ -311,35 +337,16 @@ const styles = StyleSheet.create({
   buttonText: {
     color: 'white',
     fontSize: 17,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   switchButton: {
-    marginTop: 18,
-    paddingVertical: 10,
+    marginTop: 20,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   switchText: {
-    color: '#3A6BFF',
+    color: AppColors.primary,
     fontSize: 15,
-    fontWeight: '500',
-  },
-  googleButton: {
-    backgroundColor: '#ffffff',
-    height: 52,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 16,
-    borderWidth: 1,
-    borderColor: '#E5E5E5',
-    flexDirection: 'row',
-  },
-  googleButtonText: {
-    color: '#000000',
-    fontSize: 17,
     fontWeight: '600',
-  },
-  googleIcon: {
-    marginRight: 10,
   },
 });
