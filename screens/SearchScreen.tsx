@@ -379,17 +379,28 @@ export const SearchScreen: React.FC = () => {
   };
 
   const handleLongPress = (item: any) => {
+    // Determinar el texto de la opción de ubicación
+    const locationOptionText = item.shelf_name
+      ? t('search_action_change_location')
+      : t('search_action_assign_location');
+
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [t('common_cancel'), t('common_delete')],
-          destructiveButtonIndex: 1,
+          options: [t('common_cancel'), locationOptionText, t('common_delete')],
+          destructiveButtonIndex: 2,
           cancelButtonIndex: 0,
           title: item.albums?.title || t('common_album'),
           message: t('search_action_sheet_title'),
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
+            // Ubicar
+            setSelectedAlbumForLocation(item);
+            loadPhysicalShelves();
+            setShowLocationModal(true);
+          } else if (buttonIndex === 2) {
+            // Eliminar
             confirmDeleteRecord(item);
           }
         }
@@ -400,6 +411,14 @@ export const SearchScreen: React.FC = () => {
         t('search_action_sheet_title'),
         [
           { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: locationOptionText,
+            onPress: () => {
+              setSelectedAlbumForLocation(item);
+              loadPhysicalShelves();
+              setShowLocationModal(true);
+            }
+          },
           { text: t('common_delete'), style: 'destructive', onPress: () => confirmDeleteRecord(item) },
         ]
       );

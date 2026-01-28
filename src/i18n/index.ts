@@ -57,7 +57,7 @@ export const translate = (key: keyof typeof es, options?: Record<string, string 
 
     if (text && options) {
         Object.keys(options).forEach(option => {
-            text = text.replace(new RegExp(`{${option}}`, 'g'), String(options[option]));
+            text = text.split(`{${option}}`).join(String(options[option]));
         });
     }
 
