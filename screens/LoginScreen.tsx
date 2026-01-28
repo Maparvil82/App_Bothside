@@ -122,6 +122,10 @@ export const LoginScreen: React.FC = () => {
           resizeMode="cover"
         />
         <View style={styles.overlay} />
+        <Image
+          source={require('../assets/logo-onboarding.png')}
+          style={styles.logoHeader}
+        />
       </View>
 
       {/* Login Form Card */}
@@ -134,17 +138,13 @@ export const LoginScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
           >
-            {/*<Image
-              source={require('../assets/logo-onboarding.png')}
-              style={styles.logo}
-            />
 
             <Text style={styles.title}>
               {isSignUp ? t('auth_create_account') : t('auth_login')}
             </Text>
             <Text style={styles.subtitle}>
               {isSignUp ? t('auth_signup_subtitle') : t('auth_login_subtitle')}
-            </Text>*/}
+            </Text>
 
             <View style={styles.inputsWrapper}>
               {isSignUp && (
@@ -238,15 +238,18 @@ const styles = StyleSheet.create({
     backgroundColor: '#000', // Matches top area if image doesn't load or verify status bar
   },
   headerImageContainer: {
-    height: height * 0.65,
+    height: height * 0.55,
     width: '100%',
     position: 'absolute',
     top: 0,
     left: 0,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
   },
   headerImage: {
     width: '100%',
     height: '100%',
+    position: 'absolute',
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,
@@ -262,19 +265,20 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 24,
     paddingHorizontal: 28,
     paddingTop: 40,
+    paddingBottom: 20,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -10 },
     shadowOpacity: 0.15,
     shadowRadius: 20,
     elevation: 20,
   },
-  logo: {
-    width: 140,
+  logoHeader: {
+    width: 100,
     height: 45,
     resizeMode: 'contain',
-    alignSelf: 'center',
-    marginBottom: 24,
-    tintColor: '#1a1a1a',
+    tintColor: '#ffffff', // White for better contrast on image
+    zIndex: 10,
+    top: 50,
   },
   title: {
     fontSize: 28,
