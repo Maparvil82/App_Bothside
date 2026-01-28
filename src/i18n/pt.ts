@@ -147,6 +147,7 @@ export const pt = {
     search_action_remove_gem: "Remover de Gems",
     search_action_add_gem: "Adicionar a Gems",
     search_action_assign_location: "Atribuir Localização",
+    search_action_change_location: "Alterar localização",
     search_action_add_to_shelf: "Adicionar à Maleta",
     search_action_change_version: "Alterar versão",
     search_action_play_audio: "Reproduzir áudio",

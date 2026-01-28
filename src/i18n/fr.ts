@@ -148,6 +148,7 @@ export const fr = {
     search_action_remove_gem: "Retirer des Gemmes",
     search_action_add_gem: "Ajouter aux Gemmes",
     search_action_assign_location: "Assigner un emplacement",
+    search_action_change_location: "Changer l'emplacement",
     search_action_add_to_shelf: "Ajouter à l'étagère",
     search_action_change_version: "Changer de version",
     search_action_play_audio: "Lire l'audio",

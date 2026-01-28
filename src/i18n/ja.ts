@@ -268,6 +268,7 @@ export const ja = {
     search_action_remove_gem: "ジェムから削除",
     search_action_add_gem: "ジェムに追加",
     search_action_assign_location: "場所を割り当て",
+    search_action_change_location: "場所を変更",
     search_action_add_to_shelf: "棚に追加",
     search_action_change_version: "版を変更",
     search_action_play_audio: "音声を再生",

@@ -142,6 +142,7 @@ export const en = {
     search_action_remove_gem: "Remove from Gems",
     search_action_add_gem: "Add to Gems",
     search_action_assign_location: "Assign Location",
+    search_action_change_location: "Change Location",
     search_action_add_to_shelf: "Add to Shelf",
     search_action_change_version: "Change Version",
     search_action_play_audio: "Play Audio",

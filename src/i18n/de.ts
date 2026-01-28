@@ -497,6 +497,7 @@ export const de = {
     search_action_remove_gem: "Aus Gems entfernen",
     search_action_add_gem: "Zu Gems hinzufügen",
     search_action_assign_location: "Standort zuweisen",
+    search_action_change_location: "Standort ändern",
     search_action_add_to_shelf: "Zu Maleta hinzufügen",
     search_action_change_version: "Version ändern",
     search_action_play_audio: "Audio abspielen",

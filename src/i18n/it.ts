@@ -268,6 +268,7 @@ export const it = {
     search_action_remove_gem: "Rimuovi da Gemme",
     search_action_add_gem: "Aggiungi a Gemme",
     search_action_assign_location: "Assegna posizione",
+    search_action_change_location: "Cambia posizione",
     search_action_add_to_shelf: "Aggiungi allo scaffale",
     search_action_change_version: "Cambia versione",
     search_action_play_audio: "Riproduci audio",
