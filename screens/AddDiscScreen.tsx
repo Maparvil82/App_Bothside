@@ -216,7 +216,31 @@ export const AddDiscScreen: React.FC = () => {
         const searchAlbum = album.toLowerCase().trim();
 
         // Verificar coincidencia del artista (más flexible)
-        const artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
+        // Manejo especial para "Various" / "Varios"
+        const isVarious = searchArtist.includes('various') || searchArtist.includes('varios') || searchArtist === 'v.a.';
+
+        let artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
+
+        if (isVarious) {
+          // Si buscamos "Various", permitir coincidencias con "Various", "Various Artists", "Varios", etc.
+          // O si el título coincide muy bien, ser permisivo con el artista.
+          const releaseIsVarious = releaseArtist && (
+            releaseArtist.includes('various') ||
+            releaseArtist.includes('varios') ||
+            releaseArtist.includes('v.a.')
+          );
+
+          if (releaseIsVarious) {
+            artistMatches = true;
+          } else {
+            // Si el artista del release no es explícitamente "Various", pero el usuario buscó "Various",
+            // podría ser un caso borde, pero generalmente queremos que coincida.
+            // Permitimos si el título coincide exactamente.
+            if (releaseAlbum === searchAlbum) {
+              artistMatches = true;
+            }
+          }
+        }
 
         // Verificar coincidencia del álbum (más flexible)
         const albumMatches = releaseAlbum && releaseAlbum.includes(searchAlbum);

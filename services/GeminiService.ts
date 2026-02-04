@@ -177,6 +177,8 @@ Responde SOLAMENTE con un objeto JSON válido (sin markdown, sin texto extra) co
   "artist": "Nombre del Artista",
   "title": "Título del Álbum"
 }
+Asegúrate de que la primera letra de cada palabra esté en MAYÚSCULA (Title Case). Ejemplo: "The Dark Side Of The Moon", no "the dark side of the moon".
+Si es una compilación de varios artistas o banda sonora (soundtrack), usa "Various" como artista.
 Si no puedes identificar el álbum con certeza, responde con un JSON con campos vacíos o null.
 `;
 

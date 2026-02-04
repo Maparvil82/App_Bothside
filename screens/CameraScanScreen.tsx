@@ -86,14 +86,20 @@ export const CameraScanScreen = () => {
                         return s.length > 1 && !['unknown', 'desconocido', 'n/a', 'title', 'artist', 'null', 'undefined'].includes(s);
                     };
 
+                    const toTitleCase = (str: string) => {
+                        return str.replace(/\w\S*/g, (txt) => {
+                            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+                        });
+                    };
+
                     if (isValidResult(result.artist) && isValidResult(result.title)) {
                         // SUCCESS: Deduct Credit
                         await deductCredit(COST_SCAN);
 
                         // Navigate back
                         navigation.navigate('AddDisc', {
-                            initialArtist: result.artist,
-                            initialAlbum: result.title,
+                            initialArtist: toTitleCase(result.artist),
+                            initialAlbum: toTitleCase(result.title),
                             autoManualSearch: true
                         });
                     } else {
