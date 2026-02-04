@@ -665,6 +665,11 @@ export const pt = {
     dj_stats_cta_description: "Bothside inclui recursos essenciais para registrar suas sessões...",
     dj_stats_cta_link: "DJ Planner Pro",
 
+    // Offline Screen
+    offline_title: "Sem Conexão",
+    offline_message: "Parece que você está offline.\nVerifique sua conexão para continuar.",
+    offline_retry: "Tentar novamente",
+
     // Edit Maleta Screen
     edit_maleta_error_title_required: "O título é obrigatório",
     edit_maleta_error_login_required: "Você deve iniciar sessão para editar a lista",

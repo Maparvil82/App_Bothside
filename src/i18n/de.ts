@@ -352,6 +352,11 @@ export const de = {
     dj_stats_cta_title: "DJ Planer Pro",
     dj_stats_cta_description: "Bothside enthält wesentliche Funktionen, um Ihre Sets zu protokollieren...",
     dj_stats_cta_link: "DJ Planer Pro",
+
+    // Offline Screen
+    offline_title: "Keine Verbindung",
+    offline_message: "Du scheinst offline zu sein.\nÜberprüfe deine Verbindung, um fortzufahren.",
+    offline_retry: "Erneut versuchen",
     // Edit Maleta Screen
     edit_maleta_error_title_required: "Der Titel ist erforderlich",
     edit_maleta_error_login_required: "Sie müssen angemeldet sein, um die Liste zu bearbeiten",

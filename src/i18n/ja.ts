@@ -834,6 +834,11 @@ export const ja = {
     dj_stats_cta_description: "Bothsideにはセッションを記録するための不可欠な機能が含まれています...",
     dj_stats_cta_link: "DJプランナー Pro",
 
+    // Offline Screen
+    offline_title: "接続なし",
+    offline_message: "オフラインのようです。\n接続を確認して続行してください。",
+    offline_retry: "再試行",
+
     // Edit Maleta Screen
     edit_maleta_error_title_required: "タイトルは必須です",
     edit_maleta_error_login_required: "リストを編集するにはログインが必要です",

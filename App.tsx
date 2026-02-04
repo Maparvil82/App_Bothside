@@ -10,6 +10,7 @@ import { AddSessionNoteModal } from './components/AddSessionNoteModal';
 import AppNavigator from './navigation/AppNavigator';
 import { LoginScreen } from './screens/LoginScreen';
 import { validateEnv } from './config/env';
+import { OfflineNotice } from './components/OfflineNotice';
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -68,6 +69,7 @@ export default function App() {
           <GemsProvider>
             <StatusBar style="auto" />
             <AppWithModal />
+            <OfflineNotice />
           </GemsProvider>
         </SessionNoteProvider>
       </ThemeProvider>

@@ -642,6 +642,11 @@ export const en = {
     dj_stats_cta_title: "DJ Planner Pro",
     dj_stats_cta_description: "Bothside includes essential features to log your sessions...",
     dj_stats_cta_link: "DJ Planner Pro",
+
+    // Offline Screen
+    offline_title: "No Connection",
+    offline_message: "It seems you are offline.\nCheck your connection to continue using Bothside.",
+    offline_retry: "Retry",
     // Edit Maleta Screen
     edit_maleta_error_title_required: "Title is required",
     edit_maleta_error_login_required: "You must log in to edit the list",
