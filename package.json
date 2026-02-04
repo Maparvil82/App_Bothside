@@ -7,7 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "backfill:rankings": "node scripts/backfill-user-rankings.js"
+    "backfill:rankings": "node scripts/backfill-user-rankings.js",
+    "sync-version": "node scripts/sync-version.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
