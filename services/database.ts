@@ -1339,6 +1339,19 @@ function base64ToUint8Array(base64: string): Uint8Array {
 }
 
 export const ProfileService = {
+  // Delete user account
+  async deleteUserAccount() {
+    console.log('🗑️ ProfileService: Requesting account deletion...');
+    const { data, error } = await supabase.functions.invoke('delete-account');
+
+    if (error) {
+      console.error('❌ ProfileService: Error deleting account:', error);
+      throw error;
+    }
+
+    console.log('✅ ProfileService: Account deletion successful:', data);
+    return data;
+  },
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase

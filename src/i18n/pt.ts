@@ -1001,4 +1001,11 @@ export const pt = {
     legal_attr_gemini_title: "Google Gemini AI",
     legal_delete_account_title: "Excluir Conta",
     legal_delete_account_message: "A exclusão da conta estará disponível em breve. Enquanto isso, você pode solicitá-la escrevendo para o suporte.",
+    // Exclusão de conta
+    account_delete_confirm_title: "Excluir conta permanentemente",
+    account_delete_confirm_message: "Esta ação é irreversível. Sua conta e todos os dados associados (coleção, notas, estatísticas) serão excluídos permanentemente. Você não poderá recuperá-los. Tem certeza?",
+    account_delete_button_confirm: "Sim, excluir conta",
+    account_delete_button_cancel: "Cancelar",
+    account_delete_loading: "Excluindo conta...",
+    account_delete_error: "Houve um erro ao excluir sua conta. Por favor, tente novamente.",
 };

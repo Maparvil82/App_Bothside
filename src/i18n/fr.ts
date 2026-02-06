@@ -997,4 +997,11 @@ export const fr = {
     collector_rank_global_stats: "{percent} des utilisateurs (mondial) sont à ce niveau",
     collector_rank_next_level: "Niveau suivant : {level}",
     collector_rank_ranking: "Classement",
+    // Suppression de compte
+    account_delete_confirm_title: "Supprimer le compte définitivement",
+    account_delete_confirm_message: "Cette action est irréversible. Votre compte et toutes les données associées (collection, notes, statistiques) seront définitivement supprimés. Vous ne pourrez pas les récupérer. Êtes-vous sûr ?",
+    account_delete_button_confirm: "Oui, supprimer le compte",
+    account_delete_button_cancel: "Annuler",
+    account_delete_loading: "Suppression du compte...",
+    account_delete_error: "Une erreur s'est produite lors de la suppression de votre compte. Veuillez réessayer.",
 };

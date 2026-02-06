@@ -997,6 +997,13 @@ export const ja = {
     collector_rank_global_stats: "全ユーザーの {percent} がこのレベルです",
     collector_rank_next_level: "次のレベル: {level}",
     collector_rank_ranking: "ランキング",
+    // アカウント削除
+    account_delete_confirm_title: "アカウントを完全に削除",
+    account_delete_confirm_message: "この操作は取り消せません。アカウントとそれに関連するすべてのデータ（コレクション、ノート、統計）が完全に削除されます。これらを復元することはできません。本当によろしいですか？",
+    account_delete_button_confirm: "はい、アカウントを削除します",
+    account_delete_button_cancel: "キャンセル",
+    account_delete_loading: "アカウントを削除中...",
+    account_delete_error: "アカウントの削除中にエラーが発生しました。もう一度お試しください。",
 };
 
 

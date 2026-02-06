@@ -145,6 +145,25 @@ export const AccountScreen: React.FC = () => {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        try {
+            setLoading(true);
+            // Hide modal first
+            setDeleteAccountModalVisible(false);
+
+            // Call service
+            await ProfileService.deleteUserAccount();
+
+            // Sign out and navigate to onboarding
+            await signOut();
+            // Navigation will be handled by auth state change usually, but we can force it
+        } catch (error) {
+            console.error('Error deleting account:', error);
+            setLoading(false);
+            Alert.alert(t('common_error'), t('account_delete_error'));
+        }
+    };
+
     const showDeleteAccountModal = () => {
         setDeleteAccountModalVisible(true);
     };
@@ -367,19 +386,27 @@ export const AccountScreen: React.FC = () => {
             >
                 <View style={styles.modalOverlay}>
                     <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
-                        <Ionicons name="information-circle-outline" size={48} color={colors.primary} />
-                        <Text style={[styles.modalTitle, { color: colors.text }]}>{t('account_modal_delete_title')}</Text>
+                        <Ionicons name="warning-outline" size={48} color="#ff3b30" />
+                        <Text style={[styles.modalTitle, { color: colors.text, marginTop: 10 }]}>{t('account_delete_confirm_title')}</Text>
                         <Text style={[styles.modalText, { color: colors.text }]}>
-                            {t('account_modal_delete_message')}
+                            {t('account_delete_confirm_message')}
                         </Text>
-                        <Text style={[styles.modalEmail, { color: colors.primary }]}>{t('account_delete_modal_email_example')}</Text>
 
-                        <TouchableOpacity
-                            style={[styles.modalButton, { backgroundColor: colors.primary }]}
-                            onPress={() => setDeleteAccountModalVisible(false)}
-                        >
-                            <Text style={styles.modalButtonText}>{t('common_understood')}</Text>
-                        </TouchableOpacity>
+                        <View style={{ width: '100%', marginTop: 20 }}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: '#ff3b30', marginBottom: 10, width: '100%' }]}
+                                onPress={handleDeleteAccount}
+                            >
+                                <Text style={styles.modalButtonText}>{t('account_delete_button_confirm')}</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={[styles.modalButton, { backgroundColor: 'transparent', borderWidth: 1, borderColor: colors.border, width: '100%' }]}
+                                onPress={() => setDeleteAccountModalVisible(false)}
+                            >
+                                <Text style={[styles.modalButtonText, { color: colors.text }]}>{t('account_delete_button_cancel')}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </Modal>

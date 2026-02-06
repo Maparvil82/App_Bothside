@@ -997,6 +997,13 @@ export const it = {
     collector_rank_global_stats: "{percent} degli utenti (globali) sono a questo livello",
     collector_rank_next_level: "Prossimo livello: {level}",
     collector_rank_ranking: "Classifica",
+    // Eliminazione account
+    account_delete_confirm_title: "Elimina account permanentemente",
+    account_delete_confirm_message: "Questa azione è irreversibile. Il tuo account e tutti i dati associati (collezione, note, statistiche) verranno eliminati definitivamente. Non potrai più recuperarli. Sei sicuro?",
+    account_delete_button_confirm: "Sì, elimina account",
+    account_delete_button_cancel: "Annulla",
+    account_delete_loading: "Eliminazione account...",
+    account_delete_error: "Si è verificato un errore durante l'eliminazione dell'account. Riprova.",
 };
 
 

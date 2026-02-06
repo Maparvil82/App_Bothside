@@ -949,4 +949,11 @@ export const es = {
     album_detail_remove_session_message: '¿Estás seguro de que quieres quitar este álbum de esta sesión?',
     album_detail_session_error_removing: 'Error al quitar el álbum de la sesión.',
     common_add: 'Añadir',
+    // Account Deletion
+    account_delete_confirm_title: "Eliminar cuenta permanentemente",
+    account_delete_confirm_message: "Esta acción es irreversible. Se eliminará tu cuenta y todos los datos asociados (colección, notas, estadísticas). No podrás recuperarlos. ¿Estás seguro?",
+    account_delete_button_confirm: "Sí, eliminar cuenta",
+    account_delete_button_cancel: "Cancelar",
+    account_delete_loading: "Eliminando cuenta...",
+    account_delete_error: "Hubo un error al eliminar tu cuenta. Por favor intenta de nuevo.",
 };

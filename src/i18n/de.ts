@@ -949,4 +949,11 @@ export const de = {
     album_detail_remove_session_message: 'Sind Sie sicher, dass Sie dieses Album aus dieser Sitzung entfernen möchten?',
     album_detail_session_error_removing: 'Fehler beim Entfernen des Albums aus der Sitzung.',
     common_add: 'Hinzufügen',
+    // Konto löschen
+    account_delete_confirm_title: "Konto dauerhaft löschen",
+    account_delete_confirm_message: "Diese Aktion ist unwiderruflich. Ihr Konto und alle zugehörigen Daten (Sammlung, Notizen, Statistiken) werden dauerhaft gelöscht. Sie können diese nicht wiederherstellen. Sind Sie sicher?",
+    account_delete_button_confirm: "Ja, Konto löschen",
+    account_delete_button_cancel: "Abbrechen",
+    account_delete_loading: "Konto wird gelöscht...",
+    account_delete_error: "Beim Löschen Ihres Kontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
 };

@@ -949,4 +949,11 @@ export const en = {
     album_detail_remove_session_message: 'Are you sure you want to remove this album from this session?',
     album_detail_session_error_removing: 'Error removing album from session.',
     common_add: 'Add',
+    // Account Deletion
+    account_delete_confirm_title: "Delete Account Permanently",
+    account_delete_confirm_message: "This action is irreversible. Your account and all associated data (collection, notes, stats) will be permanently deleted. You cannot recover them. Are you sure?",
+    account_delete_button_confirm: "Yes, Delete Account",
+    account_delete_button_cancel: "Cancel",
+    account_delete_loading: "Deleting account...",
+    account_delete_error: "There was an error deleting your account. Please try again.",
 };
