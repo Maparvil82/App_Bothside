@@ -1346,6 +1346,11 @@ export const ProfileService = {
 
     if (error) {
       console.error('❌ ProfileService: Error deleting account:', error);
+      // Supabase Edge Functions errors might be hidden in the context or response
+      if (error && typeof error === 'object' && 'context' in error) {
+        // @ts-ignore
+        console.error('❌ ProfileService: Error context:', JSON.stringify(error.context));
+      }
       throw error;
     }
 

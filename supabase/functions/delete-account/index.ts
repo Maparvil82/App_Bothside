@@ -28,6 +28,14 @@ serve(async (req: Request) => {
         }
 
         const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+        if (!serviceRoleKey) {
+            console.error('Error: SUPABASE_SERVICE_ROLE_KEY is not set')
+            return new Response(JSON.stringify({ error: 'Server configuration error: Missing Service Role Key' }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 500,
+            })
+        }
         const supabaseAdmin = createClient(
             Deno.env.get('SUPABASE_URL') ?? '',
             serviceRoleKey ?? ''
