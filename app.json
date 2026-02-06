@@ -16,7 +16,7 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "bundleIdentifier": "com.manuelparra.bothside",
-      "buildNumber": "7",
+      "buildNumber": "8",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrar...",
