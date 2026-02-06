@@ -2,9 +2,10 @@ const fs = require('fs');
 const path = require('path');
 
 // Paths
+// Paths
 const appJsonPath = path.resolve(__dirname, '../app.json');
-const infoPlistPath = path.resolve(__dirname, '../ios/AppBothside/Info.plist');
-const projectPbxPath = path.resolve(__dirname, '../ios/AppBothside.xcodeproj/project.pbxproj');
+const infoPlistPath = path.resolve(__dirname, '../ios/Bothside/Info.plist');
+const projectPbxPath = path.resolve(__dirname, '../ios/Bothside.xcodeproj/project.pbxproj');
 
 // Read app.json
 const appJson = require(appJsonPath);
