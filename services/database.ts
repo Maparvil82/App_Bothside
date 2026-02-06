@@ -1354,6 +1354,12 @@ export const ProfileService = {
       throw error;
     }
 
+    // We now return 200 even on error to see the message
+    if (data && data.error) {
+      console.error('❌ ProfileService: Server returned error:', data.error);
+      throw new Error(data.error);
+    }
+
     console.log('✅ ProfileService: Account deletion successful:', data);
     return data;
   },
