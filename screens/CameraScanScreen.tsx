@@ -42,7 +42,12 @@ export const CameraScanScreen = () => {
 
     if (!permission) {
         // Camera permissions are still loading.
-        return <View />;
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color="#fff" />
+                <Text style={styles.message}>Cargando cámara...</Text>
+            </View>
+        );
     }
 
     if (!permission.granted) {

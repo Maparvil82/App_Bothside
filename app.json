@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bothside",
     "slug": "AppBothside",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "orientation": "portrait",
     "scheme": "appbothside",
     "icon": "./assets/icon.png",
@@ -16,15 +16,12 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "bundleIdentifier": "com.manuelparra.bothside",
-      "buildNumber": "8",
+      "buildNumber": "9",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSLocationWhenInUseUsageDescription": "Tu App necesita tu ubicación para mostrar...",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "Esta app necesita acceso a tu ubicación...",
-        "NSCameraUsageDescription": "Esta app necesita acceso a la cámara para tomar fotos y escanear códigos QR.",
-        "NSMicrophoneUsageDescription": "Esta app necesita acceso al micrófono para grabar videos.",
-        "NSPhotoLibraryUsageDescription": "Esta app necesita acceso a tu galería para guardar o seleccionar fotos.",
-        "NSPhotoLibraryAddUsageDescription": "Esta app necesita permiso para guardar fotos en tu galería."
+        "NSCameraUsageDescription": "Necesitamos acceso a la cámara para escanear la portada de un vinilo o su código de barras. La imagen capturada se usa únicamente para identificar el álbum mediante IA y añadirlo a tu colección. No guardamos ni compartimos estas imágenes.",
+        "NSMicrophoneUsageDescription": "Usamos el micrófono para grabar notas de voz personales asociadas a tus álbumes de vinilo. Estas grabaciones se guardan localmente o en tu cuenta para tu uso personal.",
+        "NSPhotoLibraryUsageDescription": "Necesitamos acceso a tu biblioteca de fotos para que puedas seleccionar una imagen de una portada de vinilo guardada. La imagen seleccionada se analizará para identificar el álbum y añadirlo a tu catálogo. No accedemos a otras fotos ni compartimos tu biblioteca."
       }
     },
     "android": {
@@ -33,8 +30,6 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
-        "android.permission.CAMERA",
-        "android.permission.RECORD_AUDIO",
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
@@ -50,8 +45,6 @@
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
-          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
           "recordAudioAndroid": true
         }
       ]
