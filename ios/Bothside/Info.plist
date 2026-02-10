@@ -19,7 +19,7 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0.8</string>
+    <string>1.0.9</string>
     <key>CFBundleSignature</key>
     <string>????</string>
     <key>CFBundleURLTypes</key>
@@ -33,7 +33,7 @@
       </dict>
     </array>
     <key>CFBundleVersion</key>
-    <string>10</string>
+    <string>12</string>
     <key>ITSAppUsesNonExemptEncryption</key>
     <false/>
     <key>LSMinimumSystemVersion</key>
@@ -49,6 +49,8 @@
     </dict>
     <key>NSCameraUsageDescription</key>
     <string>Necesitamos acceso a la cámara para escanear la portada de un vinilo o su código de barras. La imagen capturada se usa únicamente para identificar el álbum mediante IA y añadirlo a tu colección. No guardamos ni compartimos estas imágenes.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Esta aplicación no utiliza tu ubicación directamente, pero algunas bibliotecas de terceros pueden requerir acceso a ella para funciones auxiliares.</string>
     <key>NSMicrophoneUsageDescription</key>
     <string>Usamos el micrófono para grabar notas de voz personales asociadas a tus álbumes de vinilo. Estas grabaciones se guardan localmente o en tu cuenta para tu uso personal.</string>
     <key>NSPhotoLibraryUsageDescription</key>
