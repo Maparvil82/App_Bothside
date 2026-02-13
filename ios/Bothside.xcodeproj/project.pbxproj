@@ -7,12 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		0023EB57DE9039753419A9CA /* libPods-Bothside.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 994CD223FF39E98648BC7C62 /* libPods-Bothside.a */; };
 		13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 13B07FB51A68108700A75B9A /* Images.xcassets */; };
+		1F7E9A1C1AE3C1CC69260D08 /* libPods-Bothside.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 774FF81355EC9F3D9ED6CB92 /* libPods-Bothside.a */; };
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
-		AB794B84CD58DC5C7EACA392 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 2DAD3F1EB4548FBC5BB75DB8 /* PrivacyInfo.xcprivacy */; };
+		675FF5E6C1058D11CF4C40E9 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2718CB648F6752ED2CA9C781 /* ExpoModulesProvider.swift */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
-		EEBFC3F2BA550B2F3D954E58 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5F8464D0A67A33047969B85 /* ExpoModulesProvider.swift */; };
+		BE857E9ABB124369CDC583A7 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = AF7E9BD00F3E289DAA5F7957 /* PrivacyInfo.xcprivacy */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
 /* End PBXBuildFile section */
 
@@ -20,16 +20,16 @@
 		13B07F961A680F5B00A75B9A /* Bothside.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Bothside.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		13B07FB51A68108700A75B9A /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Images.xcassets; path = Bothside/Images.xcassets; sourceTree = "<group>"; };
 		13B07FB61A68108700A75B9A /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = Info.plist; path = Bothside/Info.plist; sourceTree = "<group>"; };
-		2DAD3F1EB4548FBC5BB75DB8 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Bothside/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
-		6F572BCA2B09F3E6A9E57222 /* Pods-Bothside.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bothside.debug.xcconfig"; path = "Target Support Files/Pods-Bothside/Pods-Bothside.debug.xcconfig"; sourceTree = "<group>"; };
-		821B168304BACA6DDD5C6753 /* Pods-Bothside.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bothside.release.xcconfig"; path = "Target Support Files/Pods-Bothside/Pods-Bothside.release.xcconfig"; sourceTree = "<group>"; };
-		994CD223FF39E98648BC7C62 /* libPods-Bothside.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Bothside.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		19566EB361D15D39CF897C66 /* Pods-Bothside.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bothside.release.xcconfig"; path = "Target Support Files/Pods-Bothside/Pods-Bothside.release.xcconfig"; sourceTree = "<group>"; };
+		2718CB648F6752ED2CA9C781 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Bothside/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
+		774FF81355EC9F3D9ED6CB92 /* libPods-Bothside.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-Bothside.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Bothside/SplashScreen.storyboard; sourceTree = "<group>"; };
+		AF7E9BD00F3E289DAA5F7957 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; name = PrivacyInfo.xcprivacy; path = Bothside/PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B4A819F5CFFEF2E57C557BD8 /* Pods-Bothside.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Bothside.debug.xcconfig"; path = "Target Support Files/Pods-Bothside/Pods-Bothside.debug.xcconfig"; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Bothside/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Bothside-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Bothside-Bridging-Header.h"; path = "Bothside/Bothside-Bridging-Header.h"; sourceTree = "<group>"; };
-		F5F8464D0A67A33047969B85 /* ExpoModulesProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ExpoModulesProvider.swift; path = "Pods/Target Support Files/Pods-Bothside/ExpoModulesProvider.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,7 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0023EB57DE9039753419A9CA /* libPods-Bothside.a in Frameworks */,
+				1F7E9A1C1AE3C1CC69260D08 /* libPods-Bothside.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -53,7 +53,7 @@
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
 				AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */,
-				2DAD3F1EB4548FBC5BB75DB8 /* PrivacyInfo.xcprivacy */,
+				AF7E9BD00F3E289DAA5F7957 /* PrivacyInfo.xcprivacy */,
 			);
 			name = Bothside;
 			sourceTree = "<group>";
@@ -62,24 +62,16 @@
 			isa = PBXGroup;
 			children = (
 				ED297162215061F000B7C4FE /* JavaScriptCore.framework */,
-				994CD223FF39E98648BC7C62 /* libPods-Bothside.a */,
+				774FF81355EC9F3D9ED6CB92 /* libPods-Bothside.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		346090E268E4C53CBC4A4236 /* Bothside */ = {
+		7AEA560BB9EB3183EB56DDD2 /* Pods */ = {
 			isa = PBXGroup;
 			children = (
-				F5F8464D0A67A33047969B85 /* ExpoModulesProvider.swift */,
-			);
-			name = Bothside;
-			sourceTree = "<group>";
-		};
-		572F57AE19DADAB1D263F592 /* Pods */ = {
-			isa = PBXGroup;
-			children = (
-				6F572BCA2B09F3E6A9E57222 /* Pods-Bothside.debug.xcconfig */,
-				821B168304BACA6DDD5C6753 /* Pods-Bothside.release.xcconfig */,
+				B4A819F5CFFEF2E57C557BD8 /* Pods-Bothside.debug.xcconfig */,
+				19566EB361D15D39CF897C66 /* Pods-Bothside.release.xcconfig */,
 			);
 			name = Pods;
 			path = Pods;
@@ -99,8 +91,8 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				572F57AE19DADAB1D263F592 /* Pods */,
-				D4739F5DE51DA07F534CBEF9 /* ExpoModulesProviders */,
+				7AEA560BB9EB3183EB56DDD2 /* Pods */,
+				F8A2838547A712A95CE682AD /* ExpoModulesProviders */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -115,6 +107,14 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		A239E9DB1EAEB6D5E3089FCE /* Bothside */ = {
+			isa = PBXGroup;
+			children = (
+				2718CB648F6752ED2CA9C781 /* ExpoModulesProvider.swift */,
+			);
+			name = Bothside;
+			sourceTree = "<group>";
+		};
 		BB2F792B24A3F905000567C9 /* Supporting */ = {
 			isa = PBXGroup;
 			children = (
@@ -124,10 +124,10 @@
 			path = Bothside/Supporting;
 			sourceTree = "<group>";
 		};
-		D4739F5DE51DA07F534CBEF9 /* ExpoModulesProviders */ = {
+		F8A2838547A712A95CE682AD /* ExpoModulesProviders */ = {
 			isa = PBXGroup;
 			children = (
-				346090E268E4C53CBC4A4236 /* Bothside */,
+				A239E9DB1EAEB6D5E3089FCE /* Bothside */,
 			);
 			name = ExpoModulesProviders;
 			sourceTree = "<group>";
@@ -140,13 +140,13 @@
 			buildConfigurationList = 13B07F931A680F5B00A75B9A /* Build configuration list for PBXNativeTarget "Bothside" */;
 			buildPhases = (
 				08A4A3CD28434E44B6B9DE2E /* [CP] Check Pods Manifest.lock */,
-				E0E1D6D03BE595D78D9FCAF5 /* [Expo] Configure project */,
+				C5CBA4ADA6D19051DFB1FC35 /* [Expo] Configure project */,
 				13B07F871A680F5B00A75B9A /* Sources */,
 				13B07F8C1A680F5B00A75B9A /* Frameworks */,
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				8F4B9770BA48779B5C59EDAC /* [CP] Embed Pods Frameworks */,
+				80DBE42E78029C33C586D51A /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +196,7 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
-				AB794B84CD58DC5C7EACA392 /* PrivacyInfo.xcprivacy in Resources */,
+				BE857E9ABB124369CDC583A7 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -282,7 +282,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Bothside/Pods-Bothside-resources.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		8F4B9770BA48779B5C59EDAC /* [CP] Embed Pods Frameworks */ = {
+		80DBE42E78029C33C586D51A /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -304,7 +304,7 @@
 			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-Bothside/Pods-Bothside-frameworks.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
-		E0E1D6D03BE595D78D9FCAF5 /* [Expo] Configure project */ = {
+		C5CBA4ADA6D19051DFB1FC35 /* [Expo] Configure project */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
@@ -336,7 +336,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				EEBFC3F2BA550B2F3D954E58 /* ExpoModulesProvider.swift in Sources */,
+				675FF5E6C1058D11CF4C40E9 /* ExpoModulesProvider.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -345,7 +345,7 @@
 /* Begin XCBuildConfiguration section */
 		13B07F941A680F5B00A75B9A /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 6F572BCA2B09F3E6A9E57222 /* Pods-Bothside.debug.xcconfig */;
+			baseConfigurationReference = B4A819F5CFFEF2E57C557BD8 /* Pods-Bothside.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
@@ -381,7 +381,7 @@
 		};
 		13B07F951A680F5B00A75B9A /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 821B168304BACA6DDD5C6753 /* Pods-Bothside.release.xcconfig */;
+			baseConfigurationReference = 19566EB361D15D39CF897C66 /* Pods-Bothside.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
