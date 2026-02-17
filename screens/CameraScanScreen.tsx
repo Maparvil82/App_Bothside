@@ -40,6 +40,12 @@ export const CameraScanScreen = () => {
         }
     }, [isFocused, user]);
 
+    useEffect(() => {
+        if (permission && !permission.granted && permission.canAskAgain && isFocused) {
+            requestPermission();
+        }
+    }, [permission, isFocused]);
+
     if (!permission) {
         // Camera permissions are still loading.
         return (
