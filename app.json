@@ -2,7 +2,7 @@
   "expo": {
     "name": "Bothside",
     "slug": "AppBothside",
-    "version": "1.1.2",
+    "version": "1.1.3",
     "orientation": "portrait",
     "scheme": "appbothside",
     "icon": "./assets/icon.png",
@@ -16,7 +16,7 @@
       "supportsTablet": false,
       "requireFullScreen": true,
       "bundleIdentifier": "com.manuelparra.bothside",
-      "buildNumber": "18",
+      "buildNumber": "20",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSCameraUsageDescription": "Necesitamos acceso a la cámara para escanear la portada de un vinilo o su código de barras. La imagen capturada se usa únicamente para identificar el álbum mediante IA y añadirlo a tu colección. No guardamos ni compartimos estas imágenes.",

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, SafeAreaView, Linking } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useIsFocused } from '@react-navigation/native';
@@ -60,10 +60,26 @@ export const CameraScanScreen = () => {
         // Camera permissions are not granted yet.
         return (
             <View style={styles.container}>
-                <Text style={styles.message}>Necesitamos permiso para usar la cámara</Text>
-                <TouchableOpacity onPress={requestPermission} style={styles.button}>
-                    <Text style={styles.text}>Dar Permiso</Text>
+                <Text style={styles.message}>
+                    {permission.canAskAgain
+                        ? "Necesitamos acceso a la cámara para escanear portadas."
+                        : "El acceso a la cámara está denegado. Ve a los ajustes para activarlo."}
+                </Text>
+
+                <TouchableOpacity
+                    onPress={permission.canAskAgain ? requestPermission : Linking.openSettings}
+                    style={styles.button}
+                >
+                    <Text style={styles.text}>
+                        {permission.canAskAgain ? "Dar Permiso" : "Abrir Ajustes"}
+                    </Text>
                 </TouchableOpacity>
+
+                {!permission.canAskAgain && (
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.button, { marginTop: 20, backgroundColor: '#555' }]}>
+                        <Text style={styles.text}>Cancelar</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         );
     }
