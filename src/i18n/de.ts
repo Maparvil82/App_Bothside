@@ -863,8 +863,12 @@ export const de = {
     maletas_collaborative_removeMessage: "Sind Sie sicher, dass Sie diesen Mitarbeiter entfernen möchten?",
     maletas_collaborative_removeConfirm: "Entfernen",
     maletas_collaborative_errorRemoveFailed: "Mitarbeiter konnte nicht entfernt werden",
+    camera_permission_request: "Wir benötigen Kamerazugriff, um Cover zu scannen.",
     camera_permission_requesting: "Fordere Kameraberechtigungen an...",
-    camera_permission_denied: "Sie haben keine Kameraberechtigungen",
+    camera_permission_denied: "Kamerazugriff verweigert. Bitte in den Einstellungen aktivieren.",
+    camera_permission_grant: "Erlaubnis erteilen",
+    camera_permission_settings: "Einstellungen öffnen",
+    camera_button_cancel: "Abbrechen",
     camera_permission_instruction: "Gehen Sie zu Einstellungen und aktivieren Sie Kameraberechtigungen",
     camera_preparing: "Kamera wird vorbereitet...",
     camera_analyzing: "Analysiere...",
@@ -956,4 +960,5 @@ export const de = {
     account_delete_button_cancel: "Abbrechen",
     account_delete_loading: "Konto wird gelöscht...",
     account_delete_error: "Beim Löschen Ihres Kontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+
 };

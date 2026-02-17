@@ -611,8 +611,12 @@ export const fr = {
     maletas_collaborative_removeConfirm: "Retirer",
     maletas_collaborative_errorRemoveFailed: "Impossible de retirer le collaborateur",
 
+    camera_permission_request: "Nous avons besoin d'accès à la caméra pour scanner les pochettes.",
     camera_permission_requesting: "Demande de permissions caméra...",
-    camera_permission_denied: "Vous n'avez pas les permissions caméra",
+    camera_permission_denied: "L'accès à la caméra est refusé. Allez dans les paramètres pour l'activer.",
+    camera_permission_grant: "Donner la permission",
+    camera_permission_settings: "Ouvrir les paramètres",
+    camera_button_cancel: "Annuler",
     camera_permission_instruction: "Allez dans les Paramètres et activez les permissions caméra",
     camera_preparing: "Préparation de la caméra...",
     camera_analyzing: "Analyse...",
@@ -1004,4 +1008,5 @@ export const fr = {
     account_delete_button_cancel: "Annuler",
     account_delete_loading: "Suppression du compte...",
     account_delete_error: "Une erreur s'est produite lors de la suppression de votre compte. Veuillez réessayer.",
+
 };

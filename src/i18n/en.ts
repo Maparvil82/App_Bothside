@@ -863,8 +863,12 @@ export const en = {
     maletas_collaborative_removeMessage: "Are you sure you want to remove this collaborator?",
     maletas_collaborative_removeConfirm: "Remove",
     maletas_collaborative_errorRemoveFailed: "Could not remove collaborator",
+    camera_permission_request: "We need camera access to scan covers.",
     camera_permission_requesting: "Requesting camera permissions...",
-    camera_permission_denied: "You do not have camera permissions",
+    camera_permission_denied: "Camera access is denied. Go to settings to enable it.",
+    camera_permission_grant: "Grant Permission",
+    camera_permission_settings: "Open Settings",
+    camera_button_cancel: "Cancel",
     camera_permission_instruction: "Go to Settings and enable camera permissions",
     camera_preparing: "Preparing camera...",
     camera_analyzing: "Analyzing...",
@@ -956,4 +960,5 @@ export const en = {
     account_delete_button_cancel: "Cancel",
     account_delete_loading: "Deleting account...",
     account_delete_error: "There was an error deleting your account. Please try again.",
+
 };

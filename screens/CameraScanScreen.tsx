@@ -8,8 +8,10 @@ import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { useCredits } from '../contexts/CreditsContext';
 import { CreditService } from '../services/CreditService';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 export const CameraScanScreen = () => {
+    const { t } = useTranslation();
     const navigation = useNavigation<any>();
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<CameraView>(null);
@@ -27,7 +29,7 @@ export const CameraScanScreen = () => {
                     'Sin Créditos AI',
                     'Necesitas créditos para usar el Escáner Mágico. ¿Quieres adquirir un paquete?',
                     [
-                        { text: 'Cancelar', onPress: () => navigation.goBack() },
+                        { text: t('common_cancel'), onPress: () => navigation.goBack() },
                         {
                             text: 'Ir a la Tienda', onPress: () => {
                                 navigation.goBack();
@@ -51,7 +53,7 @@ export const CameraScanScreen = () => {
         return (
             <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
                 <ActivityIndicator size="large" color="#fff" />
-                <Text style={styles.message}>Cargando cámara...</Text>
+                <Text style={styles.message}>{t('camera_preparing')}</Text>
             </View>
         );
     }
@@ -62,8 +64,8 @@ export const CameraScanScreen = () => {
             <View style={styles.container}>
                 <Text style={styles.message}>
                     {permission.canAskAgain
-                        ? "Necesitamos acceso a la cámara para escanear portadas."
-                        : "El acceso a la cámara está denegado. Ve a los ajustes para activarlo."}
+                        ? t('camera_permission_request')
+                        : t('camera_permission_denied')}
                 </Text>
 
                 <TouchableOpacity
@@ -71,13 +73,13 @@ export const CameraScanScreen = () => {
                     style={styles.button}
                 >
                     <Text style={styles.text}>
-                        {permission.canAskAgain ? "Dar Permiso" : "Abrir Ajustes"}
+                        {permission.canAskAgain ? t('camera_permission_grant') : t('camera_permission_settings')}
                     </Text>
                 </TouchableOpacity>
 
                 {!permission.canAskAgain && (
                     <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.button, { marginTop: 20, backgroundColor: '#555' }]}>
-                        <Text style={styles.text}>Cancelar</Text>
+                        <Text style={styles.text}>{t('camera_button_cancel')}</Text>
                     </TouchableOpacity>
                 )}
             </View>
@@ -150,7 +152,7 @@ export const CameraScanScreen = () => {
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
                             <Ionicons name="close" size={30} color="white" />
                         </TouchableOpacity>
-                        <Text style={styles.title}>Escanear Portada</Text>
+                        <Text style={styles.title}>{t('add_disc_camera_title')}</Text>
                     </View>
 
                     <View style={styles.guideFrame}>
@@ -164,7 +166,7 @@ export const CameraScanScreen = () => {
                         {scanning ? (
                             <View style={styles.loadingContainer}>
                                 <ActivityIndicator size="large" color="#fff" />
-                                <Text style={styles.loadingText}>Analizando portada...</Text>
+                                <Text style={styles.loadingText}>{t('camera_ai_analyzing')}</Text>
                             </View>
                         ) : (
                             <TouchableOpacity style={styles.captureButton} onPress={takePicture}>

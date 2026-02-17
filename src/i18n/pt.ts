@@ -883,8 +883,12 @@ export const pt = {
     maletas_collaborative_removeConfirm: "Remover",
     maletas_collaborative_errorRemoveFailed: "Não foi possível remover o colaborador",
 
+    camera_permission_request: "Precisamos de acesso à câmera para escanear capas.",
     camera_permission_requesting: "Solicitando permissões de câmera...",
-    camera_permission_denied: "Você não tem permissões de câmera",
+    camera_permission_denied: "Acesso à câmera negado. Vá para as configurações para ativar.",
+    camera_permission_grant: "Dar Permissão",
+    camera_permission_settings: "Abrir Configurações",
+    camera_button_cancel: "Cancelar",
     camera_permission_instruction: "Vá para Configurações e habilite as permissões de câmera",
     camera_preparing: "Preparando câmera...",
     camera_analyzing: "Analisando...",
@@ -1008,4 +1012,5 @@ export const pt = {
     account_delete_button_cancel: "Cancelar",
     account_delete_loading: "Excluindo conta...",
     account_delete_error: "Houve um erro ao excluir sua conta. Por favor, tente novamente.",
+
 };

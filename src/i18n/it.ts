@@ -611,8 +611,12 @@ export const it = {
     maletas_collaborative_removeConfirm: "Rimuovi",
     maletas_collaborative_errorRemoveFailed: "Impossibile rimuovere il collaboratore",
 
+    camera_permission_request: "Abbiamo bisogno dell'accesso alla fotocamera per scansionare le copertine.",
     camera_permission_requesting: "Richiesta permessi fotocamera...",
-    camera_permission_denied: "Non hai i permessi della fotocamera",
+    camera_permission_denied: "Accesso alla fotocamera negato. Vai nelle impostazioni per abilitarlo.",
+    camera_permission_grant: "Concedi permesso",
+    camera_permission_settings: "Apri impostazioni",
+    camera_button_cancel: "Annulla",
     camera_permission_instruction: "Vai nelle Impostazioni e abilita i permessi della fotocamera",
     camera_preparing: "Preparazione fotocamera...",
     camera_analyzing: "Analisi...",
@@ -1004,6 +1008,7 @@ export const it = {
     account_delete_button_cancel: "Annulla",
     account_delete_loading: "Eliminazione account...",
     account_delete_error: "Si è verificato un errore durante l'eliminazione dell'account. Riprova.",
+
 };
 
 

@@ -611,10 +611,14 @@ export const ja = {
     maletas_collaborative_removeConfirm: "削除",
     maletas_collaborative_errorRemoveFailed: "コラボレーターを削除できませんでした",
 
+    camera_permission_request: "カバーをスキャンするためにカメラへのアクセスが必要です。",
     camera_permission_requesting: "カメラの権限を要求中...",
-    camera_permission_denied: "カメラの権限がありません",
+    camera_permission_denied: "カメラへのアクセスが拒否されました。設定で有効にしてください。",
+    camera_permission_grant: "許可する",
+    camera_permission_settings: "設定を開く",
+    camera_button_cancel: "キャンセル",
     camera_permission_instruction: "設定に移動してカメラの権限を有効にしてください",
-    camera_preparing: "カメラ準備中...",
+    camera_preparing: "カメラの準備中...",
     camera_analyzing: "解析中...",
     camera_ai_analyzing: "🤖 ジャケット解析中...",
     camera_ai_wait: "数秒かかる場合があります",
@@ -1004,6 +1008,7 @@ export const ja = {
     account_delete_button_cancel: "キャンセル",
     account_delete_loading: "アカウントを削除中...",
     account_delete_error: "アカウントの削除中にエラーが発生しました。もう一度お試しください。",
+
 };
 
 
