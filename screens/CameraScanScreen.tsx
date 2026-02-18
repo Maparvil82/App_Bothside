@@ -59,29 +59,78 @@ export const CameraScanScreen = () => {
     }
 
     if (!permission.granted) {
-        // Camera permissions are not granted yet.
         return (
-            <View style={styles.container}>
-                <Text style={styles.message}>
-                    {permission.canAskAgain
-                        ? t('camera_permission_request')
-                        : t('camera_permission_denied')}
-                </Text>
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }]}>
+                {/* Modal Container */}
+                <View style={{
+                    width: '85%',
+                    backgroundColor: '#1C1C1E',
+                    borderRadius: 14,
+                    padding: 24,
+                    alignItems: 'center',
+                    shadowColor: "#000",
+                    shadowOffset: {
+                        width: 0,
+                        height: 2,
+                    },
+                    shadowOpacity: 0.25,
+                    shadowRadius: 3.84,
+                    elevation: 5,
+                }}>
+                    <Ionicons name="camera-outline" size={48} color="white" style={{ marginBottom: 16 }} />
 
-                <TouchableOpacity
-                    onPress={permission.canAskAgain ? requestPermission : Linking.openSettings}
-                    style={styles.button}
-                >
-                    <Text style={styles.text}>
-                        {permission.canAskAgain ? t('camera_permission_grant') : t('camera_permission_settings')}
+                    <Text style={{
+                        color: 'white',
+                        fontSize: 20,
+                        fontWeight: 'bold',
+                        marginBottom: 12,
+                        textAlign: 'center'
+                    }}>
+                        {t('common_permissions_required')}
                     </Text>
-                </TouchableOpacity>
 
-                {!permission.canAskAgain && (
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.button, { marginTop: 20, backgroundColor: '#555' }]}>
-                        <Text style={styles.text}>{t('camera_button_cancel')}</Text>
+                    <Text style={{
+                        color: '#A0A0A0',
+                        fontSize: 16,
+                        textAlign: 'center',
+                        marginBottom: 24,
+                        lineHeight: 22
+                    }}>
+                        {permission.canAskAgain
+                            ? t('camera_permission_request')
+                            : t('camera_permission_denied')}
+                    </Text>
+
+                    <TouchableOpacity
+                        onPress={permission.canAskAgain ? requestPermission : Linking.openSettings}
+                        style={{
+                            backgroundColor: '#007AFF', // iOS Blue or App Primary
+                            paddingVertical: 12,
+                            paddingHorizontal: 24,
+                            borderRadius: 8,
+                            width: '100%',
+                            alignItems: 'center',
+                            marginBottom: 12
+                        }}
+                    >
+                        <Text style={{ color: 'white', fontWeight: 'bold', fontSize: 16 }}>
+                            {permission.canAskAgain ? t('camera_permission_grant') : t('camera_permission_settings')}
+                        </Text>
                     </TouchableOpacity>
-                )}
+
+                    <TouchableOpacity
+                        onPress={() => navigation.goBack()}
+                        style={{
+                            paddingVertical: 12,
+                            width: '100%',
+                            alignItems: 'center'
+                        }}
+                    >
+                        <Text style={{ color: '#A0A0A0', fontSize: 16 }}>
+                            {t('common_cancel')}
+                        </Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         );
     }
@@ -211,17 +260,6 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '600',
         marginLeft: 20,
-    },
-    button: {
-        alignSelf: 'center',
-        padding: 10,
-        backgroundColor: AppColors.primary,
-        borderRadius: 5
-    },
-    text: {
-        color: 'white',
-        fontWeight: 'bold',
-        fontSize: 18
     },
     guideFrame: {
         width: 300,
