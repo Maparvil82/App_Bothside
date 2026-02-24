@@ -4,9 +4,9 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   ScrollView,
   Image,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -15,9 +15,8 @@ import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
 
-const { width, height } = Dimensions.get('window');
-
 export const OnboardingScreen: React.FC = () => {
+  const { width, height } = useWindowDimensions();
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
@@ -127,18 +126,25 @@ export const OnboardingScreen: React.FC = () => {
         style={styles.scrollView}
       >
         {onboardingSteps.map((step, index) => (
-          <View key={step.id} style={styles.slide}>
+          <View key={step.id} style={[styles.slide, { width }]}>
             {/* Illustration */}
             <View style={styles.illustrationContainer}>
               <View>
-                <Image source={step.image} style={styles.image} />
+                <Image
+                  source={step.image}
+                  style={[
+                    styles.image,
+                    { width: width > 600 ? 500 : width, height: height * 0.45 }
+                  ]}
+                  resizeMode="contain"
+                />
               </View>
             </View>
 
             {/* Text content */}
-            <View style={styles.textContainer}>
-              <Text style={styles.title}>{step.title}</Text>
-              <Text style={styles.subtitle}>{step.subtitle}</Text>
+            <View style={[styles.textContainer, { maxWidth: 600, alignItems: width > 600 ? 'center' : 'flex-start' }]}>
+              <Text style={[styles.title, width > 600 && { textAlign: 'center' }]}>{step.title}</Text>
+              <Text style={[styles.subtitle, width > 600 && { textAlign: 'center' }]}>{step.subtitle}</Text>
             </View>
           </View>
         ))}
@@ -212,12 +218,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   slide: {
-    width,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: -20,
   },
   illustrationContainer: {
     justifyContent: 'center',
@@ -227,16 +231,13 @@ const styles = StyleSheet.create({
   },
 
   image: {
-    width: width,
-    height: height * 0.55,
-    resizeMode: 'cover',
-
+    // Dynamic width/height for iPad support
   },
   textContainer: {
     flex: 2,
     justifyContent: 'flex-start',
     alignItems: 'flex-start',
-
+    width: '100%',
   },
   title: {
     fontSize: 24,
