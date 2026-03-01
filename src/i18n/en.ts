@@ -257,6 +257,16 @@ export const en = {
     profile_feedback: "Feedback",
     profile_legal: "Legal Information",
     profile_account: "Account",
+    // AI Chat & Consent
+    ai_consent_title: "AI Recognition",
+    ai_consent_body: "To recognize this album, we will send the cover image to Google Gemini (Google LLC).",
+    ai_consent_disclaimer: "We do not send your name, email, or account data. Only the image you just captured.",
+    ai_consent_accept: "Allow",
+    ai_consent_decline: "Don't allow",
+    ai_consent_privacy_link: "Privacy Policy",
+    ai_consent_settings_disabled: "You can enable this feature in Settings.",
+    profile_ai_consent_label: "AI Recognition (Gemini)",
+    profile_ai_consent_subtext: "Send album covers to Google Gemini to identify them.",
     // AI Chat
     ai_question_valuable_albums: "Most valuable albums",
     ai_question_valuable_albums_query: "What are my most valuable albums and how much are they worth?",

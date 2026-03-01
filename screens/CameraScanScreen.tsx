@@ -9,6 +9,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCredits } from '../contexts/CreditsContext';
 import { CreditService } from '../services/CreditService';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { AiConsentModal } from '../components/AiConsentModal';
+import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
 
 export const CameraScanScreen = () => {
     const { t } = useTranslation();
@@ -16,6 +18,7 @@ export const CameraScanScreen = () => {
     const [permission, requestPermission] = useCameraPermissions();
     const cameraRef = useRef<CameraView>(null);
     const [scanning, setScanning] = useState(false);
+    const [showConsentModal, setShowConsentModal] = useState(false);
 
     // Credit Logic
     const { user } = useAuth();
@@ -138,6 +141,22 @@ export const CameraScanScreen = () => {
     const takePicture = async () => {
         if (cameraRef.current && !scanning) {
 
+            // Check Consent first
+            const { allowed, needsConsentPrompt } = await checkAiAllowedState();
+            if (!allowed) {
+                if (needsConsentPrompt) {
+                    setShowConsentModal(true);
+                    return;
+                } else {
+                    Alert.alert(
+                        t('ai_consent_title'),
+                        t('ai_consent_settings_disabled'),
+                        [{ text: t('common_cancel') }]
+                    );
+                    return;
+                }
+            }
+
             // Check credits one last time before action
             const COST_SCAN = 5;
             if (credits < COST_SCAN) {
@@ -225,6 +244,26 @@ export const CameraScanScreen = () => {
                     </View>
                 </SafeAreaView>
             </CameraView>
+
+            <AiConsentModal
+                visible={showConsentModal}
+                onAccept={async () => {
+                    await setAiConsent(true);
+                    await setAiEnabled(true);
+                    setShowConsentModal(false);
+                    takePicture();
+                }}
+                onDecline={async () => {
+                    await setAiConsent(false);
+                    await setAiEnabled(false);
+                    setShowConsentModal(false);
+                    Alert.alert(
+                        t('ai_consent_title'),
+                        t('ai_consent_settings_disabled'),
+                        [{ text: t('common_understood') }]
+                    );
+                }}
+            />
         </View>
     );
 };

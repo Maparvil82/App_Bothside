@@ -257,6 +257,16 @@ export const es = {
     profile_feedback: "Feedback",
     profile_legal: "Información Legal",
     profile_account: "Cuenta",
+    // AI Chat & Consent
+    ai_consent_title: "Reconocimiento con IA",
+    ai_consent_body: "Para reconocer este álbum, enviaremos la imagen de la portada a Google Gemini (Google LLC).",
+    ai_consent_disclaimer: "No enviamos tu nombre, email ni datos de tu cuenta. Solo la imagen que acabas de capturar.",
+    ai_consent_accept: "Permitir",
+    ai_consent_decline: "No permitir",
+    ai_consent_privacy_link: "Política de Privacidad",
+    ai_consent_settings_disabled: "Puedes activar esta función en Ajustes.",
+    profile_ai_consent_label: "Reconocimiento con IA (Gemini)",
+    profile_ai_consent_subtext: "Envía la portada del álbum a Google Gemini para identificarlo.",
     // AI Chat
     ai_question_valuable_albums: "Álbumes más valiosos",
     ai_question_valuable_albums_query: "¿Cuáles son mis álbumes más valiosos y cuánto valen?",

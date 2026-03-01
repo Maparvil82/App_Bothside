@@ -22,6 +22,7 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useMyInvitations } from '../hooks/useCollaboration';
 import { BothsideLoader } from '../components/BothsideLoader';
+import { getAiEnabled, setAiEnabled, setAiConsent } from '../src/privacy/aiConsent';
 
 export const ProfileScreen: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -34,6 +35,7 @@ export const ProfileScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const [showSessionEarnings, setShowSessionEarnings] = useState<boolean>(true);
+  const [isAiEnabled, setIsAiEnabled] = useState<boolean>(false);
   const { invitations } = useMyInvitations();
   const pendingInvitationsCount = invitations.filter(inv => inv.status === 'pending').length;
 
@@ -55,6 +57,9 @@ export const ProfileScreen: React.FC = () => {
 
         const earningsPref = await AsyncStorage.getItem('settings:showSessionEarnings');
         setShowSessionEarnings(earningsPref !== 'false'); // Por defecto true
+
+        const aiPref = await getAiEnabled();
+        setIsAiEnabled(aiPref);
       } catch { }
     })();
   }, [user?.id]);
@@ -149,6 +154,19 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
+  const toggleAiConsent = async (value: boolean) => {
+    try {
+      setIsAiEnabled(value);
+      await setAiEnabled(value);
+      if (!value) {
+        // If user actively disables, we also revoke the consent to ensure the modal shows again if they try to use it
+        await setAiConsent(false);
+      }
+    } catch (error) {
+      console.error('Error saving AI consent setting:', error);
+    }
+  };
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
@@ -192,12 +210,26 @@ export const ProfileScreen: React.FC = () => {
           </View>
 
           {/* Mostrar ganancias de sesiones */}
-          <View style={[styles.settingRow, { borderBottomWidth: 0 }]}>
+          <View style={[styles.settingRow, { borderBottomColor: colors.border }]}>
             <Text style={[styles.settingLabel, { color: colors.text }]}>{t('profile_show_earnings')}</Text>
             <Switch
               value={showSessionEarnings}
               onValueChange={toggleSessionEarnings}
             />
+          </View>
+
+          {/* AI Consent */}
+          <View style={[styles.settingRow, { borderBottomWidth: 0, flexDirection: 'column', alignItems: 'flex-start' }]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>{t('profile_ai_consent_label')}</Text>
+              <Switch
+                value={isAiEnabled}
+                onValueChange={toggleAiConsent}
+              />
+            </View>
+            <Text style={{ color: colors.text, opacity: 0.6, fontSize: 13, marginTop: 6, lineHeight: 18, width: '90%' }}>
+              {t('profile_ai_consent_subtext')}
+            </Text>
           </View>
         </View>
 
