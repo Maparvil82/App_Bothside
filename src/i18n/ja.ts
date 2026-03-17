@@ -14,6 +14,8 @@ export const ja = {
     auth_placeholder_email: "メールアドレス",
     auth_placeholder_password: "パスワード",
     auth_switch_to_login: "すでにアカウントをお持ちですか？ログイン",
+    auth_signup_success_title: "登録完了",
+    auth_signup_success_message: "アカウントが正常に作成されました。ログインする前にメールを確認して認証してください。",
     auth_switch_to_signup: "アカウントをお持ちでないですか？登録",
 
     // Onboarding

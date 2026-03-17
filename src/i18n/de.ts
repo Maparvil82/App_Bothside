@@ -14,6 +14,8 @@ export const de = {
     auth_placeholder_email: "E-Mail",
     auth_placeholder_password: "Passwort",
     auth_switch_to_login: "Haben Sie bereits ein Konto? Anmelden",
+    auth_signup_success_title: "Registrierung erfolgreich",
+    auth_signup_success_message: "Konto erfolgreich erstellt. Bitte überprüfen Sie Ihre E-Mail zur Verifizierung, bevor Sie sich anmelden.",
     auth_switch_to_signup: "Kein Konto? Registrieren",
     // Onboarding
     onboarding_step1_title: "KI, die Ihre Sammlung versteht",

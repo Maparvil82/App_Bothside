@@ -14,6 +14,8 @@ export const pt = {
     auth_placeholder_email: "E-mail",
     auth_placeholder_password: "Senha",
     auth_switch_to_login: "Já tem uma conta? Entrar",
+    auth_signup_success_title: "Registro concluído",
+    auth_signup_success_message: "Conta criada com sucesso. Verifique seu e-mail antes de fazer login.",
     auth_switch_to_signup: "Não tem uma conta? Criar conta",
 
     // Onboarding

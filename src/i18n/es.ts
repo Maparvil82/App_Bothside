@@ -14,6 +14,8 @@ export const es = {
     auth_placeholder_email: "Correo electrónico",
     auth_placeholder_password: "Contraseña",
     auth_switch_to_login: "¿Ya tienes cuenta? Inicia sesión",
+    auth_signup_success_title: "Registro completado",
+    auth_signup_success_message: "Cuenta creada correctamente. Revisa tu correo para verificarla antes de iniciar sesión.",
     auth_switch_to_signup: "¿No tienes cuenta? Crear cuenta",
     // Onboarding
     onboarding_step1_title: "IA que entiende tu colección",

@@ -84,11 +84,26 @@ export const LoginScreen: React.FC = () => {
     setLoading(true);
     try {
       if (isSignUp) {
-        await signUp(email, password, username.trim());
+        console.log('[AUTH] Calling signUp...');
+        const { user: newUser, session: newSession } = await signUp(email, password, username.trim());
+        
+        console.log('[AUTH] signUp returned. User:', newUser?.id, 'Session:', !!newSession);
+        
+        if (newUser && !newSession) {
+          // Usuario creado pero requiere validación de correo
+          Alert.alert(
+            // Intentamos usar traducciones si existen, si no un texto por defecto
+            t('auth_signup_success_title') || 'Registro completado',
+            t('auth_signup_success_message') || "Cuenta creada correctamente. Revisa tu correo para verificarla antes de iniciar sesión."
+          );
+          setIsSignUp(false); // Volver al modo login
+          return; // Detenemos la ejecución, no navegamos atrás
+        }
       } else {
         await signIn(email, password);
       }
 
+      console.log('[AUTH] final navigation path resolving');
       if (route.params?.selectedPlan) {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (authUser) {

@@ -14,6 +14,8 @@ export const en = {
     auth_placeholder_email: "Email",
     auth_placeholder_password: "Password",
     auth_switch_to_login: "Already have an account? Log in",
+    auth_signup_success_title: "Registration successful",
+    auth_signup_success_message: "Account created successfully. Please check your email to verify before logging in.",
     auth_switch_to_signup: "Don't have an account? Create account",
     // Onboarding
     onboarding_step1_title: "AI that understands your collection",

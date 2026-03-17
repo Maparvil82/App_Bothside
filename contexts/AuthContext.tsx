@@ -2,8 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { CreditService } from '../services/CreditService';
-import { User } from '@supabase/supabase-js';
-
+import { User, Session } from '@supabase/supabase-js';
 // Extend Supabase User type
 export type AppUser = User & {
   planType: string | null;
@@ -22,7 +21,7 @@ interface AuthContextType {
   user: AppUser | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, username: string) => Promise<void>;
+  signUp: (email: string, password: string, username: string) => Promise<{ user: User | null; session: Session | null }>;
   signOut: () => Promise<void>;
   setUser: (user: AppUser | null) => void;
   loadUserSubscriptionAndCredits: (userId: string) => Promise<void>;
@@ -220,6 +219,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = useCallback(async (email: string, password: string, username: string) => {
     try {
+      console.log('[AUTH] Starting signUp process for email:', email);
       // First create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -232,6 +232,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
 
       if (error) throw error;
+      
+      console.log('[AUTH] signUp response user:', data?.user?.id, 'session active:', !!data?.session);
 
       // If user is created, wait a moment for triggers to complete, then update profile
       if (data.user) {
@@ -295,8 +297,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Load initial empty subscription data
         await loadUserSubscriptionAndCredits(data.user.id);
       }
+      
+      return { user: data.user, session: data.session };
     } catch (error) {
-      console.error('Error during sign up:', error);
+      console.error('[AUTH] Error during sign up:', error);
       throw error;
     }
   }, [loadUserSubscriptionAndCredits]);
