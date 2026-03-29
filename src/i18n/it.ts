@@ -17,6 +17,10 @@ export const it = {
     auth_signup_success_title: "Registrazione completata",
     auth_signup_success_message: "Account creato con successo. Controlla la tua email per verificare prima di accedere.",
     auth_switch_to_signup: "Non hai un account? Registrati",
+    auth_error_user_exists: "Utente già registrato.",
+    auth_error_weak_password: "La password deve contenere almeno 6 caratteri.",
+    auth_error_invalid_credentials: "Credenziali di accesso non valide.",
+    auth_error_network: "Errore di rete. Controlla la tua connessione.",
 
     // Onboarding
     onboarding_step1_title: "IA che capisce la tua collezione",

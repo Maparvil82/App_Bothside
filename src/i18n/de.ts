@@ -17,6 +17,10 @@ export const de = {
     auth_signup_success_title: "Registrierung erfolgreich",
     auth_signup_success_message: "Konto erfolgreich erstellt. Bitte überprüfen Sie Ihre E-Mail zur Verifizierung, bevor Sie sich anmelden.",
     auth_switch_to_signup: "Kein Konto? Registrieren",
+    auth_error_user_exists: "Benutzer ist bereits registriert.",
+    auth_error_weak_password: "Das Passwort sollte mindestens 6 Zeichen lang sein.",
+    auth_error_invalid_credentials: "Ungültige Anmeldeinformationen.",
+    auth_error_network: "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     // Onboarding
     onboarding_step1_title: "KI, die Ihre Sammlung versteht",
     onboarding_step1_subtitle: "Bereite eine Tasche für ein 2-stündiges Rare-Soul-Set vor oder gib mir einen detaillierten Bericht über meine Sammlung.",

@@ -60,7 +60,7 @@ export const LoginScreen: React.FC = () => {
       return t('auth_validation_username_max_length');
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    if (!/^[a-zA-Z0-9_ .\-]+$/.test(username)) {
       return t('auth_validation_username_format');
     }
 
@@ -118,8 +118,18 @@ export const LoginScreen: React.FC = () => {
         }
       }
     } catch (error: any) {
-      console.error('LoginScreen: Auth error:', error);
-      Alert.alert(t('common_error'), error.message);
+      console.error('[AUTH ERROR] LoginScreen:', error);
+      
+      const getAuthErrorMessage = (err: any) => {
+        const msg = err?.message || '';
+        if (msg.includes('User already registered') || msg.includes('already exists')) return t('auth_error_user_exists');
+        if (msg.includes('Password should be at least')) return t('auth_error_weak_password');
+        if (msg.includes('Invalid login credentials')) return t('auth_error_invalid_credentials');
+        if (msg.includes('Network request failed') || msg.includes('fetch')) return t('auth_error_network');
+        return msg;
+      };
+
+      Alert.alert(t('common_error'), getAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }

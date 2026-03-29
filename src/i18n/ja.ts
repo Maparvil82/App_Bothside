@@ -17,6 +17,10 @@ export const ja = {
     auth_signup_success_title: "登録完了",
     auth_signup_success_message: "アカウントが正常に作成されました。ログインする前にメールを確認して認証してください。",
     auth_switch_to_signup: "アカウントをお持ちでないですか？登録",
+    auth_error_user_exists: "ユーザーは既に登録されています。",
+    auth_error_weak_password: "パスワードは6文字以上である必要があります。",
+    auth_error_invalid_credentials: "無効なログイン資格情報です。",
+    auth_error_network: "ネットワークエラー。接続を確認してください。",
 
     // Onboarding
     onboarding_step1_title: "コレクションを理解するAI",

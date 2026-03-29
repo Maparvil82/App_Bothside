@@ -17,6 +17,10 @@ export const fr = {
     auth_signup_success_title: "Inscription réussie",
     auth_signup_success_message: "Compte créé avec succès. Veuillez vérifier votre e-mail avant de vous connecter.",
     auth_switch_to_signup: "Pas de compte ? Créer un compte",
+    auth_error_user_exists: "Utilisateur déjà enregistré.",
+    auth_error_weak_password: "Le mot de passe doit comporter au moins 6 caractères.",
+    auth_error_invalid_credentials: "Identifiants de connexion invalides.",
+    auth_error_network: "Erreur réseau. Vérifiez votre connexion.",
 
     // Onboarding
     onboarding_step1_title: "Une IA qui comprend votre collection",

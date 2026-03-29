@@ -17,6 +17,10 @@ export const es = {
     auth_signup_success_title: "Registro completado",
     auth_signup_success_message: "Cuenta creada correctamente. Revisa tu correo para verificarla antes de iniciar sesión.",
     auth_switch_to_signup: "¿No tienes cuenta? Crear cuenta",
+    auth_error_user_exists: "El usuario ya está registrado.",
+    auth_error_weak_password: "La contraseña debe tener al menos 6 caracteres.",
+    auth_error_invalid_credentials: "Credenciales de inicio de sesión no válidas.",
+    auth_error_network: "Error de red. Revisa tu conexión.",
     // Onboarding
     onboarding_step1_title: "IA que entiende tu colección",
     onboarding_step1_subtitle: "Prepárame una maleta para un set de 2 horas de Rare Soul o " + "Dame un informe detallado de mi colección.",

@@ -17,6 +17,10 @@ export const en = {
     auth_signup_success_title: "Registration successful",
     auth_signup_success_message: "Account created successfully. Please check your email to verify before logging in.",
     auth_switch_to_signup: "Don't have an account? Create account",
+    auth_error_user_exists: "User already registered.",
+    auth_error_weak_password: "Password should be at least 6 characters.",
+    auth_error_invalid_credentials: "Invalid login credentials.",
+    auth_error_network: "Network error. Check your connection.",
     // Onboarding
     onboarding_step1_title: "AI that understands your collection",
     onboarding_step1_subtitle: "Prepare a bag for a 2-hour Rare Soul set or give me a detailed report of my collection.",
