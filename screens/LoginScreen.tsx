@@ -126,9 +126,7 @@ export const LoginScreen: React.FC = () => {
         if (msg.includes('Password should be at least')) return t('auth_error_weak_password');
         if (msg.includes('Invalid login credentials')) return t('auth_error_invalid_credentials');
         if (msg.includes('Network request failed') || msg.includes('fetch')) {
-          // Expose raw error message for better diagnostics during review
-          const targetUrl = (supabase as any).supabaseUrl || 'unknown';
-          return `${t('auth_error_network')}\n\nDetails: ${msg}\nTarget: ${targetUrl}`;
+          return t('auth_error_network');
         }
         return msg;
       };

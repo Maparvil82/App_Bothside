@@ -54,11 +54,12 @@ class PurchaseService {
             return null;
         } catch (e: any) {
             console.error('Error fetching offerings:', e);
-            // Check for Expo Go specific error
-            if (e.message && (e.message.includes('Invalid API key') || e.message.includes('native store is not available'))) {
-                console.log('⚠️ Detectado Expo Go sin configuración nativa. Usando Mock Offering.');
+            
+            // Si estamos en desarrollo, devolvemos un Mock para que la UI no se rompa
+            if (__DEV__) {
+                console.log('⚠️ Error de RevenueCat en desarrollo. Usando Mock Offering para permitir pruebas de UI.');
                 return {
-                    serverDescription: "Mock Offering",
+                    serverDescription: "Mock Offering (Dev Fallback)",
                     identifier: "default",
                     availablePackages: [
                         {
@@ -68,14 +69,32 @@ class PurchaseService {
                                 identifier: "mock_annual_product",
                                 description: "Annual Subscription (Mock)",
                                 title: "Annual Premium",
-                                price: 29.99,
-                                priceString: "$29.99",
-                                currencyCode: "USD",
+                                price: 14.99,
+                                priceString: "14,99 €",
+                                currencyCode: "EUR",
                                 introPrice: null,
                                 discounts: [],
                                 productCategory: "SUBSCRIPTION",
                                 productType: "SUBSCRIPTION",
                                 subscriptionPeriod: "P1Y",
+                            },
+                            offeringIdentifier: "default"
+                        } as any,
+                        {
+                            identifier: "$rc_monthly",
+                            packageType: "MONTHLY",
+                            product: {
+                                identifier: "mock_monthly_product",
+                                description: "Monthly Subscription (Mock)",
+                                title: "Monthly Premium",
+                                price: 4.99,
+                                priceString: "4,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "SUBSCRIPTION",
+                                productType: "SUBSCRIPTION",
+                                subscriptionPeriod: "P1M",
                             },
                             offeringIdentifier: "default"
                         } as any
