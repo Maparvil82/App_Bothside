@@ -33,18 +33,22 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 
-// Función para verificar conectividad
+// Función para verificar conectividad con logs más detallados
 export const checkSupabaseConnection = async () => {
+  console.log('🔍 Iniciando verificación de conexión con Supabase...');
   try {
-    const { data, error } = await supabase.from('albums').select('count').limit(1);
+    const { data, error, status } = await supabase.from('albums').select('count', { count: 'exact', head: true });
+    
     if (error) {
-      console.error('❌ Error de conexión con Supabase:', error);
-      return false;
+      console.log(`❌ Error de respuesta de Supabase: [${error.code}] ${error.message} (Status: ${status})`);
+      return { success: false, error: `${error.message} (${error.code})` };
     }
-    console.log('✅ Conexión con Supabase exitosa');
-    return true;
-  } catch (error) {
-    console.error('❌ Error de red:', error);
-    return false;
+    
+    console.log(`✅ Conexión con Supabase exitosa. Status: ${status}`);
+    return { success: true };
+  } catch (error: any) {
+    const errorMsg = error?.message || 'Unknown network error';
+    console.log(`❌ Error crítico de red al conectar con Supabase: ${errorMsg}`);
+    return { success: false, error: errorMsg };
   }
-}; 
+};
