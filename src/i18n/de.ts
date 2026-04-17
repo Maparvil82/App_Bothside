@@ -6,7 +6,7 @@ export const de = {
     auth_validation_username_format: "Benutzername darf nur Buchstaben, Zahlen und Unterstriche enthalten",
     auth_validation_all_fields_required: "Bitte alle Felder ausfüllen",
     auth_create_account: "Konto erstellen",
-    auth_login: "Willkommen bei Bothside",
+    auth_login: "Anmelden",
     auth_login_button: "Anmelden",
     auth_signup_subtitle: "Geben Sie Ihre Daten ein, um Ihr Konto zu erstellen.",
     auth_login_subtitle: "Melden Sie sich an, um Ihre Sammlung und Sitzungen zu synchronisieren.",
@@ -34,7 +34,7 @@ export const de = {
     onboarding_step5_subtitle: "Bothside verbindet sich mit Discogs, und KI analysiert diese Daten, um erweiterte Metriken anzubieten.",
     onboarding_step6_title: "DJ-Planer",
     onboarding_step6_subtitle: "Organisieren Sie Ihre Sitzungen, verfolgen Sie Einnahmen, planen Sie Events und verbessern Sie sich als DJ.",
-    onboarding_has_account: "Haben Sie ein Bothside-Konto?",
+    onboarding_has_account: "Haben Sie bereits ein Konto?",
     // Dashboard
     dashboard_error_loading_stats: "Fehler beim Laden der Statistiken",
     dashboard_collection_value_title: "Sammlungswert",

@@ -7,9 +7,11 @@ import {
   ScrollView,
   Image,
   useWindowDimensions,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
@@ -17,6 +19,7 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 
 export const OnboardingScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
@@ -95,9 +98,6 @@ export const OnboardingScreen: React.FC = () => {
   };
 
   const handleLogin = () => {
-    // If user clicks "I have an account", go to Login directly.
-    // Do NOT set hasSeenOnboarding=true manually.
-    // If login is successful, context will set seen=true automatically.
     navigation.navigate('Login');
   };
 
@@ -110,9 +110,7 @@ export const OnboardingScreen: React.FC = () => {
   };
 
   return (
-    <View style={styles.container}>
-
-
+    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
       {/* Main content */}
       <ScrollView
         ref={scrollViewRef}
@@ -124,21 +122,23 @@ export const OnboardingScreen: React.FC = () => {
           setCurrentStep(newIndex);
         }}
         style={styles.scrollView}
+        scrollEventThrottle={16}
       >
         {onboardingSteps.map((step, index) => (
           <View key={step.id} style={[styles.slide, { width }]}>
             {/* Illustration */}
             <View style={styles.illustrationContainer}>
-              <View>
-                <Image
-                  source={step.image}
-                  style={[
-                    styles.image,
-                    { width: width > 600 ? 500 : width, height: height * 0.45 }
-                  ]}
-                  resizeMode="contain"
-                />
-              </View>
+              <Image
+                source={step.image}
+                style={[
+                  styles.image,
+                  { 
+                    width: width > 600 ? 500 : width * 0.85, 
+                    height: height * (height > 800 ? 0.4 : 0.45) 
+                  }
+                ]}
+                resizeMode="contain"
+              />
             </View>
 
             {/* Text content */}
@@ -151,7 +151,7 @@ export const OnboardingScreen: React.FC = () => {
       </ScrollView>
 
       {/* Bottom section */}
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, { paddingBottom: height > 800 ? 20 : 30 }]}>
         {/* Dots indicator */}
         <View style={styles.dotsContainer}>
           {onboardingSteps.map((_, index) => (
@@ -167,7 +167,11 @@ export const OnboardingScreen: React.FC = () => {
         </View>
 
         {/* Next button */}
-        <TouchableOpacity style={[styles.nextButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]} onPress={handleNext}>
+        <TouchableOpacity 
+          style={[styles.nextButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]} 
+          onPress={handleNext}
+          activeOpacity={0.8}
+        >
           <Ionicons
             name={currentStep === onboardingSteps.length - 1 ? "checkmark" : "arrow-forward"}
             size={24}
@@ -176,23 +180,14 @@ export const OnboardingScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Account section - REMOVED or changed behavior? 
-          Reqs say "Start" on last step.
-          If we keep this "Have account? Login", it should behave consistent with new flow.
-          If I click Login here, I probably expect to go to Login screen.
-          But strict flow says Paywall first.
-          Let's assume "Login" here means "I already have a sub, let me in".
-          So going to Paywall (where Restore is) is technically correct, 
-          BUT users will be confused if they just want to Login to check something.
-          However, adhering to strict "Hard Paywall", blocking entry is the goal.
-      */}
-      <View style={styles.accountSection}>
+      {/* Account section */}
+      <View style={[styles.accountSection, { paddingBottom: Math.max(insets.bottom, 20) }]}>
         <Text style={styles.accountText}>{t('onboarding_has_account')}</Text>
-        <TouchableOpacity onPress={handleLogin}>
+        <TouchableOpacity onPress={handleLogin} activeOpacity={0.7}>
           <Text style={[styles.loginLink, { color: primaryColor }]}>{t('auth_login')}</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -200,19 +195,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-
-  },
-  skipButton: {
-    position: 'absolute',
-    top: 50,
-    right: 20,
-    zIndex: 1,
-    padding: 10,
-  },
-  skipText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
   },
   scrollView: {
     flex: 1,
@@ -221,45 +203,43 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
   },
   illustrationContainer: {
+    flex: 3,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 30,
-    paddingHorizontal: 20,
+    width: '100%',
+    paddingTop: 20,
   },
-
   image: {
-    // Dynamic width/height for iPad support
+    // Dynamic styles passed in component
   },
   textContainer: {
     flex: 2,
     justifyContent: 'flex-start',
-    alignItems: 'flex-start',
     width: '100%',
+    paddingTop: 20,
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#1a1a1a',
     textAlign: 'left',
-    marginBottom: 16,
-    lineHeight: 36,
+    marginBottom: 12,
+    lineHeight: 34,
   },
   subtitle: {
-    fontSize: 18,
+    fontSize: 17,
     color: '#666',
     textAlign: 'left',
-    lineHeight: 26,
-
+    lineHeight: 24,
   },
   bottomSection: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 30,
-    paddingVertical: 30,
     backgroundColor: '#fff',
   },
   dotsContainer: {
@@ -267,52 +247,45 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#ddd',
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#e0e0e0',
     marginHorizontal: 4,
   },
   activeDot: {
-    backgroundColor: AppColors.primary,
-    width: 24,
+    width: 20,
+    height: 6,
+    borderRadius: 3,
   },
   nextButton: {
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: AppColors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: AppColors.primary,
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 5,
   },
   accountSection: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 20,
-    backgroundColor: 'white',
+    paddingTop: 10,
+    backgroundColor: '#fff',
   },
   accountText: {
     fontSize: 14,
-    color: '#666',
-    marginRight: 10,
+    color: '#888',
+    marginRight: 6,
   },
   loginLink: {
     fontSize: 14,
-    color: AppColors.primary,
-    fontWeight: '500',
-  },
-  logo: {
-    width: 100,
-    height: 50,
-    resizeMode: 'contain',
+    fontWeight: 'bold',
   },
 });

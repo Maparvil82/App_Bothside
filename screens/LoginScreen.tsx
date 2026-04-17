@@ -240,19 +240,7 @@ export const LoginScreen: React.FC = () => {
 
             <TouchableOpacity
               style={styles.switchButton}
-              onPress={() => {
-                if (isSignUp) {
-                  setIsSignUp(false);
-                } else {
-                  setHasSeenOnboarding(false);
-                  try {
-                    navigation.navigate('Onboarding');
-                  } catch (e) {
-                    // Ignore navigation error if Onboarding is not in stack (will be handled by state change)
-                    console.log('Navigation to Onboarding failed (likely due to stack switch):', e);
-                  }
-                }
-              }}
+              onPress={() => setIsSignUp(!isSignUp)}
             >
               <Text style={styles.switchText}>
                 {isSignUp ? t('auth_switch_to_login') : t('auth_switch_to_signup')}

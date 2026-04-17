@@ -6,7 +6,7 @@ export const ja = {
     auth_validation_username_format: "ユーザー名は英数字とアンダースコアのみ使用できます",
     auth_validation_all_fields_required: "すべての項目を入力してください",
     auth_create_account: "アカウント作成",
-    auth_login: "Bothsideへようこそ",
+    auth_login: "ログイン",
     auth_login_button: "ログイン",
     auth_signup_subtitle: "詳細を入力してアカウントを作成してください。",
     auth_login_subtitle: "ログインしてコレクションとセッションを同期します。",
@@ -35,7 +35,7 @@ export const ja = {
     onboarding_step5_subtitle: "BothsideはDiscogsに接続し、AIがそのデータを分析して高度な指標を提供します。",
     onboarding_step6_title: "DJプランナー",
     onboarding_step6_subtitle: "セッションを整理し、収益を追跡し、イベントを計画し、DJとして向上します。",
-    onboarding_has_account: "Bothsideアカウントをお持ちですか？",
+    onboarding_has_account: "すでにアカウントをお持ちですか？",
 
     // Dashboard
     dashboard_error_loading_stats: "統計の読み込みエラー",
