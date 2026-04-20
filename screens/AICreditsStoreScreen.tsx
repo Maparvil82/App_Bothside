@@ -58,10 +58,17 @@ export const AICreditsStoreScreen = () => {
             if (purchaseResult && purchaseResult.customerInfo) {
                 // Determine credit amount from product identifier
                 let amount = 0;
-                if (pkg.product.identifier.includes('50')) amount = 50;
-                else if (pkg.product.identifier.includes('200')) amount = 200;
-                else if (pkg.product.identifier.includes('master')) amount = 500; // Assuming master is 500
-                else amount = 50; // Fallback
+                const productId = pkg.product.identifier.toLowerCase();
+
+                if (productId.includes('500') || productId.includes('master')) {
+                    amount = 500;
+                } else if (productId.includes('200')) {
+                    amount = 200;
+                } else if (productId.includes('50')) {
+                    amount = 50;
+                } else {
+                    amount = 50; // Fallback
+                }
 
                 // Update database
                 const result = await CreditService.addCredits(user.id, amount);
