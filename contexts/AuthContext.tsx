@@ -142,40 +142,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   useEffect(() => {
-    // Verificar sesión actual
-    const checkUser = async () => {
+    let mounted = true;
+
+    // Verificar sesión actual (USANDO getSession para acceso a caché ultrarrápido y evitar cuelgues de red)
+    const initializeAuth = async () => {
       try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          throw error;
+        }
+
+        const authUser = session?.user;
         if (authUser) {
           // Set basic user first
-          setUser(authUser as AppUser);
+          if (mounted) setUser(authUser as AppUser);
           // Then load extra data
           await loadUserSubscriptionAndCredits(authUser.id);
         } else {
-          setUser(null);
+          if (mounted) setUser(null);
         }
       } catch (error) {
-        console.error('Error checking user session:', error);
+        console.error('Error checking user session en inicialización:', error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
-    checkUser();
+    initializeAuth();
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
+        // Prevenir condición de carrera o doble fetchData al inicio
+        if (event === 'INITIAL_SESSION') {
+          return; 
+        }
+
         let currentUser = session?.user ?? null;
 
         if (currentUser) {
           // Set basic user
           setUser(prev => {
-            // Si el usuario básico es el mismo (por ID), mantenemos la referencia 'prev' si es posible,
-            // o actualizamos solo campos básicos.
-            // Sin embargo, session.user puede traer token refrescado.
-            // Para simplificar, actualizamos si cambia ID o email, pero
-            // lo mejor es confiar en que si session cambia, actualizamos.
             return currentUser as AppUser;
           });
 
@@ -185,7 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(null);
         }
 
-        setLoading(false);
+        if (mounted) setLoading(false);
 
         // Guardar/limpiar sesión en AsyncStorage con manejo de errores
         try {
@@ -200,7 +210,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, [loadUserSubscriptionAndCredits]);
 
   const signIn = useCallback(async (email: string, password: string) => {

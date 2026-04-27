@@ -112,10 +112,17 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             return;
         }
 
-        // 2. Check RevenueCat Status
+        // 2. Check RevenueCat Status (con timeout seguro)
         try {
-            const info = await PurchaseService.getCustomerInfo();
-            const activeEntitlements = info?.entitlements.active || {};
+            const rcPromise = PurchaseService.getCustomerInfo();
+            const timeoutPromise = new Promise<null>((_, reject) => {
+                setTimeout(() => reject(new Error('RevenueCat timeout excedido (5s)')), 5000);
+            });
+
+            // Evitamos que la app se quede en loading infinito si RevenueCat se cuelga
+            const info = await Promise.race([rcPromise, timeoutPromise]);
+            
+            const activeEntitlements = info?.entitlements?.active || {};
             const isActive = Object.keys(activeEntitlements).length > 0;
 
             if (isActive) {
@@ -126,8 +133,8 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 setSubscriptionStatus('none');
             }
         } catch (e) {
-            console.error('Error checking subscription status:', e);
-            // If API fails, we default to none, unless Supabase said yes (handled above)
+            console.error('⚠️ Error o Timeout checking RevenueCat subscription status:', e);
+            // If API fails or times out, we default to none
             setSubscriptionStatus('none');
         }
     };
