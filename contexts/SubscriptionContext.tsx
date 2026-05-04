@@ -115,12 +115,14 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
         // 2. Check RevenueCat Status (con timeout seguro)
         try {
             const rcPromise = PurchaseService.getCustomerInfo();
+            let timeoutId: ReturnType<typeof setTimeout>;
             const timeoutPromise = new Promise<null>((_, reject) => {
-                setTimeout(() => reject(new Error('RevenueCat timeout excedido (5s)')), 5000);
+                timeoutId = setTimeout(() => reject(new Error('RevenueCat timeout excedido (5s)')), 5000);
             });
 
             // Evitamos que la app se quede en loading infinito si RevenueCat se cuelga
             const info = await Promise.race([rcPromise, timeoutPromise]);
+            clearTimeout(timeoutId!); // Limpiar timeout si rcPromise gana
             
             const activeEntitlements = info?.entitlements?.active || {};
             const isActive = Object.keys(activeEntitlements).length > 0;
