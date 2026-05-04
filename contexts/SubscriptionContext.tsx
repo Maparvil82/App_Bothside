@@ -120,9 +120,13 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
                 timeoutId = setTimeout(() => reject(new Error('RevenueCat timeout excedido (5s)')), 5000);
             });
 
-            // Evitamos que la app se quede en loading infinito si RevenueCat se cuelga
-            const info = await Promise.race([rcPromise, timeoutPromise]);
-            clearTimeout(timeoutId!); // Limpiar timeout si rcPromise gana
+            let info;
+            try {
+                // Evitamos que la app se quede en loading infinito si RevenueCat se cuelga
+                info = await Promise.race([rcPromise, timeoutPromise]);
+            } finally {
+                clearTimeout(timeoutId!); // Siempre limpiar timeout
+            }
             
             const activeEntitlements = info?.entitlements?.active || {};
             const isActive = Object.keys(activeEntitlements).length > 0;

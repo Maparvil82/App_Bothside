@@ -40,7 +40,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const value = useMemo(() => ({ mode, setMode, toggle }), [mode]);
 
-  if (!loaded) return null as any;
+  // Don't block rendering, just use default light theme until loaded
+  // if (!loaded) return null as any;
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 };

@@ -712,7 +712,7 @@ const AppNavigator = () => {
 
   // Mostrar loading mientras se verifica la autenticación
   if (loading) {
-    return null; // O un componente de loading
+    return <BothsideLoader />;
   }
 
   // NOTE: Moving SubscriptionProvider inside here or wrapping outside?
