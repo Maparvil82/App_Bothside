@@ -37,41 +37,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       console.log('🔄 Loading subscription and credits for:', userId);
 
-      // (a) Read user_subscriptions
-      const { data: subscription } = await supabase
-        .from("user_subscriptions")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
+      // Lanzar las 3 consultas en paralelo para no bloquear entre ellas
+      const [subscriptionResult, creditsResult, profileResult] = await Promise.allSettled([
+        supabase
+          .from("user_subscriptions")
+          .select("*")
+          .eq("user_id", userId)
+          .single(),
+        supabase
+          .from("ia_credits")
+          .select("*")
+          .eq("user_id", userId)
+          .limit(1),
+        supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url')
+          .eq('id', userId)
+          .single()
+      ]);
 
-      // (b) Read ia_credits with limit(1) to handle duplicates
-      let creditsData = null;
+      const subscription = subscriptionResult.status === 'fulfilled' ? subscriptionResult.value.data : null;
 
-      const { data: creditsResponse, error: creditsError } = await supabase
-        .from("ia_credits")
-        .select("*")
-        .eq("user_id", userId)
-        .limit(1);
-
-      if (creditsError && creditsError.code !== 'PGRST116') {
-        console.error('❌ Error fetching credits:', creditsError);
-      } else {
-        // Handle array result
-        if (Array.isArray(creditsResponse) && creditsResponse.length > 0) {
-          creditsData = creditsResponse[0];
-          // Trigger cleanup independently of this query result length (because we use limit(1))
-          // We call it in background to ensure data consistency
-          // Check if imports are correct (CreditService is imported)
-          CreditService.cleanupDuplicates(userId).then(cleaned => {
-            if (cleaned) console.log('🧹 Limpieza de duplicados realizada en background');
-          });
+      // Procesar créditos
+      let creditsData: { credits_total: number; credits_used: number } | null = null;
+      if (creditsResult.status === 'fulfilled') {
+        const { data: creditsResponse, error: creditsError } = creditsResult.value as any;
+        if (!creditsError || creditsError.code === 'PGRST116') {
+          if (Array.isArray(creditsResponse) && creditsResponse.length > 0) {
+            creditsData = creditsResponse[0];
+            CreditService.cleanupDuplicates(userId).then(cleaned => {
+              if (cleaned) console.log('🧹 Limpieza de duplicados realizada en background');
+            });
+          }
+        } else {
+          console.error('❌ Error fetching credits:', creditsError);
         }
       }
 
-      // If missing, initialize
-      if (!creditsData && (!creditsError || creditsError.code === 'PGRST116')) {
+      // Si no hay créditos, inicializar en background (no bloqueante)
+      if (!creditsData) {
         console.log('✨ User has no credits row. Initializing 50 credits...');
-        const { data: newCredits, error: insertError } = await supabase
+        supabase
           .from('ia_credits')
           .insert({
             user_id: userId,
@@ -81,26 +87,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
           })
           .select()
-          .single();
-
-        if (newCredits && !insertError) {
-          creditsData = newCredits;
-          console.log('✅ Credits initialized successfully.');
-        } else {
-          console.error('❌ Failed to auto-initialize credits:', insertError);
-        }
-      } else if (creditsData) {
+          .single()
+          .then(({ data: newCredits, error: insertError }) => {
+            if (newCredits && !insertError) {
+              creditsData = newCredits;
+              console.log('✅ Credits initialized successfully.');
+            } else if (insertError) {
+              console.error('❌ Failed to auto-initialize credits:', insertError);
+            }
+          });
+      } else {
         console.log('💰 Credits Found:', creditsData);
       }
 
-      // (c) Read Profile Data (avatar, username)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('username, full_name, avatar_url')
-        .eq('id', userId)
-        .single();
+      const profileData = profileResult.status === 'fulfilled' ? (profileResult.value as any).data : null;
 
-      // (c) Update global state
+      // Actualizar estado global
       setUser(prev => {
         if (!prev) return null;
 
@@ -116,7 +118,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           avatarUrl: profileData?.avatar_url || prev.user_metadata?.avatar_url,
         };
 
-        // Simple comparison to avoid unnecessary updates
         if (
           prev.planType === newData.planType &&
           prev.isPremium === newData.isPremium &&
@@ -129,10 +130,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return prev;
         }
 
-        return {
-          ...prev,
-          ...newData
-        };
+        return { ...prev, ...newData };
       });
 
       console.log('✅ Subscription data loaded');
@@ -144,60 +142,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     let mounted = true;
 
-    // Verificar sesión actual (USANDO getSession para acceso a caché ultrarrápido y evitar cuelgues de red)
+    // Timeout de seguridad: si por cualquier motivo el loading no se resuelve en 8s, lo forzamos
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        console.warn('⚠️ Safety timeout reached: forcing setLoading(false)');
+        setLoading(false);
+      }
+    }, 8000);
+
     const initializeAuth = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          throw error;
-        }
+
+        if (error) throw error;
 
         const authUser = session?.user;
         if (authUser) {
-          // Set basic user first
+          // 1. Mostrar la app inmediatamente con el usuario básico
           if (mounted) setUser(authUser as AppUser);
-          // Then load extra data
-          await loadUserSubscriptionAndCredits(authUser.id);
         } else {
           if (mounted) setUser(null);
         }
       } catch (error) {
         console.error('Error checking user session en inicialización:', error);
       } finally {
+        // Quitar el loader SIEMPRE, aunque loadUserSubscriptionAndCredits no haya terminado
+        clearTimeout(safetyTimer);
         if (mounted) setLoading(false);
       }
     };
 
-    initializeAuth();
+    // Arrancar initializeAuth y, en paralelo, cargar datos extra sin bloquear el loader
+    initializeAuth().then(async () => {
+      // Después de quitar el loader, cargar datos extra en background
+      try {
+        const currentUser = (await supabase.auth.getSession()).data.session?.user;
+        if (currentUser && mounted) {
+          await loadUserSubscriptionAndCredits(currentUser.id);
+        }
+      } catch (e) {
+        console.error('Error loading subscription data in background:', e);
+      }
+    });
 
     // Escuchar cambios en la autenticación
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
-        
-        // Prevenir condición de carrera o doble fetchData al inicio
+
+        // Prevenir condición de carrera al inicio
         if (event === 'INITIAL_SESSION') {
-          return; 
+          return;
         }
 
-        let currentUser = session?.user ?? null;
+        const currentUser = session?.user ?? null;
 
         if (currentUser) {
-          // Set basic user
-          setUser(prev => {
-            return currentUser as AppUser;
-          });
-
-          // Load extra data
-          await loadUserSubscriptionAndCredits(currentUser.id);
+          setUser(currentUser as AppUser);
+          // Cargar datos extra sin bloquear la navegación
+          loadUserSubscriptionAndCredits(currentUser.id).catch(e =>
+            console.error('Error loading subscription on auth change:', e)
+          );
         } else {
           setUser(null);
         }
 
         if (mounted) setLoading(false);
 
-        // Guardar/limpiar sesión en AsyncStorage con manejo de errores
+        // Guardar/limpiar sesión en AsyncStorage
         try {
           if (currentUser) {
             await AsyncStorage.setItem('user_session', JSON.stringify(currentUser));
@@ -212,6 +224,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [loadUserSubscriptionAndCredits]);
