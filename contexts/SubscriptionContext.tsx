@@ -20,6 +20,7 @@ export const useSubscription = () => useContext(SubscriptionContext);
 
 import { PurchasesPackage } from 'react-native-purchases';
 import PurchaseService from '../services/PurchaseService';
+import { AnalyticsService } from '../services/analytics';
 
 export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user } = useAuth();
@@ -72,6 +73,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
             if (isActive) {
                 setSubscriptionStatus('active');
+                
+                // Track trial or subscription based on product ID or entitlement state
+                // Without deep introspection, we can check if it's an intro price / trial or fire subscription_started
+                const isTrial = activeEntitlements[Object.keys(activeEntitlements)[0]]?.periodType === 'TRIAL';
+                if (isTrial) {
+                    AnalyticsService.track('trial_started');
+                } else {
+                    AnalyticsService.track('subscription_started');
+                }
             }
         } catch (e) {
             console.error('Error purchasing package:', e);

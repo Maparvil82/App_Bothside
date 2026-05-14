@@ -1,6 +1,8 @@
 import { supabase } from '../lib/supabase';
 // TODO: Migrar a la nueva API de filesystem cuando reescribamos las operaciones de archivos
 import * as FileSystem from 'expo-file-system';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AnalyticsService } from './analytics';
 
 // Tipos para la base de datos
 export interface Album {
@@ -511,6 +513,18 @@ export const UserCollectionService = {
       .single();
 
     if (error) throw error;
+    
+    // Tracking first record added
+    try {
+      const hasAdded = await AsyncStorage.getItem('ph_first_record_added');
+      if (!hasAdded) {
+        AnalyticsService.track('first_record_added');
+        await AsyncStorage.setItem('ph_first_record_added', 'true');
+      }
+    } catch (e) {
+      console.error('Analytics tracking error', e);
+    }
+    
     return data;
   },
 
@@ -1032,6 +1046,17 @@ export const UserMaletaService = {
       throw error;
     }
 
+    // Tracking first shelf created
+    try {
+      const hasAdded = await AsyncStorage.getItem('ph_first_shelf_created');
+      if (!hasAdded) {
+        AnalyticsService.track('first_shelf_created');
+        await AsyncStorage.setItem('ph_first_shelf_created', 'true');
+      }
+    } catch (e) {
+      console.error('Analytics tracking error', e);
+    }
+
     console.log('Maleta created successfully:', data);
     return data;
   },
@@ -1410,7 +1435,7 @@ export const ProfileService = {
 
     // Leer como base64 para evitar blobs vacíos en iOS/Android
     const base64 = await FileSystem.readAsStringAsync(uri, {
-      encoding: FileSystem.EncodingType.Base64,
+      encoding: 'base64',
     });
 
     const bytes = base64ToUint8Array(base64);

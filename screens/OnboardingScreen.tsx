@@ -16,6 +16,7 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { AnalyticsService } from '../services/analytics';
 
 export const OnboardingScreen: React.FC = () => {
   const { width, height } = useWindowDimensions();
@@ -77,6 +78,7 @@ export const OnboardingScreen: React.FC = () => {
   const finishOnboarding = async () => {
     // Mark onboarding as seen.
     // The AppNavigator will automatically switch to Paywall (if not subscribed) or Login/Main
+    AnalyticsService.track('completed_onboarding');
     await setHasSeenOnboarding(true);
   };
 

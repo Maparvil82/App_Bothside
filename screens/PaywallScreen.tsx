@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Linking } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -10,6 +10,7 @@ import { useTheme } from '@react-navigation/native';
 import { translate } from '../src/i18n';
 import { ENV } from '../config/env';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { AnalyticsService } from '../services/analytics';
 
 // Compatibility alias to match the code style I just wrote
 const i18n = { t: translate };
@@ -22,6 +23,12 @@ export const PaywallScreen = () => {
     const { purchasePackage, restorePurchases } = useSubscription();
     const [loading, setLoading] = useState(false);
     const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+
+    useFocusEffect(
+        React.useCallback(() => {
+            AnalyticsService.track('paywall_shown');
+        }, [])
+    );
 
     useEffect(() => {
         const loadOfferings = async () => {

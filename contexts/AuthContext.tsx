@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import { CreditService } from '../services/CreditService';
 import { User, Session } from '@supabase/supabase-js';
+import { AnalyticsService } from '../services/analytics';
 // Extend Supabase User type
 export type AppUser = User & {
   planType: string | null;
@@ -156,11 +157,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const authUser = session?.user;
         if (authUser) {
           // Set basic user first
-          if (mounted) setUser(authUser as AppUser);
+          if (mounted) {
+            setUser(authUser as AppUser);
+            AnalyticsService.identify(authUser.id);
+          }
           // Then load extra data
           await loadUserSubscriptionAndCredits(authUser.id);
         } else {
-          if (mounted) setUser(null);
+          if (mounted) {
+            setUser(null);
+            AnalyticsService.reset();
+          }
         }
       } catch (error) {
         console.error('Error checking user session en inicialización:', error);
@@ -188,11 +195,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setUser(prev => {
             return currentUser as AppUser;
           });
+          AnalyticsService.identify(currentUser.id);
 
           // Load extra data
           await loadUserSubscriptionAndCredits(currentUser.id);
         } else {
           setUser(null);
+          AnalyticsService.reset();
         }
 
         if (mounted) setLoading(false);
@@ -323,6 +332,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       setUser(null);
+      AnalyticsService.reset();
     } catch (error) {
       console.error('Error during sign out:', error);
       throw error;

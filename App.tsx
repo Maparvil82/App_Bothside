@@ -11,6 +11,8 @@ import AppNavigator from './navigation/AppNavigator';
 import { LoginScreen } from './screens/LoginScreen';
 import { validateEnv } from './config/env';
 import { OfflineNotice } from './components/OfflineNotice';
+import { AnalyticsService, posthog } from './services/analytics';
+import { PostHogProvider } from 'posthog-react-native';
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -44,6 +46,10 @@ export default function App() {
     if (!validateEnv()) {
       setIsEnvValid(false);
     }
+    
+    // Analytics
+    AnalyticsService.init();
+    AnalyticsService.track('app_opened');
   }, []);
 
   if (!isEnvValid) {
@@ -63,17 +69,19 @@ export default function App() {
   }
 
   return (
-    <AuthProvider>
-      <ThemeProvider>
-        <SessionNoteProvider>
-          <GemsProvider>
-            <StatusBar style="auto" />
-            <AppWithModal />
-            <OfflineNotice />
-          </GemsProvider>
-        </SessionNoteProvider>
-      </ThemeProvider>
-    </AuthProvider>
+    <PostHogProvider client={posthog}>
+      <AuthProvider>
+        <ThemeProvider>
+          <SessionNoteProvider>
+            <GemsProvider>
+              <StatusBar style="auto" />
+              <AppWithModal />
+              <OfflineNotice />
+            </GemsProvider>
+          </SessionNoteProvider>
+        </ThemeProvider>
+      </AuthProvider>
+    </PostHogProvider>
   );
 }
 

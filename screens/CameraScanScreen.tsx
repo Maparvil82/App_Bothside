@@ -11,6 +11,7 @@ import { CreditService } from '../services/CreditService';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AiConsentModal } from '../components/AiConsentModal';
 import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
+import { AnalyticsService } from '../services/analytics';
 
 export const CameraScanScreen = () => {
     const { t } = useTranslation();
@@ -165,6 +166,7 @@ export const CameraScanScreen = () => {
             }
 
             setScanning(true);
+            AnalyticsService.track('camera_scan_started');
             try {
                 const photo = await cameraRef.current.takePictureAsync({
                     base64: true,
@@ -192,6 +194,7 @@ export const CameraScanScreen = () => {
                     if (isValidResult(result.artist) && isValidResult(result.title)) {
                         // SUCCESS: Deduct Credit
                         await deductCredit(COST_SCAN);
+                        AnalyticsService.track('camera_scan_success');
 
                         // Navigate back
                         navigation.navigate('AddDisc', {
