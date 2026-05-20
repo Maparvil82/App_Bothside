@@ -479,6 +479,17 @@ export const AlbumService = {
 
 // Servicios de colección de usuario
 export const UserCollectionService = {
+  // Contar discos del usuario (HEAD query — sin datos, solo el número)
+  async getUserCollectionCount(userId: string): Promise<number> {
+    const { count, error } = await supabase
+      .from('user_collection')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    return count ?? 0;
+  },
+
   // Obtener colección del usuario
   async getUserCollection(userId: string) {
     const { data, error } = await supabase

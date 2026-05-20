@@ -46,16 +46,16 @@ import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
-import { UserMaletaService } from '../services/database';
+import { UserMaletaService, UserCollectionService } from '../services/database';
 import { CameraScanScreen } from '../screens/CameraScanScreen';
 import { AICreditsStoreScreen } from '../screens/AICreditsStoreScreen';
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
 import AuthCallbackScreen from '../src/auth/AuthCallbackScreen';
-import { ChatModal } from '../components/ChatModal';
 import { ChatScreen } from '../screens/ChatScreen';
 import { PaywallScreen } from '../screens/PaywallScreen';
 import { SubscriptionProvider, useSubscription } from '../contexts/SubscriptionContext';
+import { AnalyticsService } from '../services/analytics';
 import { CreditsProvider } from '../contexts/CreditsContext';
 
 const Tab = createBottomTabNavigator();
@@ -345,57 +345,129 @@ const AddDiscStack = () => {
   );
 };
 
-const TabNavigator = () => (
-  <Tab.Navigator
-    screenOptions={({ route }) => ({
-      tabBarIcon: ({ focused, color, size }) => {
-        let iconName: string = 'help-outline';
+const TabNavigator = () => {
+  const { subscriptionStatus } = useSubscription();
+  const { user } = useAuth();
+  const isCheckingRef = React.useRef(false);
 
-        if (route.name === 'SearchTab') {
-          iconName = focused ? 'disc' : 'disc-outline';
-        } else if (route.name === 'DashboardTab') {
-          iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-        } else if (route.name === 'AddDiscTab') {
-          iconName = focused ? 'add' : 'add';
-        } else if (route.name === 'MaletasTab') {
-          iconName = focused ? 'bag-remove' : 'bag-remove-outline';
-        } else if (route.name === 'GemsTab') {
-          iconName = focused ? 'diamond' : 'diamond-outline';
-        }
+  const handleAddDiscTabPress = async (navigation: any, e: any) => {
+    // Always intercept so we can run async checks
+    e.preventDefault();
 
-        return <Ionicons name={iconName as any} size={route.name === 'AddDiscTab' ? size + 8 : size} color={color} />;
-      },
-      tabBarActiveTintColor: '#0f0f0fff',
-      tabBarInactiveTintColor: 'gray',
-      headerShown: false,
-      tabBarStyle: {
-        height: 80,
-        paddingTop: 14,
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-    })}
-  >
-    <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: '' }} />
-    <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ title: '' }} />
-    <Tab.Screen name="AddDiscTab" component={AddDiscStack} options={{ title: '' }} />
-    <Tab.Screen
-      name="MaletasTab"
-      component={MaletasStack}
-      options={({ route }) => {
-        const routeName = getFocusedRouteNameFromRoute(route) ?? 'Maletas';
-        if (routeName === 'ViewMaleta' || routeName === 'InviteCollaborators') {
-          return {
-            title: '',
-            tabBarStyle: { display: 'none' }
-          };
-        }
-        return { title: '' };
-      }}
-    />
-    <Tab.Screen name="GemsTab" component={GemsStack} options={{ title: '' }} />
-  </Tab.Navigator>
-);
+    // Debounce: ignore tap while already checking
+    if (isCheckingRef.current) return;
+
+    const isPro = subscriptionStatus === 'active';
+
+    // Pro users: let them through immediately
+    if (isPro) {
+      navigation.navigate('AddDiscTab');
+      return;
+    }
+
+    // Free users: check against limit
+    try {
+      isCheckingRef.current = true;
+
+      if (!user) {
+        // Unauthenticated (shouldn't happen in main app, but be safe)
+        navigation.navigate('AddDiscTab');
+        return;
+      }
+
+      const count = await UserCollectionService.getUserCollectionCount(user.id);
+
+      AnalyticsService.track('add_album_pressed', {
+        is_pro: isPro,
+        albums_count: count,
+        free_album_limit: FREE_ALBUM_LIMIT,
+      });
+
+      if (count >= FREE_ALBUM_LIMIT) {
+        // Block and show paywall
+        AnalyticsService.track('add_album_blocked_free_limit', {
+          albums_count: count,
+          free_album_limit: FREE_ALBUM_LIMIT,
+          source: 'add_album_limit',
+        });
+        // Navigate to Paywall in the parent AppStack
+        navigation.getParent()?.navigate('Paywall');
+        return;
+      }
+
+      // Under limit: allow
+      AnalyticsService.track('add_album_allowed_free', {
+        albums_count: count,
+        free_album_limit: FREE_ALBUM_LIMIT,
+      });
+      navigation.navigate('AddDiscTab');
+    } catch (error) {
+      console.error('[AddDiscGate] Error checking album limit:', error);
+      Alert.alert('Error', 'No se pudo verificar tu colección. Inténtalo de nuevo.');
+    } finally {
+      isCheckingRef.current = false;
+    }
+  };
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName: string = 'help-outline';
+
+          if (route.name === 'SearchTab') {
+            iconName = focused ? 'disc' : 'disc-outline';
+          } else if (route.name === 'DashboardTab') {
+            iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+          } else if (route.name === 'AddDiscTab') {
+            iconName = focused ? 'add' : 'add';
+          } else if (route.name === 'MaletasTab') {
+            iconName = focused ? 'bag-remove' : 'bag-remove-outline';
+          } else if (route.name === 'GemsTab') {
+            iconName = focused ? 'diamond' : 'diamond-outline';
+          }
+
+          return <Ionicons name={iconName as any} size={route.name === 'AddDiscTab' ? size + 8 : size} color={color} />;
+        },
+        tabBarActiveTintColor: '#0f0f0fff',
+        tabBarInactiveTintColor: 'gray',
+        headerShown: false,
+        tabBarStyle: {
+          height: 80,
+          paddingTop: 14,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+      })}
+    >
+      <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: '' }} />
+      <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ title: '' }} />
+      <Tab.Screen
+        name="AddDiscTab"
+        component={AddDiscStack}
+        options={{ title: '' }}
+        listeners={({ navigation }) => ({
+          tabPress: (e) => handleAddDiscTabPress(navigation, e),
+        })}
+      />
+      <Tab.Screen
+        name="MaletasTab"
+        component={MaletasStack}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'Maletas';
+          if (routeName === 'ViewMaleta' || routeName === 'InviteCollaborators') {
+            return {
+              title: '',
+              tabBarStyle: { display: 'none' }
+            };
+          }
+          return { title: '' };
+        }}
+      />
+      <Tab.Screen name="GemsTab" component={GemsStack} options={{ title: '' }} />
+    </Tab.Navigator>
+  );
+};
 
 const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { mode } = useThemeMode();
@@ -453,6 +525,9 @@ const MainAppWrapper = () => {
 
 // ... AppStack
 
+// Limit for free users
+const FREE_ALBUM_LIMIT = 5;
+
 const AppStack = () => {
   const { colors } = useTheme();
   const { user } = useAuth();
@@ -464,38 +539,21 @@ const AppStack = () => {
     return <BothsideLoader />;
   }
 
-  // 1. Onboarding Check
+  // 1. Onboarding Check — show only for non-authenticated users
   if (!hasSeenOnboarding) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        {/* We keep Login accessible just in case, but flow prefers finish->paywall */}
         <Stack.Screen name="Login" component={LoginScreen} />
       </Stack.Navigator>
     );
   }
 
-  // 2. Paywall Check (Hard Block)
-  // If no user OR user exists but has no subscription (and not in trial)
-  // Logic: 
-  // - If !user => Show Paywall (unless we want to allow login? But requirement says "Onboarding -> Paywall").
-  // - If user && sub='none' => Show Paywall.
-  // - If user && sub='trial'/'active' => Main App.
-
-  const showPaywall = (!user && subscriptionStatus === 'none') || (user && subscriptionStatus === 'none');
-
-  // Correction: If !user, subStatus is 'none' by default in context.
-  // So simply: if subscriptionStatus === 'none' -> Paywall.
-  // BUT: We need to allow routing to Login from Paywall? 
-  // The PaywallScreen I built pushes to 'Login' after trial start (which sets sub=trial).
-  // If I am on Paywall and I want to "Restore" or "Login", I need those routes available.
-  // The current PaywallScreen uses navigation.replace('Login').
-  // So 'Login' must be in the same stack or accessible.
-
-  if (subscriptionStatus === 'none') {
+  // 2. Auth Check — not logged in → Login
+  // Paywall is NO LONGER a mandatory gate here.
+  if (!user) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Paywall" component={PaywallScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal', headerShown: true }} />
         <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} />
@@ -516,7 +574,7 @@ const AppStack = () => {
     );
   }
 
-  // 4. Main App (Authenticated & Subscribed/Trial)
+  // 3. Main App — authenticated (free or paid). Paywall shown via usage gate, not here.
   return (
     <Stack.Navigator
       screenOptions={{
@@ -527,8 +585,13 @@ const AppStack = () => {
         headerTitleStyle: { color: colors.text },
       }}
     >
-      {/* ✅ USUARIO AUTENTICADO (Acceso Completo - App de Pago) */}
+      {/* ✅ USUARIO AUTENTICADO (libre o Pro) */}
       <Stack.Screen name="Main" component={MainAppWrapper} options={{ headerShown: false }} />
+
+      {/* Paywall accesible desde la app (límite de discos) */}
+      <Stack.Screen name="Paywall" component={PaywallScreen} options={{ headerShown: false, presentation: 'modal' }} />
+      {/* Login en stack principal para que PaywallScreen pueda navegar a él tras compra */}
+      <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
 
       <Stack.Screen
         name="AlbumDetail"
