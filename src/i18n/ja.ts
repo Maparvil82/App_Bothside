@@ -152,8 +152,17 @@ export const ja = {
     pricing_alert_restore_message: "アクティブなサブスクリプションを検索中...",
     pricing_error_title: "エラー",
     pricing_error_trial: "トライアルを開始できませんでした。もう一度お試しください。",
+    // New Paywall keys (Freemium)
+    paywall_limit_title: "無料の制限に達しました",
+    paywall_limit_subtitle: "5枚のレコードを追加しました。Bothside Proを使用すると、制限なしでレコードを追加し、コレクション全体を整理できます。",
+    paywall_pro_plan: "Bothside Pro",
+    paywall_pro_trial: "7日間の無料Pro",
+    paywall_pro_cta: "Proを7日間無料で試す",
+    paywall_after_trial: "その後 {0}/年。いつでもキャンセル可能。",
+    paywall_keep_collection: "アップグレードしなくても、現在のコレクションは引き続き利用できます。",
+    paywall_not_now: "今はしない",
 
-    // Dashboard Extended
+    // Account Screen
     dashboard_shelves_title: "場所",
     dashboard_shelves_created: "作成された場所",
     dashboard_shelves_manage: "場所を管理",

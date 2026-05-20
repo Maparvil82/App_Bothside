@@ -4,6 +4,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
+import { useAuth } from '../contexts/AuthContext';
 import { PurchasesPackage } from 'react-native-purchases';
 import PurchaseService from '../services/PurchaseService';
 import { useTheme } from '@react-navigation/native';
@@ -20,6 +21,7 @@ const { width } = Dimensions.get('window');
 export const PaywallScreen = () => {
     const { colors } = useTheme();
     const navigation = useNavigation<any>();
+    const { user } = useAuth();
     const { purchasePackage, restorePurchases } = useSubscription();
     const [loading, setLoading] = useState(false);
     const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
@@ -92,17 +94,21 @@ export const PaywallScreen = () => {
 
             <SafeAreaView style={styles.contentContainer}>
 
-
-
+                <View style={styles.header}>
+                    <Text style={styles.title}>{i18n.t('paywall_limit_title')}</Text>
+                    <Text style={[styles.preTitle, { marginTop: 8, fontSize: 15, textTransform: 'none', letterSpacing: 0, color: '#DDD', textAlign: 'center' }]}>
+                        {i18n.t('paywall_limit_subtitle')}
+                    </Text>
+                </View>
 
                 <View style={styles.offerCard}>
 
-                    <Text style={styles.planTitle}>{i18n.t('pricing_plan_annual_title')}</Text>
+                    <Text style={styles.planTitle}>{i18n.t('paywall_pro_plan')}</Text>
                     <View style={styles.priceContainer}>
                         <Text style={styles.price}>{priceString}</Text>
                         <Text style={styles.period}>{i18n.t('pricing_period_annual_slash')}</Text>
                     </View>
-                    <Text style={styles.trialText}>{i18n.t('pricing_trial_text_5_days')}</Text>
+                    <Text style={styles.trialText}>{i18n.t('paywall_pro_trial')}</Text>
                 </View>
 
                 <View style={styles.footer}>
@@ -133,22 +139,34 @@ export const PaywallScreen = () => {
                             {loading
                                 ? i18n.t('pricing_button_starting')
                                 : pkg
-                                    ? i18n.t('pricing_button_start_5_days')
+                                    ? i18n.t('paywall_pro_cta')
                                     : 'Reintentar Cargar Plan'
                             }
                         </Text>
                     </TouchableOpacity>
 
                     <Text style={styles.legalText}>
-                        {i18n.t('pricing_legal_annual')}
+                        {i18n.t('paywall_after_trial').replace('{0}', priceString)}
+                    </Text>
+
+                    <Text style={[styles.legalText, { marginTop: -10, marginBottom: 20 }]}>
+                        {i18n.t('paywall_keep_collection')}
                     </Text>
 
                     <View style={styles.linksContainer}>
-                        <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                            <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF' }]}>
-                                {i18n.t('pricing_login_link')}
-                            </Text>
-                        </TouchableOpacity>
+                        {user ? (
+                            <TouchableOpacity onPress={() => navigation.goBack()}>
+                                <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF', fontSize: 16, fontWeight: '600' }]}>
+                                    {i18n.t('paywall_not_now')}
+                                </Text>
+                            </TouchableOpacity>
+                        ) : (
+                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                                <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF' }]}>
+                                    {i18n.t('pricing_login_link')}
+                                </Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     <View style={[styles.linksContainer, { marginTop: 20 }]}>

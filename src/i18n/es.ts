@@ -512,6 +512,15 @@ export const es = {
     pricing_alert_restore_message: "Buscando suscripciones activas...",
     pricing_error_title: "Error",
     pricing_error_trial: "No se pudo iniciar la prueba. Inténtalo de nuevo.",
+    // New Paywall keys (Freemium)
+    paywall_limit_title: "Has llegado al límite gratuito",
+    paywall_limit_subtitle: "Ya has añadido 5 discos. Con Bothside Pro puedes seguir añadiendo vinilos sin límite y organizar toda tu colección.",
+    paywall_pro_plan: "Bothside Pro",
+    paywall_pro_trial: "7 días gratis de Pro",
+    paywall_pro_cta: "Probar Pro 7 días gratis",
+    paywall_after_trial: "Después {0}/año. Cancela cuando quieras.",
+    paywall_keep_collection: "Tu colección actual seguirá disponible aunque no actualices.",
+    paywall_not_now: "Ahora no",
     // Account Screen
     account_success_profile_updated: "Perfil actualizado correctamente",
     account_error_profile_update: "No se pudo actualizar el perfil",

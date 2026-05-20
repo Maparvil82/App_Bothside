@@ -216,6 +216,15 @@ export const fr = {
     pricing_alert_restore_message: "Recherche d'abonnements actifs...",
     pricing_error_title: "Erreur",
     pricing_error_trial: "Impossible de démarrer l'essai. Veuillez réessayer.",
+    // New Paywall keys (Freemium)
+    paywall_limit_title: "Vous avez atteint la limite gratuite",
+    paywall_limit_subtitle: "Vous avez ajouté 5 disques. Avec Bothside Pro, vous pouvez continuer à ajouter des vinyles sans limite et organiser toute votre collection.",
+    paywall_pro_plan: "Bothside Pro",
+    paywall_pro_trial: "7 jours de Pro gratuits",
+    paywall_pro_cta: "Essayer Pro gratuitement 7 jours",
+    paywall_after_trial: "Puis {0}/an. Annulable à tout moment.",
+    paywall_keep_collection: "Votre collection actuelle restera disponible même si vous ne passez pas à Pro.",
+    paywall_not_now: "Pas maintenant",
 
     // Search Extended
     search_alert_other_edition_title: "Vous avez une autre édition",
