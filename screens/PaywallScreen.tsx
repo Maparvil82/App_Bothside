@@ -84,7 +84,7 @@ export const PaywallScreen = () => {
             {/* Background Image / Gradient */}
             {/* Background Image / Gradient */}
             <Image
-                source={require('../assets/wall.png')}
+                source={require('../assets/wall_1.png')}
                 style={styles.backgroundImage}
             />
             <LinearGradient
