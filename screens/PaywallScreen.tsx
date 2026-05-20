@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     preTitle: {
         color: '#AAA',
         fontSize: 12,
-        fontWeight: '700',
+        fontWeight: '500',
         letterSpacing: 2,
         marginBottom: 8,
     },
