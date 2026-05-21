@@ -979,9 +979,10 @@ export const AddDiscScreen: React.FC = () => {
           renderItem={renderAlbum}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={albums.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="search-outline" size={48} color="#ccc" />
+
               <Text style={styles.emptyText}>
                 {query ? `${t('add_disc_empty_search_query')} "${query}"` : t('add_disc_empty_search_default')}
               </Text>
@@ -990,9 +991,7 @@ export const AddDiscScreen: React.FC = () => {
                   {t('add_disc_empty_search_hint')}
                 </Text>
               )}
-              <Text style={styles.debugText}>
-                {albums.length > 0 ? `${albums.length} ${t('add_disc_results_found')}` : t('add_disc_no_results')}
-              </Text>
+
             </View>
           }
         />
@@ -1169,9 +1168,10 @@ export const AddDiscScreen: React.FC = () => {
           renderItem={renderDiscogsRelease}
           keyExtractor={(item) => item.id.toString()}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={manualSearchResults.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Ionicons name="disc-outline" size={48} color="#ccc" />
+
               <Text style={styles.emptyText}>
                 {artistQuery && albumQuery
                   ? t('add_disc_empty_manual_query')
@@ -1191,18 +1191,13 @@ export const AddDiscScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
       {/* Tabs */}
-      <View style={[styles.tabContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.tabContainer, { backgroundColor: 'white', borderBottomColor: '#eee' }]}>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'search' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
           onPress={() => setActiveTab('search')}
         >
-          <Ionicons
-            name={activeTab === 'search' ? 'search' : 'search-outline'}
-            size={20}
-            color={activeTab === 'search' ? primaryColor : colors.text}
-          />
           <Text style={[styles.tabText, { color: activeTab === 'search' ? primaryColor : colors.text }]}>
             {t('add_disc_tab_search')}
           </Text>
@@ -1212,11 +1207,6 @@ export const AddDiscScreen: React.FC = () => {
           style={[styles.tab, activeTab === 'manual' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
           onPress={() => setActiveTab('manual')}
         >
-          <Ionicons
-            name={activeTab === 'manual' ? 'create' : 'create-outline'}
-            size={20}
-            color={activeTab === 'manual' ? primaryColor : colors.text}
-          />
           <Text style={[styles.tabText, { color: activeTab === 'manual' ? primaryColor : colors.text }]}>
             {t('add_disc_tab_manual')}
           </Text>
@@ -1228,7 +1218,7 @@ export const AddDiscScreen: React.FC = () => {
             alignItems: 'center',
             paddingHorizontal: 15,
             borderLeftWidth: 1,
-            borderLeftColor: colors.border,
+            borderLeftColor: '#eee',
           }}
           onPress={() => navigation.navigate('CameraScan')}
         >
@@ -1270,7 +1260,7 @@ const styles = StyleSheet.create({
     borderBottomColor: AppColors.primary,
   },
   tabText: {
-    marginLeft: 8,
+    marginLeft: 0,
     fontSize: 14,
     color: '#666',
     fontWeight: '500',
