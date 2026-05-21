@@ -1967,16 +1967,8 @@ export const SearchScreen: React.FC = () => {
                     await AsyncStorage.setItem(key, 'true');
                   }
                   
-                  // Abrir el flujo/modal existente para crear una nueva ubicación/estantería
-                  if (collection.length > 0 && collection[0]?.albums?.id) {
-                    openCreateMaletaModal(collection[0].albums.id, () => {
-                      loadCollection();
-                    });
-                  } else {
-                    openCreateMaletaModal(undefined, () => {
-                      loadCollection();
-                    });
-                  }
+                  // Navegar directamente a la pantalla de creación de estanterías físicas
+                  navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
                 }}
               >
                 <Text style={styles.btnPrimaryText}>
