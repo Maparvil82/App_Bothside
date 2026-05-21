@@ -121,12 +121,12 @@ export const SearchScreen: React.FC = () => {
   const truncate = (text: string, maxLen = 30) =>
     text && text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
 
-  // Controlar visualmente la visibilidad del tab bar inferior según collection.length y estado de carga
+  // Controlar visualmente la visibilidad del tab bar inferior según collection.length, physicalShelves.length y estado de carga
   useEffect(() => {
     const parent = navigation.getParent();
     if (!parent) return;
 
-    const hideTabBar = isCollectionLoading || collection.length === 0;
+    const hideTabBar = isCollectionLoading || collection.length === 0 || physicalShelves.length === 0;
 
     if (hideTabBar) {
       parent.setOptions({
@@ -142,7 +142,7 @@ export const SearchScreen: React.FC = () => {
         }
       });
     }
-  }, [collection.length, isCollectionLoading, navigation]);
+  }, [collection.length, physicalShelves.length, isCollectionLoading, navigation]);
 
   useEffect(() => {
     if (user) {
@@ -158,7 +158,7 @@ export const SearchScreen: React.FC = () => {
       // Aplicar visibilidad del tab bar inmediatamente al enfocar la pantalla para evitar parpadeos
       const parent = navigation.getParent();
       if (parent) {
-        const hideTabBar = isCollectionLoading || collection.length === 0;
+        const hideTabBar = isCollectionLoading || collection.length === 0 || physicalShelves.length === 0;
         if (hideTabBar) {
           parent.setOptions({
             tabBarStyle: { display: 'none' }
@@ -173,7 +173,7 @@ export const SearchScreen: React.FC = () => {
     });
 
     return unsubscribe;
-  }, [navigation, user, collection.length, isCollectionLoading]);
+  }, [navigation, user, collection.length, physicalShelves.length, isCollectionLoading]);
 
   useEffect(() => {
     sortCollection();
@@ -229,29 +229,39 @@ export const SearchScreen: React.FC = () => {
     if (!user) return;
     try {
       setIsCollectionLoading(true);
-      // Obtener colección
-      const { data: userCollection, error } = await supabase
-        .from('user_collection')
-        .select(`
-          *,
-          albums (
+      // Obtener colección y estanterías físicas en paralelo
+      const [collectionRes, shelvesRes] = await Promise.all([
+        supabase
+          .from('user_collection')
+          .select(`
             *,
-            album_styles (
-              styles (*)
-            )
-          ),
-          shelves ( name )
-        `)
-        .eq('user_id', user.id)
-        .order('added_at', { ascending: false });
+            albums (
+              *,
+              album_styles (
+                styles (*)
+              )
+            ),
+            shelves ( name )
+          `)
+          .eq('user_id', user.id)
+          .order('added_at', { ascending: false }),
+        supabase
+          .from('shelves')
+          .select('id, name, shelf_rows, shelf_columns')
+          .eq('user_id', user.id)
+      ]);
 
-      if (error) {
-        console.error('Error loading collection:', error);
+      if (collectionRes.error) {
+        console.error('Error loading collection:', collectionRes.error);
         return;
       }
 
+      if (shelvesRes.error) {
+        console.error('Error loading shelves:', shelvesRes.error);
+      }
+
       // Procesar la colección con información de ubicación física
-      const collectionWithShelfInfo = (userCollection || []).map((item) => {
+      const collectionWithShelfInfo = (collectionRes.data || []).map((item) => {
         const hasLocation = item.shelves && item.shelves.name;
         const shelfName = hasLocation ? (item.shelves as any).name : null;
 
@@ -263,6 +273,7 @@ export const SearchScreen: React.FC = () => {
       });
 
       setCollection(collectionWithShelfInfo);
+      setPhysicalShelves(shelvesRes.data || []);
 
       // Actualizar estadísticas
       await refreshStats();

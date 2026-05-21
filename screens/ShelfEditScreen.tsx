@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard, SafeAreaView } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
@@ -23,11 +23,22 @@ export default function ShelfEditScreen() {
   const [saving, setSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(!!shelf);
 
+  // Configurar título del encabezado
   useEffect(() => {
     navigation.setOptions({
       title: isEditMode ? t('shelf_edit_title_edit') : t('shelf_edit_title_create'),
     });
   }, [navigation, isEditMode]);
+
+  // Ocultar la barra de pestañas visualmente durante el flujo de creación/edición
+  useEffect(() => {
+    const parent = navigation.getParent();
+    if (parent) {
+      parent.setOptions({
+        tabBarStyle: { display: 'none' }
+      });
+    }
+  }, [navigation]);
 
   const handleSave = async () => {
     if (!user) {
@@ -86,82 +97,121 @@ export default function ShelfEditScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.label}>{t('shelf_edit_label_name')}</Text>
-      <TextInput
-        style={styles.input}
-        value={name}
-        onChangeText={setName}
-        placeholder={t('shelf_edit_placeholder_name')}
-      />
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <SafeAreaView style={[styles.container, { backgroundColor: '#FFFFFF' }]}>
+        <View style={styles.formContainer}>
+          <Text style={styles.label}>{t('shelf_edit_label_name')}</Text>
+          <TextInput
+            style={styles.input}
+            value={name}
+            onChangeText={setName}
+            placeholder={t('shelf_edit_placeholder_name')}
+            placeholderTextColor="#9EA0A4"
+          />
 
-      <Text style={styles.label}>{t('common_rows')}</Text>
-      <TextInput
-        style={styles.input}
-        value={rows}
-        onChangeText={setRows}
-        keyboardType="number-pad"
-        placeholder={t('shelf_config_placeholder_dimension')}
-      />
+          <View style={styles.rowContainer}>
+            <View style={styles.columnField}>
+              <Text style={styles.label}>{t('common_rows')}</Text>
+              <TextInput
+                style={styles.input}
+                value={rows}
+                onChangeText={setRows}
+                keyboardType="number-pad"
+                placeholder="e.g. 4"
+                placeholderTextColor="#9EA0A4"
+              />
+            </View>
+            <View style={styles.spacingWidth} />
+            <View style={styles.columnField}>
+              <Text style={styles.label}>{t('common_columns')}</Text>
+              <TextInput
+                style={styles.input}
+                value={columns}
+                onChangeText={setColumns}
+                keyboardType="number-pad"
+                placeholder="e.g. 5"
+                placeholderTextColor="#9EA0A4"
+              />
+            </View>
+          </View>
 
-      <Text style={styles.label}>{t('common_columns')}</Text>
-      <TextInput
-        style={styles.input}
-        value={columns}
-        onChangeText={setColumns}
-        keyboardType="number-pad"
-        placeholder={t('shelf_config_placeholder_dimension')}
-      />
-
-      <TouchableOpacity
-        style={[styles.button, saving && styles.buttonDisabled, { backgroundColor: primaryColor }]}
-        onPress={handleSave}
-        disabled={saving}
-      >
-        {saving ? (
-          <BothsideLoader size="small" fullscreen={false} />
-        ) : (
-          <Text style={styles.buttonText}>{t('common_save')}</Text>
-        )}
-      </TouchableOpacity>
-    </View>
+          <TouchableOpacity
+            style={[styles.button, saving && styles.buttonDisabled, { backgroundColor: primaryColor }]}
+            onPress={handleSave}
+            disabled={saving}
+            activeOpacity={0.8}
+          >
+            {saving ? (
+              <BothsideLoader size="small" fullscreen={false} />
+            ) : (
+              <Text style={styles.buttonText}>{t('common_save')}</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    </TouchableWithoutFeedback>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#FFFFFF',
+  },
+  formContainer: {
+    flex: 1,
+    paddingHorizontal: 28,
+    paddingTop: 36,
   },
   label: {
-    fontSize: 16,
-    marginBottom: 8,
-    color: '#495057',
+    fontSize: 12,
     fontWeight: '600',
+    color: '#8E8E93',
+    textTransform: 'uppercase',
+    letterSpacing: 1.2,
+    marginBottom: 10,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 12,
+    backgroundColor: '#F9F9F9',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     fontSize: 16,
     borderWidth: 1,
-    borderColor: '#DEE2E6',
-    marginBottom: 20,
+    borderColor: '#EFEFEF',
+    color: '#1C1C1E',
+    marginBottom: 28,
+  },
+  rowContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  columnField: {
+    flex: 1,
+  },
+  spacingWidth: {
+    width: 20,
   },
   button: {
-    backgroundColor: AppColors.primary,
-    borderRadius: 8,
-    padding: 16,
+    borderRadius: 14,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 16,
+    justifyContent: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
   },
   buttonDisabled: {
-    backgroundColor: '#A0C7FF',
+    opacity: 0.6,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
-}); 
+});
