@@ -445,7 +445,10 @@ const TabNavigator = () => {
       <Tab.Screen
         name="AddDiscTab"
         component={AddDiscStack}
-        options={{ title: '' }}
+        options={{
+          title: '',
+          tabBarStyle: { display: 'none' }
+        }}
         listeners={({ navigation }) => ({
           tabPress: (e) => handleAddDiscTabPress(navigation, e),
         })}
