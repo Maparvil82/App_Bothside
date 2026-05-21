@@ -208,6 +208,10 @@ export const it = {
     search_action_add_more: "Aggiungi altri album",
     search_action_go_to_collection: "Vai alla collezione",
     search_error_adding_to_collection: "Impossibile aggiungere l'album alla collezione",
+    first_disc_modal_title: "La tua collezione è appena iniziata",
+    first_disc_modal_subtitle: "Hai aggiunto il tuo primo disco a Bothside. Crea una posizione per organizzarlo come nella tua vera libreria.",
+    first_disc_modal_btn_primary: "Crea posizione",
+    first_disc_modal_btn_secondary: "Più tardi",
     search_filter_no_location: "Nessuna posizione",
     search_current_location: "Situato a: {0}",
     search_alert_no_results_title: "Nessun risultato",
@@ -292,9 +296,9 @@ export const it = {
     search_action_play_audio: "Riproduci audio",
     search_action_delete_audio: "Elimina audio",
     search_action_record_audio: "Registra nota audio",
-    search_empty_title: "Non hai nessun album",
-    search_empty_subtitle: "Aggiungi il tuo primo album per iniziare la tua collezione",
-    search_empty_button: "Aggiungi un album",
+    search_empty_title: "Il tuo scaffale è vuoto",
+    search_empty_subtitle: "Inizia a organizzare la tua collezione",
+    search_empty_button: "Aggiungi il tuo primo disco",
     search_no_results: "Nessun risultato trovato",
 
     // Maletas (Shelves)

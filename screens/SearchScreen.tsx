@@ -36,6 +36,8 @@ import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { ENV } from '../config/env';
 import { Audio } from 'expo-av';
 import { useTranslation } from '../src/i18n/useTranslation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -106,6 +108,10 @@ export const SearchScreen: React.FC = () => {
   const [showDeleteRecordModal, setShowDeleteRecordModal] = useState(false);
   const [recordToDelete, setRecordToDelete] = useState<any>(null);
   const [isDeletingRecord, setIsDeletingRecord] = useState(false);
+
+  // --- FIRST DISC SHELF SUGGESTION MODAL ---
+  const [showFirstDiscModal, setShowFirstDiscModal] = useState(false);
+  const { openCreateMaletaModal } = React.useContext(CreateMaletaModalContext);
   // --------------------------
 
   // Helper to truncate title
@@ -142,6 +148,44 @@ export const SearchScreen: React.FC = () => {
       }, 100);
     }
   }, [showSearch]);
+
+  useEffect(() => {
+    const checkFirstDiscModal = async () => {
+      if (!user) return;
+      const key = `has_seen_first_disc_location_modal_${user.id}`;
+
+      // Si no tiene discos en su colección, reseteamos el estado visto en AsyncStorage
+      if (collection.length === 0) {
+        try {
+          await AsyncStorage.removeItem(key);
+        } catch (error) {
+          console.error('Error resetting first disc modal seen status:', error);
+        }
+        return;
+      }
+
+      if (collection.length !== 1) {
+        return;
+      }
+
+      try {
+        const hasSeen = await AsyncStorage.getItem(key);
+        if (hasSeen === 'true') {
+          return;
+        }
+
+        // Comprobar si todavía no tiene ninguna ubicación/estantería creada
+        const maletas = await UserMaletaService.getUserMaletas(user.id);
+        if (!maletas || maletas.length === 0) {
+          setShowFirstDiscModal(true);
+        }
+      } catch (error) {
+        console.error('Error checking first disc shelf suggestion:', error);
+      }
+    };
+
+    checkFirstDiscModal();
+  }, [collection, user]);
 
   const loadCollection = async () => {
     if (!user) return;
@@ -612,10 +656,10 @@ export const SearchScreen: React.FC = () => {
 
     if (collection.length === 0) {
       return (
-        <View style={styles.emptyState}>
-          <Ionicons name="disc-outline" size={64} color={colors.text} />
-          <Text style={[styles.emptyStateTitle, { color: colors.text }]}>{t('search_empty_title')}</Text>
-          <Text style={[styles.emptyStateSubtitle, { color: colors.text }]}>
+        <View style={[styles.emptyState, { backgroundColor: '#FFF' }]}>
+          <Image source={require('../assets/empty.png')} style={styles.emptyStateImage} />
+          <Text style={[styles.emptyStateTitle, { color: '#1A2530' }]}>{t('search_empty_title')}</Text>
+          <Text style={[styles.emptyStateSubtitle, { color: '#6B7280' }]}>
             {t('search_empty_subtitle')}
           </Text>
           <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
@@ -1239,16 +1283,16 @@ export const SearchScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: collection.length === 0 ? '#FFF' : colors.background }]}>
 
       {/* Toolbar con botones de búsqueda, vista y filtros */}
-      <View style={[styles.toolbarContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+      <View style={[styles.toolbarContainer, { backgroundColor: collection.length === 0 ? '#FFF' : colors.card, borderBottomColor: collection.length === 0 ? '#EAEAEA' : colors.border }]}>
         {/* Contador de discos y porcentaje ubicados a la izquierda */}
-        <Text style={[styles.collectionStats, { color: colors.text }]}>
-          <Text style={[styles.collectionCount, { color: colors.text }]}>
+        <Text style={[styles.collectionStats, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
+          <Text style={[styles.collectionCount, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
             {filteredCollection.length} {t('search_stats_discs')}
           </Text>
-          <Text style={[styles.locatedPercentage, { color: colors.text }]}>
+          <Text style={[styles.locatedPercentage, { color: collection.length === 0 ? '#6B7280' : colors.text }]}>
             {' • '}{getLocatedPercentage()}% {t('search_stats_located')}
           </Text>
         </Text>
@@ -1258,21 +1302,21 @@ export const SearchScreen: React.FC = () => {
           <TouchableOpacity
             style={[
               styles.toolbarButton,
-              { backgroundColor: showSearch ? colors.border : 'transparent' }
+              { backgroundColor: showSearch ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
             ]}
             onPress={() => setShowSearch(!showSearch)}
           >
             <Ionicons
               name="search-outline"
               size={24}
-              color={colors.text}
+              color={collection.length === 0 ? '#1A2530' : colors.text}
             />
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[
               styles.toolbarButton,
-              { backgroundColor: showFilters ? colors.border : 'transparent' }
+              { backgroundColor: showFilters ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
             ]}
             onPress={() => setShowFilters(!showFilters)}
           >
@@ -1280,7 +1324,7 @@ export const SearchScreen: React.FC = () => {
               <Ionicons
                 name="filter-outline"
                 size={24}
-                color={hasActiveFilters ? '#34A853' : colors.text}
+                color={hasActiveFilters ? '#34A853' : (collection.length === 0 ? '#1A2530' : colors.text)}
               />
               {hasActiveFilters && (
                 <View
@@ -1880,12 +1924,172 @@ export const SearchScreen: React.FC = () => {
         albumTitle={floatingAlbumTitle}
         onClose={() => setShowFloatingPlayer(false)}
       />
+
+      {/* Bottom Sheet para sugerencia de primera ubicación */}
+      <Modal
+        visible={showFirstDiscModal}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={async () => {
+          if (user) {
+            const key = `has_seen_first_disc_location_modal_${user.id}`;
+            await AsyncStorage.setItem(key, 'true');
+          }
+          setShowFirstDiscModal(false);
+        }}
+      >
+        <View style={styles.bottomSheetOverlay}>
+          <View style={[styles.bottomSheetContent, { backgroundColor: '#FFF' }]}>
+            {/* Drag Indicator */}
+            <View style={styles.dragIndicator} />
+
+            <View style={styles.bottomSheetBody}>
+              {/* Decorative Icon */}
+              <View style={styles.iconContainer}>
+                <Ionicons name="sparkles" size={32} color="#000" />
+              </View>
+
+              <Text style={styles.bottomSheetTitle}>
+                {t('first_disc_modal_title')}
+              </Text>
+              
+              <Text style={styles.bottomSheetSubtitle}>
+                {t('first_disc_modal_subtitle')}
+              </Text>
+
+              {/* Botón principal */}
+              <TouchableOpacity
+                style={[styles.btnPrimary, { backgroundColor: '#000' }]}
+                onPress={async () => {
+                  setShowFirstDiscModal(false);
+                  if (user) {
+                    const key = `has_seen_first_disc_location_modal_${user.id}`;
+                    await AsyncStorage.setItem(key, 'true');
+                  }
+                  
+                  // Abrir el flujo/modal existente para crear una nueva ubicación/estantería
+                  if (collection.length > 0 && collection[0]?.albums?.id) {
+                    openCreateMaletaModal(collection[0].albums.id, () => {
+                      loadCollection();
+                    });
+                  } else {
+                    openCreateMaletaModal(undefined, () => {
+                      loadCollection();
+                    });
+                  }
+                }}
+              >
+                <Text style={styles.btnPrimaryText}>
+                  {t('first_disc_modal_btn_primary')}
+                </Text>
+              </TouchableOpacity>
+
+              {/* Botón secundario */}
+              <TouchableOpacity
+                style={styles.btnSecondary}
+                onPress={async () => {
+                  setShowFirstDiscModal(false);
+                  if (user) {
+                    const key = `has_seen_first_disc_location_modal_${user.id}`;
+                    await AsyncStorage.setItem(key, 'true');
+                  }
+                }}
+              >
+                <Text style={styles.btnSecondaryText}>
+                  {t('first_disc_modal_btn_secondary')}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
 
 
 const styles = StyleSheet.create({
+  bottomSheetOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    justifyContent: 'flex-end',
+  },
+  bottomSheetContent: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingHorizontal: 24,
+    paddingTop: 12,
+    paddingBottom: Platform.OS === 'ios' ? 40 : 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -4,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 10,
+    elevation: 20,
+  },
+  dragIndicator: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 20,
+  },
+  bottomSheetBody: {
+    alignItems: 'center',
+  },
+  iconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: '#F3F4F6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  bottomSheetTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#111827',
+    textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'normal',
+  },
+  bottomSheetSubtitle: {
+    fontSize: 15,
+    color: '#4B5563',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+    paddingHorizontal: 12,
+  },
+  btnPrimary: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  btnPrimaryText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  btnSecondary: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  btnSecondaryText: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#6B7280',
+  },
   container: {
     flex: 1,
   },
@@ -2096,18 +2300,33 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 60,
   },
+  emptyStateImage: {
+    width: '100%',
+    maxWidth: 250,
+    height: 180,
+    resizeMode: 'contain',
+    marginBottom: 4,
+    opacity: 0.8,
+    alignSelf: 'center',
+  },
   emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#666',
-    marginTop: 16,
+
     marginBottom: 8,
+
+
+    opacity: 0.8,
   },
   emptyStateSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#999',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 36,
+
+    width: '75%',
+
   },
   createButton: {
     flexDirection: 'row',
@@ -2119,6 +2338,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     minWidth: 160,
     flexWrap: 'nowrap',
+    opacity: 0.9
   },
   createButtonText: {
     color: 'white',

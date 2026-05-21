@@ -208,6 +208,10 @@ export const ja = {
     search_action_add_more: "さらにアルバムを追加",
     search_action_go_to_collection: "コレクションへ移動",
     search_error_adding_to_collection: "コレクションにアルバムを追加できませんでした",
+    first_disc_modal_title: "コレクションが始まりました",
+    first_disc_modal_subtitle: "Bothsideに最初のレコードが追加されました。本物の棚のように整理するために、最初の場所を作成しましょう。",
+    first_disc_modal_btn_primary: "場所を作成",
+    first_disc_modal_btn_secondary: "後で",
     search_filter_no_location: "場所なし",
     search_current_location: "保管場所: {0}",
     search_alert_no_results_title: "結果なし",
@@ -292,9 +296,9 @@ export const ja = {
     search_action_play_audio: "音声を再生",
     search_action_delete_audio: "音声を削除",
     search_action_record_audio: "音声メモを録音",
-    search_empty_title: "アルバムがありません",
-    search_empty_subtitle: "最初のアルバムを追加してコレクションを開始しましょう",
-    search_empty_button: "アルバムを追加",
+    search_empty_title: "棚は空です",
+    search_empty_subtitle: "コレクションの整理を始めましょう",
+    search_empty_button: "最初のレコードを追加",
     search_no_results: "結果が見つかりません",
 
     // Maletas (Shelves)
