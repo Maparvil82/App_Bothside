@@ -156,9 +156,10 @@ export const ja = {
     paywall_limit_title: "無料の制限に達しました",
     paywall_limit_subtitle: "5枚のレコードを追加しました。Bothside Proを使用すると、制限なしでレコードを追加し、コレクション全体を整理できます。",
     paywall_pro_plan: "Bothside Pro",
+    paywall_price_per_year: "年額 {0}",
     paywall_pro_trial: "7日間の無料Pro",
     paywall_pro_cta: "Proを7日間無料で試す",
-    paywall_after_trial: "その後 {0}/年。いつでもキャンセル可能。",
+    paywall_after_trial: "その後は{0}。いつでもキャンセルできます。",
     paywall_keep_collection: "アップグレードしなくても、現在のコレクションは引き続き利用できます。",
     paywall_not_now: "今はしない",
 

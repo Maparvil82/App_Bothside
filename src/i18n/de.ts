@@ -182,9 +182,10 @@ export const de = {
     paywall_limit_title: "Du hast das kostenlose Limit erreicht",
     paywall_limit_subtitle: "Du hast 5 Platten hinzugefügt. Mit Bothside Pro kannst du unbegrenzt weitere Vinyls hinzufügen und deine gesamte Sammlung organisieren.",
     paywall_pro_plan: "Bothside Pro",
+    paywall_price_per_year: "{0} / Jahr",
     paywall_pro_trial: "7 Tage Pro kostenlos",
     paywall_pro_cta: "Pro 7 Tage kostenlos testen",
-    paywall_after_trial: "Danach {0}/Jahr. Jederzeit kündbar.",
+    paywall_after_trial: "Danach {0}. Jederzeit kündbar.",
     paywall_keep_collection: "Deine aktuelle Sammlung bleibt verfügbar, auch wenn du kein Upgrade durchführst.",
     paywall_not_now: "Jetzt nicht",
     // Account Screen

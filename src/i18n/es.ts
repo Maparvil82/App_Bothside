@@ -516,9 +516,10 @@ export const es = {
     paywall_limit_title: "Has llegado al límite gratuito",
     paywall_limit_subtitle: "Ya has añadido 5 discos. Con Bothside Pro puedes seguir añadiendo vinilos sin límite y organizar toda tu colección.",
     paywall_pro_plan: "Bothside Pro",
+    paywall_price_per_year: "{0} / año",
     paywall_pro_trial: "7 días gratis de Pro",
     paywall_pro_cta: "Probar Pro 7 días gratis",
-    paywall_after_trial: "Después {0}/año. Cancela cuando quieras.",
+    paywall_after_trial: "Después {0}. Cancela cuando quieras.",
     paywall_keep_collection: "Tu colección actual seguirá disponible aunque no actualices.",
     paywall_not_now: "Ahora no",
     // Account Screen

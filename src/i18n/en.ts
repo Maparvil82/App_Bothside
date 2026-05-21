@@ -516,9 +516,10 @@ export const en = {
     paywall_limit_title: "You’ve reached the free limit",
     paywall_limit_subtitle: "You’ve added 5 records. With Bothside Pro, you can keep adding vinyl without limits and organize your entire collection.",
     paywall_pro_plan: "Bothside Pro",
+    paywall_price_per_year: "{0} / year",
     paywall_pro_trial: "7 days of Pro free",
     paywall_pro_cta: "Try Pro free for 7 days",
-    paywall_after_trial: "Then {0}/year. Cancel anytime.",
+    paywall_after_trial: "Then {0}. Cancel anytime.",
     paywall_keep_collection: "Your current collection will remain available even if you don’t upgrade.",
     paywall_not_now: "Not now",
     // Account Screen

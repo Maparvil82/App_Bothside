@@ -78,6 +78,8 @@ export const PaywallScreen = () => {
     };
 
     const priceString = pkg?.product.priceString || i18n.t('pricing_price_annual');
+    const yearlyPriceText = i18n.t('paywall_price_per_year').replace('{0}', priceString);
+    const afterTrialText = i18n.t('paywall_after_trial').replace('{0}', yearlyPriceText);
 
     return (
         <View style={styles.container}>
@@ -105,8 +107,7 @@ export const PaywallScreen = () => {
 
                     <Text style={styles.planTitle}>{i18n.t('paywall_pro_plan')}</Text>
                     <View style={styles.priceContainer}>
-                        <Text style={styles.price}>{priceString}</Text>
-                        <Text style={styles.period}>{i18n.t('pricing_period_annual_slash')}</Text>
+                        <Text style={styles.price}>{yearlyPriceText}</Text>
                     </View>
                     <Text style={styles.trialText}>{i18n.t('paywall_pro_trial')}</Text>
                 </View>
@@ -146,7 +147,7 @@ export const PaywallScreen = () => {
                     </TouchableOpacity>
 
                     <Text style={styles.legalText}>
-                        {i18n.t('paywall_after_trial').replace('{0}', priceString)}
+                        {afterTrialText}
                     </Text>
 
                     <Text style={[styles.legalText, { marginTop: -10, marginBottom: 20 }]}>
