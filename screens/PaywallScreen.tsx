@@ -206,9 +206,9 @@ const styles = StyleSheet.create({
     backgroundImage: {
         position: 'absolute',
         width: width,
-        height: '80%',
+        height: '100%',
         top: 0,
-        opacity: 0.6,
+        opacity: 0.5,
     },
     gradient: {
         position: 'absolute',
@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         zIndex: 2,
-        justifyContent: 'flex-end',
+        justifyContent: 'space-around',
         padding: 24,
     },
     header: {
@@ -237,9 +237,10 @@ const styles = StyleSheet.create({
     },
     title: {
         color: '#FFF',
-        fontSize: 36,
-        fontWeight: '500',
+        fontSize: 22,
+        fontWeight: '700',
         letterSpacing: -1,
+        marginBottom: 10,
     },
     featuresContainer: {
         marginBottom: 40,
