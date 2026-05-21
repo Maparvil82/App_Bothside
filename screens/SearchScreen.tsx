@@ -38,6 +38,7 @@ import { Audio } from 'expo-av';
 import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -54,7 +55,9 @@ export const SearchScreen: React.FC = () => {
   const { addGem, removeGem, isGem, updateGemStatus } = useGems();
   const { refreshStats } = useStats();
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
@@ -117,6 +120,27 @@ export const SearchScreen: React.FC = () => {
   // Helper to truncate title
   const truncate = (text: string, maxLen = 30) =>
     text && text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
+
+  // Controlar visualmente la visibilidad del tab bar inferior según collection.length
+  useEffect(() => {
+    const parent = navigation.getParent();
+    if (!parent) return;
+
+    if (!collectionLoading && collection.length === 0) {
+      parent.setOptions({
+        tabBarStyle: { display: 'none' }
+      });
+    } else {
+      parent.setOptions({
+        tabBarStyle: {
+          height: 80,
+          paddingTop: 14,
+          justifyContent: 'center',
+          alignItems: 'center',
+        }
+      });
+    }
+  }, [collection.length, collectionLoading, navigation]);
 
   useEffect(() => {
     if (user) {
@@ -662,7 +686,16 @@ export const SearchScreen: React.FC = () => {
           <Text style={[styles.emptyStateSubtitle, { color: '#6B7280' }]}>
             {t('search_empty_subtitle')}
           </Text>
-          <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}>
+          <TouchableOpacity
+            style={[
+              styles.createButtonFixed,
+              {
+                bottom: Math.max(insets.bottom, 20),
+                backgroundColor: '#000',
+              }
+            ]}
+            onPress={() => navigation.navigate('Main', { screen: 'AddDiscTab' })}
+          >
             <Ionicons name="add" size={20} color="white" />
             <Text style={styles.createButtonText}>{t('search_empty_button')}</Text>
           </TouchableOpacity>
@@ -1952,7 +1985,7 @@ export const SearchScreen: React.FC = () => {
               <Text style={styles.bottomSheetTitle}>
                 {t('first_disc_modal_title')}
               </Text>
-              
+
               <Text style={styles.bottomSheetSubtitle}>
                 {t('first_disc_modal_subtitle')}
               </Text>
@@ -1966,7 +1999,7 @@ export const SearchScreen: React.FC = () => {
                     const key = `has_seen_first_disc_location_modal_${user.id}`;
                     await AsyncStorage.setItem(key, 'true');
                   }
-                  
+
                   // Navegar directamente a la pantalla de creación de estanterías físicas
                   navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
                 }}
@@ -2294,7 +2327,7 @@ const styles = StyleSheet.create({
   },
   emptyStateImage: {
     width: '100%',
-    maxWidth: 250,
+    maxWidth: 300,
     height: 180,
     resizeMode: 'contain',
     marginBottom: 4,
@@ -2338,6 +2371,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 10,
     flexShrink: 0,
+  },
+  createButtonFixed: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
   },
   footerContainer: {
     padding: 15,
