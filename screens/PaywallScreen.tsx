@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     backgroundImage: {
         position: 'absolute',
         width: width,
-        height: '60%',
+        height: '80%',
         top: 0,
         opacity: 0.6,
     },
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     title: {
         color: '#FFF',
         fontSize: 36,
-        fontWeight: '900',
+        fontWeight: '500',
         letterSpacing: -1,
     },
     featuresContainer: {
