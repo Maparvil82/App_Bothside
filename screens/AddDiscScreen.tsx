@@ -90,6 +90,39 @@ export const AddDiscScreen: React.FC = () => {
     }
   }, []);
 
+  // Controlar la visibilidad del tab bar inferior en el flujo de añadir disco
+  useEffect(() => {
+    const checkCollectionCountAndSetTabStyle = async () => {
+      if (!user) return;
+      try {
+        const count = await UserCollectionService.getUserCollectionCount(user.id);
+        const parent = navigation.getParent();
+        if (parent) {
+          if (count === 0) {
+            parent.setOptions({
+              tabBarStyle: { display: 'none' }
+            });
+          } else {
+            parent.setOptions({
+              tabBarStyle: {
+                height: 80,
+                paddingTop: 14,
+                justifyContent: 'center',
+                alignItems: 'center',
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error checking collection count for tab bar style:', error);
+      }
+    };
+
+    if (!addingDisc) {
+      checkCollectionCountAndSetTabStyle();
+    }
+  }, [user, navigation, addingDisc]);
+
   // Efecto para buscar cuando cambia el query con debounce
   useEffect(() => {
     if (debouncedQuery.trim()) {

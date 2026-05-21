@@ -65,7 +65,7 @@ export const SearchScreen: React.FC = () => {
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
-  const [collectionLoading, setCollectionLoading] = useState(true);
+  const [isCollectionLoading, setIsCollectionLoading] = useState(true);
   const [collection, setCollection] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'date' | 'year' | 'artist' | 'label'>('date');
   const [filterByStyle, setFilterByStyle] = useState<string>('');
@@ -121,12 +121,14 @@ export const SearchScreen: React.FC = () => {
   const truncate = (text: string, maxLen = 30) =>
     text && text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
 
-  // Controlar visualmente la visibilidad del tab bar inferior según collection.length
+  // Controlar visualmente la visibilidad del tab bar inferior según collection.length y estado de carga
   useEffect(() => {
     const parent = navigation.getParent();
     if (!parent) return;
 
-    if (!collectionLoading && collection.length === 0) {
+    const hideTabBar = isCollectionLoading || collection.length === 0;
+
+    if (hideTabBar) {
       parent.setOptions({
         tabBarStyle: { display: 'none' }
       });
@@ -140,7 +142,7 @@ export const SearchScreen: React.FC = () => {
         }
       });
     }
-  }, [collection.length, collectionLoading, navigation]);
+  }, [collection.length, isCollectionLoading, navigation]);
 
   useEffect(() => {
     if (user) {
@@ -152,6 +154,18 @@ export const SearchScreen: React.FC = () => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('🔄 SearchScreen: Screen focused, syncing gem status');
+      
+      // Aplicar visibilidad del tab bar inmediatamente al enfocar la pantalla para evitar parpadeos
+      const parent = navigation.getParent();
+      if (parent) {
+        const hideTabBar = isCollectionLoading || collection.length === 0;
+        if (hideTabBar) {
+          parent.setOptions({
+            tabBarStyle: { display: 'none' }
+          });
+        }
+      }
+
       // Recargar la colección para sincronizar el estado de gems
       if (user) {
         loadCollection();
@@ -159,7 +173,7 @@ export const SearchScreen: React.FC = () => {
     });
 
     return unsubscribe;
-  }, [navigation, user]);
+  }, [navigation, user, collection.length, isCollectionLoading]);
 
   useEffect(() => {
     sortCollection();
@@ -214,7 +228,7 @@ export const SearchScreen: React.FC = () => {
   const loadCollection = async () => {
     if (!user) return;
     try {
-      setCollectionLoading(true);
+      setIsCollectionLoading(true);
       // Obtener colección
       const { data: userCollection, error } = await supabase
         .from('user_collection')
@@ -255,7 +269,7 @@ export const SearchScreen: React.FC = () => {
     } catch (error) {
       console.error('Error loading collection:', error);
     } finally {
-      setCollectionLoading(false);
+      setIsCollectionLoading(false);
     }
   };
 
@@ -674,7 +688,7 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderEmptyState = () => {
-    if (collectionLoading) {
+    if (isCollectionLoading) {
       return <BothsideLoader />;
     }
 
