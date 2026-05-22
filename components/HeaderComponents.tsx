@@ -49,18 +49,18 @@ export const HeaderAvatar = () => {
         return profile.username.substring(0, 2).toUpperCase();
     };
 
-    const handleChatPress = () => {
+    const handleShelvesPress = () => {
         if (!user) return;
-        navigation.navigate('Chat' as never);
+        (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' });
     };
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <TouchableOpacity
-                onPress={handleChatPress}
+                onPress={handleShelvesPress}
                 style={{ marginRight: 12, padding: 4 }}
             >
-                <Ionicons name="flash" size={24} color={colors.text} />
+                <Ionicons name="grid-outline" size={24} color={colors.text} />
             </TouchableOpacity>
 
             <TouchableOpacity

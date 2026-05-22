@@ -66,6 +66,8 @@ export const SearchScreen: React.FC = () => {
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
   const [loading, setLoading] = useState(false);
   const [isCollectionLoading, setIsCollectionLoading] = useState(true);
+  const [hasFinishedInitialLoad, setHasFinishedInitialLoad] = useState(false);
+  const [isOnboardingCompleted, setIsOnboardingCompleted] = useState<boolean | null>(null);
   const [collection, setCollection] = useState<any[]>([]);
   const [sortBy, setSortBy] = useState<'date' | 'year' | 'artist' | 'label'>('date');
   const [filterByStyle, setFilterByStyle] = useState<string>('');
@@ -121,12 +123,38 @@ export const SearchScreen: React.FC = () => {
   const truncate = (text: string, maxLen = 30) =>
     text && text.length > maxLen ? text.slice(0, maxLen) + "…" : text;
 
-  // Controlar visualmente la visibilidad del tab bar inferior según collection.length, physicalShelves.length y estado de carga
+  // Cargar estado de onboarding desde caché local en AsyncStorage para evitar parpadeos
+  useEffect(() => {
+    const checkOnboardingCache = async () => {
+      if (!user) {
+        setIsOnboardingCompleted(false);
+        return;
+      }
+      try {
+        const value = await AsyncStorage.getItem(`onboarding_completed_${user.id}`);
+        setIsOnboardingCompleted(value === 'true');
+      } catch (error) {
+        console.error('Error reading onboarding completed status:', error);
+        setIsOnboardingCompleted(false);
+      }
+    };
+    checkOnboardingCache();
+  }, [user]);
+
+  // Controlar visualmente la visibilidad del tab bar inferior
   useEffect(() => {
     const parent = navigation.getParent();
     if (!parent) return;
 
-    const hideTabBar = isCollectionLoading || collection.length === 0 || physicalShelves.length === 0;
+    // Solo ocultar si no hemos terminado de verificar la caché,
+    // o si el onboarding no se ha completado y aún no termina la carga inicial,
+    // o si habiendo terminado la carga, la colección está vacía (0 discos).
+    const hideTabBar = 
+      isOnboardingCompleted === null
+        ? true // oculto por defecto mientras carga la caché inicial
+        : isOnboardingCompleted === false && !hasFinishedInitialLoad
+          ? true // si no ha completado el onboarding y sigue en carga inicial, ocultar
+          : collection.length === 0; // si ya cargó, ocultar SOLO si collection.length es 0
 
     if (hideTabBar) {
       parent.setOptions({
@@ -142,7 +170,7 @@ export const SearchScreen: React.FC = () => {
         }
       });
     }
-  }, [collection.length, physicalShelves.length, isCollectionLoading, navigation]);
+  }, [collection.length, isOnboardingCompleted, hasFinishedInitialLoad, navigation]);
 
   useEffect(() => {
     if (user) {
@@ -150,30 +178,45 @@ export const SearchScreen: React.FC = () => {
     }
   }, [user]);
 
-  // Efecto para sincronizar el estado de gems cuando se navegue de vuelta
+  // Efecto para sincronizar el estado al enfocar la pantalla
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       console.log('🔄 SearchScreen: Screen focused, syncing gem status');
       
-      // Aplicar visibilidad del tab bar inmediatamente al enfocar la pantalla para evitar parpadeos
+      // Aplicar visibilidad de inmediato usando el último estado estable de la caché/longitud
       const parent = navigation.getParent();
       if (parent) {
-        const hideTabBar = isCollectionLoading || collection.length === 0 || physicalShelves.length === 0;
+        const hideTabBar = 
+          isOnboardingCompleted === null
+            ? true
+            : isOnboardingCompleted === false && !hasFinishedInitialLoad
+              ? true
+              : collection.length === 0;
+              
         if (hideTabBar) {
           parent.setOptions({
             tabBarStyle: { display: 'none' }
           });
+        } else {
+          parent.setOptions({
+            tabBarStyle: {
+              height: 80,
+              paddingTop: 14,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }
+          });
         }
       }
 
-      // Recargar la colección para sincronizar el estado de gems
+      // Recargar la colección para sincronizar cambios
       if (user) {
         loadCollection();
       }
     });
 
     return unsubscribe;
-  }, [navigation, user, collection.length, physicalShelves.length, isCollectionLoading]);
+  }, [navigation, user, collection.length, isOnboardingCompleted, hasFinishedInitialLoad]);
 
   useEffect(() => {
     sortCollection();
@@ -192,6 +235,11 @@ export const SearchScreen: React.FC = () => {
       if (!user) return;
       const key = `has_seen_first_disc_location_modal_${user.id}`;
 
+      // Si el usuario ya tiene al menos una ubicación creada, nunca mostrar el onboarding
+      if (physicalShelves.length > 0) {
+        return;
+      }
+
       // Si no tiene discos en su colección, reseteamos el estado visto en AsyncStorage
       if (collection.length === 0) {
         try {
@@ -202,6 +250,7 @@ export const SearchScreen: React.FC = () => {
         return;
       }
 
+      // Solo mostrar cuando tiene exactamente 1 disco en la colección
       if (collection.length !== 1) {
         return;
       }
@@ -212,18 +261,15 @@ export const SearchScreen: React.FC = () => {
           return;
         }
 
-        // Comprobar si todavía no tiene ninguna ubicación/estantería creada
-        const maletas = await UserMaletaService.getUserMaletas(user.id);
-        if (!maletas || maletas.length === 0) {
-          setShowFirstDiscModal(true);
-        }
+        // Si llegó hasta aquí: tiene exactamente 1 disco, 0 ubicaciones y no ha visto el modal antes
+        setShowFirstDiscModal(true);
       } catch (error) {
         console.error('Error checking first disc shelf suggestion:', error);
       }
     };
 
     checkFirstDiscModal();
-  }, [collection, user]);
+  }, [collection.length, physicalShelves.length, user]);
 
   const loadCollection = async () => {
     if (!user) return;
@@ -272,6 +318,21 @@ export const SearchScreen: React.FC = () => {
         };
       });
 
+      const userHasCollection = (collectionRes.data || []).length > 0;
+
+      // Persistir el estado estable de onboarding completado si tiene discos
+      try {
+        if (userHasCollection) {
+          await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+          setIsOnboardingCompleted(true);
+        } else {
+          await AsyncStorage.removeItem(`onboarding_completed_${user.id}`);
+          setIsOnboardingCompleted(false);
+        }
+      } catch (err) {
+        console.error('Error updating onboarding completed cache:', err);
+      }
+
       setCollection(collectionWithShelfInfo);
       setPhysicalShelves(shelvesRes.data || []);
 
@@ -281,6 +342,7 @@ export const SearchScreen: React.FC = () => {
       console.error('Error loading collection:', error);
     } finally {
       setIsCollectionLoading(false);
+      setHasFinishedInitialLoad(true);
     }
   };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, TouchableWithoutFeedback, Keyboard, SafeAreaView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
@@ -30,15 +31,68 @@ export default function ShelfEditScreen() {
     });
   }, [navigation, isEditMode]);
 
-  // Ocultar la barra de pestañas visualmente durante el flujo de creación/edición
+  // Controlar la visibilidad de la barra de pestañas.
+  // Solo se oculta durante la creación de la primera ubicación (cuando el usuario no tiene estanterías todavía).
   useEffect(() => {
-    const parent = navigation.getParent();
-    if (parent) {
-      parent.setOptions({
-        tabBarStyle: { display: 'none' }
-      });
-    }
-  }, [navigation]);
+    const checkShelvesAndSetTabStyle = async () => {
+      if (!user) return;
+      const parent = navigation.getParent();
+      if (!parent) return;
+
+      try {
+        const { count, error } = await supabase
+          .from('shelves')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        if (count === 0) {
+          parent.setOptions({
+            tabBarStyle: { display: 'none' }
+          });
+        } else {
+          parent.setOptions({
+            tabBarStyle: {
+              height: 80,
+              paddingTop: 14,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error checking shelves count in ShelfEditScreen:', err);
+      }
+    };
+
+    checkShelvesAndSetTabStyle();
+
+    // Al desmontarse la pantalla (salir del flujo), restaurar el tab bar a visible si el onboarding ya está completado
+    return () => {
+      const restoreTabStyle = async () => {
+        const parent = navigation.getParent();
+        if (parent && user) {
+          try {
+            const completed = await AsyncStorage.getItem(`onboarding_completed_${user.id}`);
+            if (completed === 'true') {
+              parent.setOptions({
+                tabBarStyle: {
+                  height: 80,
+                  paddingTop: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }
+              });
+            }
+          } catch (e) {
+            console.error('Error restoring tab bar style on ShelfEditScreen unmount:', e);
+          }
+        }
+      };
+      restoreTabStyle();
+    };
+  }, [navigation, user]);
 
   const handleSave = async () => {
     if (!user) {
@@ -85,6 +139,17 @@ export default function ShelfEditScreen() {
       }
 
       if (error) throw error;
+
+      // Si se crea una estantería nueva (primera ubicación), marcar el onboarding como visto y completado
+      if (!isEditMode) {
+        try {
+          const key = `has_seen_first_disc_location_modal_${user.id}`;
+          await AsyncStorage.setItem(key, 'true');
+          await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+        } catch (err) {
+          console.error('Error saving onboarding state:', err);
+        }
+      }
 
       Alert.alert(t('common_saved'), t('shelf_edit_success_save'));
       navigation.goBack();

@@ -25,10 +25,11 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 const { width, height } = Dimensions.get('window');
 
 export const LoginScreen: React.FC = () => {
+  const route = useRoute<any>();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [username, setUsername] = useState('');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(route.params?.isSignUp === true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -37,13 +38,12 @@ export const LoginScreen: React.FC = () => {
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const primaryColor = AppColors.primary; // Enforce brand color for premium feel
-  const route = useRoute<any>();
   const navigation = useNavigation<any>();
 
   // Verificar si venimos de pricing con modo registro
   useEffect(() => {
-    if (route.params?.isSignUp) {
-      setIsSignUp(true);
+    if (route.params?.isSignUp !== undefined) {
+      setIsSignUp(route.params.isSignUp);
     }
   }, [route.params?.isSignUp]);
 
@@ -86,9 +86,9 @@ export const LoginScreen: React.FC = () => {
       if (isSignUp) {
         console.log('[AUTH] Calling signUp...');
         const { user: newUser, session: newSession } = await signUp(email, password, username.trim());
-        
+
         console.log('[AUTH] signUp returned. User:', newUser?.id, 'Session:', !!newSession);
-        
+
         if (newUser && !newSession) {
           // Usuario creado pero requiere validación de correo
           Alert.alert(
@@ -119,7 +119,7 @@ export const LoginScreen: React.FC = () => {
       }
     } catch (error: any) {
       console.error('[AUTH ERROR] LoginScreen:', error);
-      
+
       const getAuthErrorMessage = (err: any) => {
         const msg = err?.message || '';
         if (msg.includes('User already registered') || msg.includes('already exists')) return t('auth_error_user_exists');
@@ -144,7 +144,7 @@ export const LoginScreen: React.FC = () => {
       {/* Header Image */}
       <View style={styles.headerImageContainer}>
         <Image
-          source={require('../assets/1.png')}
+          source={require('../assets/wall_1.png')}
           style={styles.headerImage}
           resizeMode="cover"
         />
@@ -322,7 +322,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     backgroundColor: '#F5F5F7', // Premium light grey input background
-    borderRadius: 16,
+    borderRadius: 30,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
@@ -345,15 +345,12 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: AppColors.primary,
     height: 56,
-    borderRadius: 16, // Modern pill/rounded rect
+    borderRadius: 30, // Modern pill/rounded rect
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 32,
-    shadowColor: AppColors.primary,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 16,
-    elevation: 8,
+
+
   },
   buttonDisabled: {
     backgroundColor: '#ccc',

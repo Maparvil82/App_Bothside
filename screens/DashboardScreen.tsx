@@ -97,6 +97,34 @@ export default function DashboardScreen() {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [activeChartIndex, setActiveChartIndex] = useState(0);
 
+  // Asegurar que el menú inferior se muestre correctamente al enfocar Dashboard si el onboarding ya está completado
+  useFocusEffect(
+    useCallback(() => {
+      const restoreTabStyle = async () => {
+        if (!user) return;
+        const parent = navigation.getParent();
+        if (parent) {
+          try {
+            const completed = await AsyncStorage.getItem(`onboarding_completed_${user.id}`);
+            if (completed === 'true') {
+              parent.setOptions({
+                tabBarStyle: {
+                  height: 80,
+                  paddingTop: 14,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }
+              });
+            }
+          } catch (e) {
+            console.error('Error restoring tab bar style in DashboardScreen:', e);
+          }
+        }
+      };
+      restoreTabStyle();
+    }, [navigation, user])
+  );
+
   const handleScroll = (event: any) => {
     // Usamos width - 16 porque es el tamaño del item (width - 32) + el gap (16)
     const slideSize = width - 16;

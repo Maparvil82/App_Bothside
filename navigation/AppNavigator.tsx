@@ -291,7 +291,14 @@ const DashboardStack = () => {
       <Stack.Screen
         name="ShelvesList"
         component={ShelvesListScreen}
-        options={{ title: 'Mis Estanterías' }}
+        options={({ navigation }) => ({
+          title: 'Mis Estanterías',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
+        })}
       />
       <Stack.Screen
         name="ShelfEdit"
@@ -557,7 +564,7 @@ const AppStack = () => {
   if (!user) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} initialParams={{ isSignUp: true }} />
         <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal', headerShown: true }} />
         <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} />
       </Stack.Navigator>
@@ -570,7 +577,7 @@ const AppStack = () => {
   if (!user) {
     return (
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Login" component={LoginScreen} initialParams={{ isSignUp: true }} />
         <Stack.Screen name="Legal" component={LegalScreen} options={{ title: 'Información Legal', headerShown: true }} />
         <Stack.Screen name="AuthCallback" component={AuthCallbackScreen} />
       </Stack.Navigator>

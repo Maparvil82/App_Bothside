@@ -22,6 +22,7 @@ import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { useTranslation } from '../src/i18n/useTranslation';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface Album {
   id: string;
@@ -92,17 +93,27 @@ export const AddDiscScreen: React.FC = () => {
 
   // Controlar la visibilidad del tab bar inferior en el flujo de añadir disco
   useEffect(() => {
-    const checkCollectionCountAndSetTabStyle = async () => {
+    const syncTabStyle = async () => {
       if (!user) return;
+      const parent = navigation.getParent();
+      if (!parent) return;
+
       try {
-        const count = await UserCollectionService.getUserCollectionCount(user.id);
-        const parent = navigation.getParent();
-        if (parent) {
-          if (count === 0) {
-            parent.setOptions({
-              tabBarStyle: { display: 'none' }
-            });
-          } else {
+        const completed = await AsyncStorage.getItem(`onboarding_completed_${user.id}`);
+        if (completed === 'true') {
+          parent.setOptions({
+            tabBarStyle: {
+              height: 80,
+              paddingTop: 14,
+              justifyContent: 'center',
+              alignItems: 'center',
+            }
+          });
+        } else {
+          // Si no está completado en caché, consultar el conteo en base de datos como respaldo
+          const count = await UserCollectionService.getUserCollectionCount(user.id);
+          if (count > 0) {
+            await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
             parent.setOptions({
               tabBarStyle: {
                 height: 80,
@@ -111,15 +122,21 @@ export const AddDiscScreen: React.FC = () => {
                 alignItems: 'center',
               }
             });
+          } else {
+            parent.setOptions({
+              tabBarStyle: { display: 'none' }
+            });
           }
         }
       } catch (error) {
-        console.error('Error checking collection count for tab bar style:', error);
+        console.error('Error syncing tab style in AddDiscScreen:', error);
       }
     };
 
     if (!addingDisc) {
-      checkCollectionCountAndSetTabStyle();
+      const unsubscribe = navigation.addListener('focus', syncTabStyle);
+      syncTabStyle(); // Ejecutar inicialmente
+      return unsubscribe;
     }
   }, [user, navigation, addingDisc]);
 

@@ -162,7 +162,7 @@ export const PaywallScreen = () => {
                                 </Text>
                             </TouchableOpacity>
                         ) : (
-                            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                            <TouchableOpacity onPress={() => navigation.navigate('Login', { isSignUp: false })}>
                                 <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF' }]}>
                                     {i18n.t('pricing_login_link')}
                                 </Text>

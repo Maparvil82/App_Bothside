@@ -100,7 +100,7 @@ export const OnboardingScreen: React.FC = () => {
   };
 
   const handleLogin = () => {
-    navigation.navigate('Login');
+    navigation.navigate('Login', { isSignUp: false });
   };
 
   const handleDotPress = (index: number) => {
