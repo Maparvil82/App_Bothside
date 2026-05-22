@@ -1899,49 +1899,67 @@ export const SearchScreen: React.FC = () => {
             </View>
 
             <ScrollView style={styles.modalBody}>
-              <Text style={styles.selectShelfTitle}>{t('search_subtitle_select_location')}</Text>
+              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('search_subtitle_select_location')}</Text>
 
               {physicalShelves.length === 0 ? (
                 <View style={styles.emptyShelvesContainer}>
-                  <Ionicons name="grid-outline" size={48} color="#ccc" />
-                  <Text style={styles.emptyShelvesTitle}>{t('search_empty_locations')}</Text>
-                  <Text style={styles.emptyShelvesSubtitle}>
-                    {t('search_empty_locations_subtitle')}
+                  <Image source={require('../assets/empty.png')} style={styles.emptyStateImage} />
+                  <Text style={[styles.emptyShelvesTitle, { color: colors.text }]}>{t('search_modal_empty_shelves_title')}</Text>
+                  <Text style={[styles.emptyShelvesSubtitle, { color: colors.text, opacity: 0.6 }]}>
+                    {t('search_modal_empty_shelves_subtitle')}
                   </Text>
                   <TouchableOpacity
                     style={[styles.createShelfButton, { backgroundColor: primaryColor }]}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('ShelvesList');
+                      navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
                     }}
                   >
-                    <Text style={styles.createShelfButtonText}>{t('search_action_create_location')}</Text>
+                    <Text style={styles.createShelfButtonText}>{t('search_modal_empty_shelves_cta')}</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
-                physicalShelves.map((shelf) => (
+                <>
+                  {physicalShelves.map((shelf) => {
+                    const recordsCount = collection.filter((item) => item.shelf_id === shelf.id).length;
+                    return (
+                      <TouchableOpacity
+                        key={shelf.id}
+                        style={[styles.shelfSelectItem, { backgroundColor: colors.background, borderColor: colors.border }]}
+                        onPress={() => {
+                          setShowLocationModal(false);
+                          navigation.navigate('SelectCell', {
+                            user_collection_id: selectedAlbumForLocation?.id,
+                            shelf: shelf,
+                            current_row: undefined,
+                            current_column: undefined,
+                          });
+                        }}
+                      >
+                        <View style={styles.shelfSelectInfo}>
+                          <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
+                          <Text style={[styles.shelfDimensions, { color: colors.text, opacity: 0.6 }]}>
+                            {shelf.shelf_rows}x{shelf.shelf_columns}{recordsCount > 0 ? ` · ${recordsCount === 1 ? t('search_modal_record_singular').replace('{0}', '1') : t('search_modal_record_plural').replace('{0}', String(recordsCount))}` : ''}
+                          </Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                      </TouchableOpacity>
+                    );
+                  })}
+
                   <TouchableOpacity
-                    key={shelf.id}
-                    style={styles.shelfSelectItem}
+                    style={[styles.createShelfDashedButton, { borderColor: colors.border }]}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('SelectCell', {
-                        user_collection_id: selectedAlbumForLocation?.id,
-                        shelf: shelf,
-                        current_row: undefined,
-                        current_column: undefined,
-                      });
+                      navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
                     }}
+                    activeOpacity={0.7}
                   >
-                    <View style={styles.shelfSelectInfo}>
-                      <Text style={styles.shelfSelectItemText}>{shelf.name}</Text>
-                      <Text style={styles.shelfDimensions}>
-                        {shelf.shelf_rows}x{shelf.shelf_columns}
-                      </Text>
-                    </View>
-                    <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                    <Text style={[styles.createShelfDashedButtonText, { color: primaryColor }]}>
+                      {t('search_modal_create_new_shelf')}
+                    </Text>
                   </TouchableOpacity>
-                ))
+                </>
               )}
             </ScrollView>
           </View>
@@ -2809,7 +2827,6 @@ const styles = StyleSheet.create({
   selectShelfTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
     marginBottom: 15,
     marginTop: 10,
   },
@@ -2821,18 +2838,16 @@ const styles = StyleSheet.create({
   emptyShelvesTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#333',
     marginTop: 15,
     marginBottom: 5,
+    textAlign: 'center',
   },
   emptyShelvesSubtitle: {
     fontSize: 14,
-    color: '#666',
     textAlign: 'center',
     marginBottom: 20,
   },
   createShelfButton: {
-    backgroundColor: AppColors.primary,
     paddingVertical: 12,
     paddingHorizontal: 24,
     borderRadius: 8,
@@ -2848,11 +2863,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 15,
     paddingHorizontal: 20,
-    backgroundColor: '#f8f9fa',
     borderRadius: 12,
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#e9ecef',
   },
   shelfSelectInfo: {
     flex: 1,
@@ -2860,12 +2873,26 @@ const styles = StyleSheet.create({
   shelfSelectItemText: {
     fontSize: 16,
     fontWeight: '500',
-    color: '#333',
     marginBottom: 2,
   },
   shelfDimensions: {
     fontSize: 14,
-    color: '#666',
+  },
+  createShelfDashedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    marginTop: 10,
+    marginBottom: 20,
+  },
+  createShelfDashedButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
   },
   audioTagIconOnly: {
     flexDirection: 'row',
