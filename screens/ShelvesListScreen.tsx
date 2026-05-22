@@ -4,6 +4,112 @@ import { BothsideLoader } from '../components/BothsideLoader';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import Svg, { Rect, Line } from 'react-native-svg';
+
+const ShelvesFABIcon: React.FC<{ color: string; size: number }> = ({ color, size }) => {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Outer Cabinet Frame */}
+      <Rect
+        x="2"
+        y="2"
+        width="20"
+        height="20"
+        rx="2.5"
+        stroke={color}
+        strokeWidth={2}
+        fill="none"
+      />
+      {/* Partition Lines */}
+      <Line
+        x1="12"
+        y1="2"
+        x2="12"
+        y2="22"
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <Line
+        x1="2"
+        y1="12"
+        x2="22"
+        y2="12"
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      
+      {/* Top-Left Shelf Vinyls (leaning) */}
+      <Line
+        x1={5.5}
+        y1={4.5}
+        x2={6.5}
+        y2={9.5}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <Line
+        x1={7.5}
+        y1={4.5}
+        x2={8.5}
+        y2={9.5}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <Line
+        x1={9.5}
+        y1={4.5}
+        x2={10.5}
+        y2={9.5}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+
+      {/* Bottom-Right Shelf Vinyls (leaning) */}
+      <Line
+        x1={14.5}
+        y1={14.5}
+        x2={15.5}
+        y2={19.5}
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <Line
+        x1={16.5}
+        y1={14.5}
+        x2={17.5}
+        y2="19.5"
+        stroke={color}
+        strokeWidth={1.5}
+      />
+      <Line
+        x1={18.5}
+        y1={14.5}
+        x2={19.5}
+        y2="19.5"
+        stroke={color}
+        strokeWidth={1.5}
+      />
+
+      {/* Bottom-Left Shelf: Small Plus sign representing ADD shelf */}
+      <Line
+        x1={5}
+        y1={17}
+        x2={9}
+        y2={17}
+        stroke={color}
+        strokeWidth={2}
+      />
+      <Line
+        x1={7}
+        y1={15}
+        x2={7}
+        y2={19}
+        stroke={color}
+        strokeWidth={2}
+      />
+    </Svg>
+  );
+};
 import { AppColors } from '../src/theme/colors';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -153,8 +259,9 @@ export default function ShelvesListScreen() {
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
         onPress={() => navigation.navigate('ShelfEdit')}
+        activeOpacity={0.8}
       >
-        <Ionicons name="add" size={30} color="#fff" />
+        <ShelvesFABIcon color="#fff" size={26} />
       </TouchableOpacity>
     </View>
   );

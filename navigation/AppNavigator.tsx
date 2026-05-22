@@ -58,6 +58,94 @@ import { PaywallScreen } from '../screens/PaywallScreen';
 import { SubscriptionProvider, useSubscription } from '../contexts/SubscriptionContext';
 import { AnalyticsService } from '../services/analytics';
 import { CreditsProvider } from '../contexts/CreditsContext';
+import Svg, { Rect, Line } from 'react-native-svg';
+
+const ShelvesTabIcon: React.FC<{ color: string; size: number; focused: boolean }> = ({ color, size, focused }) => {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      {/* Outer Cabinet Frame */}
+      <Rect
+        x="2"
+        y="2"
+        width="20"
+        height="20"
+        rx="2.5"
+        stroke={color}
+        strokeWidth={focused ? 2.4 : 1.8}
+        fill={focused ? `${color}15` : "none"}
+      />
+      {/* Partition Lines */}
+      <Line
+        x1="12"
+        y1="2"
+        x2="12"
+        y2="22"
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+      <Line
+        x1="2"
+        y1="12"
+        x2="22"
+        y2="12"
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+      
+      {/* Top-Left Shelf Vinyls (leaning) */}
+      <Line
+        x1={5.5}
+        y1={4.5}
+        x2={6.5}
+        y2={9.5}
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+      <Line
+        x1={7.5}
+        y1={4.5}
+        x2={8.5}
+        y2={9.5}
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+      <Line
+        x1={9.5}
+        y1={4.5}
+        x2={10.5}
+        y2={9.5}
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+
+      {/* Bottom-Right Shelf Vinyls (leaning) */}
+      <Line
+        x1={14.5}
+        y1={14.5}
+        x2={15.5}
+        y2={19.5}
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+      <Line
+        x1={16.5}
+        y1={14.5}
+        x2={17.5}
+        y2="19.5"
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+      <Line
+        x1={18.5}
+        y1={14.5}
+        x2={19.5}
+        y2={19.5}
+        stroke={color}
+        strokeWidth={focused ? 1.8 : 1.2}
+      />
+    </Svg>
+  );
+};
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
@@ -454,14 +542,16 @@ const TabNavigator = () => {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
+          if (route.name === 'ShelvesTab') {
+            return <ShelvesTabIcon color={color} size={size} focused={focused} />;
+          }
+
           let iconName: string = 'help-outline';
 
           if (route.name === 'SearchTab') {
             iconName = focused ? 'disc' : 'disc-outline';
           } else if (route.name === 'DashboardTab') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
-          } else if (route.name === 'ShelvesTab') {
-            iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'AddDiscTab') {
             iconName = focused ? 'add' : 'add';
           } else if (route.name === 'MaletasTab') {
