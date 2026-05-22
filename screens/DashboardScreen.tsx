@@ -705,24 +705,6 @@ export default function DashboardScreen() {
           userPosition={userPosition || undefined}
         />
 
-        {/* Sección de Ubicaciones */}
-        <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('dashboard_shelves_title')}</Text>
-          <View style={styles.shelfStatContainer}>
-            <Text style={[styles.shelfStatNumber, { color: colors.primary }]}>{shelves.length}</Text>
-            <Text style={[styles.shelfStatText, { color: colors.text }]}>{t('dashboard_shelves_created')}</Text>
-          </View>
-          <TouchableOpacity
-            style={[styles.configButton, { backgroundColor: primaryColor }]}
-            onPress={() => (navigation as any).navigate('ShelvesList')}
-          >
-            <Ionicons name="grid-outline" size={20} color="#fff" />
-            <Text style={styles.configButtonText}>
-              {t('dashboard_shelves_manage')}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Álbumes más caros */}
         {stats.mostExpensiveAlbums.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
