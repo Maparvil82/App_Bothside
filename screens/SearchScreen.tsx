@@ -19,7 +19,7 @@ import {
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
 import { useThemeMode } from '../contexts/ThemeContext';
-import { SwipeListView } from 'react-native-swipe-list-view';
+
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
@@ -719,13 +719,6 @@ export const SearchScreen: React.FC = () => {
     confirmDeleteRecord(item);
   };
 
-  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
-    const item = filteredCollection.find(col => col.id === rowKey);
-    if (item) {
-      confirmDeleteRecord(item);
-    }
-    rowMap[rowKey]?.closeRow();
-  };
 
   const handleToggleGem = async (item: any) => {
     if (!user) return;
@@ -792,113 +785,6 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
-  const handleSwipeOptions = async (rowMap: any, rowKey: string) => {
-    const item = filteredCollection.find(col => col.id === rowKey);
-    if (item) {
-      // Usar el contexto para determinar si es gem
-      const isItemGem = isGem(item.albums?.id);
-      const gemAction = isItemGem ? t('search_action_remove_gem') : t('search_action_add_gem');
-      const hasLocation = !!item.shelf_name;
-
-      console.log('🔍 handleSwipeOptions: Item gem status:', {
-        itemId: item.id,
-        albumId: item.albums?.id,
-        albumTitle: item.albums?.title,
-        isGem: isItemGem,
-        localIsGem: item.is_gem,
-        hasLocation
-      });
-
-      // Preparar acciones dinámicas
-      const actions: { text: string; onPress: () => void }[] = [];
-
-      // 1. Ubicación (Asignar / Cambiar)
-      const locationText = hasLocation ? t('search_action_change_location') : t('search_action_assign_location');
-      actions.push({
-        text: locationText,
-        onPress: () => {
-          setSelectedAlbumForLocation(item);
-          loadPhysicalShelves();
-          setShowLocationModal(true);
-        }
-      });
-
-      // 2. Si tiene ubicación, opción de Quitar ubicación
-      if (hasLocation) {
-        actions.push({
-          text: t('search_action_remove_location'),
-          onPress: () => confirmRemoveLocation(item)
-        });
-      }
-
-      // 3. Añadir a maleta
-      actions.push({
-        text: t('search_action_add_to_shelf'),
-        onPress: () => {
-          setSelectedAlbum(item);
-          loadUserMaletas();
-          setShowAddToShelfModal(true);
-        }
-      });
-
-      // 4. Gem action
-      actions.push({
-        text: gemAction,
-        onPress: () => handleToggleGem(item)
-      });
-
-      // 5. Cambiar versión
-      actions.push({
-        text: t('search_action_change_version'),
-        onPress: () => handleEditAlbum(item)
-      });
-
-      // 6. Opciones de audio
-      if (item.audio_note) {
-        actions.push({
-          text: t('search_action_play_audio'),
-          onPress: () => handlePlayAudio(item)
-        });
-        actions.push({
-          text: t('search_action_delete_audio'),
-          onPress: () => handleDeleteAudioNote(item)
-        });
-      } else {
-        actions.push({
-          text: t('search_action_record_audio'),
-          onPress: () => handleRecordAudio(item)
-        });
-      }
-
-      if (Platform.OS === 'ios') {
-        const iosOptions = [t('common_cancel'), ...actions.map(a => a.text)];
-        ActionSheetIOS.showActionSheetWithOptions(
-          {
-            options: iosOptions,
-            cancelButtonIndex: 0,
-            title: item.albums?.title || t('common_album'),
-            message: t('search_action_sheet_title'),
-          },
-          (buttonIndex) => {
-            if (buttonIndex > 0 && buttonIndex <= actions.length) {
-              actions[buttonIndex - 1].onPress();
-            }
-          }
-        );
-      } else {
-        const androidButtons = [
-          { text: t('common_cancel'), style: 'cancel' as const },
-          ...actions.map(a => ({ text: a.text, onPress: a.onPress }))
-        ];
-        Alert.alert(
-          item.albums?.title || t('common_album'),
-          t('search_action_sheet_title'),
-          androidButtons
-        );
-      }
-    }
-    rowMap[rowKey]?.closeRow();
-  };
 
   const renderEmptyState = () => {
     if (isCollectionLoading) {
@@ -1628,27 +1514,6 @@ export const SearchScreen: React.FC = () => {
     </View>
   );
 
-  // Componente para las acciones de swipe (fondo)
-  const renderSwipeActions = (rowData: any, rowMap: any) => (
-    <View style={styles.swipeActionsContainer}>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeOptions, { backgroundColor: primaryColor }]}
-        onPress={() => handleSwipeOptions(rowMap, rowData.item.id)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="ellipsis-horizontal" size={18} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_options')}</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeDelete]}
-        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
@@ -1931,18 +1796,13 @@ export const SearchScreen: React.FC = () => {
 
       {/* Lista combinada */}
       {user ? (
-        <SwipeListView
+        <FlatList
           data={filteredCollection}
           renderItem={renderCollectionItem}
-          renderHiddenItem={renderSwipeActions}
-          rightOpenValue={-180}
-          disableRightSwipe
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
           refreshing={refreshing}
           onRefresh={onRefresh}
-          previewOpenValue={0}
-          previewOpenDelay={0}
           ListEmptyComponent={renderEmptyState}
           contentContainerStyle={filteredCollection.length === 0 ? { flexGrow: 1 } : undefined}
           ListFooterComponent={
@@ -2870,38 +2730,6 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 14,
     color: '#666',
-  },
-  // Estilos para swipe actions
-  swipeActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-
-
-
-    gap: 0, // Sin espacio entre botones para que se vean como una barra continua
-  },
-  swipeAction: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 90, // Botones más anchos
-    height: '100%',
-    borderRadius: 0, // Sin bordes redondeados
-  },
-  swipeOptions: {
-    backgroundColor: AppColors.primary,
-    borderRightWidth: 2,
-    borderRightColor: 'rgba(255,255,255,0.5)', // Separador más visible
-  },
-  swipeDelete: {
-    backgroundColor: '#FF3B30',
-  },
-  swipeActionText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-    textAlign: 'center',
   },
 
   // Estilos para el modal de añadir a maleta
