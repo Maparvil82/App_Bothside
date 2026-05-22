@@ -119,7 +119,7 @@ import { useThemeMode } from '../contexts/ThemeContext';
 
 type RootStackParamList = {
   ShelfView: { shelfId: string, shelfName: string };
-  ShelfEdit: undefined;
+  ShelfEdit: { shelf: Shelf };
 };
 
 type ShelvesListNavigationProp = StackNavigationProp<RootStackParamList, 'ShelfView', 'ShelfEdit'>;
@@ -202,13 +202,15 @@ export default function ShelvesListScreen() {
     if (Platform.OS === 'ios') {
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [t('common_cancel'), t('common_delete')],
-          destructiveButtonIndex: 1,
+          options: [t('common_cancel'), t('common_edit'), t('common_delete')],
+          destructiveButtonIndex: 2,
           cancelButtonIndex: 0,
           title: item.name,
         },
         (buttonIndex) => {
           if (buttonIndex === 1) {
+            navigation.navigate('ShelfEdit', { shelf: item });
+          } else if (buttonIndex === 2) {
             confirmDeleteShelf(item);
           }
         }
@@ -219,6 +221,10 @@ export default function ShelvesListScreen() {
         undefined,
         [
           { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: t('common_edit'),
+            onPress: () => navigation.navigate('ShelfEdit', { shelf: item }),
+          },
           {
             text: t('common_delete'),
             style: 'destructive',
