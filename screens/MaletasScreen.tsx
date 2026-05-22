@@ -9,8 +9,10 @@ import {
   Image,
   ScrollView,
   Dimensions,
+  FlatList,
+  ActionSheetIOS,
+  Platform,
 } from 'react-native';
-import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
@@ -186,69 +188,50 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
     );
   };
 
-  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
-    const item = filteredLists.find(list => list.id === rowKey);
-    if (!item) return;
-
-    Alert.alert(
-      t('maletas_alert_delete_title'),
-      t('maletas_alert_delete_message').replace('{0}', item.title),
-      [
-        { text: t('common_cancel'), style: 'cancel' },
+  const handleLongPress = (item: UserMaleta) => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
         {
-          text: t('common_delete'),
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await UserMaletaService.deleteMaleta(item.id);
-              removeListLocally(item.id);
-              Alert.alert(t('common_success'), t('maletas_success_deleted'));
-            } catch (error: any) {
-              console.error('❌ ListsScreen: Error deleting list:', error);
-              Alert.alert(t('common_error'), t('maletas_error_deleting').replace('{0}', error?.message || 'Error desconocido'));
-            }
-          },
+          options: [t('common_cancel'), t('common_edit'), t('common_delete')],
+          destructiveButtonIndex: 2,
+          cancelButtonIndex: 0,
+          title: item.title,
         },
-      ]
-    );
-    rowMap[rowKey]?.closeRow();
-  };
-
-  const handleSwipeEdit = (rowMap: any, rowKey: string) => {
-    const item = filteredLists.find(list => list.id === rowKey);
-    if (item) {
-      handleEditList(item);
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleEditList(item);
+          } else if (buttonIndex === 2) {
+            handleDeleteList(item);
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        item.title,
+        undefined,
+        [
+          { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: t('common_edit'),
+            onPress: () => handleEditList(item),
+          },
+          {
+            text: t('common_delete'),
+            style: 'destructive',
+            onPress: () => handleDeleteList(item),
+          },
+        ]
+      );
     }
-    rowMap[rowKey]?.closeRow();
   };
-
-  const renderSwipeActions = (rowData: any, rowMap: any) => (
-    <View style={styles.swipeActionsContainer}>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeEdit, { backgroundColor: primaryColor }]}
-        onPress={() => handleSwipeEdit(rowMap, rowData.item.id)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="create-outline" size={18} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_edit')}</Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeDelete]}
-        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   const renderListItem = ({ item }: { item: UserMaleta }) => (
     <View style={[styles.listItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
       <TouchableOpacity
         style={[styles.listItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         onPress={() => handleViewList(item)}
+        onLongPress={() => handleLongPress(item)}
+        delayLongPress={350}
         activeOpacity={0.7}
       >
         <MaletaCoverCollage
@@ -428,14 +411,10 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
       ) : filteredLists.length === 0 ? (
         renderEmptyState()
       ) : (
-        <SwipeListView
+        <FlatList
           data={filteredLists}
           renderItem={renderListItem}
-          renderHiddenItem={renderSwipeActions}
           keyExtractor={(item) => item.id}
-          rightOpenValue={-180}
-          previewOpenValue={0}
-          previewOpenDelay={0}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -559,32 +538,7 @@ const styles = StyleSheet.create({
     color: '#888',
     textDecorationLine: 'underline',
   },
-  swipeActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 0,
-  },
-  swipeAction: {
-    width: 90,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 0,
-  },
-  swipeEdit: {
-    backgroundColor: AppColors.primary,
-  },
-  swipeDelete: {
-    backgroundColor: '#FF3B30',
-  },
-  swipeActionText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-    textAlign: 'center',
-  },
+  // Swipe styles removed
   listContainer: {
 
   },
