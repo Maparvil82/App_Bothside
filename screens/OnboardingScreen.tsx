@@ -134,9 +134,10 @@ export const OnboardingScreen: React.FC = () => {
                 source={step.image}
                 style={[
                   styles.image,
-                  { 
-                    width: width > 600 ? 500 : width * 0.85, 
-                    height: height * (height > 800 ? 0.4 : 0.45) 
+                  {
+                    width: width > 600 ? 500 : width * 0.85,
+                    height: height * (height > 800 ? 0.4 : 0.45),
+                    borderRadius: 50
                   }
                 ]}
                 resizeMode="contain"
@@ -169,8 +170,8 @@ export const OnboardingScreen: React.FC = () => {
         </View>
 
         {/* Next button */}
-        <TouchableOpacity 
-          style={[styles.nextButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]} 
+        <TouchableOpacity
+          style={[styles.nextButton, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
           onPress={handleNext}
           activeOpacity={0.8}
         >
