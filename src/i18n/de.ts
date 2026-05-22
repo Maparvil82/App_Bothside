@@ -553,6 +553,8 @@ export const de = {
     first_disc_modal_btn_primary: "Standort erstellen",
     first_disc_modal_btn_secondary: "Später",
     search_filter_no_location: "Kein Standort",
+    quick_filter_all: "Alle",
+    quick_filter_unlocated: "Nicht zugewiesen",
     search_alert_no_results_title: "Keine Ergebnisse",
     search_current_location: "Befindet sich in: {0}",
     search_alert_no_editions_message: "Keine Ausgaben für \"{0}\" von \"{1}\" gefunden. Versuchen Sie eine spezifischere Suche.",

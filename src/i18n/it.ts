@@ -213,6 +213,8 @@ export const it = {
     first_disc_modal_btn_primary: "Crea posizione",
     first_disc_modal_btn_secondary: "Più tardi",
     search_filter_no_location: "Nessuna posizione",
+    quick_filter_all: "Tutti",
+    quick_filter_unlocated: "Non posizionati",
     search_current_location: "Situato a: {0}",
     search_alert_no_results_title: "Nessun risultato",
     search_alert_no_editions_message: "Nessuna edizione trovata per \"{0}\" di \"{1}\". Prova una ricerca più specifica.",

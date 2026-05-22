@@ -178,6 +178,8 @@ export const pt = {
     first_disc_modal_btn_primary: "Criar localização",
     first_disc_modal_btn_secondary: "Mais tarde",
     search_filter_no_location: "Sem localização",
+    quick_filter_all: "Todos",
+    quick_filter_unlocated: "Sem localização",
     search_current_location: "Localizado em: {0}",
     search_alert_no_results_title: "Sem resultados",
     search_alert_no_editions_message: "Nenhuma edição encontrada para \"{0}\" de \"{1}\". Tente uma busca mais específica.",

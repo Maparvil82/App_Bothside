@@ -213,6 +213,8 @@ export const ja = {
     first_disc_modal_btn_primary: "場所を作成",
     first_disc_modal_btn_secondary: "後で",
     search_filter_no_location: "場所なし",
+    quick_filter_all: "すべて",
+    quick_filter_unlocated: "未配置",
     search_current_location: "保管場所: {0}",
     search_alert_no_results_title: "結果なし",
     search_alert_no_editions_message: "\"{0}\" (\"{1}\") の版が見つかりませんでした。より具体的な検索を試してください。",

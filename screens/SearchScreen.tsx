@@ -1061,6 +1061,89 @@ export const SearchScreen: React.FC = () => {
     return Math.round(percentage);
   };
 
+  const getQuickLocationChips = () => {
+    // 1. All
+    const chips = [{
+      key: 'all',
+      label: t('quick_filter_all') || 'All',
+      value: '',
+    }];
+
+    // 2. Unlocated
+    const unlocatedCount = collection.filter(item => !item.shelf_name).length;
+    if (unlocatedCount > 0) {
+      chips.push({
+        key: 'unlocated',
+        label: `${t('quick_filter_unlocated') || 'Unlocated'} ${unlocatedCount}`,
+        value: t('search_filter_no_location'),
+      });
+    }
+
+    // 3. Shelves
+    const shelfCounts: Record<string, number> = {};
+    collection.forEach(item => {
+      if (item.shelf_name) {
+        shelfCounts[item.shelf_name] = (shelfCounts[item.shelf_name] || 0) + 1;
+      }
+    });
+
+    const activeShelfNames = Object.keys(shelfCounts).sort((a, b) => a.localeCompare(b));
+    activeShelfNames.forEach(name => {
+      chips.push({
+        key: `shelf:${name}`,
+        label: `${name} ${shelfCounts[name]}`,
+        value: name,
+      });
+    });
+
+    return chips;
+  };
+
+  const renderQuickLocationFilters = () => {
+    const hasLocations = collection.some(item => item.shelf_name);
+    if (!hasLocations || collection.length === 0) return null;
+
+    const chips = getQuickLocationChips();
+
+    return (
+      <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.quickFiltersScrollContent}
+        >
+          {chips.map((chip) => {
+            const isActive = filterByLocation === chip.value;
+            return (
+              <TouchableOpacity
+                key={chip.key}
+                activeOpacity={0.8}
+                style={[
+                  styles.quickFilterChip,
+                  isActive
+                    ? [styles.quickFilterChipActive, { backgroundColor: primaryColor }]
+                    : [styles.quickFilterChipInactive, { borderColor: mode === 'dark' ? colors.border : '#EAEAEA', backgroundColor: colors.card }]
+                ]}
+                onPress={() => setFilterByLocation(chip.value)}
+              >
+                <Text
+                  style={[
+                    styles.quickFilterChipText,
+                    isActive
+                      ? styles.quickFilterChipTextActive
+                      : [styles.quickFilterChipTextInactive, { color: mode === 'dark' ? '#A1A1AA' : '#6B7280' }]
+                  ]}
+                >
+                  {chip.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </View>
+    );
+  };
+
   const searchAlbumEditions = async (albumTitle: string, artist: string) => {
     setEditionsLoading(true);
     try {
@@ -1303,9 +1386,9 @@ export const SearchScreen: React.FC = () => {
   // ========== FIN FUNCIONES DE CÁMARA ==========
 
   const renderCollectionItem = ({ item }: { item: any }) => (
-    <View style={[styles.collectionItemContainer, { backgroundColor: colors.card }]}>
+    <View style={[styles.collectionItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
       <TouchableOpacity
-        style={[styles.collectionItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
+        style={[styles.collectionItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         onLongPress={() => handleLongPress(item)}
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
         activeOpacity={0.7}
@@ -1403,10 +1486,10 @@ export const SearchScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: collection.length === 0 ? '#FFF' : colors.background }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
 
       {/* Toolbar con botones de búsqueda, vista y filtros */}
-      <View style={[styles.toolbarContainer, { backgroundColor: collection.length === 0 ? '#FFF' : colors.card, borderBottomColor: collection.length === 0 ? '#EAEAEA' : colors.border }]}>
+      <View style={[styles.toolbarContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
         {/* Contador de discos y porcentaje ubicados a la izquierda */}
         <Text style={[styles.collectionStats, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
           <Text style={[styles.collectionCount, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
@@ -1675,6 +1758,9 @@ export const SearchScreen: React.FC = () => {
 
         </View>
       )}
+
+      {/* Filtros rápidos por ubicación física */}
+      {renderQuickLocationFilters()}
 
       {/* Lista combinada */}
       {user ? (
@@ -3105,5 +3191,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     opacity: 0.6,
+  },
+  quickFiltersContainer: {
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+  },
+  quickFiltersScrollContent: {
+    paddingHorizontal: 15,
+    alignItems: 'center',
+  },
+  quickFilterChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginRight: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickFilterChipActive: {
+    borderColor: 'transparent',
+  },
+  quickFilterChipInactive: {
+    // border and background are handled dynamically
+  },
+  quickFilterChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  quickFilterChipTextActive: {
+    color: 'white',
+  },
+  quickFilterChipTextInactive: {
+    // color handled dynamically
   },
 }); 

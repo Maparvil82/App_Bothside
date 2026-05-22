@@ -240,6 +240,8 @@ export const fr = {
     first_disc_modal_btn_primary: "Créer un emplacement",
     first_disc_modal_btn_secondary: "Plus tard",
     search_filter_no_location: "Aucun emplacement",
+    quick_filter_all: "Tous",
+    quick_filter_unlocated: "Non localisés",
     search_current_location: "Situé à : {0}",
     search_alert_no_results_title: "Aucun résultat",
     search_alert_no_editions_message: "Aucune édition trouvée pour \"{0}\" par \"{1}\". Essayez une recherche plus spécifique.",
