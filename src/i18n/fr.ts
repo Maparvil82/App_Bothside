@@ -247,6 +247,7 @@ export const fr = {
     search_filter_no_location: "Aucun emplacement",
     quick_filter_all: "Tous",
     quick_filter_unlocated: "Non localisés",
+    tab_locations: "Emplacements",
     quick_filter_create_location: "+ Créer un emplacement",
     search_current_location: "Situé à : {0}",
     search_alert_no_results_title: "Aucun résultat",

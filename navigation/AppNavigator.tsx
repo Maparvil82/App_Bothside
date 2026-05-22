@@ -9,6 +9,7 @@ import { useColorScheme, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import * as Linking from 'expo-linking';
+import { useTranslation } from '../src/i18n/useTranslation';
 
 import { SearchScreen } from '../screens/SearchScreen';
 import { ProfileScreen } from '../screens/ProfileScreen';
@@ -352,6 +353,49 @@ const AddDiscStack = () => {
   );
 };
 
+const ShelvesStack = () => {
+  const { colors } = useTheme();
+  const { t } = useTranslation();
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerBackTitle: '',
+        headerTintColor: colors.text,
+        headerShown: true,
+        headerStyle: { backgroundColor: colors.card },
+        headerTitleStyle: { color: colors.text },
+      }}
+    >
+      <Stack.Screen
+        name="ShelvesList"
+        component={ShelvesListScreen}
+        options={({ navigation }) => ({
+          title: t('tab_locations') || 'Locations',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
+          headerRight: () => <HeaderAvatar />,
+        })}
+      />
+      <Stack.Screen
+        name="ShelfEdit"
+        component={ShelfEditScreen}
+        options={{ title: 'Estantería' }}
+      />
+      <Stack.Screen
+        name="ShelfView"
+        component={ShelfViewScreen}
+        options={({ route }: any) => ({
+          title: route.params?.shelfName || 'Estantería'
+        })}
+      />
+      {ProfileScreensGroup()}
+    </Stack.Navigator>
+  );
+};
+
 const TabNavigator = () => {
   const { subscriptionStatus } = useSubscription();
   const { user } = useAuth();
@@ -426,6 +470,8 @@ const TabNavigator = () => {
             iconName = focused ? 'disc' : 'disc-outline';
           } else if (route.name === 'DashboardTab') {
             iconName = focused ? 'stats-chart' : 'stats-chart-outline';
+          } else if (route.name === 'ShelvesTab') {
+            iconName = focused ? 'grid' : 'grid-outline';
           } else if (route.name === 'AddDiscTab') {
             iconName = focused ? 'add' : 'add';
           } else if (route.name === 'MaletasTab') {
@@ -450,15 +496,18 @@ const TabNavigator = () => {
       <Tab.Screen name="SearchTab" component={SearchStack} options={{ title: '' }} />
       <Tab.Screen name="DashboardTab" component={DashboardStack} options={{ title: '' }} />
       <Tab.Screen
-        name="AddDiscTab"
-        component={AddDiscStack}
-        options={{
-          title: '',
-          tabBarStyle: { display: 'none' }
+        name="ShelvesTab"
+        component={ShelvesStack}
+        options={({ route }) => {
+          const routeName = getFocusedRouteNameFromRoute(route) ?? 'ShelvesList';
+          if (routeName === 'ShelfEdit' || routeName === 'ShelfView') {
+            return {
+              title: '',
+              tabBarStyle: { display: 'none' }
+            };
+          }
+          return { title: '' };
         }}
-        listeners={({ navigation }) => ({
-          tabPress: (e) => handleAddDiscTabPress(navigation, e),
-        })}
       />
       <Tab.Screen
         name="MaletasTab"
@@ -475,6 +524,15 @@ const TabNavigator = () => {
         }}
       />
       <Tab.Screen name="GemsTab" component={GemsStack} options={{ title: '' }} />
+      <Tab.Screen
+        name="AddDiscTab"
+        component={AddDiscStack}
+        options={{
+          title: '',
+          tabBarButton: () => null,
+          tabBarStyle: { display: 'none' }
+        }}
+      />
     </Tab.Navigator>
   );
 };

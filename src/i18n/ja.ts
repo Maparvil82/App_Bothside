@@ -215,6 +215,7 @@ export const ja = {
     search_filter_no_location: "場所なし",
     quick_filter_all: "すべて",
     quick_filter_unlocated: "未配置",
+    tab_locations: "場所",
     quick_filter_create_location: "+ 場所を作成",
     search_current_location: "保管場所: {0}",
     search_alert_no_results_title: "結果なし",

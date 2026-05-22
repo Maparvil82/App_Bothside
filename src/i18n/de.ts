@@ -560,6 +560,7 @@ export const de = {
     search_filter_no_location: "Kein Standort",
     quick_filter_all: "Alle",
     quick_filter_unlocated: "Nicht zugewiesen",
+    tab_locations: "Standorte",
     quick_filter_create_location: "+ Standort erstellen",
     search_alert_no_results_title: "Keine Ergebnisse",
     search_current_location: "Befindet sich in: {0}",

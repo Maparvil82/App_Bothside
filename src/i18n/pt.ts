@@ -185,6 +185,7 @@ export const pt = {
     search_filter_no_location: "Sem localização",
     quick_filter_all: "Todos",
     quick_filter_unlocated: "Sem localização",
+    tab_locations: "Localizações",
     quick_filter_create_location: "+ Criar localização",
     search_current_location: "Localizado em: {0}",
     search_alert_no_results_title: "Sem resultados",

@@ -180,6 +180,7 @@ export const en = {
     search_filter_no_location: "No location",
     quick_filter_all: "All",
     quick_filter_unlocated: "Unlocated",
+    tab_locations: "Locations",
     quick_filter_create_location: "+ Create location",
     search_alert_no_results_title: "No results",
     search_current_location: "Located in: {0}",

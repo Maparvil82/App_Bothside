@@ -215,6 +215,7 @@ export const it = {
     search_filter_no_location: "Nessuna posizione",
     quick_filter_all: "Tutti",
     quick_filter_unlocated: "Non posizionati",
+    tab_locations: "Posizioni",
     quick_filter_create_location: "+ Crea posizione",
     search_current_location: "Situato a: {0}",
     search_alert_no_results_title: "Nessun risultato",

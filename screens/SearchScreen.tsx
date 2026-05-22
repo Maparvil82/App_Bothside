@@ -39,6 +39,8 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { AnalyticsService } from '../services/analytics';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -50,6 +52,8 @@ const normalize = (str: string) =>
     ?.replace(/[^a-z0-9]/g, "") // quitar símbolos
     ?.trim();
 
+const FREE_ALBUM_LIMIT = 5;
+
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
   const { addGem, removeGem, isGem, updateGemStatus } = useGems();
@@ -57,6 +61,7 @@ export const SearchScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { subscriptionStatus } = useSubscription();
 
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
@@ -99,6 +104,49 @@ export const SearchScreen: React.FC = () => {
   const [editions, setEditions] = useState<any[]>([]);
   const [editionsLoading, setEditionsLoading] = useState(false);
   const [selectedAlbumForEdit, setSelectedAlbumForEdit] = useState<any>(null);
+
+  const [isFABCheckingLimit, setIsFABCheckingLimit] = useState(false);
+
+  const handleAddRecord = async () => {
+    if (isFABCheckingLimit) return;
+    const isPro = subscriptionStatus === 'active';
+    if (isPro) {
+      navigation.navigate('AddDiscTab');
+      return;
+    }
+    try {
+      setIsFABCheckingLimit(true);
+      if (!user) {
+        navigation.navigate('AddDiscTab');
+        return;
+      }
+      const count = await UserCollectionService.getUserCollectionCount(user.id);
+      AnalyticsService.track('add_album_pressed', {
+        is_pro: isPro,
+        albums_count: count,
+        free_album_limit: FREE_ALBUM_LIMIT,
+      });
+      if (count >= FREE_ALBUM_LIMIT) {
+        AnalyticsService.track('add_album_blocked_free_limit', {
+          albums_count: count,
+          free_album_limit: FREE_ALBUM_LIMIT,
+          source: 'add_album_limit',
+        });
+        navigation.navigate('Paywall');
+        return;
+      }
+      AnalyticsService.track('add_album_allowed_free', {
+        albums_count: count,
+        free_album_limit: FREE_ALBUM_LIMIT,
+      });
+      navigation.navigate('AddDiscTab');
+    } catch (error) {
+      console.error('[AddDiscGate] Error checking album limit:', error);
+      Alert.alert('Error', 'No se pudo verificar tu colección. Inténtalo de nuevo.');
+    } finally {
+      setIsFABCheckingLimit(false);
+    }
+  };
 
   // Estados para audio
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
@@ -1173,31 +1221,7 @@ export const SearchScreen: React.FC = () => {
     const hasLocations = collection.some(item => item.shelf_name);
 
     if (!hasLocations) {
-      return (
-        <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }]}>
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[
-              styles.quickFilterActionChip,
-              {
-                borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
-                backgroundColor: 'transparent',
-                marginRight: 15,
-              }
-            ]}
-            onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
-          >
-            <Text
-              style={[
-                styles.quickFilterActionChipText,
-                { color: mode === 'dark' ? '#E5E7EB' : '#4B5563' }
-              ]}
-            >
-              {t('quick_filter_create_location') || '+ Create location'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
+      return null;
     }
 
     const chips = getQuickLocationChips();
@@ -1207,7 +1231,7 @@ export const SearchScreen: React.FC = () => {
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingLeft: 15, paddingRight: 8, alignItems: 'center' }}
+          contentContainerStyle={{ paddingLeft: 15, paddingRight: 15, alignItems: 'center' }}
           style={{ flex: 1 }}
         >
           {chips.map((chip) => {
@@ -1238,29 +1262,6 @@ export const SearchScreen: React.FC = () => {
             );
           })}
         </ScrollView>
-
-        {/* Botón de acción fijo en la derecha */}
-        <TouchableOpacity
-          activeOpacity={0.8}
-          style={[
-            styles.quickFilterActionChip,
-            {
-              borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
-              backgroundColor: 'transparent',
-              marginRight: 15,
-            }
-          ]}
-          onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
-        >
-          <Text
-            style={[
-              styles.quickFilterActionChipText,
-              { color: mode === 'dark' ? '#E5E7EB' : '#4B5563' }
-            ]}
-          >
-            {t('quick_filter_create_location') || '+ Create location'}
-          </Text>
-        </TouchableOpacity>
       </View>
     );
   };
@@ -2340,12 +2341,35 @@ export const SearchScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      {/* Floating Add Record Button (FAB) */}
+      <TouchableOpacity
+        style={[styles.fabButton, { backgroundColor: primaryColor }]}
+        onPress={handleAddRecord}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="add" size={28} color="white" />
+      </TouchableOpacity>
     </SafeAreaView>
   );
 };
 
 
 const styles = StyleSheet.create({
+  fabButton: {
+    position: 'absolute',
+    bottom: 95,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4.65,
+    elevation: 8,
+  },
   bottomSheetOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
