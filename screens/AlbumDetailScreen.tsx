@@ -266,6 +266,56 @@ export default function AlbumDetailScreen() {
     }
   };
 
+  const confirmRemoveLocation = () => {
+    if (!album) return;
+    Alert.alert(
+      t('search_confirm_remove_location_title'),
+      t('search_confirm_remove_location_message'),
+      [
+        { text: t('search_confirm_remove_location_cancel'), style: 'cancel' },
+        {
+          text: t('search_confirm_remove_location_confirm'),
+          style: 'destructive',
+          onPress: () => handleRemoveLocation()
+        }
+      ]
+    );
+  };
+
+  const handleRemoveLocation = async () => {
+    if (!album) return;
+    try {
+      const { error } = await supabase
+        .from('user_collection')
+        .update({
+          shelf_id: null,
+          location_row: null,
+          location_column: null
+        })
+        .eq('id', album.id);
+
+      if (error) throw error;
+
+      // Update local state immediately for instant feedback
+      setAlbum(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          shelf_id: undefined,
+          shelf_name: undefined,
+          location_row: undefined,
+          location_column: undefined
+        };
+      });
+
+      // Reload album details to completely sync all queries
+      loadAlbumDetail();
+    } catch (error: any) {
+      console.error('Error removing location:', error);
+      Alert.alert(t('common_error'), t('search_error_loading_locations'));
+    }
+  };
+
   // Update header with delete button
   useEffect(() => {
     navigation.setOptions({
@@ -1626,6 +1676,15 @@ export default function AlbumDetailScreen() {
                   highlightRow={album.location_row}
                   highlightColumn={album.location_column}
                 />
+                <TouchableOpacity
+                  style={styles.removeLocationButton}
+                  onPress={confirmRemoveLocation}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  <Text style={styles.removeLocationButtonText}>
+                    {t('search_action_remove_location')}
+                  </Text>
+                </TouchableOpacity>
                 <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_change_location')}</Text>
               </>
             ) : (
@@ -3760,6 +3819,26 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#374151',
     marginBottom: 8,
+  },
+  removeLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ef444433',
+    backgroundColor: 'transparent',
+  },
+  removeLocationButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#ef4444',
+    marginLeft: 6,
+    letterSpacing: 0.2,
   },
   errorButton: {
     marginTop: 20,

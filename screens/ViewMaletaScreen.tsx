@@ -38,6 +38,7 @@ interface ViewListScreenProps {
 const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, navigation: any, t: any, isCollaborative: boolean }) => {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const { colors } = useTheme();
+  const { mode } = useThemeMode();
 
   React.useEffect(() => {
     Animated.timing(fadeAnim, {
@@ -48,9 +49,9 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
   }, [fadeAnim]);
 
   return (
-    <Animated.View style={[styles.albumItemContainer, { opacity: fadeAnim }]}>
+    <Animated.View style={[styles.albumItemContainer, { opacity: fadeAnim, backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
       <TouchableOpacity
-        style={[styles.albumItem, { backgroundColor: colors.card }]}
+        style={[styles.albumItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.album_id })}
         activeOpacity={0.7}
       >
@@ -428,8 +429,8 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
+      <View style={[styles.header, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
         <View style={styles.headerInfo}>
 
           <View style={styles.headerTitleRow}>
@@ -475,7 +476,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
       </View>
 
       {list.is_collaborative && (
-        <View style={[styles.collaborationSection, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+        <View style={[styles.collaborationSection, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
           <View style={styles.collaborationHeader}>
 
 
@@ -525,7 +526,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         ListHeaderComponent={
           <View>
             {list.description && (
-              <View style={styles.descriptionContainer}>
+              <View style={[styles.descriptionContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
                 <Text style={[styles.descriptionText, { color: colors.text }]}>{list.description}</Text>
               </View>
             )}
@@ -541,7 +542,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
 
       {/* Fixed Invite Button Footer */}
       {list.is_collaborative && list.user_id === user?.id && (
-        <View style={[styles.footerContainer, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
+        <View style={[styles.footerContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderTopColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
           <TouchableOpacity
             style={[styles.inviteButton, { backgroundColor: primaryColor }]}
             onPress={() => navigation.navigate('InviteCollaborators', { maletaId })}

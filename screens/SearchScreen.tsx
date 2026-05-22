@@ -533,17 +533,62 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
+  const confirmRemoveLocation = (item: any) => {
+    Alert.alert(
+      t('search_confirm_remove_location_title'),
+      t('search_confirm_remove_location_message'),
+      [
+        { text: t('search_confirm_remove_location_cancel'), style: 'cancel' },
+        {
+          text: t('search_confirm_remove_location_confirm'),
+          style: 'destructive',
+          onPress: () => handleRemoveLocation(item)
+        }
+      ]
+    );
+  };
+
+  const handleRemoveLocation = async (item: any) => {
+    try {
+      const { error } = await supabase
+        .from('user_collection')
+        .update({
+          shelf_id: null,
+          location_row: null,
+          location_column: null
+        })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      // Recargar la colección para actualizar filtros e interfaz
+      await loadCollection();
+    } catch (error: any) {
+      console.error('Error removing location:', error);
+      Alert.alert(t('common_error'), t('search_error_loading_locations'));
+    }
+  };
+
   const handleLongPress = (item: any) => {
     // Determinar el texto de la opción de ubicación
     const locationOptionText = item.shelf_name
       ? t('search_action_change_location')
       : t('search_action_assign_location');
 
+    const options: string[] = [t('common_cancel'), locationOptionText];
+    const hasLocation = !!item.shelf_name;
+    
+    if (hasLocation) {
+      options.push(t('search_action_remove_location'));
+    }
+    options.push(t('common_delete'));
+
     if (Platform.OS === 'ios') {
+      const destructiveIndex = options.length - 1;
       ActionSheetIOS.showActionSheetWithOptions(
         {
-          options: [t('common_cancel'), locationOptionText, t('common_delete')],
-          destructiveButtonIndex: 2,
+          options: options,
+          destructiveButtonIndex: destructiveIndex,
           cancelButtonIndex: 0,
           title: item.albums?.title || t('common_album'),
           message: t('search_action_sheet_title'),
@@ -554,28 +599,45 @@ export const SearchScreen: React.FC = () => {
             setSelectedAlbumForLocation(item);
             loadPhysicalShelves();
             setShowLocationModal(true);
-          } else if (buttonIndex === 2) {
+          } else if (hasLocation && buttonIndex === 2) {
+            // Quitar ubicación
+            confirmRemoveLocation(item);
+          } else if (buttonIndex === destructiveIndex) {
             // Eliminar
             confirmDeleteRecord(item);
           }
         }
       );
     } else {
+      const alertButtons: any[] = [
+        { text: t('common_cancel'), style: 'cancel' },
+        {
+          text: locationOptionText,
+          onPress: () => {
+            setSelectedAlbumForLocation(item);
+            loadPhysicalShelves();
+            setShowLocationModal(true);
+          }
+        }
+      ];
+      
+      if (hasLocation) {
+        alertButtons.push({
+          text: t('search_action_remove_location'),
+          onPress: () => confirmRemoveLocation(item)
+        });
+      }
+      
+      alertButtons.push({
+        text: t('common_delete'),
+        style: 'destructive',
+        onPress: () => confirmDeleteRecord(item)
+      });
+
       Alert.alert(
         item.albums?.title || t('common_album'),
         t('search_action_sheet_title'),
-        [
-          { text: t('common_cancel'), style: 'cancel' },
-          {
-            text: locationOptionText,
-            onPress: () => {
-              setSelectedAlbumForLocation(item);
-              loadPhysicalShelves();
-              setShowLocationModal(true);
-            }
-          },
-          { text: t('common_delete'), style: 'destructive', onPress: () => confirmDeleteRecord(item) },
-        ]
+        alertButtons
       );
     }
   };
@@ -664,96 +726,102 @@ export const SearchScreen: React.FC = () => {
       // Usar el contexto para determinar si es gem
       const isItemGem = isGem(item.albums?.id);
       const gemAction = isItemGem ? t('search_action_remove_gem') : t('search_action_add_gem');
+      const hasLocation = !!item.shelf_name;
 
       console.log('🔍 handleSwipeOptions: Item gem status:', {
         itemId: item.id,
         albumId: item.albums?.id,
         albumTitle: item.albums?.title,
         isGem: isItemGem,
-        localIsGem: item.is_gem
+        localIsGem: item.is_gem,
+        hasLocation
       });
 
-      // Preparar opciones dinámicas
-      const options = [t('common_cancel'), t('search_action_assign_location'), t('search_action_add_to_shelf'), gemAction, t('search_action_change_version')];
+      // Preparar acciones dinámicas
+      const actions: { text: string; onPress: () => void }[] = [];
 
-      // Añadir opciones de audio
+      // 1. Ubicación (Asignar / Cambiar)
+      const locationText = hasLocation ? t('search_action_change_location') : t('search_action_assign_location');
+      actions.push({
+        text: locationText,
+        onPress: () => {
+          setSelectedAlbumForLocation(item);
+          loadPhysicalShelves();
+          setShowLocationModal(true);
+        }
+      });
+
+      // 2. Si tiene ubicación, opción de Quitar ubicación
+      if (hasLocation) {
+        actions.push({
+          text: t('search_action_remove_location'),
+          onPress: () => confirmRemoveLocation(item)
+        });
+      }
+
+      // 3. Añadir a maleta
+      actions.push({
+        text: t('search_action_add_to_shelf'),
+        onPress: () => {
+          setSelectedAlbum(item);
+          loadUserMaletas();
+          setShowAddToShelfModal(true);
+        }
+      });
+
+      // 4. Gem action
+      actions.push({
+        text: gemAction,
+        onPress: () => handleToggleGem(item)
+      });
+
+      // 5. Cambiar versión
+      actions.push({
+        text: t('search_action_change_version'),
+        onPress: () => handleEditAlbum(item)
+      });
+
+      // 6. Opciones de audio
       if (item.audio_note) {
-        options.push(t('search_action_play_audio'), t('search_action_delete_audio'));
+        actions.push({
+          text: t('search_action_play_audio'),
+          onPress: () => handlePlayAudio(item)
+        });
+        actions.push({
+          text: t('search_action_delete_audio'),
+          onPress: () => handleDeleteAudioNote(item)
+        });
       } else {
-        options.push(t('search_action_record_audio'));
+        actions.push({
+          text: t('search_action_record_audio'),
+          onPress: () => handleRecordAudio(item)
+        });
       }
 
       if (Platform.OS === 'ios') {
+        const iosOptions = [t('common_cancel'), ...actions.map(a => a.text)];
         ActionSheetIOS.showActionSheetWithOptions(
           {
-            options: options,
+            options: iosOptions,
             cancelButtonIndex: 0,
-
             title: item.albums?.title || t('common_album'),
             message: t('search_action_sheet_title'),
           },
           (buttonIndex) => {
-            switch (buttonIndex) {
-              case 1: // Asignar Ubicación
-                setSelectedAlbumForLocation(item);
-                loadPhysicalShelves();
-                setShowLocationModal(true);
-                break;
-              case 2: // Añadir a Maleta
-                setSelectedAlbum(item);
-                loadUserMaletas();
-                setShowAddToShelfModal(true);
-                break;
-              case 3: // Gem action
-                handleToggleGem(item);
-                break;
-              case 4: // Cambiar versión
-                handleEditAlbum(item);
-                break;
-              case 5: // Audio options
-                if (item.audio_note) {
-                  handlePlayAudio(item);
-                } else {
-                  handleRecordAudio(item);
-                }
-                break;
-              case 6: // Delete audio (if exists)
-                if (item.audio_note) {
-                  handleDeleteAudioNote(item);
-                }
-                break;
+            if (buttonIndex > 0 && buttonIndex <= actions.length) {
+              actions[buttonIndex - 1].onPress();
             }
           }
         );
       } else {
+        const androidButtons = [
+          { text: t('common_cancel'), style: 'cancel' as const },
+          ...actions.map(a => ({ text: a.text, onPress: a.onPress }))
+        ];
         Alert.alert(
           item.albums?.title || t('common_album'),
           t('search_action_sheet_title'),
-          [
-            { text: t('common_cancel'), style: 'cancel' },
-            {
-              text: t('search_action_assign_location'), onPress: () => {
-                setSelectedAlbumForLocation(item);
-                loadPhysicalShelves();
-                setShowLocationModal(true);
-              }
-            },
-            {
-              text: t('search_action_add_to_shelf'), onPress: () => {
-                setSelectedAlbum(item);
-                loadUserMaletas();
-                setShowAddToShelfModal(true);
-              }
-            },
-            { text: gemAction, onPress: () => handleToggleGem(item) },
-            { text: t('search_action_change_version'), onPress: () => handleEditAlbum(item) },
-            ...(item.audio_note ? [
-              { text: t('search_action_play_audio'), onPress: () => handlePlayAudio(item) },
-              { text: t('search_action_delete_audio'), onPress: () => handleDeleteAudioNote(item) }
-            ] : [
-              { text: t('search_action_record_audio'), onPress: () => handleRecordAudio(item) }
-            ])
-          ]
+          androidButtons
         );
       }
     }

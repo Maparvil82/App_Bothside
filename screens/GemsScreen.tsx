@@ -86,9 +86,9 @@ export default function GemsScreen() {
   }
 
   const renderGemItem = ({ item }: { item: any }) => (
-    <View style={[styles.gemItemContainer, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.gemItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
       <TouchableOpacity
-        style={styles.gemItem}
+        style={[styles.gemItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         activeOpacity={0.7}
         onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: item.id })}
       >
@@ -137,8 +137,8 @@ export default function GemsScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
+      <View style={[styles.header, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
         <Text style={[styles.title, { color: colors.text }]}>{t('gems_header')}</Text>
         <Text style={[styles.subtitle, { color: colors.text }]}>
           {gems.length} {gems.length === 1 ? t('gems_count_singular') : t('gems_count_plural')}

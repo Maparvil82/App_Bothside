@@ -245,9 +245,9 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   );
 
   const renderListItem = ({ item }: { item: UserMaleta }) => (
-    <View style={styles.listItemContainer}>
+    <View style={[styles.listItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
       <TouchableOpacity
-        style={styles.listItem}
+        style={[styles.listItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         onPress={() => handleViewList(item)}
         activeOpacity={0.7}
       >
@@ -340,15 +340,15 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
   if (!user) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
         <Text style={[styles.errorText, { color: colors.text }]}>{t('maletas_login_required')}</Text>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.header, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
+    <View style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
+      <View style={[styles.header, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
         <View style={styles.headerLeft}>
           <Text style={[styles.headerTitle, { color: colors.text }]}>{t('maletas_title')}</Text>
           <Text style={[styles.listCount, { color: colors.text }]}>{t('maletas_count_text').replace('{0}', filteredLists.length.toString())}</Text>
@@ -376,8 +376,8 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
       {/* Filtros Dropdown */}
       {showFilters && (
-        <View style={[styles.filterDropdownContent, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
-          <View style={[styles.filterSection, { borderBottomColor: colors.border }]}>
+        <View style={[styles.filterDropdownContent, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
+          <View style={[styles.filterSection, { borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
             <Text style={[styles.filterSectionTitle, { color: colors.text }]}>{t('maletas_filter_type')}</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
               <TouchableOpacity
@@ -409,7 +409,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
 
           {/* Clear Filters Button */}
           {filterType !== 'all' && (
-            <View style={[styles.clearFiltersContainer, { borderTopColor: colors.border }]}>
+            <View style={[styles.clearFiltersContainer, { borderTopColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
               <TouchableOpacity onPress={() => setFilterType('all')} style={styles.clearFiltersButton}>
                 <Ionicons name="close-circle-outline" size={16} color="#888" style={{ marginRight: 4 }} />
                 <Text style={styles.clearFiltersText}>{t('search_action_clear_filters')}</Text>
