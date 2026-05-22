@@ -267,6 +267,7 @@ export const it = {
     search_modal_empty_shelves_cta: "Crea scaffale",
     search_modal_record_singular: "{0} disco",
     search_modal_record_plural: "{0} dischi",
+    shelf_slot_empty: "Vuoto",
     search_empty_locations: "Nessuna posizione fisica",
     search_empty_locations_subtitle: "Crea posizioni fisiche per organizzare la tua collezione",
     search_action_create_location: "Crea una posizione fisica",

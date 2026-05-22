@@ -60,6 +60,7 @@ export default function SelectCellScreen() {
       <ShelfGridSelectable
         rows={shelf.shelf_rows}
         columns={shelf.shelf_columns}
+        shelfId={shelf.id}
         onSelectCell={handleSelectLocation}
         selectedRow={current_row ? current_row - 1 : undefined} // Convertir a 0-indexed
         selectedColumn={current_column ? current_column - 1 : undefined} // Convertir a 0-indexed

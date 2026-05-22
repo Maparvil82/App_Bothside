@@ -294,6 +294,7 @@ export const fr = {
     search_modal_empty_shelves_cta: "Créer une étagère",
     search_modal_record_singular: "{0} disque",
     search_modal_record_plural: "{0} disques",
+    shelf_slot_empty: "Vide",
     search_empty_locations: "Aucun emplacement physique",
     search_empty_locations_subtitle: "Créez des emplacements physiques pour organiser votre collection",
     search_action_create_location: "Créer un emplacement physique",

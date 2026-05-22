@@ -267,6 +267,7 @@ export const ja = {
     search_modal_empty_shelves_cta: "棚を作成",
     search_modal_record_singular: "{0} 枚のレコード",
     search_modal_record_plural: "{0} 枚のレコード",
+    shelf_slot_empty: "空き",
     search_empty_locations: "物理的な場所がありません",
     search_empty_locations_subtitle: "コレクションを整理するために物理的な場所を作成してください",
     search_action_create_location: "物理的な場所を作成",

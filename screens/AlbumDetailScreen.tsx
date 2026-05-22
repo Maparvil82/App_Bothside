@@ -1622,6 +1622,7 @@ export default function AlbumDetailScreen() {
                 <ShelfGrid
                   rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
                   columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
+                  shelfId={album.shelf_id || undefined}
                   highlightRow={album.location_row}
                   highlightColumn={album.location_column}
                 />

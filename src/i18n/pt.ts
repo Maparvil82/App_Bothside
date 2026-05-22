@@ -233,6 +233,7 @@ export const pt = {
     search_modal_empty_shelves_cta: "Criar estante",
     search_modal_record_singular: "{0} disco",
     search_modal_record_plural: "{0} discos",
+    shelf_slot_empty: "Vazio",
     search_empty_locations: "Sem localizações físicas",
     search_empty_locations_subtitle: "Crie localizações físicas para organizar sua coleção",
     search_action_create_location: "Criar localização física",

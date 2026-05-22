@@ -87,7 +87,7 @@ export default function ShelfViewScreen() {
     <View style={styles.container}>
 
       <View style={styles.gridWrapper}>
-        <ShelfGrid rows={shelf.shelf_rows} columns={shelf.shelf_columns} />
+        <ShelfGrid rows={shelf.shelf_rows} columns={shelf.shelf_columns} shelfId={shelf.id} />
       </View>
     </View>
   );

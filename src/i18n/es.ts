@@ -227,6 +227,7 @@ export const es = {
     search_modal_empty_shelves_cta: "Crear estantería",
     search_modal_record_singular: "{0} disco",
     search_modal_record_plural: "{0} discos",
+    shelf_slot_empty: "Vacío",
     search_empty_locations: "Sin ubicaciones físicas",
     search_empty_locations_subtitle: "Crea ubicaciones físicas para organizar tu colección",
     search_action_create_location: "Crear ubicación física",

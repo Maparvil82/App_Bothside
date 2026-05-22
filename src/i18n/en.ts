@@ -227,6 +227,7 @@ export const en = {
     search_modal_empty_shelves_cta: "Create Shelf",
     search_modal_record_singular: "{0} record",
     search_modal_record_plural: "{0} records",
+    shelf_slot_empty: "Empty",
     search_empty_locations: "No physical locations",
     search_empty_locations_subtitle: "Create physical locations to organize your collection",
     search_action_create_location: "Create Physical Location",

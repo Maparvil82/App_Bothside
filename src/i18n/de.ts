@@ -607,6 +607,7 @@ export const de = {
     search_modal_empty_shelves_cta: "Regal erstellen",
     search_modal_record_singular: "{0} Schallplatte",
     search_modal_record_plural: "{0} Schallplatten",
+    shelf_slot_empty: "Leer",
     search_empty_locations: "Keine physischen Standorte",
     search_empty_locations_subtitle: "Erstellen Sie physische Standorte, um Ihre Sammlung zu organisieren",
     search_action_create_location: "Physischen Standort erstellen",
