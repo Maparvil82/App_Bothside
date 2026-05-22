@@ -23,6 +23,7 @@ import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const { width } = Dimensions.get('window');
 const MALETA_SIZE = width * 0.25;
@@ -34,6 +35,7 @@ interface ListsScreenProps {
 
 const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const { lists, loading, refreshLists, refreshAfterChange, addListLocally, removeListLocally } = useHybridMaletas();
   const { colors } = useTheme();
   const { t } = useTranslation();
@@ -314,15 +316,24 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
   );
 
   const renderEmptyState = () => (
-    <View style={styles.emptyState}>
-      <Ionicons name="list-outline" size={64} color="#CCC" />
-      <Text style={styles.emptyStateTitle}>{t('maletas_empty_title')}</Text>
-      <Text style={styles.emptyStateSubtitle}>
-        {t('maletas_empty_subtitle')}
+    <View style={[styles.emptyState, { backgroundColor: '#FFFFFF' }]}>
+      <Image source={require('../assets/maleta.png')} style={styles.emptyStateImage} />
+      <Text style={[styles.emptyStateTitle, { color: '#1A2530' }]}>Organiza tus maletas</Text>
+      <Text style={[styles.emptyStateSubtitle, { color: '#6B7280' }]}>
+        Crea maletas para preparar selecciones de discos y tenerlas siempre a mano.
       </Text>
-      <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={handleOpenCreateModal}>
+      <TouchableOpacity
+        style={[
+          styles.createButtonFixed,
+          {
+            bottom: Math.max(insets.bottom, 20),
+            backgroundColor: '#000',
+          }
+        ]}
+        onPress={handleOpenCreateModal}
+      >
         <Ionicons name="add" size={20} color="white" />
-        <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
+        <Text style={styles.createButtonText}>Crear maleta</Text>
       </TouchableOpacity>
     </View>
   );
@@ -415,17 +426,7 @@ const ListsScreen: React.FC<ListsScreenProps> = ({ navigation, route }) => {
           <Text style={[styles.loadingText, { color: colors.text }]}>{t('maletas_loading')}</Text>
         </View>
       ) : filteredLists.length === 0 ? (
-        <View style={styles.emptyState}>
-          <Ionicons name="list-outline" size={64} color={colors.text} />
-          <Text style={styles.emptyStateTitle}>{t('maletas_empty_title')}</Text>
-          <Text style={styles.emptyStateSubtitle}>
-            {t('maletas_empty_subtitle')}
-          </Text>
-          <TouchableOpacity style={[styles.createButton, { backgroundColor: primaryColor }]} onPress={handleOpenCreateModal}>
-            <Ionicons name="bag-remove-outline" size={20} color="white" />
-            <Text style={styles.createButtonText}>{t('maletas_action_create')}</Text>
-          </TouchableOpacity>
-        </View>
+        renderEmptyState()
       ) : (
         <SwipeListView
           data={filteredLists}
@@ -711,18 +712,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 60,
   },
+  emptyStateImage: {
+    width: '100%',
+    maxWidth: 400,
+    height: 180,
+    resizeMode: 'contain',
+    marginBottom: 4,
+    opacity: 0.8,
+    alignSelf: 'center',
+  },
   emptyStateTitle: {
-    fontSize: 20,
-    fontWeight: '600',
+    fontSize: 18,
+    fontWeight: '700',
     color: '#666',
-    marginTop: 16,
     marginBottom: 8,
+    opacity: 0.8,
   },
   emptyStateSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#999',
     textAlign: 'center',
-    marginBottom: 24,
+    marginBottom: 36,
+    width: '75%',
   },
   createButton: {
     flexDirection: 'row',
@@ -732,11 +743,28 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 8,
   },
+  createButtonFixed: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
   createButtonText: {
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
-    marginLeft: 8,
+    marginLeft: 10,
+    flexShrink: 0,
   },
   loadingContainer: {
     flex: 1,
