@@ -14,7 +14,6 @@ import {
   ScrollView,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import Svg, { Line, Rect } from 'react-native-svg';
 import { BothsideLoader } from './BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -29,101 +28,6 @@ interface CreateShelfModalProps {
   onClose: () => void;
   onShelfCreated: () => void;
 }
-
-// ─── Grid Preview ─────────────────────────────────────────────────────────────
-
-const MAX_PREVIEW_ROWS = 6;
-const MAX_PREVIEW_COLS = 8;
-const PREVIEW_HEIGHT = 80;
-
-interface ShelfGridPreviewProps {
-  rows: number;
-  cols: number;
-}
-
-const ShelfGridPreview: React.FC<ShelfGridPreviewProps> = ({ rows, cols }) => {
-  const clampedRows = Math.min(Math.max(rows, 1), MAX_PREVIEW_ROWS);
-  const clampedCols = Math.min(Math.max(cols, 1), MAX_PREVIEW_COLS);
-
-  const containerWidth = 260; // fixed logical width for the preview SVG
-  const cellW = containerWidth / clampedCols;
-  const cellH = PREVIEW_HEIGHT / clampedRows;
-
-  const horizontalLines = Array.from({ length: clampedRows + 1 }, (_, i) => i * cellH);
-  const verticalLines = Array.from({ length: clampedCols + 1 }, (_, i) => i * cellW);
-
-  return (
-    <View style={previewStyles.container}>
-      <Svg
-        width={containerWidth}
-        height={PREVIEW_HEIGHT}
-        viewBox={`0 0 ${containerWidth} ${PREVIEW_HEIGHT}`}
-      >
-        {/* Background rect */}
-        <Rect
-          x={0}
-          y={0}
-          width={containerWidth}
-          height={PREVIEW_HEIGHT}
-          fill="#F9F9F9"
-          rx={6}
-        />
-        {/* Outer border */}
-        <Rect
-          x={0.5}
-          y={0.5}
-          width={containerWidth - 1}
-          height={PREVIEW_HEIGHT - 1}
-          fill="none"
-          stroke="#D1D5DB"
-          strokeWidth={1}
-          rx={6}
-        />
-        {/* Horizontal inner lines */}
-        {horizontalLines.slice(1, -1).map((y, i) => (
-          <Line
-            key={`h-${i}`}
-            x1={0}
-            y1={y}
-            x2={containerWidth}
-            y2={y}
-            stroke="#E5E7EB"
-            strokeWidth={0.8}
-          />
-        ))}
-        {/* Vertical inner lines */}
-        {verticalLines.slice(1, -1).map((x, i) => (
-          <Line
-            key={`v-${i}`}
-            x1={x}
-            y1={0}
-            x2={x}
-            y2={PREVIEW_HEIGHT}
-            stroke="#E5E7EB"
-            strokeWidth={0.8}
-          />
-        ))}
-      </Svg>
-      <Text style={previewStyles.label}>
-        {clampedRows} × {clampedCols}
-      </Text>
-    </View>
-  );
-};
-
-const previewStyles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-  },
-  label: {
-    marginTop: 6,
-    fontSize: 11,
-    color: '#9CA3AF',
-    letterSpacing: 0.5,
-  },
-});
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
@@ -154,8 +58,6 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
 
   const numRows = parseInt(rows, 10);
   const numCols = parseInt(columns, 10);
-  const previewRows = isNaN(numRows) || numRows <= 0 ? 1 : numRows;
-  const previewCols = isNaN(numCols) || numCols <= 0 ? 1 : numCols;
 
   const handleSave = async () => {
     if (!user) {
@@ -227,7 +129,6 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
               style={styles.kvAvoid}
             >
               <View style={styles.sheet}>
-                {/* iPad/large screen safety: constrain width */}
                 <View style={styles.sheetInner}>
                   {/* Drag indicator */}
                   <View style={styles.dragIndicator} />
@@ -278,9 +179,6 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
                       </View>
                     </View>
 
-                    {/* Live grid preview */}
-                    <ShelfGridPreview rows={previewRows} cols={previewCols} />
-
                     {/* Save button */}
                     <TouchableOpacity
                       style={[
@@ -330,7 +228,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 20,
-    // iPad centering safety — sheet never stretches wider than 560pt
     alignSelf: 'center',
     width: '100%',
     maxWidth: 560,
