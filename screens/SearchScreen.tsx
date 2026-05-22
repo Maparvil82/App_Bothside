@@ -42,6 +42,7 @@ import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { AnalyticsService } from '../services/analytics';
+import Svg, { Rect, Line } from 'react-native-svg';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -2334,7 +2335,88 @@ export const SearchScreen: React.FC = () => {
             <View style={styles.bottomSheetBody}>
               {/* Decorative Icon */}
               <View style={styles.iconContainer}>
-                <Ionicons name="sparkles" size={32} color="#000" />
+                <Svg width={32} height={32} viewBox="0 0 24 24" fill="none">
+                  {/* Outer Cabinet Frame */}
+                  <Rect
+                    x="2"
+                    y="2"
+                    width="20"
+                    height="20"
+                    rx="2.5"
+                    stroke="#000"
+                    strokeWidth={1.8}
+                    fill="none"
+                  />
+                  {/* Partition Lines */}
+                  <Line
+                    x1="12"
+                    y1="2"
+                    x2="12"
+                    y2="22"
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                  <Line
+                    x1="2"
+                    y1="12"
+                    x2="22"
+                    y2="12"
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                  
+                  {/* Top-Left Shelf Vinyls (leaning) */}
+                  <Line
+                    x1={5.5}
+                    y1={4.5}
+                    x2={6.5}
+                    y2={9.5}
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                  <Line
+                    x1={7.5}
+                    y1={4.5}
+                    x2={8.5}
+                    y2={9.5}
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                  <Line
+                    x1={9.5}
+                    y1={4.5}
+                    x2={10.5}
+                    y2={9.5}
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+
+                  {/* Bottom-Right Shelf Vinyls (leaning) */}
+                  <Line
+                    x1={14.5}
+                    y1={14.5}
+                    x2={15.5}
+                    y2={19.5}
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                  <Line
+                    x1={16.5}
+                    y1={14.5}
+                    x2={17.5}
+                    y2={19.5}
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                  <Line
+                    x1={18.5}
+                    y1={14.5}
+                    x2={19.5}
+                    y2={19.5}
+                    stroke="#000"
+                    strokeWidth={1.2}
+                  />
+                </Svg>
               </View>
 
               <Text style={styles.bottomSheetTitle}>
