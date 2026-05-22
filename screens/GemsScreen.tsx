@@ -9,9 +9,10 @@ import {
   TouchableOpacity,
   Alert,
   FlatList,
+  ActionSheetIOS,
+  Platform,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
-import { SwipeListView } from 'react-native-swipe-list-view';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
@@ -62,10 +63,7 @@ export default function GemsScreen() {
     }
   };
 
-  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
-    const item = gems.find(gem => gem.id === rowKey);
-    if (!item) return;
-
+  const handleRemoveGemConfirm = (item: any) => {
     Alert.alert(
       t('gems_remove_confirm_title'),
       `${t('gems_remove_confirm_message')} "${item.albums?.title}"?`,
@@ -78,7 +76,38 @@ export default function GemsScreen() {
         },
       ]
     );
-    rowMap[rowKey]?.closeRow();
+  };
+
+  const handleLongPress = (item: any) => {
+    const title = item.albums?.title || t('gems_count_singular');
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [t('common_cancel'), t('search_action_remove_gem')],
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+          title: title,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleRemoveGemConfirm(item);
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        title,
+        undefined,
+        [
+          { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: t('search_action_remove_gem'),
+            style: 'destructive',
+            onPress: () => handleRemoveGemConfirm(item),
+          },
+        ]
+      );
+    }
   };
 
   if (loading) {
@@ -90,7 +119,9 @@ export default function GemsScreen() {
       <TouchableOpacity
         style={[styles.gemItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         activeOpacity={0.7}
-        onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: item.id })}
+        onPress={() => (navigation as any).navigate('AlbumDetail', { albumId: item.albums?.id || item.id })}
+        onLongPress={() => handleLongPress(item)}
+        delayLongPress={350}
       >
         <Image
           source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
@@ -123,19 +154,6 @@ export default function GemsScreen() {
     </View>
   );
 
-  const renderSwipeActions = (rowData: any, rowMap: any) => (
-    <View style={styles.swipeActionsContainer}>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeDelete]}
-        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
   return (
     <View style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
       <View style={[styles.header, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
@@ -154,14 +172,10 @@ export default function GemsScreen() {
           </Text>
         </View>
       ) : (
-        <SwipeListView
+        <FlatList
           data={gems}
           renderItem={renderGemItem}
-          renderHiddenItem={renderSwipeActions}
           keyExtractor={(item) => item.id}
-          rightOpenValue={-90}
-          previewOpenValue={0}
-          previewOpenDelay={0}
           refreshControl={
             <RefreshControl refreshing={loading} onRefresh={refreshGems} />
           }
@@ -309,29 +323,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  swipeActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 0,
-  },
-  swipeAction: {
-    width: 90,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 0,
-  },
-  swipeDelete: {
-    backgroundColor: '#FF3B30',
-  },
-  swipeActionText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-    textAlign: 'center',
-  },
+  // Swipe styles removed
   floatingAIButton: {
     position: 'absolute',
     bottom: 16,
