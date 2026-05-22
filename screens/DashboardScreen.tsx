@@ -110,9 +110,7 @@ export default function DashboardScreen() {
               parent.setOptions({
                 tabBarStyle: {
                   height: 80,
-                  paddingTop: 14,
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  width: '100%',
                 }
               });
             }

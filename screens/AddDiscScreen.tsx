@@ -104,9 +104,7 @@ export const AddDiscScreen: React.FC = () => {
           parent.setOptions({
             tabBarStyle: {
               height: 80,
-              paddingTop: 14,
-              justifyContent: 'center',
-              alignItems: 'center',
+              width: '100%',
             }
           });
         } else {
@@ -117,9 +115,7 @@ export const AddDiscScreen: React.FC = () => {
             parent.setOptions({
               tabBarStyle: {
                 height: 80,
-                paddingTop: 14,
-                justifyContent: 'center',
-                alignItems: 'center',
+                width: '100%',
               }
             });
           } else {

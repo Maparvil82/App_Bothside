@@ -302,11 +302,6 @@ const DashboardStack = () => {
         })}
       />
       <Stack.Screen
-        name="ShelfEdit"
-        component={ShelfEditScreen}
-        options={{ title: 'Editar Estantería' }}
-      />
-      <Stack.Screen
         name="ShelfView"
         component={ShelfViewScreen}
         options={({ route }: any) => ({
@@ -378,11 +373,6 @@ const ShelvesStack = () => {
           ),
           headerRight: () => <HeaderAvatar />,
         })}
-      />
-      <Stack.Screen
-        name="ShelfEdit"
-        component={ShelfEditScreen}
-        options={{ title: 'Estantería' }}
       />
       <Stack.Screen
         name="ShelfView"
@@ -485,11 +475,16 @@ const TabNavigator = () => {
         tabBarActiveTintColor: '#0f0f0fff',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
-        tabBarStyle: {
-          height: 80,
-          paddingTop: 14,
+        tabBarShowLabel: false,
+        tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',
+          paddingTop: 12,
+        },
+        tabBarStyle: {
+          height: 80,
+          width: '100%',
+
         },
       })}
     >
@@ -530,6 +525,7 @@ const TabNavigator = () => {
         options={{
           title: '',
           tabBarButton: () => null,
+          tabBarItemStyle: { display: 'none' },
           tabBarStyle: { display: 'none' }
         }}
       />
@@ -736,6 +732,19 @@ const AppStack = () => {
           headerShown: true,
           title: 'Ubicar Vinilo'
         }}
+      />
+      <Stack.Screen
+        name="ShelfEdit"
+        component={ShelfEditScreen}
+        options={({ navigation }) => ({
+          headerShown: true,
+          title: 'Estantería',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => navigation.goBack()} style={{ paddingHorizontal: 12 }}>
+              <Ionicons name="chevron-back-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+          ),
+        })}
       />
 
       {/* Admin Screen accessible if needed */}

@@ -212,9 +212,7 @@ export const SearchScreen: React.FC = () => {
       parent.setOptions({
         tabBarStyle: {
           height: 80,
-          paddingTop: 14,
-          justifyContent: 'center',
-          alignItems: 'center',
+          width: '100%',
         }
       });
     }
@@ -249,9 +247,7 @@ export const SearchScreen: React.FC = () => {
           parent.setOptions({
             tabBarStyle: {
               height: 80,
-              paddingTop: 14,
-              justifyContent: 'center',
-              alignItems: 'center',
+              width: '100%',
             }
           });
         }
@@ -2120,7 +2116,7 @@ export const SearchScreen: React.FC = () => {
                     style={[styles.createShelfButton, { backgroundColor: primaryColor }]}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
+                      navigation.navigate('ShelfEdit');
                     }}
                   >
                     <Text style={styles.createShelfButtonText}>{t('search_modal_empty_shelves_cta')}</Text>
@@ -2159,7 +2155,7 @@ export const SearchScreen: React.FC = () => {
                     style={[styles.createShelfDashedButton, { borderColor: colors.border }]}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
+                      navigation.navigate('ShelfEdit');
                     }}
                     activeOpacity={0.7}
                   >
@@ -2314,7 +2310,7 @@ export const SearchScreen: React.FC = () => {
                   }
 
                   // Navegar directamente a la pantalla de creación de estanterías físicas
-                  navigation.navigate('DashboardTab', { screen: 'ShelfEdit' });
+                  navigation.navigate('ShelfEdit');
                 }}
               >
                 <Text style={styles.btnPrimaryText}>
@@ -2342,13 +2338,21 @@ export const SearchScreen: React.FC = () => {
         </View>
       </Modal>
       {/* Floating Add Record Button (FAB) */}
-      <TouchableOpacity
-        style={[styles.fabButton, { backgroundColor: primaryColor }]}
-        onPress={handleAddRecord}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="add" size={28} color="white" />
-      </TouchableOpacity>
+      {collection.length > 0 && (
+        <TouchableOpacity
+          style={[
+            styles.fabButton,
+            {
+              backgroundColor: primaryColor,
+              shadowColor: primaryColor,
+            },
+          ]}
+          onPress={handleAddRecord}
+          activeOpacity={0.8}
+        >
+          <Ionicons name="add" size={30} color="#fff" />
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };
@@ -2357,18 +2361,17 @@ export const SearchScreen: React.FC = () => {
 const styles = StyleSheet.create({
   fabButton: {
     position: 'absolute',
-    bottom: 95,
     right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    bottom: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
-    shadowRadius: 4.65,
-    elevation: 8,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   bottomSheetOverlay: {
     flex: 1,

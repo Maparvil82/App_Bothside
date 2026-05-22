@@ -55,9 +55,7 @@ export default function ShelfEditScreen() {
           parent.setOptions({
             tabBarStyle: {
               height: 80,
-              paddingTop: 14,
-              justifyContent: 'center',
-              alignItems: 'center',
+              width: '100%',
             }
           });
         }
@@ -79,9 +77,7 @@ export default function ShelfEditScreen() {
               parent.setOptions({
                 tabBarStyle: {
                   height: 80,
-                  paddingTop: 14,
-                  justifyContent: 'center',
-                  alignItems: 'center',
+                  width: '100%',
                 }
               });
             }
