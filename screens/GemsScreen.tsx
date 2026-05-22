@@ -146,10 +146,10 @@ export default function GemsScreen() {
       </View>
 
       {gems.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Ionicons name="diamond-outline" size={64} color={colors.text} />
-          <Text style={[styles.emptyTitle, { color: colors.text }]}>{t('gems_empty_title')}</Text>
-          <Text style={[styles.emptyText, { color: colors.text }]}>
+        <View style={[styles.emptyState, { backgroundColor: '#FFFFFF' }]}>
+          <Image source={require('../assets/gem.png')} style={styles.emptyStateImage} />
+          <Text style={[styles.emptyStateTitle, { color: '#1A2530' }]}>{t('gems_empty_title')}</Text>
+          <Text style={[styles.emptyStateSubtitle, { color: '#6B7280' }]}>
             {t('gems_empty_text')}
           </Text>
         </View>
@@ -205,24 +205,58 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 4,
   },
-  emptyContainer: {
+  emptyState: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    paddingHorizontal: 40,
+    paddingVertical: 60,
   },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  emptyStateImage: {
+    width: '100%',
+    maxWidth: 400,
+    height: 180,
+    resizeMode: 'contain',
+    marginBottom: 4,
+    opacity: 0.8,
+    alignSelf: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     color: '#666',
-    marginTop: 16,
+    marginBottom: 8,
+    opacity: 0.8,
   },
-  emptyText: {
-    fontSize: 16,
+  emptyStateSubtitle: {
+    fontSize: 14,
     color: '#999',
     textAlign: 'center',
-    marginTop: 8,
-    lineHeight: 24,
+    marginBottom: 36,
+    width: '75%',
+  },
+  createButtonFixed: {
+    position: 'absolute',
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderRadius: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  createButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 10,
+    flexShrink: 0,
   },
   listContainer: {
     padding: 0,
