@@ -1174,7 +1174,7 @@ export const SearchScreen: React.FC = () => {
 
     if (!hasLocations) {
       return (
-        <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA', alignItems: 'center' }]}>
+        <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA', flexDirection: 'row', justifyContent: 'flex-end', alignItems: 'center' }]}>
           <TouchableOpacity
             activeOpacity={0.8}
             style={[
@@ -1182,7 +1182,7 @@ export const SearchScreen: React.FC = () => {
               {
                 borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
                 backgroundColor: 'transparent',
-                marginRight: 0,
+                marginRight: 15,
               }
             ]}
             onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
@@ -1203,11 +1203,12 @@ export const SearchScreen: React.FC = () => {
     const chips = getQuickLocationChips();
 
     return (
-      <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
+      <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA', flexDirection: 'row', alignItems: 'center' }]}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.quickFiltersScrollContent}
+          contentContainerStyle={{ paddingLeft: 15, paddingRight: 8, alignItems: 'center' }}
+          style={{ flex: 1 }}
         >
           {chips.map((chip) => {
             const isActive = filterByLocation === chip.value;
@@ -1236,29 +1237,30 @@ export const SearchScreen: React.FC = () => {
               </TouchableOpacity>
             );
           })}
-
-          {/* "+ Crear ubicación" Action Chip */}
-          <TouchableOpacity
-            activeOpacity={0.8}
-            style={[
-              styles.quickFilterActionChip,
-              {
-                borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
-                backgroundColor: 'transparent',
-              }
-            ]}
-            onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
-          >
-            <Text
-              style={[
-                styles.quickFilterActionChipText,
-                { color: mode === 'dark' ? '#E5E7EB' : '#4B5563' }
-              ]}
-            >
-              {t('quick_filter_create_location') || '+ Create location'}
-            </Text>
-          </TouchableOpacity>
         </ScrollView>
+
+        {/* Botón de acción fijo en la derecha */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          style={[
+            styles.quickFilterActionChip,
+            {
+              borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
+              backgroundColor: 'transparent',
+              marginRight: 15,
+            }
+          ]}
+          onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
+        >
+          <Text
+            style={[
+              styles.quickFilterActionChipText,
+              { color: mode === 'dark' ? '#E5E7EB' : '#4B5563' }
+            ]}
+          >
+            {t('quick_filter_create_location') || '+ Create location'}
+          </Text>
+        </TouchableOpacity>
       </View>
     );
   };
