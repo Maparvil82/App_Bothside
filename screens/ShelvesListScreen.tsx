@@ -1,8 +1,7 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList, ActionSheetIOS, Platform } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { CreateShelfModal } from '../components/CreateShelfModal';
-import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Rect, Line } from 'react-native-svg';
@@ -120,7 +119,7 @@ import { useThemeMode } from '../contexts/ThemeContext';
 
 type RootStackParamList = {
   ShelfView: { shelfId: string, shelfName: string };
-  ShelfEdit: undefined; // No se necesitan parámetros para la creación
+  ShelfEdit: undefined;
 };
 
 type ShelvesListNavigationProp = StackNavigationProp<RootStackParamList, 'ShelfView', 'ShelfEdit'>;
@@ -162,34 +161,13 @@ export default function ShelvesListScreen() {
     }
   }, [user]);
 
-
-
   useFocusEffect(
     useCallback(() => {
       fetchShelves();
     }, [fetchShelves])
   );
 
-  const renderItem = ({ item }: { item: Shelf }) => (
-    <TouchableOpacity
-      style={styles.itemContainer}
-      onPress={() => navigation.navigate('ShelfView', { shelfId: item.id, shelfName: item.name })}
-    >
-      <View style={styles.itemTextContainer}>
-        <Ionicons name="grid-outline" size={24} color="#000" />
-        <Text style={styles.itemText}>{item.name}</Text>
-      </View>
-      <View style={styles.itemDetailsContainer}>
-        <Text style={styles.itemDetails}>{`${item.shelf_rows}x${item.shelf_columns}`}</Text>
-        <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
-      </View>
-    </TouchableOpacity>
-  );
-
-  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
-    const item = shelves.find(shelf => shelf.id === rowKey);
-    if (!item) return;
-
+  const confirmDeleteShelf = (item: Shelf) => {
     Alert.alert(
       t('shelves_list_delete_title'),
       t('shelves_list_delete_message').replace('{0}', item.name),
@@ -208,32 +186,66 @@ export default function ShelvesListScreen() {
 
               if (error) throw error;
 
-              // Actualizar la lista local
-              setShelves(prevShelves => prevShelves.filter(shelf => shelf.id !== item.id));
-
+              setShelves(prev => prev.filter(s => s.id !== item.id));
               Alert.alert(t('common_success'), t('shelves_list_success_delete'));
             } catch (error: any) {
               Alert.alert(t('common_error'), t('shelves_list_error_delete'));
               console.error('Error deleting shelf:', error.message);
             }
-          }
-        }
+          },
+        },
       ]
     );
-    rowMap[rowKey]?.closeRow();
   };
 
-  const renderSwipeActions = (rowData: any, rowMap: any) => (
-    <View style={styles.swipeActionsContainer}>
-      <TouchableOpacity
-        style={[styles.swipeAction, styles.swipeDelete]}
-        onPress={() => handleSwipeDelete(rowMap, rowData.item.id)}
-        activeOpacity={0.8}
-      >
-        <Ionicons name="trash" size={18} color="white" />
-        <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
-      </TouchableOpacity>
-    </View>
+  const handleLongPress = (item: Shelf) => {
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: [t('common_cancel'), t('common_delete')],
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+          title: item.name,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            confirmDeleteShelf(item);
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        item.name,
+        undefined,
+        [
+          { text: t('common_cancel'), style: 'cancel' },
+          {
+            text: t('common_delete'),
+            style: 'destructive',
+            onPress: () => confirmDeleteShelf(item),
+          },
+        ]
+      );
+    }
+  };
+
+  const renderItem = ({ item }: { item: Shelf }) => (
+    <TouchableOpacity
+      style={styles.itemContainer}
+      onPress={() => navigation.navigate('ShelfView', { shelfId: item.id, shelfName: item.name })}
+      onLongPress={() => handleLongPress(item)}
+      delayLongPress={350}
+      activeOpacity={0.7}
+    >
+      <View style={styles.itemTextContainer}>
+        <Ionicons name="grid-outline" size={24} color="#000" />
+        <Text style={styles.itemText}>{item.name}</Text>
+      </View>
+      <View style={styles.itemDetailsContainer}>
+        <Text style={styles.itemDetails}>{`${item.shelf_rows}x${item.shelf_columns}`}</Text>
+        <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+      </View>
+    </TouchableOpacity>
   );
 
   if (loading) {
@@ -242,14 +254,11 @@ export default function ShelvesListScreen() {
 
   return (
     <View style={styles.container}>
-      <SwipeListView
+      <FlatList
         data={shelves}
         renderItem={renderItem}
-        renderHiddenItem={renderSwipeActions}
         keyExtractor={(item) => item.id}
-        rightOpenValue={-90}
-        previewOpenValue={0}
-        previewOpenDelay={0}
+        showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>{t('shelves_list_empty_title')}</Text>
@@ -292,29 +301,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  swipeActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 0,
-  },
-  swipeAction: {
-    width: 90,
-    height: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 0,
-  },
-  swipeDelete: {
-    backgroundColor: '#FF3B30',
-  },
-  swipeActionText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
-    textAlign: 'center',
   },
   itemTextContainer: {
     flexDirection: 'row',
@@ -366,4 +352,4 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 5,
   },
-}); 
+});
