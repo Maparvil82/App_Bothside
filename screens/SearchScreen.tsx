@@ -255,13 +255,13 @@ export const SearchScreen: React.FC = () => {
       }
 
       // Sincronizar visibilidad del calendario de cabecera de inmediato al enfocar la pantalla
-      if (isCollectionLoading || collection.length === 0) {
-        navigation.setOptions({
-          headerLeft: () => null
-        });
-      } else {
+      if (collection.length > 0) {
         navigation.setOptions({
           headerLeft: () => <HeaderCalendar />
+        });
+      } else if (hasFinishedInitialLoad && collection.length === 0) {
+        navigation.setOptions({
+          headerLeft: () => null
         });
       }
 
@@ -279,17 +279,17 @@ export const SearchScreen: React.FC = () => {
   }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByLocation, filterByAudioNotes, query]);
 
   useEffect(() => {
-    // Ocultar el icono del calendario en la cabecera cuando la colección está vacía o cargando
-    if (isCollectionLoading || collection.length === 0) {
-      navigation.setOptions({
-        headerLeft: () => null
-      });
-    } else {
+    // Sincronizar la visibilidad del calendario en la cabecera
+    if (collection.length > 0) {
       navigation.setOptions({
         headerLeft: () => <HeaderCalendar />
       });
+    } else if (hasFinishedInitialLoad && collection.length === 0) {
+      navigation.setOptions({
+        headerLeft: () => null
+      });
     }
-  }, [collection.length, isCollectionLoading, navigation]);
+  }, [collection.length, hasFinishedInitialLoad, navigation]);
 
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
