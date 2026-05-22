@@ -23,18 +23,12 @@ export const ja = {
     auth_error_network: "ネットワークエラー。接続を確認してください。",
 
     // Onboarding
-    onboarding_step1_title: "コレクションを理解するAI",
-    onboarding_step1_subtitle: "2時間のレアソウルセット用のバッグを準備したり、コレクションの詳細なレポートを作成したりします。",
-    onboarding_step2_title: "スマート認識",
-    onboarding_step2_subtitle: "AIビジョンを統合し、ジャケットからレコードを識別します。カメラを向けるだけです。",
-    onboarding_step3_title: "リアルな物理棚",
-    onboarding_step3_subtitle: "棚にある物理的なレコードを見つけます。各レコードはカタログ化時に実際の場所に関連付けられます。",
-    onboarding_step4_title: "音声メモ",
-    onboarding_step4_subtitle: "個人的な録音、セットのアイデア、またはそのレコードに関連する思い出を残すことができます。",
-    onboarding_step5_title: "高度なメタデータ",
-    onboarding_step5_subtitle: "BothsideはDiscogsに接続し、AIがそのデータを分析して高度な指標を提供します。",
-    onboarding_step6_title: "DJプランナー",
-    onboarding_step6_subtitle: "セッションを整理し、収益を追跡し、イベントを計画し、DJとして向上します。",
+    onboarding_step1_title: "あなたのコレクションを、美しく整理。",
+    onboarding_step1_subtitle: "どんなレコードもすぐに見つけて、自分だけの音楽空間を作ろう。",
+    onboarding_step2_title: "数秒でスキャンして登録",
+    onboarding_step2_subtitle: "AIによるジャケット認識とDiscogs連携。",
+    onboarding_step3_title: "もうレコードを探し回らない",
+    onboarding_step3_subtitle: "すべてのレコードを実際の保管場所に関連付け。",
     onboarding_has_account: "すでにアカウントをお持ちですか？",
 
     // Dashboard

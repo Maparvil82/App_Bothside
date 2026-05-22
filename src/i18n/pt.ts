@@ -23,18 +23,12 @@ export const pt = {
     auth_error_network: "Erro de rede. Verifique sua conexão.",
 
     // Onboarding
-    onboarding_step1_title: "IA que entende sua coleção",
-    onboarding_step1_subtitle: "Prepare uma maleta para um set de 2 horas de Rare Soul ou " + "Dê-me um relatório detalhado da minha coleção.",
-    onboarding_step2_title: "Reconhecimento inteligente",
-    onboarding_step2_subtitle: "Integra visão por inteligência artificial para identificar vinis a partir de suas capas. Basta apontar a câmera.",
-    onboarding_step3_title: "Estantes físicas reais",
-    onboarding_step3_subtitle: "Localize um disco físico na sua estante, cada vinil é associado ao seu lugar físico real no momento da catalogação.",
-    onboarding_step4_title: "Notas de voz",
-    onboarding_step4_subtitle: "Você pode deixar gravações pessoais, ideias para um set, ou até memórias vinculadas a esse disco.",
-    onboarding_step5_title: "Metadados avançados",
-    onboarding_step5_subtitle: "O Bothside se conecta ao Discogs, a inteligência artificial analisa esses dados para oferecer métricas avançadas",
-    onboarding_step6_title: "DJ Planner",
-    onboarding_step6_subtitle: "Organize suas sessões, controle seus ganhos, planeje eventos e melhore como DJ.",
+    onboarding_step1_title: "A tua coleção. Organizada.",
+    onboarding_step1_subtitle: "Encontra qualquer disco instantaneamente e cria o teu espaço musical.",
+    onboarding_step2_title: "Digitaliza e cataloga em segundos",
+    onboarding_step2_subtitle: "Reconhecimento inteligente de capas ligado ao Discogs.",
+    onboarding_step3_title: "Nunca mais percas um disco",
+    onboarding_step3_subtitle: "Associa cada vinil à sua localização física real.",
     onboarding_has_account: "Você já tem uma conta?",
 
     // Dashboard

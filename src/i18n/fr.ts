@@ -23,18 +23,12 @@ export const fr = {
     auth_error_network: "Erreur réseau. Vérifiez votre connexion.",
 
     // Onboarding
-    onboarding_step1_title: "Une IA qui comprend votre collection",
-    onboarding_step1_subtitle: "Préparez un sac pour un set Rare Soul de 2 heures ou obtenez un rapport détaillé de ma collection.",
-    onboarding_step2_title: "Reconnaissance intelligente",
-    onboarding_step2_subtitle: "Intègre la vision par IA pour identifier les vinyles à partir de leurs pochettes. Il suffit de pointer la caméra.",
-    onboarding_step3_title: "vraies étagères physiques",
-    onboarding_step3_subtitle: "Localisez un disque physique sur votre étagère ; chaque vinyle est associé à son emplacement réel lors du catalogage.",
-    onboarding_step4_title: "Notes vocales",
-    onboarding_step4_subtitle: "Laissez des enregistrements personnels, des idées pour un set, ou même des souvenirs liés à ce disque.",
-    onboarding_step5_title: "Métadonnées avancées",
-    onboarding_step5_subtitle: "Bothside se connecte à Discogs, et l'IA analyse ces données pour offrir des métriques avancées.",
-    onboarding_step6_title: "Planificateur DJ",
-    onboarding_step6_subtitle: "Organisez vos sessions, suivez vos gains, planifiez des événements et améliorez-vous en tant que DJ.",
+    onboarding_step1_title: "Votre collection. Organisée.",
+    onboarding_step1_subtitle: "Retrouvez n’importe quel disque instantanément et créez votre espace musical.",
+    onboarding_step2_title: "Scannez et cataloguez en quelques secondes",
+    onboarding_step2_subtitle: "Reconnaissance intelligente des pochettes connectée à Discogs.",
+    onboarding_step3_title: "Ne perdez plus jamais un disque",
+    onboarding_step3_subtitle: "Associez chaque vinyle à son emplacement physique réel.",
     onboarding_has_account: "Vous avez déjà un compte ?",
 
     // Dashboard

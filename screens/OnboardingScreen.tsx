@@ -35,44 +35,23 @@ export const OnboardingScreen: React.FC = () => {
       id: 1,
       title: t('onboarding_step1_title'),
       subtitle: t('onboarding_step1_subtitle'),
-      image: require('../assets/1.png'),
-      color: '#9b59b6',
+      image: require('../assets/wall_1.png'),
+      color: primaryColor,
     },
     {
       id: 2,
       title: t('onboarding_step2_title'),
       subtitle: t('onboarding_step2_subtitle'),
-      image: require('../assets/2.png'),
-      color: '#28a745',
+      image: require('../assets/onboarding_2.png'),
+      color: primaryColor,
     },
     {
       id: 3,
       title: t('onboarding_step3_title'),
       subtitle: t('onboarding_step3_subtitle'),
-      image: require('../assets/3.png'),
+      image: require('../assets/onboarding_3.png'),
       color: primaryColor,
     },
-    {
-      id: 4,
-      title: t('onboarding_step4_title'),
-      subtitle: t('onboarding_step4_subtitle'),
-      image: require('../assets/Gemini_Generated_Image_8jxpae8jxpae8jxp.png'),
-      color: '#f39c12',
-    },
-    {
-      id: 5,
-      title: t('onboarding_step5_title'),
-      subtitle: t('onboarding_step5_subtitle'),
-      image: require('../assets/image.png'), // Placeholder, reusing existing until user provides new
-      color: '#e74c3c',
-    },
-    {
-      id: 6,
-      title: t('onboarding_step6_title'),
-      subtitle: t('onboarding_step6_subtitle'),
-      image: require('../assets/4.png'), // Placeholder
-      color: '#8e44ad',
-    }
   ];
 
   const finishOnboarding = async () => {
@@ -137,10 +116,10 @@ export const OnboardingScreen: React.FC = () => {
                   {
                     width: width > 600 ? 500 : width * 0.85,
                     height: height * (height > 800 ? 0.4 : 0.45),
-                    borderRadius: 50
+                    borderRadius: 20
                   }
                 ]}
-                resizeMode="contain"
+                resizeMode="cover"
               />
             </View>
 

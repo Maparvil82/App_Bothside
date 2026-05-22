@@ -23,18 +23,12 @@ export const it = {
     auth_error_network: "Errore di rete. Controlla la tua connessione.",
 
     // Onboarding
-    onboarding_step1_title: "IA che capisce la tua collezione",
-    onboarding_step1_subtitle: "Prepara una borsa per un set Rare Soul di 2 ore o dammi un rapporto dettagliato della mia collezione.",
-    onboarding_step2_title: "Riconoscimento intelligente",
-    onboarding_step2_subtitle: "Integra la visione AI per identificare i vinili dalle copertine. Basta puntare la fotocamera.",
-    onboarding_step3_title: "Veri scaffali fisici",
-    onboarding_step3_subtitle: "Localizza un disco fisico sul tuo scaffale; ogni vinile è associato al suo posto reale durante la catalogazione.",
-    onboarding_step4_title: "Note vocali",
-    onboarding_step4_subtitle: "Lascia registrazioni personali, idee per un set o anche ricordi legati a quel disco.",
-    onboarding_step5_title: "Metadati avanzati",
-    onboarding_step5_subtitle: "Bothside si connette a Discogs e l'IA analizza i dati per offrire metriche avanzate.",
-    onboarding_step6_title: "DJ Planner",
-    onboarding_step6_subtitle: "Organizza le tue sessioni, traccia i guadagni, pianifica eventi e migliora come DJ.",
+    onboarding_step1_title: "La tua collezione. Organizzata.",
+    onboarding_step1_subtitle: "Trova qualsiasi disco all’istante e crea il tuo spazio musicale.",
+    onboarding_step2_title: "Scansiona e cataloga in pochi secondi",
+    onboarding_step2_subtitle: "Riconoscimento intelligente delle copertine connesso a Discogs.",
+    onboarding_step3_title: "Non perdere mai più un disco",
+    onboarding_step3_subtitle: "Assegna ogni vinile alla sua posizione fisica reale.",
     onboarding_has_account: "Hai già un account?",
 
     // Dashboard
