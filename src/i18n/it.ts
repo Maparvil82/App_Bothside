@@ -215,6 +215,7 @@ export const it = {
     search_filter_no_location: "Nessuna posizione",
     quick_filter_all: "Tutti",
     quick_filter_unlocated: "Non posizionati",
+    quick_filter_create_location: "+ Crea posizione",
     search_current_location: "Situato a: {0}",
     search_alert_no_results_title: "Nessun risultato",
     search_alert_no_editions_message: "Nessuna edizione trovata per \"{0}\" di \"{1}\". Prova una ricerca più specifica.",

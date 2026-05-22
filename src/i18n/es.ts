@@ -181,6 +181,7 @@ export const es = {
     search_filter_no_location: "Sin ubicación",
     quick_filter_all: "Todos",
     quick_filter_unlocated: "Sin ubicar",
+    quick_filter_create_location: "+ Crear ubicación",
     search_alert_no_results_title: "Sin resultados",
     search_alert_no_editions_message: "No se encontraron ediciones para \"{0}\" de \"{1}\". Intenta con una búsqueda más específica.",
     search_error_loading_editions: "No se pudieron cargar las ediciones. Verifica tu conexión a internet y el token de Discogs.",

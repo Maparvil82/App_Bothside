@@ -1168,8 +1168,37 @@ export const SearchScreen: React.FC = () => {
   };
 
   const renderQuickLocationFilters = () => {
+    if (collection.length === 0) return null;
+
     const hasLocations = collection.some(item => item.shelf_name);
-    if (!hasLocations || collection.length === 0) return null;
+
+    if (!hasLocations) {
+      return (
+        <View style={[styles.quickFiltersContainer, { backgroundColor: mode === 'dark' ? colors.background : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA', alignItems: 'center' }]}>
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={[
+              styles.quickFilterActionChip,
+              {
+                borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
+                backgroundColor: 'transparent',
+                marginRight: 0,
+              }
+            ]}
+            onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
+          >
+            <Text
+              style={[
+                styles.quickFilterActionChipText,
+                { color: mode === 'dark' ? '#E5E7EB' : '#4B5563' }
+              ]}
+            >
+              {t('quick_filter_create_location') || '+ Create location'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
 
     const chips = getQuickLocationChips();
 
@@ -1207,6 +1236,28 @@ export const SearchScreen: React.FC = () => {
               </TouchableOpacity>
             );
           })}
+
+          {/* "+ Crear ubicación" Action Chip */}
+          <TouchableOpacity
+            activeOpacity={0.8}
+            style={[
+              styles.quickFilterActionChip,
+              {
+                borderColor: mode === 'dark' ? '#ffffff33' : '#6B728033',
+                backgroundColor: 'transparent',
+              }
+            ]}
+            onPress={() => (navigation as any).navigate('DashboardTab', { screen: 'ShelvesList' })}
+          >
+            <Text
+              style={[
+                styles.quickFilterActionChipText,
+                { color: mode === 'dark' ? '#E5E7EB' : '#4B5563' }
+              ]}
+            >
+              {t('quick_filter_create_location') || '+ Create location'}
+            </Text>
+          </TouchableOpacity>
         </ScrollView>
       </View>
     );
@@ -3293,5 +3344,20 @@ const styles = StyleSheet.create({
   },
   quickFilterChipTextInactive: {
     // color handled dynamically
+  },
+  quickFilterActionChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    marginRight: 8,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderStyle: 'dashed',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  quickFilterActionChipText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 }); 

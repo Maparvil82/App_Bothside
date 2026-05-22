@@ -56,12 +56,13 @@ export const HeaderAvatar = () => {
 
     return (
         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity
+            {/* Ocultado para evitar ambigüedad visual con vista de lista/cuadrícula. Se accede mediante el chip "+ Shelf" en la colección */}
+            {/* <TouchableOpacity
                 onPress={handleShelvesPress}
                 style={{ marginRight: 12, padding: 4 }}
             >
                 <Ionicons name="grid-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             <TouchableOpacity
                 style={styles.avatarContainer}
