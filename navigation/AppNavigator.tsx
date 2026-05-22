@@ -260,7 +260,6 @@ const SearchStack = () => {
         component={SearchScreen}
         options={{
           title: 'Bothside',
-          headerLeft: () => <HeaderCalendar />,
           headerRight: () => <HeaderAvatar />,
         }}
       />

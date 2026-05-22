@@ -33,6 +33,7 @@ import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
 import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
+import { HeaderCalendar } from '../components/HeaderComponents';
 import { ENV } from '../config/env';
 import { Audio } from 'expo-av';
 import { useTranslation } from '../src/i18n/useTranslation';
@@ -253,6 +254,17 @@ export const SearchScreen: React.FC = () => {
         }
       }
 
+      // Sincronizar visibilidad del calendario de cabecera de inmediato al enfocar la pantalla
+      if (isCollectionLoading || collection.length === 0) {
+        navigation.setOptions({
+          headerLeft: () => null
+        });
+      } else {
+        navigation.setOptions({
+          headerLeft: () => <HeaderCalendar />
+        });
+      }
+
       // Recargar la colección para sincronizar cambios
       if (user) {
         loadCollection();
@@ -260,11 +272,24 @@ export const SearchScreen: React.FC = () => {
     });
 
     return unsubscribe;
-  }, [navigation, user, collection.length, isOnboardingCompleted, hasFinishedInitialLoad]);
+  }, [navigation, user, collection.length, isCollectionLoading, isOnboardingCompleted, hasFinishedInitialLoad]);
 
   useEffect(() => {
     sortCollection();
   }, [collection, sortBy, filterByStyle, filterByYear, filterByLabel, filterByLocation, filterByAudioNotes, query]);
+
+  useEffect(() => {
+    // Ocultar el icono del calendario en la cabecera cuando la colección está vacía o cargando
+    if (isCollectionLoading || collection.length === 0) {
+      navigation.setOptions({
+        headerLeft: () => null
+      });
+    } else {
+      navigation.setOptions({
+        headerLeft: () => <HeaderCalendar />
+      });
+    }
+  }, [collection.length, isCollectionLoading, navigation]);
 
   useEffect(() => {
     if (showSearch && searchInputRef.current) {
@@ -1607,66 +1632,68 @@ export const SearchScreen: React.FC = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
 
       {/* Toolbar con botones de búsqueda, vista y filtros */}
-      <View style={[styles.toolbarContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
-        {/* Contador de discos y porcentaje ubicados a la izquierda */}
-        <Text style={[styles.collectionStats, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
-          <Text style={[styles.collectionCount, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
-            {filteredCollection.length} {t('search_stats_discs')}
+      {collection.length > 0 && (
+        <View style={[styles.toolbarContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
+          {/* Contador de discos y porcentaje ubicados a la izquierda */}
+          <Text style={[styles.collectionStats, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
+            <Text style={[styles.collectionCount, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
+              {filteredCollection.length} {t('search_stats_discs')}
+            </Text>
+            <Text style={[styles.locatedPercentage, { color: collection.length === 0 ? '#6B7280' : colors.text }]}>
+              {' • '}{getLocatedPercentage()}% {t('search_stats_located')}
+            </Text>
           </Text>
-          <Text style={[styles.locatedPercentage, { color: collection.length === 0 ? '#6B7280' : colors.text }]}>
-            {' • '}{getLocatedPercentage()}% {t('search_stats_located')}
-          </Text>
-        </Text>
 
-        {/* Botones de búsqueda, vista y filtros a la derecha */}
-        <View style={styles.toolbarButtons}>
-          <TouchableOpacity
-            style={[
-              styles.toolbarButton,
-              { backgroundColor: showSearch ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
-            ]}
-            onPress={() => setShowSearch(!showSearch)}
-          >
-            <Ionicons
-              name="search-outline"
-              size={24}
-              color={collection.length === 0 ? '#1A2530' : colors.text}
-            />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[
-              styles.toolbarButton,
-              { backgroundColor: showFilters ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
-            ]}
-            onPress={() => setShowFilters(!showFilters)}
-          >
-            <View style={{ position: 'relative' }}>
+          {/* Botones de búsqueda, vista y filtros a la derecha */}
+          <View style={styles.toolbarButtons}>
+            <TouchableOpacity
+              style={[
+                styles.toolbarButton,
+                { backgroundColor: showSearch ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
+              ]}
+              onPress={() => setShowSearch(!showSearch)}
+            >
               <Ionicons
-                name="filter-outline"
+                name="search-outline"
                 size={24}
-                color={hasActiveFilters ? '#34A853' : (collection.length === 0 ? '#1A2530' : colors.text)}
+                color={collection.length === 0 ? '#1A2530' : colors.text}
               />
-              {hasActiveFilters && (
-                <View
-                  style={{
-                    position: 'absolute',
-                    top: -2,
-                    right: -2,
-                    width: 8,
-                    height: 8,
-                    borderRadius: 4,
-                    backgroundColor: '#34A853',
-                  }}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.toolbarButton,
+                { backgroundColor: showFilters ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
+              ]}
+              onPress={() => setShowFilters(!showFilters)}
+            >
+              <View style={{ position: 'relative' }}>
+                <Ionicons
+                  name="filter-outline"
+                  size={24}
+                  color={hasActiveFilters ? '#34A853' : (collection.length === 0 ? '#1A2530' : colors.text)}
                 />
-              )}
-            </View>
-          </TouchableOpacity>
+                {hasActiveFilters && (
+                  <View
+                    style={{
+                      position: 'absolute',
+                      top: -2,
+                      right: -2,
+                      width: 8,
+                      height: 8,
+                      borderRadius: 4,
+                      backgroundColor: '#34A853',
+                    }}
+                  />
+                )}
+              </View>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      )}
 
       {/* Campo de búsqueda */}
-      {showSearch && (
+      {collection.length > 0 && showSearch && (
         <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
           <View style={[styles.searchInputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <TextInput
@@ -1691,7 +1718,7 @@ export const SearchScreen: React.FC = () => {
       )}
 
       {/* Filtros */}
-      {showFilters && (
+      {collection.length > 0 && showFilters && (
         <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
           {/* Filtro por Estilo */}
           <View style={styles.filterSection}>
@@ -2338,7 +2365,7 @@ export const SearchScreen: React.FC = () => {
         </View>
       </Modal>
       {/* Floating Add Record Button (FAB) */}
-      {collection.length > 0 && (
+      {!isCollectionLoading && collection.length > 0 && (
         <TouchableOpacity
           style={[
             styles.fabButton,
