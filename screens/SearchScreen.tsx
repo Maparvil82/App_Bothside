@@ -43,6 +43,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { AnalyticsService } from '../services/analytics';
 import Svg, { Rect, Line } from 'react-native-svg';
+import { CreateShelfModal } from '../components/CreateShelfModal';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -108,6 +109,7 @@ export const SearchScreen: React.FC = () => {
   const [selectedAlbumForEdit, setSelectedAlbumForEdit] = useState<any>(null);
 
   const [isFABCheckingLimit, setIsFABCheckingLimit] = useState(false);
+  const [showCreateShelfModal, setShowCreateShelfModal] = useState(false);
 
   const handleAddRecord = async () => {
     if (isFABCheckingLimit) return;
@@ -2163,7 +2165,7 @@ export const SearchScreen: React.FC = () => {
                     style={[styles.createShelfButton, { backgroundColor: primaryColor }]}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('ShelfEdit');
+                      setShowCreateShelfModal(true);
                     }}
                   >
                     <Text style={styles.createShelfButtonText}>{t('search_modal_empty_shelves_cta')}</Text>
@@ -2202,7 +2204,7 @@ export const SearchScreen: React.FC = () => {
                     style={[styles.createShelfDashedButton, { borderColor: colors.border }]}
                     onPress={() => {
                       setShowLocationModal(false);
-                      navigation.navigate('ShelfEdit');
+                      setShowCreateShelfModal(true);
                     }}
                     activeOpacity={0.7}
                   >
@@ -2436,9 +2438,8 @@ export const SearchScreen: React.FC = () => {
                     const key = `has_seen_first_disc_location_modal_${user.id}`;
                     await AsyncStorage.setItem(key, 'true');
                   }
-
-                  // Navegar directamente a la pantalla de creación de estanterías físicas
-                  navigation.navigate('ShelfEdit');
+                  // Abrir el modal de creación de estantería como bottom sheet
+                  setShowCreateShelfModal(true);
                 }}
               >
                 <Text style={styles.btnPrimaryText}>
@@ -2465,6 +2466,13 @@ export const SearchScreen: React.FC = () => {
           </View>
         </View>
       </Modal>
+      {/* Modal de creación de estantería (bottom sheet) */}
+      <CreateShelfModal
+        visible={showCreateShelfModal}
+        onClose={() => setShowCreateShelfModal(false)}
+        onShelfCreated={loadCollection}
+      />
+
       {/* Floating Add Record Button (FAB) */}
       {!isCollectionLoading && collection.length > 0 && (
         <TouchableOpacity

@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
+import { CreateShelfModal } from '../components/CreateShelfModal';
 import { SwipeListView } from 'react-native-swipe-list-view';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -139,6 +140,7 @@ export default function ShelvesListScreen() {
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const fetchShelves = useCallback(async () => {
     if (!user) return;
@@ -258,11 +260,16 @@ export default function ShelvesListScreen() {
       />
       <TouchableOpacity
         style={[styles.fab, { backgroundColor: primaryColor, shadowColor: primaryColor }]}
-        onPress={() => navigation.navigate('ShelfEdit')}
+        onPress={() => setShowCreateModal(true)}
         activeOpacity={0.8}
       >
         <ShelvesFABIcon color="#fff" size={26} />
       </TouchableOpacity>
+      <CreateShelfModal
+        visible={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onShelfCreated={fetchShelves}
+      />
     </View>
   );
 }
