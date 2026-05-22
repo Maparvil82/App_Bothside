@@ -115,7 +115,7 @@ export const OnboardingScreen: React.FC = () => {
                   styles.image,
                   {
                     width: width > 600 ? 500 : width * 0.85,
-                    height: height * (height > 800 ? 0.4 : 0.45),
+                    height: height * (height > 1000 ? 0.4 : 0.45),
                     borderRadius: 20
                   }
                 ]}
@@ -193,6 +193,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     paddingTop: 20,
+
   },
   image: {
     // Dynamic styles passed in component
@@ -204,12 +205,13 @@ const styles = StyleSheet.create({
     paddingTop: 20,
   },
   title: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1a1a1a',
     textAlign: 'left',
     marginBottom: 12,
     lineHeight: 34,
+    marginTop: 20
   },
   subtitle: {
     fontSize: 17,
