@@ -116,6 +116,21 @@ const extractYouTubeId = (url: string | null | undefined): string | null => {
   }
 };
 
+// Helper to format physical location with coordinates when available
+const formatLocation = (
+  shelfName: string | null | undefined,
+  row: number | null | undefined,
+  column: number | null | undefined,
+  defaultPlaceholder: string
+) => {
+  const name = shelfName || defaultPlaceholder;
+  if (typeof row === 'number' && typeof column === 'number' && row > 0 && column > 0) {
+    const rowChar = String.fromCharCode(65 + (row - 1));
+    return `${name} · ${rowChar}${column}`;
+  }
+  return name;
+};
+
 export default function AlbumDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
@@ -1668,7 +1683,9 @@ export default function AlbumDetailScreen() {
 
             {album.shelf_id && album.location_row && album.location_column ? (
               <>
-                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>{t('album_detail_currently_in')} {album.shelf_name || t('album_detail_unnamed_shelf')}</Text>
+                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
+                  {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
+                </Text>
                 <ShelfGrid
                   rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
                   columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}

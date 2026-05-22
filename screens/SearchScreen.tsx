@@ -1528,6 +1528,19 @@ export const SearchScreen: React.FC = () => {
 
   // ========== FIN FUNCIONES DE CÁMARA ==========
 
+  const formatLocation = (
+    shelfName: string | null | undefined,
+    row: number | null | undefined,
+    column: number | null | undefined
+  ) => {
+    const name = shelfName || 'Ubicación física';
+    if (typeof row === 'number' && typeof column === 'number' && row > 0 && column > 0) {
+      const rowChar = String.fromCharCode(65 + (row - 1));
+      return `${name} · ${rowChar}${column}`;
+    }
+    return name;
+  };
+
   const renderCollectionItem = ({ item }: { item: any }) => (
     <View style={[styles.collectionItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
       <TouchableOpacity
@@ -1556,7 +1569,13 @@ export const SearchScreen: React.FC = () => {
               {item.in_shelf && (
                 <View style={styles.shelfTag}>
                   <Ionicons name="location" size={12} color="#28a745" />
-                  <Text style={styles.shelfTagText}>{item.shelf_name || 'Ubicación física'}</Text>
+                  <Text 
+                    style={styles.shelfTagText}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {formatLocation(item.shelf_name, item.location_row, item.location_column)}
+                  </Text>
                 </View>
               )}
 
