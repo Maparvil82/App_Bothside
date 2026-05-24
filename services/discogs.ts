@@ -125,6 +125,24 @@ export class DiscogsService {
     }
   }
 
+  static async searchByBarcode(barcode: string): Promise<DiscogsSearchResponse | null> {
+    try {
+      const encodedBarcode = encodeURIComponent(barcode);
+      const endpoint = `/database/search?barcode=${encodedBarcode}&type=release`;
+
+      const result = await this.makeRequest(endpoint, { cacheTtlMs: 2 * 60 * 1000, retries: 1 });
+      if (result === null) {
+        console.warn('⚠️ No se pudo buscar por código de barras en Discogs - token inválido');
+        return null;
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error searching by barcode:', error);
+      return null;
+    }
+  }
+
   static async getRelease(id: number): Promise<DiscogsRelease | null> {
     try {
       const endpoint = `/releases/${id}`;

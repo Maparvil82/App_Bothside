@@ -1229,13 +1229,26 @@ export const AddDiscScreen: React.FC = () => {
           style={{
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 15,
+            paddingHorizontal: 12,
             borderLeftWidth: 1,
             borderLeftColor: '#eee',
           }}
           onPress={() => navigation.navigate('CameraScan')}
         >
           <Ionicons name="camera" size={24} color={colors.text} />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={{
+            justifyContent: 'center',
+            alignItems: 'center',
+            paddingHorizontal: 12,
+            borderLeftWidth: 1,
+            borderLeftColor: '#eee',
+          }}
+          onPress={() => navigation.navigate('BarcodeScan')}
+        >
+          <Ionicons name="barcode" size={24} color={colors.text} />
         </TouchableOpacity>
 
       </View>

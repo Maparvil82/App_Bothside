@@ -49,6 +49,7 @@ import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { CameraScanScreen } from '../screens/CameraScanScreen';
+import { BarcodeScanScreen } from '../screens/BarcodeScanScreen';
 import { AICreditsStoreScreen } from '../screens/AICreditsStoreScreen';
 import { Alert } from 'react-native';
 import { DarkModeWIPModal } from '../components/DarkModeWIPModal';
@@ -428,6 +429,11 @@ const AddDiscStack = () => {
       <Stack.Screen
         name="CameraScan"
         component={CameraScanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BarcodeScan"
+        component={BarcodeScanScreen}
         options={{ headerShown: false }}
       />
       {ProfileScreensGroup()}
