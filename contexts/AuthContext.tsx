@@ -35,9 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   const loadUserSubscriptionAndCredits = useCallback(async (userId: string) => {
-    try {
-      console.log('🔄 Loading subscription and credits for:', userId);
-
+    // Definimos la ejecución real en una promesa para poder aplicarle un timeout global seguro
+    const fetchPromise = async () => {
       // (a) Read user_subscriptions
       const { data: subscription } = await supabase
         .from("user_subscriptions")
@@ -62,7 +61,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           creditsData = creditsResponse[0];
           // Trigger cleanup independently of this query result length (because we use limit(1))
           // We call it in background to ensure data consistency
-          // Check if imports are correct (CreditService is imported)
           CreditService.cleanupDuplicates(userId).then(cleaned => {
             if (cleaned) console.log('🧹 Limpieza de duplicados realizada en background');
           });
@@ -101,7 +99,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         .eq('id', userId)
         .single();
 
-      // (c) Update global state
+      return { subscription, creditsData, profileData };
+    };
+
+    try {
+      console.log('🔄 Loading subscription and credits for:', userId);
+
+      // Creamos la promesa con timeout seguro de 8 segundos
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout de base de datos excedido (8s)')), 8000)
+      );
+
+      // Carrera entre la consulta real y el timeout para evitar promesas colgadas
+      const result = await Promise.race([fetchPromise(), timeoutPromise]) as {
+        subscription: any;
+        creditsData: any;
+        profileData: any;
+      };
+
+      const { subscription, creditsData, profileData } = result;
+
+      // (d) Update global state
       setUser(prev => {
         if (!prev) return null;
 
@@ -139,6 +157,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log('✅ Subscription data loaded');
     } catch (error) {
       console.error('❌ Error loading subscription data:', error);
+      // En caso de error o timeout de base de datos, el flujo continuará de forma segura.
+      // El estado loading se cambiará a false en el bloque finally del llamador (initializeAuth).
     }
   }, []);
 
@@ -148,7 +168,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Verificar sesión actual (USANDO getSession para acceso a caché ultrarrápido y evitar cuelgues de red)
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log('[AUTH] Checking active session...');
+        // Timeout para getSession por si AsyncStorage nativo se bloquea en frío (5s)
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null }; error: Error }>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout de AsyncStorage excedido (5s)')), 5000)
+        );
+
+        const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]) as any;
         
         if (error) {
           throw error;
@@ -161,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setUser(authUser as AppUser);
             AnalyticsService.identify(authUser.id);
           }
-          // Then load extra data
+          // Then load extra data (de forma segura con timeout interno de 8s)
           await loadUserSubscriptionAndCredits(authUser.id);
         } else {
           if (mounted) {
@@ -172,7 +199,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Error checking user session en inicialización:', error);
       } finally {
-        if (mounted) setLoading(false);
+        if (mounted) {
+          console.log('[AUTH] Session initialization finished.');
+          setLoading(false);
+        }
       }
     };
 
