@@ -1053,4 +1053,11 @@ export const pt = {
     account_delete_loading: "Excluindo conta...",
     account_delete_error: "Houve um erro ao excluir sua conta. Por favor, tente novamente.",
 
+    // Bothside Recommendation Modal
+    recommend_modal_title: "Conhece alguém que colecione vinis?",
+    recommend_modal_text: "Se o Bothside está a ajudar-te a organizar a tua coleção, partilha-o com outro colecionador.",
+    recommend_modal_btn_primary: "Recomendar Bothside",
+    recommend_modal_btn_secondary: "Talvez mais tarde",
+    recommend_modal_btn_tertiary: "Não mostrar novamente",
+    recommend_share_text: "Estou a usar o Bothside para organizar a minha coleção de vinis. Se colecionas discos, vais adorar.\n\nDescarrega aqui:\nhttps://apps.apple.com/app/id6475736780",
 };

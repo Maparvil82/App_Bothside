@@ -1001,4 +1001,11 @@ export const de = {
     account_delete_loading: "Konto wird gelöscht...",
     account_delete_error: "Beim Löschen Ihres Kontos ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
 
+    // Bothside Recommendation Modal
+    recommend_modal_title: "Kennst du jemanden, der Schallplatten sammelt?",
+    recommend_modal_text: "Wenn Bothside dir hilft, deine Sammlung zu organisieren, teile sie mit einem anderen Sammler.",
+    recommend_modal_btn_primary: "Bothside empfehlen",
+    recommend_modal_btn_secondary: "Vielleicht später",
+    recommend_modal_btn_tertiary: "Nicht mehr anzeigen",
+    recommend_share_text: "Ich benutze Bothside, um meine Schallplattensammlung zu organisieren. Wenn du Schallplatten sammelst, wird es dir gefallen.\n\nHier herunterladen:\nhttps://apps.apple.com/app/id6475736780",
 };

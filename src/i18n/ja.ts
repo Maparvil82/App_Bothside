@@ -1049,6 +1049,10 @@ export const ja = {
     account_delete_loading: "アカウントを削除中...",
     account_delete_error: "アカウントの削除中にエラーが発生しました。もう一度お試しください。",
 
+    recommend_modal_title: "レコードを収集している人を知っていますか？",
+    recommend_modal_text: "Bothsideがコレクションの整理に役立っているなら、他のコレクターにも共有しましょう。",
+    recommend_modal_btn_primary: "Bothsideを推薦する",
+    recommend_modal_btn_secondary: "また今度",
+    recommend_modal_btn_tertiary: "再表示しない",
+    recommend_share_text: "レコードコレクションを整理するためにBothsideを使っています。レコードをコレクションしているなら、きっと気に入るはずです。\n\nダウンロードはこちらから：\nhttps://apps.apple.com/app/id6475736780",
 };
-
-

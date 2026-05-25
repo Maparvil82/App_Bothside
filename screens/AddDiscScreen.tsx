@@ -23,6 +23,7 @@ import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 
 interface Album {
   id: string;
@@ -53,6 +54,34 @@ export const AddDiscScreen: React.FC = () => {
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
+  const { checkRecommendationTrigger } = useRecommendBothside();
+
+  const showSuccessAlert = useCallback(() => {
+    // Check if user has exactly 4 vinyl records to recommend Bothside
+    checkRecommendationTrigger();
+
+    Alert.alert(
+      t('add_disc_success_title'),
+      t('add_disc_success_message'),
+      [
+        {
+          text: t('add_disc_action_add_more'),
+          style: 'default',
+          onPress: () => {
+            // Mantener en la página actual
+          }
+        },
+        {
+          text: t('add_disc_action_go_collection'),
+          style: 'default',
+          onPress: () => {
+            navigation.navigate('SearchTab');
+          }
+        }
+      ]
+    );
+  }, [navigation, t, checkRecommendationTrigger]);
+
   const [activeTab, setActiveTab] = useState<'search' | 'manual'>('search');
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
@@ -419,31 +448,7 @@ export const AddDiscScreen: React.FC = () => {
           if (findErr) throw findErr;
           if (albumRow?.id) {
             await UserCollectionService.addToCollection(user.id, albumRow.id);
-            setArtistQuery('');
-            setAlbumQuery('');
-            setManualSearchResults([]);
-
-            // Mostrar opciones después de añadir el disco
-            Alert.alert(
-              t('add_disc_success_title'),
-              t('add_disc_success_message'),
-              [
-                {
-                  text: t('add_disc_action_add_more'),
-                  style: 'default',
-                  onPress: () => {
-                    // Mantener en la página actual
-                  }
-                },
-                {
-                  text: t('add_disc_action_go_collection'),
-                  style: 'default',
-                  onPress: () => {
-                    navigation.navigate('SearchTab');
-                  }
-                }
-              ]
-            );
+            showSuccessAlert();
             return;
           } else {
             // Crear álbum mínimo en catálogo y luego añadir a colección
@@ -497,31 +502,7 @@ export const AddDiscScreen: React.FC = () => {
                 }
               } catch { }
               await UserCollectionService.addToCollection(user.id, newAlbum.id);
-              setArtistQuery('');
-              setAlbumQuery('');
-              setManualSearchResults([]);
-
-              // Mostrar opciones después de añadir el disco
-              Alert.alert(
-                t('add_disc_success_title'),
-                t('add_disc_success_message'),
-                [
-                  {
-                    text: t('add_disc_action_add_more'),
-                    style: 'default',
-                    onPress: () => {
-                      // Mantener en la página actual
-                    }
-                  },
-                  {
-                    text: t('add_disc_action_go_collection'),
-                    style: 'default',
-                    onPress: () => {
-                      navigation.navigate('SearchTab');
-                    }
-                  }
-                ]
-              );
+              showSuccessAlert();
               return;
             }
           }
@@ -549,32 +530,7 @@ export const AddDiscScreen: React.FC = () => {
             });
         }
 
-        // Limpiar búsqueda manual
-        setArtistQuery('');
-        setAlbumQuery('');
-        setManualSearchResults([]);
-
-        // Mostrar opciones después de añadir el disco
-        Alert.alert(
-          t('add_disc_success_title'),
-          t('add_disc_success_message'),
-          [
-            {
-              text: t('add_disc_action_add_more'),
-              style: 'default',
-              onPress: () => {
-                // Mantener en la página actual
-              }
-            },
-            {
-              text: t('add_disc_action_go_collection'),
-              style: 'default',
-              onPress: () => {
-                navigation.navigate('SearchTab');
-              }
-            }
-          ]
-        );
+        showSuccessAlert();
       } else {
         // Si la función respondió 2xx pero con success false, intentar fallback
         try {
@@ -586,31 +542,7 @@ export const AddDiscScreen: React.FC = () => {
             .maybeSingle();
           if (albumRow?.id) {
             await UserCollectionService.addToCollection(user.id, albumRow.id);
-            setArtistQuery('');
-            setAlbumQuery('');
-            setManualSearchResults([]);
-
-            // Mostrar opciones después de añadir el disco
-            Alert.alert(
-              t('add_disc_success_title'),
-              t('add_disc_success_message'),
-              [
-                {
-                  text: t('add_disc_action_add_more'),
-                  style: 'default',
-                  onPress: () => {
-                    // Mantener en la página actual
-                  }
-                },
-                {
-                  text: t('add_disc_action_go_collection'),
-                  style: 'default',
-                  onPress: () => {
-                    navigation.navigate('SearchTab');
-                  }
-                }
-              ]
-            );
+            showSuccessAlert();
             return;
           }
         } catch { }
@@ -709,30 +641,7 @@ export const AddDiscScreen: React.FC = () => {
           // 🟢 3) Si pasa las verificaciones → continuar
 
           await UserCollectionService.addToCollection(user.id, albumRow.id);
-          setQuery('');
-          setAlbums([]);
-
-          // Mostrar opciones después de añadir el disco
-          Alert.alert(
-            t('add_disc_success_title'),
-            t('add_disc_success_message'),
-            [
-              {
-                text: t('add_disc_action_add_more'),
-                style: 'default',
-                onPress: () => {
-                  // Mantener en la página actual
-                }
-              },
-              {
-                text: t('add_disc_action_go_collection'),
-                style: 'default',
-                onPress: () => {
-                  navigation.navigate('SearchTab');
-                }
-              }
-            ]
-          );
+          showSuccessAlert();
           return;
         } else {
           // El álbum no existe, crearlo con datos completos
@@ -878,60 +787,14 @@ export const AddDiscScreen: React.FC = () => {
             // 🟢 3) Si pasa las verificaciones → continuar
 
             await UserCollectionService.addToCollection(user.id, newAlbum.id);
-            setQuery('');
-            setAlbums([]);
-
-            // Mostrar opciones después de añadir el disco
-            Alert.alert(
-              t('add_disc_success_title'),
-              t('add_disc_success_message'),
-              [
-                {
-                  text: t('add_disc_action_add_more'),
-                  style: 'default',
-                  onPress: () => {
-                    // Mantener en la página actual
-                  }
-                },
-                {
-                  text: t('add_disc_action_go_collection'),
-                  style: 'default',
-                  onPress: () => {
-                    navigation.navigate('SearchTab');
-                  }
-                }
-              ]
-            );
+            showSuccessAlert();
             return;
           }
         }
       } else {
         // Para álbumes sin discogs_id (casos raros)
         await UserCollectionService.addToCollection(user.id, album.id);
-        setQuery('');
-        setAlbums([]);
-
-        // Mostrar opciones después de añadir el disco
-        Alert.alert(
-          t('add_disc_success_title'),
-          t('add_disc_success_message'),
-          [
-            {
-              text: t('add_disc_action_add_more'),
-              style: 'default',
-              onPress: () => {
-                // Mantener en la página actual
-              }
-            },
-            {
-              text: t('add_disc_action_go_collection'),
-              style: 'default',
-              onPress: () => {
-                navigation.navigate('SearchTab');
-              }
-            }
-          ]
-        );
+        showSuccessAlert();
       }
     } catch (error) {
       console.error('❌ Error adding to collection:', error);

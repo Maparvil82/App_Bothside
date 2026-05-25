@@ -1049,6 +1049,13 @@ export const it = {
     account_delete_loading: "Eliminazione account...",
     account_delete_error: "Si è verificato un errore durante l'eliminazione dell'account. Riprova.",
 
+    // Bothside Recommendation Modal
+    recommend_modal_title: "Conosci qualcuno che colleziona vinili?",
+    recommend_modal_text: "Se Bothside ti sta aiutando a organizzare la tua collezione, condividila con un altro collezionista.",
+    recommend_modal_btn_primary: "Consiglia Bothside",
+    recommend_modal_btn_secondary: "Forse più tardi",
+    recommend_modal_btn_tertiary: "Non mostrare più",
+    recommend_share_text: "Sto usando Bothside per organizzare la mia collezione di vinili. Se collezioni dischi, ti piacerà.\n\nScaricala qui:\nhttps://apps.apple.com/app/id6475736780",
 };
 
 

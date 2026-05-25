@@ -13,6 +13,8 @@ import { validateEnv } from './config/env';
 import { OfflineNotice } from './components/OfflineNotice';
 import { AnalyticsService, posthog } from './services/analytics';
 import { PostHogProvider } from 'posthog-react-native';
+import { RecommendBothsideProvider } from './contexts/RecommendBothsideContext';
+import { RecommendBothsideModal } from './components/RecommendBothsideModal';
 
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
@@ -35,6 +37,7 @@ const AppWithModal: React.FC = () => {
         sessionId={sessionId}
         onClose={closeSessionNoteModal}
       />
+      <RecommendBothsideModal />
     </>
   );
 };
@@ -74,9 +77,11 @@ export default function App() {
         <ThemeProvider>
           <SessionNoteProvider>
             <GemsProvider>
-              <StatusBar style="auto" />
-              <AppWithModal />
-              <OfflineNotice />
+              <RecommendBothsideProvider>
+                <StatusBar style="auto" />
+                <AppWithModal />
+                <OfflineNotice />
+              </RecommendBothsideProvider>
             </GemsProvider>
           </SessionNoteProvider>
         </ThemeProvider>

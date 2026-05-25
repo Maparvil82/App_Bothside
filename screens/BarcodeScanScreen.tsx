@@ -22,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 
 const { width } = Dimensions.get('window');
 
@@ -41,6 +42,7 @@ export const BarcodeScanScreen = () => {
     const navigation = useNavigation<any>();
     const isFocused = useIsFocused();
     const { mode } = useThemeMode();
+    const { checkRecommendationTrigger } = useRecommendBothside();
     const [permission, requestPermission] = useCameraPermissions();
 
     const [scanned, setScanned] = useState(false);
@@ -272,6 +274,9 @@ export const BarcodeScanScreen = () => {
             }
 
             console.log('✅ Disco guardado exitosamente');
+            
+            // Check recommendation trigger for Bothside (4th vinyl record)
+            checkRecommendationTrigger();
 
             // Success feedback
             Alert.alert(

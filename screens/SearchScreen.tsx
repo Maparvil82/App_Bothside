@@ -42,6 +42,7 @@ import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { AnalyticsService } from '../services/analytics';
+import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 import Svg, { Rect, Line } from 'react-native-svg';
 import { CreateShelfModal } from '../components/CreateShelfModal';
 
@@ -69,6 +70,7 @@ export const SearchScreen: React.FC = () => {
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
   const { t } = useTranslation();
+  const { checkRecommendationTrigger } = useRecommendBothside();
   const searchInputRef = useRef<TextInput>(null);
   const [query, setQuery] = useState('');
   const [releases, setReleases] = useState<DiscogsRelease[]>([]);
@@ -968,6 +970,9 @@ export const SearchScreen: React.FC = () => {
       await UserCollectionService.addToCollection(user.id, album.id);
 
       await loadCollection();
+
+      // Check recommendation trigger for Bothside (4th vinyl record)
+      checkRecommendationTrigger();
 
       // Mostrar opciones después de añadir el disco
       Alert.alert(
