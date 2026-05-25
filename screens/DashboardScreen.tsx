@@ -697,6 +697,79 @@ export default function DashboardScreen() {
           <StatCard title={t('dashboard_stat_newest_album')} value={stats.newestAlbum} />
         </View>
 
+        {/* Gráficas en scroll horizontal */}
+        {(stats.topArtists.length > 0 || stats.topLabels.length > 0 || stats.topStyles.length > 0 || stats.albumsByDecade.length > 0) && (
+          <View style={styles.chartsSection}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.chartsScrollContainer}
+              decelerationRate="fast"
+              snapToInterval={width - 16} // Ancho del item (width-32) + margen derecho (16)
+              pagingEnabled={false} // Desactivamos paging estricto para permitir gaps
+              onScroll={handleScroll}
+              scrollEventThrottle={16}
+            >
+              {stats.topStyles.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.topStyles}
+                    title={t('dashboard_chart_top_styles')}
+                    keyName="style"
+                    icon="musical-notes"
+                  />
+                </View>
+              )}
+
+              {stats.topArtists.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.topArtists}
+                    title={t('dashboard_chart_top_artists')}
+                    keyName="artist"
+                    icon="people"
+                  />
+                </View>
+              )}
+
+              {stats.topLabels.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.topLabels}
+                    title={t('dashboard_chart_top_labels')}
+                    keyName="label"
+                    icon="business"
+                  />
+                </View>
+              )}
+
+              {stats.albumsByDecade.length > 0 && (
+                <View style={styles.chartItem}>
+                  <TopItemsLineChart
+                    data={stats.albumsByDecade}
+                    title={t('dashboard_chart_albums_by_decade')}
+                    keyName="decade"
+                    icon="calendar"
+                  />
+                </View>
+              )}
+            </ScrollView>
+
+            {/* Pagination Dots */}
+            <View style={styles.paginationContainer}>
+              {[0, 1, 2, 3].map((_, index) => (
+                <View
+                  key={index}
+                  style={[
+                    styles.paginationDot,
+                    index === activeChartIndex ? styles.paginationDotActive : styles.paginationDotInactive,
+                  ]}
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Rango de Coleccionista */}
         <CollectorRankCard
           totalAlbums={stats.totalAlbums}
@@ -830,78 +903,7 @@ export default function DashboardScreen() {
           </View>
         )}
 
-        {/* Gráficas en scroll horizontal */}
-        {(stats.topArtists.length > 0 || stats.topLabels.length > 0 || stats.topStyles.length > 0 || stats.albumsByDecade.length > 0) && (
-          <View style={styles.chartsSection}>
-            <ScrollView
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.chartsScrollContainer}
-              decelerationRate="fast"
-              snapToInterval={width - 16} // Ancho del item (width-32) + margen derecho (16)
-              pagingEnabled={false} // Desactivamos paging estricto para permitir gaps
-              onScroll={handleScroll}
-              scrollEventThrottle={16}
-            >
-              {stats.topArtists.length > 0 && (
-                <View style={styles.chartItem}>
-                  <TopItemsLineChart
-                    data={stats.topArtists}
-                    title={t('dashboard_chart_top_artists')}
-                    keyName="artist"
-                    icon="people"
-                  />
-                </View>
-              )}
 
-              {stats.topLabels.length > 0 && (
-                <View style={styles.chartItem}>
-                  <TopItemsLineChart
-                    data={stats.topLabels}
-                    title={t('dashboard_chart_top_labels')}
-                    keyName="label"
-                    icon="business"
-                  />
-                </View>
-              )}
-
-              {stats.topStyles.length > 0 && (
-                <View style={styles.chartItem}>
-                  <TopItemsLineChart
-                    data={stats.topStyles}
-                    title={t('dashboard_chart_top_styles')}
-                    keyName="style"
-                    icon="musical-notes"
-                  />
-                </View>
-              )}
-
-              {stats.albumsByDecade.length > 0 && (
-                <View style={styles.chartItem}>
-                  <TopItemsLineChart
-                    data={stats.albumsByDecade}
-                    title={t('dashboard_chart_albums_by_decade')}
-                    keyName="decade"
-                    icon="calendar"
-                  />
-                </View>
-              )}
-            </ScrollView>
-
-            {/* Pagination Dots */}
-            <View style={styles.paginationContainer}>
-              {[0, 1, 2, 3].map((_, index) => (
-                <View
-                  key={index}
-                  style={[
-                    styles.paginationDot,
-                    index === activeChartIndex ? styles.paginationDotActive : styles.paginationDotInactive,
-                  ]}
-                />
-              ))}
-            </View>
-          </View>
-        )}
 
         {/* Últimos Álbumes Añadidos */}
         {stats.latestAlbums.length > 0 && (
