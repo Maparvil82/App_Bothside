@@ -23,7 +23,6 @@ import { AppColors } from '../src/theme/colors';
 import { useMyInvitations } from '../hooks/useCollaboration';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { getAiEnabled, setAiEnabled, setAiConsent } from '../src/privacy/aiConsent';
-import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 
 
 export const ProfileScreen: React.FC = () => {
@@ -40,7 +39,6 @@ export const ProfileScreen: React.FC = () => {
   const [isAiEnabled, setIsAiEnabled] = useState<boolean>(false);
   const { invitations } = useMyInvitations();
   const pendingInvitationsCount = invitations.filter(inv => inv.status === 'pending').length;
-  const { showPreview, resetStorage } = useRecommendBothside();
 
   useEffect(() => {
     setIsDarkMode(mode === 'dark');
@@ -170,15 +168,7 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
-  const handleResetRecommendModal = async () => {
-    try {
-      await resetStorage();
-      Alert.alert(t('common_success') || 'Éxito', 'Estado del modal de recomendación restablecido.');
-    } catch (error) {
-      console.error('Error resetting recommend modal state:', error);
-      Alert.alert(t('common_error') || 'Error', 'No se pudo restablecer el estado del modal.');
-    }
-  };
+
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -284,27 +274,7 @@ export const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {__DEV__ && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 10 }]}>Desarrollo (DEV)</Text>
-            
-            <TouchableOpacity
-              style={[styles.menuItem, { borderBottomColor: colors.border }]}
-              onPress={showPreview}
-            >
-              <Text style={[styles.menuItemText, { color: colors.text }]}>Previsualizar Modal Recomendación</Text>
-              <Ionicons name="eye-outline" size={20} color={colors.text} opacity={0.5} />
-            </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.menuItem, { borderBottomWidth: 0 }]}
-              onPress={handleResetRecommendModal}
-            >
-              <Text style={[styles.menuItemText, { color: colors.text }]}>Resetear Estado Modal</Text>
-              <Ionicons name="refresh-outline" size={20} color={colors.text} opacity={0.5} />
-            </TouchableOpacity>
-          </View>
-        )}
 
         {/* Cuenta */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>

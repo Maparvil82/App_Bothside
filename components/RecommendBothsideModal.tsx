@@ -1,15 +1,11 @@
 import React from 'react';
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Dimensions, Share } from 'react-native';
+import { Modal, View, Text, StyleSheet, TouchableOpacity, Share, ImageBackground, SafeAreaView, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeMode } from '../contexts/ThemeContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 import { APP_STORE_URL } from '../config/env';
 
-const { width } = Dimensions.get('window');
-
 export const RecommendBothsideModal = () => {
-    const { mode } = useThemeMode();
     const { t } = useTranslation();
     const {
         recommendModalVisible,
@@ -31,199 +27,224 @@ export const RecommendBothsideModal = () => {
                 await handleRecommend();
             } else if (result.action === Share.dismissedAction) {
                 console.log('[RecommendBothsideModal] Native share was dismissed.');
-                // We still count it as dismissed/postponed
                 handleDismiss();
             }
         } catch (error) {
             console.error('[RecommendBothsideModal] Error opening native share:', error);
-            // Fallback: close modal even if share failed
             handleDismiss();
         }
     };
 
     if (!recommendModalVisible) return null;
 
-    // Premium styling depending on clear/dark themes
-    const isDark = mode === 'dark';
-    const cardBgColor = isDark ? '#1C1C1E' : '#FFFFFF';
-    const textColor = isDark ? '#FFFFFF' : '#1C1C1E';
-    const subtextColor = isDark ? '#A1A1AA' : '#6B7280';
-    const borderColor = isDark ? '#2C2C2E' : '#E5E5EA';
-    const primaryBtnColor = isDark ? '#FF9F0A' : '#000000'; // Elegant orange for dark mode, sleek black for light mode
-    const secondaryBtnBg = isDark ? '#2C2C2E' : '#F2F2F7';
-
     return (
         <Modal
             transparent
             visible={recommendModalVisible}
-            animationType="fade"
+            animationType="slide"
             statusBarTranslucent
             onRequestClose={handleDismiss}
         >
-            <View style={styles.overlay}>
-                <View style={[styles.container, { backgroundColor: cardBgColor, borderColor: borderColor }]}>
-                    
-                    {/* Premium Circle Icon Backdrop */}
-                    <View style={[styles.iconContainer, { backgroundColor: isDark ? 'rgba(255, 159, 10, 0.12)' : 'rgba(0, 0, 0, 0.05)' }]}>
-                        <Ionicons 
-                            name="share-social" 
-                            size={44} 
-                            color={isDark ? '#FF9F0A' : '#000000'} 
-                        />
-                    </View>
+            {/* Dark semi-transparent backdrop */}
+            <TouchableOpacity
+                style={styles.backdrop}
+                activeOpacity={1}
+                onPress={handleDismiss}
+            >
+                {/* Bottom Sheet Container */}
+                <TouchableOpacity
+                    activeOpacity={1}
+                    style={styles.sheetContainer}
+                >
+                    <ImageBackground
+                        source={require('../assets/compart.png')}
+                        style={styles.sheetBackground}
+                        resizeMode="cover"
+                    >
+                        {/* Overlay covering only the sheet background for readability */}
+                        <View style={styles.sheetOverlay}>
+                            <SafeAreaView style={styles.safeArea}>
+                                <View style={styles.contentContainer}>
 
-                    {/* Headline */}
-                    <Text style={[styles.title, { color: textColor }]}>
-                        {t('recommend_modal_title')}
-                    </Text>
+                                    {/* Top section: Handle + Title + Subtitle */}
+                                    <View style={styles.topContainer}>
+                                        {/* Bottom sheet drag handle indicator */}
+                                        <View style={styles.dragHandle} />
 
-                    {/* Supporting Text */}
-                    <Text style={[styles.message, { color: subtextColor }]}>
-                        {t('recommend_modal_text')}
-                    </Text>
+                                        {/* Headline */}
+                                        <Text style={styles.title}>
+                                            {t('recommend_modal_title')}
+                                        </Text>
 
-                    {/* Action Buttons */}
-                    <View style={styles.buttonContainer}>
-                        {/* Primary action */}
-                        <TouchableOpacity
-                            style={[styles.buttonPrimary, { backgroundColor: primaryBtnColor }]}
-                            onPress={handleShare}
-                            activeOpacity={0.85}
-                        >
-                            <Ionicons name="logo-apple-appstore" size={18} color="#FFF" style={styles.buttonIcon} />
-                            <Text style={styles.buttonTextPrimary}>
-                                {t('recommend_modal_btn_primary')}
-                            </Text>
-                        </TouchableOpacity>
+                                        {/* Supporting Text */}
+                                        <Text style={styles.message}>
+                                            {t('recommend_modal_text')}
+                                        </Text>
+                                    </View>
 
-                        {/* Secondary action */}
-                        <TouchableOpacity
-                            style={[styles.buttonSecondary, { backgroundColor: secondaryBtnBg }]}
-                            onPress={handleDismiss}
-                            activeOpacity={0.85}
-                        >
-                            <Text style={[styles.buttonTextSecondary, { color: textColor }]}>
-                                {t('recommend_modal_btn_secondary')}
-                            </Text>
-                        </TouchableOpacity>
+                                    {/* Bottom section: Action Buttons */}
+                                    <View style={styles.buttonContainer}>
+                                        {/* Primary action */}
+                                        <TouchableOpacity
+                                            style={styles.buttonPrimary}
+                                            onPress={handleShare}
+                                            activeOpacity={0.9}
+                                        >
+                                            <Ionicons name="share-social-outline" size={18} color="#000" style={styles.buttonIcon} />
+                                            <Text style={styles.buttonTextPrimary}>
+                                                {t('recommend_modal_btn_primary')}
+                                            </Text>
+                                        </TouchableOpacity>
 
-                        {/* Tertiary action */}
-                        <TouchableOpacity
-                            style={styles.buttonTertiary}
-                            onPress={handleNeverShowAgain}
-                            activeOpacity={0.85}
-                        >
-                            <Text style={styles.buttonTextTertiary}>
-                                {t('recommend_modal_btn_tertiary')}
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
+                                        {/* Secondary action */}
+                                        <TouchableOpacity
+                                            style={styles.buttonSecondary}
+                                            onPress={handleDismiss}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Text style={styles.buttonTextSecondary}>
+                                                {t('recommend_modal_btn_secondary')}
+                                            </Text>
+                                        </TouchableOpacity>
+
+                                        {/* Tertiary action */}
+                                        <TouchableOpacity
+                                            style={styles.buttonTertiary}
+                                            onPress={handleNeverShowAgain}
+                                            activeOpacity={0.8}
+                                        >
+                                            <Text style={styles.buttonTextTertiary}>
+                                                {t('recommend_modal_btn_tertiary')}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            </SafeAreaView>
+                        </View>
+                    </ImageBackground>
+                </TouchableOpacity>
+            </TouchableOpacity>
         </Modal>
     );
 };
 
 const styles = StyleSheet.create({
-    overlay: {
+    backdrop: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 24,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)', // Dim backdrop showing the screen behind the sheet
+        justifyContent: 'flex-end',
     },
-    container: {
-        width: width * 0.88,
-        borderRadius: 28,
-        paddingHorizontal: 24,
-        paddingTop: 32,
-        paddingBottom: 20,
-        alignItems: 'center',
-        borderWidth: 1.5,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 10,
-        },
-        shadowOpacity: 0.35,
-        shadowRadius: 16,
-        elevation: 12,
+    sheetContainer: {
+        width: '100%',
+        height: Dimensions.get('window').height * 0.7, // Cover ~72% height of screen like a standard sheet
+        borderTopLeftRadius: 36,
+        borderTopRightRadius: 36,
+        overflow: 'hidden', // Enforces rounded corners on child background
     },
-    iconContainer: {
-        marginBottom: 24,
-        padding: 20,
-        borderRadius: 60,
-        justifyContent: 'center',
-        alignItems: 'center',
+    sheetBackground: {
+        flex: 1,
+        width: '100%',
+        height: '100%',
+    },
+    sheetOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.65)', // Ensure superb readability of white text
+        justifyContent: 'flex-end',
+    },
+    safeArea: {
+        flex: 1,
+        width: '100%',
+    },
+    contentContainer: {
+        flex: 1,
+        paddingHorizontal: 28,
+        paddingBottom: 28,
+        paddingTop: 16,
+        width: '100%',
+        justifyContent: 'space-between', // Spaces topContainer (top) and buttonContainer (bottom) perfectly
+    },
+    topContainer: {
+        width: '100%',
+    },
+    dragHandle: {
+        width: 44,
+        height: 5,
+        borderRadius: 3,
+        backgroundColor: 'rgba(255, 255, 255, 0.35)',
+        alignSelf: 'center',
+        marginBottom: 28,
     },
     title: {
-        fontSize: 22,
-        fontWeight: '700',
+        fontSize: 28,
+        fontWeight: '800',
+        color: '#FFFFFF',
         marginBottom: 12,
-        textAlign: 'center',
-        lineHeight: 28,
-        letterSpacing: -0.3,
+        textAlign: 'left',
+        lineHeight: 34,
+        letterSpacing: -0.6,
     },
     message: {
         fontSize: 15,
-        textAlign: 'center',
-        marginBottom: 28,
+        color: 'rgba(255, 255, 255, 0.85)',
+        textAlign: 'left',
         lineHeight: 22,
-        paddingHorizontal: 8,
+        fontWeight: '400',
+        marginBottom: 16,
     },
     buttonContainer: {
         width: '100%',
         gap: 12,
-        alignItems: 'center',
     },
     buttonPrimary: {
         flexDirection: 'row',
+        backgroundColor: '#FFFFFF',
         paddingVertical: 15,
-        paddingHorizontal: 24,
-        borderRadius: 16,
+        borderRadius: 14,
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
-            height: 3,
+            height: 4,
         },
         shadowOpacity: 0.15,
-        shadowRadius: 6,
-        elevation: 3,
+        shadowRadius: 8,
+        elevation: 4,
     },
     buttonTextPrimary: {
-        color: '#FFFFFF',
+        color: '#000000',
         fontSize: 16,
-        fontWeight: '600',
-        letterSpacing: -0.1,
+        fontWeight: '700',
+        letterSpacing: -0.2,
     },
     buttonIcon: {
         marginRight: 8,
     },
     buttonSecondary: {
-        paddingVertical: 14,
-        paddingHorizontal: 24,
-        borderRadius: 16,
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        borderWidth: 1,
+        borderColor: 'rgba(255, 255, 255, 0.3)',
+        paddingVertical: 15,
+        borderRadius: 14,
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
     },
     buttonTextSecondary: {
+        color: '#FFFFFF',
         fontSize: 15,
         fontWeight: '600',
     },
     buttonTertiary: {
-        paddingVertical: 10,
-        paddingHorizontal: 16,
+        paddingVertical: 8,
         width: '100%',
         alignItems: 'center',
         justifyContent: 'center',
-        marginTop: 6,
+        marginTop: 4,
     },
     buttonTextTertiary: {
-        color: '#8E8E93',
+        color: 'rgba(255, 255, 255, 0.5)',
         fontSize: 13,
         fontWeight: '500',
         textDecorationLine: 'underline',
