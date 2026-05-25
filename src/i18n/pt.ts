@@ -409,6 +409,7 @@ export const pt = {
     album_detail_gem_added_title: "Gem Adicionado",
     album_detail_gem_added_message: "O álbum foi adicionado às suas Gems",
     album_detail_gem_error_message: "Não foi possível gerenciar a Gem",
+    album_detail_go_to_planner: "Ir para o DJ Planner",
     album_detail_already_in_bag_title: "Já na maleta",
     album_detail_already_in_bag_message: "Este álbum já está nesta maleta",
     album_detail_added_to_bag_title: "Adicionado!",

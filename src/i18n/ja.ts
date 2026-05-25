@@ -1004,6 +1004,7 @@ export const ja = {
     album_detail_gem_added_title: "ジェム追加",
     album_detail_gem_added_message: "アルバムがジェムに追加されました",
     album_detail_gem_error_message: "ジェムを管理できませんでした",
+    album_detail_go_to_planner: "DJプランナーに移動",
     album_detail_already_in_bag_title: "既にバッグにあります",
     album_detail_already_in_bag_message: "このアルバムは既にこのバッグに入っています",
     album_detail_added_to_bag_title: "追加完了！",

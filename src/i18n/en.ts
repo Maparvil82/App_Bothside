@@ -398,6 +398,7 @@ export const en = {
     album_detail_gem_added_title: "Gem Added",
     album_detail_gem_added_message: "The album has been added to your Gems",
     album_detail_gem_error_message: "Could not manage Gem",
+    album_detail_go_to_planner: "Go to DJ Planner",
     album_detail_already_in_bag_title: "Already in bag",
     album_detail_already_in_bag_message: "This album is already in this bag",
     album_detail_added_to_bag_title: "Added!",

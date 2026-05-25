@@ -2252,6 +2252,21 @@ export default function AlbumDetailScreen() {
                 </View>
               )}
             </ScrollView>
+
+            <View style={{ padding: 20, borderTopWidth: 1, borderTopColor: colors.border }}>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowSessionModal(false);
+                  (navigation as any).navigate('Calendar');
+                }}
+                style={[styles.goToPlannerButton, { borderColor: primaryColor, marginTop: 0 }]}
+              >
+                <Ionicons name="calendar-outline" size={20} color={primaryColor} style={{ marginRight: 8 }} />
+                <Text style={[styles.goToPlannerButtonText, { color: primaryColor }]}>
+                  {t('album_detail_go_to_planner')}
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -4093,6 +4108,20 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 16,
     color: '#fff',
+    fontWeight: '600',
+  },
+  goToPlannerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginTop: 12,
+  },
+  goToPlannerButtonText: {
+    fontSize: 14,
     fontWeight: '600',
   },
   floatingAIButton: {

@@ -1004,6 +1004,7 @@ export const it = {
     album_detail_gem_added_title: "Gemma Aggiunta",
     album_detail_gem_added_message: "L'album è stato aggiunto alle tue Gemme",
     album_detail_gem_error_message: "Impossibile gestire la Gemma",
+    album_detail_go_to_planner: "Vai al DJ Planner",
     album_detail_already_in_bag_title: "Già nel carrello",
     album_detail_already_in_bag_message: "Questo album è già in questo carrello",
     album_detail_added_to_bag_title: "Aggiunto!",

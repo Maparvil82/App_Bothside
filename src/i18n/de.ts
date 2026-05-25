@@ -734,6 +734,7 @@ export const de = {
     album_detail_gem_added_title: "Gem hinzugefügt",
     album_detail_gem_added_message: "Das Album wurde zu Ihren Gems hinzugefügt",
     album_detail_gem_error_message: "Gem konnte nicht verwaltet werden",
+    album_detail_go_to_planner: "Zum DJ Planer gehen",
     album_detail_already_in_bag_title: "Bereits in Maleta",
     album_detail_already_in_bag_message: "Dieses Album ist bereits in dieser Maleta",
     album_detail_added_to_bag_title: "Hinzugefügt!",
