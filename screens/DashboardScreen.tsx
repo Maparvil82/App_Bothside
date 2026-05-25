@@ -541,54 +541,29 @@ export default function DashboardScreen() {
     if (!user?.id || !stats) return;
 
     try {
-      // Get all users with their collection stats
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('id, username')
-        .not('username', 'is', null);
+      // Get all user rankings directly from user_rankings table
+      const { data: rankings, error } = await supabase
+        .from('user_rankings')
+        .select('user_id, level_index, collection_value, total_albums')
+        .order('level_index', { ascending: false })
+        .order('collection_value', { ascending: false });
 
       if (error) throw error;
 
-      const usersWithStats = await Promise.all(
-        profiles.map(async (profile) => {
-          const { data: collection } = await supabase
-            .from('user_collection')
-            .select(`
-              album_id,
-              albums!inner (
-                album_stats (
-                  avg_price
-                )
-              )
-            `)
-            .eq('user_id', profile.id);
-
-          const totalAlbums = collection?.length || 0;
-          const collectionValue = collection?.reduce((sum, item) => {
-            const stats = extractAlbumStats(item.albums);
-            const avgPrice = stats?.avg_price;
-            return sum + (avgPrice || 0);
-          }, 0) || 0;
-
-          return {
-            id: profile.id,
-            totalAlbums,
-            collectionValue,
-          };
-        })
-      );
-
-      // Sort by collection value, then by total albums
-      const sortedUsers = usersWithStats
-        .sort((a, b) => {
-          if (b.collectionValue !== a.collectionValue) {
-            return b.collectionValue - a.collectionValue;
-          }
-          return b.totalAlbums - a.totalAlbums;
-        });
+      // Secondary sorting on the client to match exact leaderboard behavior:
+      // Sort by level_index (desc), collection_value (desc), total_albums (desc)
+      const sortedUsers = (rankings || []).sort((a: any, b: any) => {
+        if (b.level_index !== a.level_index) {
+          return b.level_index - a.level_index;
+        }
+        if (b.collection_value !== a.collection_value) {
+          return b.collection_value - a.collection_value;
+        }
+        return b.total_albums - a.total_albums;
+      });
 
       // Find current user's position
-      const position = sortedUsers.findIndex(u => u.id === user.id) + 1;
+      const position = sortedUsers.findIndex((u: any) => u.user_id === user.id) + 1;
       setUserPosition(position > 0 ? position : null);
 
     } catch (error) {
