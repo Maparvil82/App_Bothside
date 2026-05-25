@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
+import { APP_STORE_URL } from '../config/env';
 
 const { width } = Dimensions.get('window');
 
@@ -19,7 +20,7 @@ export const RecommendBothsideModal = () => {
 
     const handleShare = async () => {
         try {
-            const shareText = t('recommend_share_text');
+            const shareText = t('recommend_share_text', { appStoreUrl: APP_STORE_URL });
             console.log('[RecommendBothsideModal] Sharing message:', shareText);
             const result = await Share.share({
                 message: shareText,

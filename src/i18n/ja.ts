@@ -1054,5 +1054,6 @@ export const ja = {
     recommend_modal_btn_primary: "Bothsideを推薦する",
     recommend_modal_btn_secondary: "また今度",
     recommend_modal_btn_tertiary: "再表示しない",
-    recommend_share_text: "レコードコレクションを整理するためにBothsideを使っています。レコードをコレクションしているなら、きっと気に入るはずです。\n\nダウンロードはこちらから：\nhttps://apps.apple.com/app/id6475736780",
+    recommend_share_text: "レコードコレクションを整理するためにBothsideを使っています。レコードをコレクションしているなら、きっと気に入るはずです。\n\nダウンロードはこちらから：\n{appStoreUrl}",
 };
+

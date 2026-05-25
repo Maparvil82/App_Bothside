@@ -9,6 +9,8 @@ interface RecommendBothsideContextType {
     handleRecommend: () => Promise<void>;
     handleDismiss: () => void;
     handleNeverShowAgain: () => Promise<void>;
+    showPreview: () => void;
+    resetStorage: () => Promise<void>;
 }
 
 const RecommendBothsideContext = createContext<RecommendBothsideContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
     const [recommendModalVisible, setRecommendModalVisible] = useState(false);
     const [sessionDismissed, setSessionDismissed] = useState(false);
     const isChecking = useRef(false);
+    const isPreviewMode = useRef(false);
 
     const checkRecommendationTrigger = useCallback(async () => {
         if (!user) {
@@ -73,6 +76,11 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
 
     const handleRecommend = useCallback(async () => {
         setRecommendModalVisible(false);
+        if (isPreviewMode.current) {
+            console.log('[RecommendBothside] Recommend clicked in preview mode. Skipping storage write.');
+            isPreviewMode.current = false;
+            return;
+        }
         try {
             // Persist the shown state so they never see it again
             await AsyncStorage.setItem('bothside_recommend_shown', 'true');
@@ -82,18 +90,46 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
     }, []);
 
     const handleDismiss = useCallback(() => {
-        console.log('[RecommendBothside] Dismissed for the current session.');
+        console.log('[RecommendBothside] Dismissed.');
         setRecommendModalVisible(false);
+        if (isPreviewMode.current) {
+            console.log('[RecommendBothside] Dismissed clicked in preview mode. Skipping session dismiss set.');
+            isPreviewMode.current = false;
+            return;
+        }
         setSessionDismissed(true);
     }, []);
 
     const handleNeverShowAgain = useCallback(async () => {
         console.log('[RecommendBothside] Dismissed permanently.');
         setRecommendModalVisible(false);
+        if (isPreviewMode.current) {
+            console.log('[RecommendBothside] Never Show clicked in preview mode. Skipping storage write.');
+            isPreviewMode.current = false;
+            return;
+        }
         try {
             await AsyncStorage.setItem('bothside_recommend_never_show', 'true');
         } catch (error) {
             console.error('[RecommendBothside] Error saving never show state:', error);
+        }
+    }, []);
+
+    const showPreview = useCallback(() => {
+        console.log('[RecommendBothside] Forcing modal preview (DEV mode).');
+        isPreviewMode.current = true;
+        setRecommendModalVisible(true);
+    }, []);
+
+    const resetStorage = useCallback(async () => {
+        console.log('[RecommendBothside] Resetting persistent states (DEV mode).');
+        try {
+            await AsyncStorage.removeItem('bothside_recommend_shown');
+            await AsyncStorage.removeItem('bothside_recommend_never_show');
+            setSessionDismissed(false);
+            isPreviewMode.current = false;
+        } catch (error) {
+            console.error('[RecommendBothside] Error resetting storage states:', error);
         }
     }, []);
 
@@ -105,6 +141,8 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
                 handleRecommend,
                 handleDismiss,
                 handleNeverShowAgain,
+                showPreview,
+                resetStorage,
             }}
         >
             {children}

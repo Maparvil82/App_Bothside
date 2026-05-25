@@ -1007,5 +1007,6 @@ export const en = {
     recommend_modal_btn_primary: "Recommend Bothside",
     recommend_modal_btn_secondary: "Maybe later",
     recommend_modal_btn_tertiary: "Don't show again",
-    recommend_share_text: "I'm using Bothside to organize my vinyl collection. If you collect records, you're going to love it.\n\nDownload it here:\nhttps://apps.apple.com/app/id6475736780",
+    recommend_share_text: "I'm using Bothside to organize my vinyl collection. If you collect records, you're going to love it.\n\nDownload it here:\n{appStoreUrl}",
 };
+

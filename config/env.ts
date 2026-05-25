@@ -63,5 +63,8 @@ export const validateEnv = () => {
   return true;
 };
 
+export const APP_STORE_URL = 'https://apps.apple.com/app/bothside/id6757703583';
+
+
 
 
