@@ -415,6 +415,7 @@ export const pt = {
     album_detail_change_edition_confirm: "Tem certeza de que deseja alterar a edição de {albumTitle}?",
     album_detail_change_edition_success: "Edição alterada com sucesso.",
     album_detail_change_edition_error: "Não foi possível alterar a edição.",
+    album_detail_changing_edition: "Alterando edição...",
     album_detail_current_edition: "Edição ativa",
     album_detail_already_in_bag_title: "Já na maleta",
     album_detail_already_in_bag_message: "Este álbum já está nesta maleta",

@@ -1010,6 +1010,7 @@ export const ja = {
     album_detail_change_edition_confirm: "{albumTitle} のエディションを変更してもよろしいですか？",
     album_detail_change_edition_success: "エディションが正常に変更されました。",
     album_detail_change_edition_error: "エディションを変更できませんでした。",
+    album_detail_changing_edition: "エディションを変更中...",
     album_detail_current_edition: "アクティブなエディション",
     album_detail_already_in_bag_title: "既にバッグにあります",
     album_detail_already_in_bag_message: "このアルバムは既にこのバッグに入っています",

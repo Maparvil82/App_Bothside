@@ -740,6 +740,7 @@ export const de = {
     album_detail_change_edition_confirm: "Sind Sie sicher, dass Sie die Edition von {albumTitle} ändern möchten?",
     album_detail_change_edition_success: "Edition erfolgreich geändert.",
     album_detail_change_edition_error: "Edition konnte nicht geändert werden.",
+    album_detail_changing_edition: "Edition wird geändert...",
     album_detail_current_edition: "Aktive Edition",
     album_detail_already_in_bag_title: "Bereits in Maleta",
     album_detail_already_in_bag_message: "Dieses Album ist bereits in dieser Maleta",

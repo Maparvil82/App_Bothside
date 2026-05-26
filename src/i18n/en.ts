@@ -404,6 +404,7 @@ export const en = {
     album_detail_change_edition_confirm: "Are you sure you want to change the edition of {albumTitle}?",
     album_detail_change_edition_success: "Edition changed successfully.",
     album_detail_change_edition_error: "Could not change the edition.",
+    album_detail_changing_edition: "Changing edition...",
     album_detail_current_edition: "Active edition",
     album_detail_already_in_bag_title: "Already in bag",
     album_detail_already_in_bag_message: "This album is already in this bag",

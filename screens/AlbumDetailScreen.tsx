@@ -213,6 +213,32 @@ export default function AlbumDetailScreen() {
     outputRange: [1, 0.8],
   });
 
+  const [displayCoverUrl, setDisplayCoverUrl] = useState<string | null>(null);
+  const coverFadeAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const nextCover = album?.albums?.cover_url || null;
+    if (nextCover !== displayCoverUrl) {
+      if (!displayCoverUrl) {
+        setDisplayCoverUrl(nextCover);
+        coverFadeAnim.setValue(1);
+      } else {
+        Animated.timing(coverFadeAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          setDisplayCoverUrl(nextCover);
+          Animated.timing(coverFadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          }).start();
+        });
+      }
+    }
+  }, [album?.albums?.cover_url]);
+
   // Estados para álbumes similares
   const [similarAlbums, setSimilarAlbums] = useState<any[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
@@ -595,11 +621,11 @@ export default function AlbumDetailScreen() {
     checkStatus();
   }, [user?.id, albumId]);
 
-  const loadAlbumDetail = useCallback(() => {
+  const loadAlbumDetail = useCallback((isBackgroundRefresh = false) => {
     const fetchFullAlbumData = async () => {
       if (!albumId || !user) {
         setError(t('album_detail_error_no_id'));
-        setLoading(false);
+        if (!isBackgroundRefresh) setLoading(false);
         return;
       }
 
@@ -647,12 +673,14 @@ export default function AlbumDetailScreen() {
             albums: albumDirectData,
           } as AlbumDetail;
           setAlbum(publicAlbum);
-          setLoading(false);
+          if (!isBackgroundRefresh) setLoading(false);
           return;
         }
       }
 
-      setLoading(true);
+      if (!isBackgroundRefresh) {
+        setLoading(true);
+      }
       setError(null);
 
       try {
@@ -847,7 +875,9 @@ export default function AlbumDetailScreen() {
       } catch (e: any) {
         setError(e.message);
       } finally {
-        setLoading(false);
+        if (!isBackgroundRefresh) {
+          setLoading(false);
+        }
       }
     };
 
@@ -1179,8 +1209,8 @@ export default function AlbumDetailScreen() {
       setIsPlaying(false);
       setCurrentAudioUrl(null);
 
-      // Recargar todos los detalles de la pantalla
-      await loadAlbumDetail();
+      // Recargar todos los detalles de la pantalla en segundo plano sin bloquear la UI
+      await loadAlbumDetail(true);
       
       Alert.alert(
         t('album_detail_change_edition_title' as any) || 'Cambiar Edición',
@@ -1410,20 +1440,7 @@ export default function AlbumDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingBottom: 20 }]}>
-      {isChangingEdition && (
-        <View style={{
-          ...StyleSheet.absoluteFillObject,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          justifyContent: 'center',
-          alignItems: 'center',
-          zIndex: 9999,
-        }}>
-          <BothsideLoader />
-          <Text style={{ color: '#fff', marginTop: 12, fontWeight: '600' }}>
-            {t('album_detail_loading_editions') || 'Cargando...'}
-          </Text>
-        </View>
-      )}
+
 
 
       <ScrollView showsVerticalScrollIndicator={false} removeClippedSubviews={false} style={[styles.detalleScroll]}>
@@ -1436,12 +1453,12 @@ export default function AlbumDetailScreen() {
             overflow: 'hidden'
           }
         ]}>
-          {album.albums.cover_url ? (
+          {displayCoverUrl ? (
             <Animated.Image
-              source={{ uri: album.albums.cover_url }}
+              source={{ uri: displayCoverUrl }}
               style={[
                 styles.fullCoverImage,
-                { opacity: coverOpacity }
+                { opacity: Animated.multiply(coverOpacity, coverFadeAnim) }
               ]}
               resizeMode="cover"
             />
@@ -1449,6 +1466,26 @@ export default function AlbumDetailScreen() {
             <View style={[styles.fullCoverPlaceholder, { backgroundColor: colors.border }]}>
               <Text style={[styles.fullCoverPlaceholderText, { color: colors.text }]}>{t('album_detail_no_cover')}</Text>
             </View>
+          )}
+
+          {isChangingEdition && (
+            <Animated.View style={{
+              ...StyleSheet.absoluteFillObject,
+              backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 10,
+            }}>
+              <ActivityIndicator size="small" color={primaryColor} />
+              <Text style={{
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: '600',
+                marginTop: 8,
+              }}>
+                {t('album_detail_changing_edition' as any) || 'Cambiando edición...'}
+              </Text>
+            </Animated.View>
           )}
         </Animated.View>
 
@@ -1741,7 +1778,17 @@ export default function AlbumDetailScreen() {
 
         {/* Sección de Ediciones */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_vinyl_editions')}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>{t('album_detail_vinyl_editions')}</Text>
+            {isChangingEdition && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', backgroundColor: colors.border + '30', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 }}>
+                <ActivityIndicator size="small" color={primaryColor} style={{ marginRight: 6 }} />
+                <Text style={{ fontSize: 11, color: colors.text, opacity: 0.8, fontWeight: '600' }}>
+                  {t('album_detail_changing_edition' as any) || 'Cambiando...'}
+                </Text>
+              </View>
+            )}
+          </View>
           {editionsLoading ? (
             <View style={styles.loadingContainer}>
               <BothsideLoader />

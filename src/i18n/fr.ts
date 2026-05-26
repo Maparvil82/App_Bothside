@@ -1010,6 +1010,7 @@ export const fr = {
     album_detail_change_edition_confirm: "Êtes-vous sûr de vouloir changer l'édition de {albumTitle} ?",
     album_detail_change_edition_success: "Édition changée avec succès.",
     album_detail_change_edition_error: "Impossible de changer l'édition.",
+    album_detail_changing_edition: "Changement d'édition...",
     album_detail_current_edition: "Édition active",
     album_detail_already_in_bag_title: "Déjà dans le panier",
     album_detail_already_in_bag_message: "Cet album est déjà dans ce panier",
