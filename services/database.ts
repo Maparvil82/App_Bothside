@@ -244,6 +244,95 @@ export const AlbumService = {
     if (error) throw error;
   },
 
+  // Cambiar edición de Discogs de un álbum
+  async changeAlbumDiscogsRelease(
+    albumId: string,
+    releaseId: number,
+    cc0Data: {
+      title: string;
+      year: number;
+      artists: string;
+      cover_url: string | null;
+      label: string;
+      genres: string[];
+      styles: string[];
+      tracklist: Array<{ position: string; title: string; duration: string }>;
+      country: string | null;
+      format: string | null;
+      catalog_no: string | null;
+    }
+  ): Promise<boolean> {
+    try {
+      console.log(`🔄 Changing release for album ${albumId} to Discogs ID ${releaseId}...`);
+
+      // 1. Actualizar campos básicos en la tabla albums
+      const { error: albumError } = await supabase
+        .from('albums')
+        .update({
+          discogs_id: releaseId,
+          title: cc0Data.title,
+          artist: cc0Data.artists,
+          release_year: cc0Data.year.toString(),
+          label: cc0Data.label,
+          cover_url: cc0Data.cover_url,
+          country: cc0Data.country,
+          format: cc0Data.format,
+          catalog_no: cc0Data.catalog_no,
+          discogs_cached_at: new Date().toISOString(),
+        })
+        .eq('id', albumId);
+
+      if (albumError) throw albumError;
+
+      // 2. Actualizar canciones (Tracks)
+      await supabase.from('tracks').delete().eq('album_id', albumId);
+      if (cc0Data.tracklist.length > 0) {
+        const tracksToInsert = cc0Data.tracklist.map((track) => ({
+          album_id: albumId,
+          position: track.position,
+          title: track.title,
+          duration: track.duration,
+        }));
+        await supabase.from('tracks').insert(tracksToInsert);
+      }
+
+      // 3. Actualizar estilos (Styles)
+      await supabase.from('album_styles').delete().eq('album_id', albumId);
+      if (cc0Data.styles.length > 0) {
+        for (const styleName of cc0Data.styles) {
+          try {
+            const { data: existingStyle } = await supabase
+              .from('styles')
+              .select('id')
+              .eq('name', styleName)
+              .single();
+
+            let styleId = existingStyle?.id;
+            if (!styleId) {
+              const { data: newStyle } = await supabase
+                .from('styles')
+                .insert({ name: styleName })
+                .select('id')
+                .single();
+              styleId = newStyle?.id;
+            }
+
+            if (styleId) {
+              await supabase.from('album_styles').insert({ album_id: albumId, style_id: styleId });
+            }
+          } catch (e) {
+            console.warn(`Error linking style ${styleName}:`, e);
+          }
+        }
+      }
+
+      return true;
+    } catch (error) {
+      console.error('❌ Error changing album release:', error);
+      return false;
+    }
+  },
+
   // Actualizar o crear estadísticas de Discogs para un álbum
   async updateAlbumWithDiscogsStats(albumId: string, discogsStats: any) {
     const statsData: Partial<AlbumStats> = {

@@ -32,6 +32,8 @@ import { AudioRecorder } from '../components/AudioRecorder';
 import { AudioPlayer } from '../components/AudioPlayer';
 import { UserCollectionService, AlbumService, UserMaletaService } from '../services/database';
 import { SessionService, Session } from '../services/SessionService';
+import { DiscogsStatsService } from '../services/discogs-stats';
+import { YouTubeSearchService } from '../services/youtube-search';
 import { needsDiscogsRefresh, hoursSinceCache } from '../utils/cache';
 import ShelfGrid from '../components/ShelfGrid';
 import { MaletaCoverCollage } from '../components/MaletaCoverCollage';
@@ -157,6 +159,7 @@ export default function AlbumDetailScreen() {
   const [showAudioRecorder, setShowAudioRecorder] = useState(false);
   const [editions, setEditions] = useState<any[]>([]);
   const [editionsLoading, setEditionsLoading] = useState(false);
+  const [isChangingEdition, setIsChangingEdition] = useState(false);
   const [showRatioModal, setShowRatioModal] = useState(false);
   const [currentRatioData, setCurrentRatioData] = useState<{ ratio: number; level: string; color: string } | null>(null);
   const [showAllEditions, setShowAllEditions] = useState(false);
@@ -1074,6 +1077,143 @@ export default function AlbumDetailScreen() {
     }
   };
 
+  // Realizar el cambio de edición/release de Discogs
+  const performChangeEdition = async (editionId: number) => {
+    if (!album?.albums?.id) return;
+    
+    setIsChangingEdition(true);
+    try {
+      console.log(`🌐 Fetching release details for ${editionId} from Discogs...`);
+      const releaseDetails: any = await DiscogsService.getRelease(editionId);
+      if (!releaseDetails) {
+        throw new Error('No se pudieron obtener los detalles de la edición desde Discogs.');
+      }
+
+      // Extraer y formatear datos de la edición
+      const formatText = releaseDetails.formats
+        ? releaseDetails.formats.map((f: any) => {
+            const desc = f.descriptions ? ` (${f.descriptions.join(', ')})` : '';
+            return `${f.qty}x ${f.name}${desc}`;
+          }).join(', ')
+        : (Array.isArray(releaseDetails.format) ? releaseDetails.format.join(', ') : releaseDetails.format || '');
+
+      const labelText = releaseDetails.labels?.[0]?.name || '';
+      const catNoText = (releaseDetails.labels?.[0] as any)?.catno || releaseDetails.catno || '';
+      const coverUrl = releaseDetails.images?.[0]?.uri || releaseDetails.thumb || null;
+      const genres = releaseDetails.genres || [];
+      const stylesList = releaseDetails.styles || [];
+      const tracklist = (releaseDetails.tracklist || []).map((t: any) => ({
+        position: t.position?.toString() || '',
+        title: t.title?.toString() || '',
+        duration: t.duration?.toString() || '',
+      }));
+
+      const cc0Data = {
+        title: releaseDetails.title || album.albums.title,
+        year: releaseDetails.year || 0,
+        artists: releaseDetails.artists?.map((a: any) => a.name).join(', ') || album.albums.artist,
+        cover_url: coverUrl,
+        label: labelText,
+        genres: genres,
+        styles: stylesList,
+        tracklist: tracklist,
+        country: releaseDetails.country || null,
+        format: formatText,
+        catalog_no: catNoText,
+      };
+
+      console.log('💾 Updating album and metadata in DB...');
+      const success = await AlbumService.changeAlbumDiscogsRelease(
+        album.albums.id,
+        editionId,
+        cc0Data
+      );
+
+      if (!success) {
+        throw new Error('Error al actualizar los datos en base de datos.');
+      }
+
+      console.log('📊 Fetching and updating Discogs stats...');
+      await DiscogsStatsService.fetchAndSaveDiscogsStats(album.albums.id, editionId).catch(() => {});
+
+      console.log('📺 Updating YouTube URLs...');
+      // 1. Limpiar URLs de YouTube previas de este álbum
+      await supabase.from('album_youtube_urls').delete().eq('album_id', album.albums.id);
+
+      // 2. Extraer videos del release si existen
+      const discogsVideos = (releaseDetails.videos || []).filter(
+        (v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be'))
+      );
+
+      if (discogsVideos.length > 0) {
+        // Insertar videos de Discogs
+        const payload = discogsVideos.map((v: any) => ({
+          album_id: album.albums.id,
+          url: v.uri,
+          title: v.title || '',
+          is_playlist: false,
+          imported_from_discogs: true,
+          discogs_video_id: v.id ? String(v.id) : null,
+        }));
+        await supabase.from('album_youtube_urls').insert(payload);
+      } else {
+        // Fallback: buscar videos por artista y título en la API de YouTube
+        console.log('📺 Falling back to YouTube search API...');
+        const artistForSearch = releaseDetails.artists?.map((a: any) => a.name).join(', ') || album.albums.artist;
+        const titleForSearch = releaseDetails.title || album.albums.title;
+        const foundVideos = await YouTubeSearchService.searchYouTubeVideos(artistForSearch, titleForSearch);
+        
+        if (foundVideos.length > 0) {
+          const payload = foundVideos.map((v) => ({
+            album_id: album.albums.id,
+            url: v.url,
+            title: v.title,
+            is_playlist: false,
+            imported_from_discogs: false,
+          }));
+          await supabase.from('album_youtube_urls').insert(payload);
+        }
+      }
+
+      // Reiniciar cualquier audio en reproducción para que invalide y cargue el nuevo
+      setIsPlaying(false);
+      setCurrentAudioUrl(null);
+
+      // Recargar todos los detalles de la pantalla
+      await loadAlbumDetail();
+      
+      Alert.alert(
+        t('album_detail_change_edition_title' as any) || 'Cambiar Edición',
+        t('album_detail_change_edition_success' as any) || 'Edición cambiada con éxito.'
+      );
+    } catch (err: any) {
+      console.error('❌ Error performing change edition:', err);
+      Alert.alert(
+        t('common_error' as any) || 'Error',
+        (t('album_detail_change_edition_error' as any) || 'No se pudo cambiar la edición.') + '\n' + err.message
+      );
+    } finally {
+      setIsChangingEdition(false);
+    }
+  };
+
+  const confirmChangeEdition = (edition: any) => {
+    const albumTitle = album?.albums?.title || '';
+    Alert.alert(
+      t('album_detail_change_edition_title' as any) || 'Cambiar Edición',
+      (t('album_detail_change_edition_confirm' as any) || '¿Estás seguro de que quieres cambiar la edición de {albumTitle}?')
+        .replace('{albumTitle}', albumTitle),
+      [
+        { text: t('common_cancel' as any) || 'Cancelar', style: 'cancel' },
+        {
+          text: t('common_confirm' as any) || 'Confirmar',
+          style: 'default',
+          onPress: () => performChangeEdition(edition.id)
+        }
+      ]
+    );
+  };
+
   // Backfill Discogs (Stub)
   const backfillDiscogsDetails = async () => {
     // Placeholder
@@ -1270,6 +1410,20 @@ export default function AlbumDetailScreen() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingBottom: 20 }]}>
+      {isChangingEdition && (
+        <View style={{
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+        }}>
+          <BothsideLoader />
+          <Text style={{ color: '#fff', marginTop: 12, fontWeight: '600' }}>
+            {t('album_detail_loading_editions') || 'Cargando...'}
+          </Text>
+        </View>
+      )}
 
 
       <ScrollView showsVerticalScrollIndicator={false} removeClippedSubviews={false} style={[styles.detalleScroll]}>
@@ -1595,64 +1749,100 @@ export default function AlbumDetailScreen() {
             </View>
           ) : editions.length > 0 ? (
             <View style={styles.editionsContainer}>
-              {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => (
-                <View
-                  key={edition.id}
-                  style={[styles.editionItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}
-                >
-                  {edition.thumb && (
-                    <Image
-                      source={{ uri: edition.thumb }}
-                      style={styles.editionCover}
-                      resizeMode="cover"
-                    />
-                  )}
-                  <View style={styles.editionInfo}>
-                    <Text style={[styles.editionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
-                    <Text style={[styles.editionArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
-
-                    {/* Formato */}
-                    {edition.format && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_format')}</Text>
-                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
-                      </View>
+              {(showAllEditions ? editions : editions.slice(0, 3)).map((edition, index) => {
+                const isCurrentEdition = album?.albums?.discogs_id === edition.id;
+                return (
+                  <TouchableOpacity
+                    key={edition.id}
+                    disabled={isCurrentEdition || isChangingEdition}
+                    onPress={() => confirmChangeEdition(edition)}
+                    style={[
+                      styles.editionItem,
+                      {
+                        backgroundColor: colors.card,
+                        borderBottomColor: colors.border,
+                        opacity: isChangingEdition && !isCurrentEdition ? 0.5 : 1,
+                      },
+                      isCurrentEdition && {
+                        backgroundColor: mode === 'dark' ? '#0369a130' : '#e0f2fe',
+                        borderWidth: 0,
+                        borderBottomWidth: 0,
+                        borderRadius: 12,
+                        padding: 15,
+                        marginVertical: 6,
+                      }
+                    ]}
+                  >
+                    {edition.thumb && (
+                      <Image
+                        source={{ uri: edition.thumb }}
+                        style={styles.editionCover}
+                        resizeMode="cover"
+                      />
                     )}
-
-                    {/* Sello */}
-                    {edition.label && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_label')}</Text>
-                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
+                    <View style={styles.editionInfo}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <Text style={[styles.editionTitle, { color: colors.text, flex: 1 }]} numberOfLines={1} ellipsizeMode="tail">{edition.title}</Text>
+                        {isCurrentEdition && (
+                          <View style={{
+                            backgroundColor: primaryColor + '15',
+                            paddingHorizontal: 8,
+                            paddingVertical: 2,
+                            borderRadius: 6,
+                            marginLeft: 8,
+                            marginBottom: 4,
+                          }}>
+                            <Text style={{ color: primaryColor, fontSize: 11, fontWeight: 'bold' }}>
+                              {t('album_detail_current_edition') || 'Edición activa'}
+                            </Text>
+                          </View>
+                        )}
                       </View>
-                    )}
+                      <Text style={[styles.editionArtist, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.artist}</Text>
 
-                    {/* Año */}
-                    {edition.year && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_year')}</Text>
-                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
-                      </View>
-                    )}
+                      {/* Formato */}
+                      {edition.format && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_format')}</Text>
+                          <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.format}</Text>
+                        </View>
+                      )}
 
-                    {/* País */}
-                    {edition.country && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_country')}</Text>
-                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
-                      </View>
-                    )}
+                      {/* Sello */}
+                      {edition.label && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_label')}</Text>
+                          <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.label}</Text>
+                        </View>
+                      )}
 
-                    {/* Catálogo */}
-                    {edition.catno && (
-                      <View style={styles.editionDetailRow}>
-                        <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_catalog')}</Text>
-                        <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
-                      </View>
-                    )}
-                  </View>
-                </View>
-              ))}
+                      {/* Año */}
+                      {edition.year && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_year')}</Text>
+                          <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.year}</Text>
+                        </View>
+                      )}
+
+                      {/* País */}
+                      {edition.country && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_country')}</Text>
+                          <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.country}</Text>
+                        </View>
+                      )}
+
+                      {/* Catálogo */}
+                      {edition.catno && (
+                        <View style={styles.editionDetailRow}>
+                          <Text style={[styles.editionDetailLabel, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{t('album_detail_catalog')}</Text>
+                          <Text style={[styles.editionDetailValue, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{edition.catno}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
 
               {/* Botón "Ver más" o "Ver menos" */}
               {editions.length > 3 && (
