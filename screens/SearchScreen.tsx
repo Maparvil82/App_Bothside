@@ -113,6 +113,12 @@ export const SearchScreen: React.FC = () => {
   const [isFABCheckingLimit, setIsFABCheckingLimit] = useState(false);
   const [showCreateShelfModal, setShowCreateShelfModal] = useState(false);
 
+  // Estados para la animación educativa de Long Press (Gesto)
+  const [shouldShowLongPressHint, setShouldShowLongPressHint] = useState(false);
+  const hintIconAnim = useRef(new Animated.Value(0)).current;  // Opacidad y escala general
+  const hintScaleAnim = useRef(new Animated.Value(1)).current; // Contracción/expansión del pulso
+  const hintGlowAnim = useRef(new Animated.Value(0)).current;  // Expansión del anillo de brillo
+
   const handleAddRecord = async () => {
     if (isFABCheckingLimit) return;
     const isPro = subscriptionStatus === 'active';
@@ -308,23 +314,91 @@ export const SearchScreen: React.FC = () => {
     const checkFirstDiscModal = async () => {
       if (!user) return;
       const key = `has_seen_first_disc_location_modal_${user.id}`;
-
-      // Si el usuario ya tiene al menos una ubicación creada, nunca mostrar el onboarding
-      if (physicalShelves.length > 0) {
-        return;
-      }
+      const hintKey = `has_seen_longpress_hint_${user.id}`;
 
       // Si no tiene discos en su colección, reseteamos el estado visto en AsyncStorage
       if (collection.length === 0) {
         try {
           await AsyncStorage.removeItem(key);
+          await AsyncStorage.removeItem(hintKey);
         } catch (error) {
-          console.error('Error resetting first disc modal seen status:', error);
+          console.error('Error resetting seen status:', error);
         }
         return;
       }
 
-      // Solo mostrar cuando tiene exactamente 1 disco en la colección
+      // Control de la sugerencia de long press (exactamente 1 disco en la colección)
+      if (collection.length === 1) {
+        try {
+          const hasSeenHint = await AsyncStorage.getItem(hintKey);
+          if (hasSeenHint !== 'true') {
+            setShouldShowLongPressHint(true);
+            setTimeout(() => {
+              // Secuencia de animación premium: scale down (presión) -> delay -> spring scale up + glow fade out (liberación)
+              Animated.sequence([
+                // 1. Entrada: Fundido y aparición (0 -> 1)
+                Animated.timing(hintIconAnim, {
+                  toValue: 1,
+                  duration: 350,
+                  useNativeDriver: true,
+                }),
+                // 2. Toque: Contracción sutil de escala (1 -> 0.9)
+                Animated.timing(hintScaleAnim, {
+                  toValue: 0.9,
+                  duration: 150,
+                  useNativeDriver: true,
+                }),
+                // 3. Onda: Expansión de escala del icono y disparo del anillo de brillo de forma lineal (0.9 -> 1.12)
+                Animated.parallel([
+                  Animated.timing(hintScaleAnim, {
+                    toValue: 1.12,
+                    duration: 200,
+                    useNativeDriver: true,
+                  }),
+                  Animated.timing(hintGlowAnim, {
+                    toValue: 1,
+                    duration: 200,
+                    useNativeDriver: true,
+                  })
+                ]),
+                // Espera del gesto
+                Animated.delay(400),
+                // 4. Salida: Desvanecimiento de todo el conjunto
+                Animated.parallel([
+                  Animated.timing(hintIconAnim, {
+                    toValue: 0,
+                    duration: 350,
+                    useNativeDriver: true,
+                  }),
+                  Animated.timing(hintGlowAnim, {
+                    toValue: 0,
+                    duration: 350,
+                    useNativeDriver: true,
+                  })
+                ])
+              ]).start(async () => {
+                try {
+                  await AsyncStorage.setItem(hintKey, 'true');
+                  setTimeout(() => {
+                    setShouldShowLongPressHint(false);
+                  }, 1200);
+                } catch (e) {
+                  console.error('Error saving hint seen status:', e);
+                }
+              });
+            }, 800);
+          }
+        } catch (error) {
+          console.error('Error checking long press hint:', error);
+        }
+      }
+
+      // Si el usuario ya tiene al menos una ubicación creada, nunca mostrar el onboarding de ubicación
+      if (physicalShelves.length > 0) {
+        return;
+      }
+
+      // Solo mostrar modal de ubicación cuando tiene exactamente 1 disco en la colección
       if (collection.length !== 1) {
         return;
       }
@@ -1435,63 +1509,122 @@ export const SearchScreen: React.FC = () => {
     return name;
   };
 
-  const renderCollectionItem = ({ item }: { item: any }) => (
-    <View style={[styles.collectionItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
-      <TouchableOpacity
-        style={[styles.collectionItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
-        onLongPress={() => handleLongPress(item)}
-        onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
-        activeOpacity={0.7}
-      >
-        <Image
-          source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
-          style={styles.collectionThumbnail}
-        />
-        <View style={styles.collectionInfo}>
-          <Text style={[styles.collectionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
-            {item.albums?.title}
-          </Text>
-          <Text style={[styles.collectionArtist, { color: colors.text }]}>{item.albums?.artist}</Text>
-          <View style={styles.collectionDetails}>
-            <Text style={[styles.collectionDetail, { color: colors.text }]}>
-              {item.albums?.label} • {item.albums?.release_year}
+  const renderCollectionItem = ({ item }: { item: any }) => {
+    const isHintItem = shouldShowLongPressHint && item.albums?.id === collection[0]?.albums?.id;
+
+    return (
+      <View style={[styles.collectionItemContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF' }]}>
+        <TouchableOpacity
+          style={[styles.collectionItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
+          onLongPress={() => handleLongPress(item)}
+          onPress={() => navigation.navigate('AlbumDetail', { albumId: item.albums.id })}
+          activeOpacity={0.7}
+        >
+          <Image
+            source={{ uri: item.albums?.cover_url || 'https://via.placeholder.com/60' }}
+            style={styles.collectionThumbnail}
+          />
+          <View style={styles.collectionInfo}>
+            <Text style={[styles.collectionTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">
+              {item.albums?.title}
             </Text>
+            <Text style={[styles.collectionArtist, { color: colors.text }]}>{item.albums?.artist}</Text>
+            <View style={styles.collectionDetails}>
+              <Text style={[styles.collectionDetail, { color: colors.text }]}>
+                {item.albums?.label} • {item.albums?.release_year}
+              </Text>
 
-            {/* Tags reordenados */}
-            <View style={styles.tagsContainer}>
-              {/* Tag de ubicación física - PRIMERO */}
-              {item.in_shelf && (
-                <View style={styles.shelfTag}>
-                  <Ionicons name="location" size={12} color="#28a745" />
-                  <Text 
-                    style={styles.shelfTagText}
-                    numberOfLines={1}
-                    ellipsizeMode="tail"
-                  >
-                    {formatLocation(item.shelf_name, item.location_row, item.location_column)}
-                  </Text>
-                </View>
-              )}
+              {/* Tags reordenados */}
+              <View style={styles.tagsContainer}>
+                {/* Tag de ubicación física - PRIMERO */}
+                {item.in_shelf && (
+                  <View style={styles.shelfTag}>
+                    <Ionicons name="location" size={12} color="#28a745" />
+                    <Text 
+                      style={styles.shelfTagText}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {formatLocation(item.shelf_name, item.location_row, item.location_column)}
+                    </Text>
+                  </View>
+                )}
 
-              {/* Tag de audio - SEGUNDO (solo icono) */}
-              {item.audio_note && (
-                <View style={styles.audioTagIconOnly}>
-                  <Ionicons name="mic" size={12} color="#000" />
-                </View>
-              )}
+                {/* Tag de audio - SEGUNDO (solo icono) */}
+                {item.audio_note && (
+                  <View style={styles.audioTagIconOnly}>
+                    <Ionicons name="mic" size={12} color="#000" />
+                  </View>
+                )}
 
-              {/* Tag de gem - TERCERO (solo icono) */}
-              {item.is_gem && (
-                <View style={styles.gemTagIconOnly}>
-                  <Ionicons name="diamond" size={12} color="#d97706" />
-                </View>
-              )}
+                {/* Tag de gem - TERCERO (solo icono) */}
+                {item.is_gem && (
+                  <View style={styles.gemTagIconOnly}>
+                    <Ionicons name="diamond" size={12} color="#d97706" />
+                  </View>
+                )}
+              </View>
             </View>
           </View>
-        </View>
-      </TouchableOpacity>
-    </View>
-  );
+
+          {/* Icono animado de long press sutil sobre la zona derecha */}
+          {isHintItem && (
+            <View style={{
+              position: 'absolute',
+              right: 32,
+              top: 0,
+              bottom: 0,
+              justifyContent: 'center',
+              alignItems: 'center',
+              zIndex: 10,
+            }}>
+              {/* Anillo de brillo expansivo translúcido */}
+              <Animated.View style={{
+                position: 'absolute',
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                borderWidth: 1.5,
+                borderColor: '#38bdf8',
+                backgroundColor: '#38bdf815',
+                opacity: Animated.multiply(hintIconAnim, hintGlowAnim),
+                transform: [{
+                  scale: hintGlowAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.8, 1.4],
+                  })
+                }],
+              }} />
+
+              {/* Icono de huella digital gestual */}
+              <Animated.View style={{
+                opacity: hintIconAnim,
+                transform: [
+                  {
+                    scale: hintIconAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.8, 1],
+                    })
+                  },
+                  { scale: hintScaleAnim }
+                ],
+                backgroundColor: '#38bdf820',
+                width: 36,
+                height: 36,
+                borderRadius: 18,
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderWidth: 1,
+                borderColor: '#38bdf850',
+              }}>
+                <Ionicons name="finger-print" size={22} color="#0284c7" />
+              </Animated.View>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   const renderRelease = ({ item }: { item: DiscogsRelease }) => (
     <View style={[styles.releaseItem, { backgroundColor: colors.card, borderBottomColor: colors.border }]}>
