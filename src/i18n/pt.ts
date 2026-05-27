@@ -672,6 +672,8 @@ export const pt = {
     album_detail_tell_us: "Conte-nos sobre este álbum",
     album_detail_subtitle: "Responda as perguntas que quiser para personalizar sua experiência",
     album_detail_delete_album_button: "Remover da minha coleção",
+    maleta_action_remove: "Remover da maleta",
+    maleta_action_sheet_message: "O que você deseja fazer com este disco na sua maleta?",
     // Account Screen (New)
     account_placeholder_new_email: "novo@email.com",
     account_delete_modal_email_example: "maparvil@gmail.com",

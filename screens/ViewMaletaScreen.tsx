@@ -15,6 +15,7 @@ import {
   ScrollView,
   Animated,
   ActivityIndicator,
+  ActionSheetIOS,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
@@ -35,7 +36,7 @@ interface ViewListScreenProps {
   route: any;
 }
 
-const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, navigation: any, t: any, isCollaborative: boolean }) => {
+const AlbumItem = ({ item, navigation, t, isCollaborative, onLongPress }: { item: any, navigation: any, t: any, isCollaborative: boolean, onLongPress?: () => void }) => {
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const { colors } = useTheme();
   const { mode } = useThemeMode();
@@ -53,6 +54,7 @@ const AlbumItem = ({ item, navigation, t, isCollaborative }: { item: any, naviga
       <TouchableOpacity
         style={[styles.albumItem, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}
         onPress={() => navigation.navigate('AlbumDetail', { albumId: item.album_id })}
+        onLongPress={onLongPress}
         activeOpacity={0.7}
       >
         <Image
@@ -351,35 +353,45 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
     );
   };
 
-
-
-  const handleSwipeDelete = async (rowMap: any, rowKey: string) => {
-    const item = albums.find(album => album.album_id === rowKey);
-    if (item) {
-      await handleRemoveAlbum(item.album_id);
-    }
-    rowMap[rowKey]?.closeRow();
-  };
-
-  const renderSwipeActions = (rowData: any, rowMap: any) => {
-    const item = rowData.item;
+  const handleLongPress = (item: any) => {
     const isOwner = list?.user_id === user?.id;
     const canDelete = isOwner || (isCollaborator && collaboratorStatus === 'accepted' && item.added_by === user?.id);
 
-    if (!canDelete) return <View />;
+    if (!canDelete) return;
 
-    return (
-      <View style={styles.swipeActionsContainer}>
-        <TouchableOpacity
-          style={[styles.swipeAction, styles.swipeDelete]}
-          onPress={() => handleSwipeDelete(rowMap, rowData.item.album_id)}
-        >
-          <Ionicons name="trash-outline" size={20} color="white" />
-          <Text style={styles.swipeActionText}>{t('common_delete')}</Text>
-        </TouchableOpacity>
-      </View>
-    );
+    const options = [t('common_cancel' as any) || 'Cancelar', t('maleta_action_remove' as any) || 'Quitar de la maleta'];
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          options: options,
+          destructiveButtonIndex: 1,
+          cancelButtonIndex: 0,
+          title: item.albums?.title || t('common_album' as any) || 'Álbum',
+          message: t('maleta_action_sheet_message' as any) || '¿Qué quieres hacer con este disco de tu maleta?',
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleRemoveAlbum(item.album_id);
+          }
+        }
+      );
+    } else {
+      Alert.alert(
+        item.albums?.title || t('common_album' as any) || 'Álbum',
+        t('maleta_action_sheet_message' as any) || '¿Qué quieres hacer con este disco de tu maleta?',
+        [
+          { text: t('common_cancel' as any) || 'Cancelar', style: 'cancel' },
+          {
+            text: t('maleta_action_remove' as any) || 'Quitar de la maleta',
+            style: 'destructive',
+            onPress: () => handleRemoveAlbum(item.album_id),
+          },
+        ]
+      );
+    }
   };
+
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -504,7 +516,7 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         </View>
       )}
 
-      <SwipeListView
+      <FlatList
         data={albums}
         renderItem={({ item }) => (
           <AlbumItem
@@ -512,9 +524,9 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
             navigation={navigation}
             t={t}
             isCollaborative={!!list?.is_collaborative}
+            onLongPress={() => handleLongPress(item)}
           />
         )}
-        renderHiddenItem={renderSwipeActions}
         keyExtractor={(item) => item.album_id}
         contentContainerStyle={[
           styles.albumsContainer,
@@ -535,9 +547,6 @@ const ViewListScreen: React.FC<ViewListScreenProps> = ({ navigation, route }) =>
         }
         ListEmptyComponent={renderEmptyState}
         showsVerticalScrollIndicator={false}
-        rightOpenValue={-90}
-        previewOpenValue={0}
-        previewOpenDelay={0}
       />
 
       {/* Fixed Invite Button Footer */}
@@ -945,30 +954,6 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 16,
     color: '#666',
-    textAlign: 'center',
-  },
-  // Estilos para swipe actions
-  swipeActionsContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    gap: 0,
-  },
-  swipeAction: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: 90,
-    height: '100%',
-    borderRadius: 0,
-  },
-  swipeDelete: {
-    backgroundColor: '#FF3B30',
-  },
-  swipeActionText: {
-    color: 'white',
-    fontSize: 11,
-    fontWeight: '600',
-    marginTop: 2,
     textAlign: 'center',
   },
   // Modal styles (from CalendarScreen)

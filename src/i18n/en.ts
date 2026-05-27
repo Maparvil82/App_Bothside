@@ -653,6 +653,8 @@ export const en = {
     album_detail_tell_us: "Tell us about this album",
     album_detail_subtitle: "Answer the questions you want to personalize your experience",
     album_detail_delete_album_button: "Remove from my collection",
+    maleta_action_remove: "Remove from bag",
+    maleta_action_sheet_message: "What do you want to do with this record in your bag?",
     // Account Screen (New)
     account_placeholder_new_email: "new@email.com",
     account_delete_modal_email_example: "maparvil@gmail.com",

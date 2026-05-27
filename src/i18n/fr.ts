@@ -919,6 +919,8 @@ export const fr = {
     album_detail_tell_us: "Parlez-nous de cet album",
     album_detail_subtitle: "Répondez aux questions que vous souhaitez pour personnaliser votre expérience",
     album_detail_delete_album_button: "Supprimer de ma collection",
+    maleta_action_remove: "Retirer de la mallette",
+    maleta_action_sheet_message: "Que voulez-vous faire de ce disque dans votre mallette?",
     album_detail_error_no_id: "Aucun ID d'album fourni ou utilisateur non authentifié.",
     album_detail_error_loading: "Erreur lors du chargement de l'album",
     album_detail_error_not_found: "Album non trouvé dans votre collection.",

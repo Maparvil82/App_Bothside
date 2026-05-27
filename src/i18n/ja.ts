@@ -919,6 +919,8 @@ export const ja = {
     album_detail_tell_us: "このアルバムについて教えてください",
     album_detail_subtitle: "体験をパーソナライズするために好きな質問に答えてください",
     album_detail_delete_album_button: "コレクションから削除",
+    maleta_action_remove: "バッグから削除",
+    maleta_action_sheet_message: "このバッグに入っているレコードをどうしますか？",
     album_detail_error_no_id: "アルバムIDがないか、ユーザーが認証されていません。",
     album_detail_error_loading: "アルバム読み込みエラー",
     album_detail_error_not_found: "アルバムがコレクションに見つかりません。",
