@@ -151,6 +151,8 @@ export const fr = {
     search_action_add_gem: "Ajouter aux Gemmes",
     search_action_assign_location: "Assigner un emplacement",
     search_action_change_location: "Changer l'emplacement",
+    select_cell_onboarding_title: "Où est rangé votre premier vinyle ?",
+    select_cell_onboarding_subtitle: "Sélectionnez la position réelle dans votre étagère.",
     search_action_remove_location: "Retirer l'emplacement",
     search_confirm_remove_location_title: "Retirer l'emplacement ?",
     search_confirm_remove_location_message: "Le disque restera dans votre collection, mais apparaîtra comme « Non localisé ».",

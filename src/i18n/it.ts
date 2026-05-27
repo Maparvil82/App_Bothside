@@ -297,6 +297,8 @@ export const it = {
     search_action_add_gem: "Aggiungi a Gemme",
     search_action_assign_location: "Assegna posizione",
     search_action_change_location: "Cambia posizione",
+    select_cell_onboarding_title: "Dove è conservato il tuo primo disco?",
+    select_cell_onboarding_subtitle: "Seleziona la posizione reale all'interno dello scaffale.",
     search_action_remove_location: "Rimuovi posizione",
     search_confirm_remove_location_title: "Rimuovi posizione?",
     search_confirm_remove_location_message: "Il disco rimarrà nella tua collezione, ma apparirà come “Non posizionato”.",

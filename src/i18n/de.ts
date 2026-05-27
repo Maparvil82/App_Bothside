@@ -525,6 +525,8 @@ export const de = {
     search_action_add_gem: "Zu Gems hinzufügen",
     search_action_assign_location: "Standort zuweisen",
     search_action_change_location: "Standort ändern",
+    select_cell_onboarding_title: "Wo ist Ihre erste Schallplatte aufbewahrt?",
+    select_cell_onboarding_subtitle: "Wählen Sie die reale Position in Ihrem Regal.",
     search_action_remove_location: "Zuweisung entfernen",
     search_confirm_remove_location_title: "Zuweisung entfernen?",
     search_confirm_remove_location_message: "Die Schallplatte bleibt in Ihrer Sammlung, wird aber als „Nicht zugewiesen“ angezeigt.",

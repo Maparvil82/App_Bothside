@@ -297,6 +297,8 @@ export const ja = {
     search_action_add_gem: "ジェムに追加",
     search_action_assign_location: "場所を割り当て",
     search_action_change_location: "場所を変更",
+    select_cell_onboarding_title: "最初のレコードはどこに保管されていますか？",
+    select_cell_onboarding_subtitle: "棚の中の実際の配置を選択してください。",
     search_action_remove_location: "配置を解除",
     search_confirm_remove_location_title: "配置を解除しますか？",
     search_confirm_remove_location_message: "レコードはコレクションに残りますが、「未配置」として表示されます。",

@@ -112,12 +112,14 @@ export const SearchScreen: React.FC = () => {
 
   const [isFABCheckingLimit, setIsFABCheckingLimit] = useState(false);
   const [showCreateShelfModal, setShowCreateShelfModal] = useState(false);
+  const [onboardingCreateLocationAccepted, setOnboardingCreateLocationAccepted] = useState(false);
 
   // Estados para la animación educativa de Long Press (Gesto)
   const [shouldShowLongPressHint, setShouldShowLongPressHint] = useState(false);
   const hintIconAnim = useRef(new Animated.Value(0)).current;  // Opacidad y escala general
   const hintScaleAnim = useRef(new Animated.Value(1)).current; // Contracción/expansión del pulso
   const hintGlowAnim = useRef(new Animated.Value(0)).current;  // Expansión del anillo de brillo
+  const prevCollectionLength = useRef<number | null>(null);
 
   const handleAddRecord = async () => {
     if (isFABCheckingLimit) return;
@@ -310,87 +312,90 @@ export const SearchScreen: React.FC = () => {
     }
   }, [showSearch]);
 
+  const triggerLongPressHint = () => {
+    // Reset animation values to their starting state
+    hintIconAnim.setValue(0);
+    hintScaleAnim.setValue(1);
+    hintGlowAnim.setValue(0);
+    
+    setShouldShowLongPressHint(true);
+    
+    setTimeout(() => {
+      // Secuencia de animación premium: scale down (presión) -> delay -> spring scale up + glow fade out (liberación)
+      Animated.sequence([
+        // 1. Entrada: Fundido y aparición (0 -> 1)
+        Animated.timing(hintIconAnim, {
+          toValue: 1,
+          duration: 350,
+          useNativeDriver: true,
+        }),
+        // 2. Toque: Contracción sutil de escala (1 -> 0.9)
+        Animated.timing(hintScaleAnim, {
+          toValue: 0.9,
+          duration: 150,
+          useNativeDriver: true,
+        }),
+        // 3. Onda: Expansión de escala del icono y disparo del anillo de brillo de forma lineal (0.9 -> 1.12)
+        Animated.parallel([
+          Animated.timing(hintScaleAnim, {
+            toValue: 1.12,
+            duration: 200,
+            useNativeDriver: true,
+          }),
+          Animated.timing(hintGlowAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+          })
+        ]),
+        // Espera del gesto
+        Animated.delay(400),
+        // 4. Salida: Desvanecimiento de todo el conjunto
+        Animated.parallel([
+          Animated.timing(hintIconAnim, {
+            toValue: 0,
+            duration: 350,
+            useNativeDriver: true,
+          }),
+          Animated.timing(hintGlowAnim, {
+            toValue: 0,
+            duration: 350,
+            useNativeDriver: true,
+          })
+        ])
+      ]).start(() => {
+        setTimeout(() => {
+          setShouldShowLongPressHint(false);
+        }, 1200);
+      });
+    }, 800);
+  };
+
+  useEffect(() => {
+    if (hasFinishedInitialLoad && collection.length > 0) {
+      if (prevCollectionLength.current !== null && collection.length > prevCollectionLength.current) {
+        // Un disco fue añadido
+        triggerLongPressHint();
+      }
+      prevCollectionLength.current = collection.length;
+    } else if (hasFinishedInitialLoad && collection.length === 0) {
+      prevCollectionLength.current = 0;
+    }
+  }, [collection.length, hasFinishedInitialLoad]);
+
   useEffect(() => {
     const checkFirstDiscModal = async () => {
       if (!user) return;
       const key = `has_seen_first_disc_location_modal_${user.id}`;
-      const hintKey = `has_seen_longpress_hint_${user.id}`;
 
       // Si no tiene discos en su colección, reseteamos el estado visto en AsyncStorage
       if (collection.length === 0) {
         try {
           await AsyncStorage.removeItem(key);
-          await AsyncStorage.removeItem(hintKey);
         } catch (error) {
           console.error('Error resetting seen status:', error);
         }
         return;
-      }
-
-      // Control de la sugerencia de long press (exactamente 1 disco en la colección)
-      if (collection.length === 1) {
-        try {
-          const hasSeenHint = await AsyncStorage.getItem(hintKey);
-          if (hasSeenHint !== 'true') {
-            setShouldShowLongPressHint(true);
-            setTimeout(() => {
-              // Secuencia de animación premium: scale down (presión) -> delay -> spring scale up + glow fade out (liberación)
-              Animated.sequence([
-                // 1. Entrada: Fundido y aparición (0 -> 1)
-                Animated.timing(hintIconAnim, {
-                  toValue: 1,
-                  duration: 350,
-                  useNativeDriver: true,
-                }),
-                // 2. Toque: Contracción sutil de escala (1 -> 0.9)
-                Animated.timing(hintScaleAnim, {
-                  toValue: 0.9,
-                  duration: 150,
-                  useNativeDriver: true,
-                }),
-                // 3. Onda: Expansión de escala del icono y disparo del anillo de brillo de forma lineal (0.9 -> 1.12)
-                Animated.parallel([
-                  Animated.timing(hintScaleAnim, {
-                    toValue: 1.12,
-                    duration: 200,
-                    useNativeDriver: true,
-                  }),
-                  Animated.timing(hintGlowAnim, {
-                    toValue: 1,
-                    duration: 200,
-                    useNativeDriver: true,
-                  })
-                ]),
-                // Espera del gesto
-                Animated.delay(400),
-                // 4. Salida: Desvanecimiento de todo el conjunto
-                Animated.parallel([
-                  Animated.timing(hintIconAnim, {
-                    toValue: 0,
-                    duration: 350,
-                    useNativeDriver: true,
-                  }),
-                  Animated.timing(hintGlowAnim, {
-                    toValue: 0,
-                    duration: 350,
-                    useNativeDriver: true,
-                  })
-                ])
-              ]).start(async () => {
-                try {
-                  await AsyncStorage.setItem(hintKey, 'true');
-                  setTimeout(() => {
-                    setShouldShowLongPressHint(false);
-                  }, 1200);
-                } catch (e) {
-                  console.error('Error saving hint seen status:', e);
-                }
-              });
-            }, 800);
-          }
-        } catch (error) {
-          console.error('Error checking long press hint:', error);
-        }
       }
 
       // Si el usuario ya tiene al menos una ubicación creada, nunca mostrar el onboarding de ubicación
@@ -471,10 +476,26 @@ export const SearchScreen: React.FC = () => {
       // Persistir el estado estable de onboarding completado si tiene discos
       try {
         if (userHasCollection) {
-          await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
-          setIsOnboardingCompleted(true);
+          // Solo marcar automáticamente como completado si NO estamos esperando la asignación del primer disco
+          const pendingAssignment = await AsyncStorage.getItem(`pendingFirstRecordAssignment_${user.id}`);
+          const hasSeenModal = await AsyncStorage.getItem(`has_seen_first_disc_location_modal_${user.id}`);
+          const onboardingCompletedCache = await AsyncStorage.getItem(`onboarding_completed_${user.id}`);
+          
+          if (onboardingCompletedCache === 'true' || (hasSeenModal === 'true' && pendingAssignment !== 'true')) {
+            await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+            setIsOnboardingCompleted(true);
+          } else if ((collectionRes.data || []).length > 1) {
+            // Si tiene más de un disco, ya no es el primer disco, completamos de todos modos
+            await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+            setIsOnboardingCompleted(true);
+          } else {
+            // De lo contrario, respetamos el estado actual en AsyncStorage para onboarding_completed
+            const isCompleted = onboardingCompletedCache === 'true';
+            setIsOnboardingCompleted(isCompleted);
+          }
         } else {
           await AsyncStorage.removeItem(`onboarding_completed_${user.id}`);
+          await AsyncStorage.removeItem(`pendingFirstRecordAssignment_${user.id}`);
           setIsOnboardingCompleted(false);
         }
       } catch (err) {
@@ -2432,9 +2453,11 @@ export const SearchScreen: React.FC = () => {
                 style={[styles.btnPrimary, { backgroundColor: '#000' }]}
                 onPress={async () => {
                   setShowFirstDiscModal(false);
+                  setOnboardingCreateLocationAccepted(true);
                   if (user) {
                     const key = `has_seen_first_disc_location_modal_${user.id}`;
                     await AsyncStorage.setItem(key, 'true');
+                    await AsyncStorage.setItem(`pendingFirstRecordAssignment_${user.id}`, 'true');
                   }
                   // Abrir el modal de creación de estantería como bottom sheet
                   setShowCreateShelfModal(true);
@@ -2453,6 +2476,8 @@ export const SearchScreen: React.FC = () => {
                   if (user) {
                     const key = `has_seen_first_disc_location_modal_${user.id}`;
                     await AsyncStorage.setItem(key, 'true');
+                    await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+                    setIsOnboardingCompleted(true);
                   }
                 }}
               >
@@ -2467,8 +2492,21 @@ export const SearchScreen: React.FC = () => {
       {/* Modal de creación de estantería (bottom sheet) */}
       <CreateShelfModal
         visible={showCreateShelfModal}
-        onClose={() => setShowCreateShelfModal(false)}
-        onShelfCreated={loadCollection}
+        onClose={() => {
+          setShowCreateShelfModal(false);
+          setOnboardingCreateLocationAccepted(false);
+        }}
+        onShelfCreated={async (newShelf) => {
+          await loadCollection();
+          if (onboardingCreateLocationAccepted && collection.length > 0 && newShelf) {
+            navigation.navigate('SelectCell', {
+              user_collection_id: collection[0].id,
+              shelf: newShelf,
+              isOnboarding: true,
+            });
+            setOnboardingCreateLocationAccepted(false);
+          }
+        }}
       />
 
       {/* Floating Add Record Button (FAB) */}

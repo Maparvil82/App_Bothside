@@ -26,7 +26,7 @@ import { useThemeMode } from '../contexts/ThemeContext';
 interface CreateShelfModalProps {
   visible: boolean;
   onClose: () => void;
-  onShelfCreated: () => void;
+  onShelfCreated: (shelf?: any) => void;
 }
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
@@ -81,12 +81,16 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
     setSaving(true);
 
     try {
-      const { error } = await supabase.from('shelves').insert({
-        user_id: user.id,
-        name: name.trim(),
-        shelf_rows: numRows,
-        shelf_columns: numCols,
-      });
+      const { data, error } = await supabase
+        .from('shelves')
+        .insert({
+          user_id: user.id,
+          name: name.trim(),
+          shelf_rows: numRows,
+          shelf_columns: numCols,
+        })
+        .select()
+        .single();
 
       if (error) throw error;
 
@@ -94,12 +98,11 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
       try {
         const key = `has_seen_first_disc_location_modal_${user.id}`;
         await AsyncStorage.setItem(key, 'true');
-        await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
       } catch (err) {
         console.error('Error saving onboarding state:', err);
       }
 
-      onShelfCreated();
+      onShelfCreated(data);
       onClose();
     } catch (error: any) {
       Alert.alert(t('common_error'), t('shelf_edit_error_save'));

@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import ShelfGridSelectable from '../components/ShelfGridSelectable';
 import { supabase } from '../lib/supabase';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Shelf {
   id: string;
@@ -17,11 +19,14 @@ export default function SelectCellScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { t } = useTranslation();
-  const { user_collection_id, shelf, current_row, current_column } = route.params as {
+  const { user } = useAuth();
+  
+  const { user_collection_id, shelf, current_row, current_column, isOnboarding } = route.params as {
     user_collection_id: string,
     shelf: Shelf,
     current_row?: number,
-    current_column?: number
+    current_column?: number,
+    isOnboarding?: boolean
   };
 
   const [saving, setSaving] = useState(false);
@@ -39,6 +44,17 @@ export default function SelectCellScreen() {
         .eq('id', user_collection_id);
 
       if (error) throw error;
+
+      if (isOnboarding && user) {
+        try {
+          await AsyncStorage.setItem(`onboarding_completed_${user.id}`, 'true');
+          await AsyncStorage.setItem(`has_seen_first_disc_location_modal_${user.id}`, 'true');
+          await AsyncStorage.removeItem(`pendingFirstRecordAssignment_${user.id}`);
+        } catch (err) {
+          console.error('Error writing onboarding complete state:', err);
+        }
+      }
+
       Alert.alert(t('select_cell_success_title'), `${shelf.name} (${t('common_row')} ${row + 1}, ${t('common_column')} ${column + 1})`);
       navigation.goBack();
     } catch (error: any) {
@@ -55,8 +71,12 @@ export default function SelectCellScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.title}>{t('select_cell_title')}</Text>
-      <Text style={styles.subtitle}>{t('select_cell_subtitle')} {shelf.name}</Text>
+      <Text style={styles.title}>
+        {isOnboarding ? t('select_cell_onboarding_title') : t('select_cell_title')}
+      </Text>
+      <Text style={styles.subtitle}>
+        {isOnboarding ? t('select_cell_onboarding_subtitle') : `${t('select_cell_subtitle')} ${shelf.name}`}
+      </Text>
       <ShelfGridSelectable
         rows={shelf.shelf_rows}
         columns={shelf.shelf_columns}

@@ -150,6 +150,8 @@ export const pt = {
     search_action_add_gem: "Adicionar a Gems",
     search_action_assign_location: "Atribuir Localização",
     search_action_change_location: "Alterar localização",
+    select_cell_onboarding_title: "Onde está guardado o seu primeiro disco?",
+    select_cell_onboarding_subtitle: "Selecione a posição real dentro da sua estante.",
     search_action_remove_location: "Remover localização",
     search_confirm_remove_location_title: "Remover localização?",
     search_confirm_remove_location_message: "O disco continuará na sua coleção, mas aparecerá como “Sem localização”.",

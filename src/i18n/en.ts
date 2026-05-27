@@ -145,6 +145,8 @@ export const en = {
     search_action_add_gem: "Add to Gems",
     search_action_assign_location: "Assign Location",
     search_action_change_location: "Change Location",
+    select_cell_onboarding_title: "Where is your first record stored?",
+    select_cell_onboarding_subtitle: "Select the real position inside your shelf.",
     search_action_remove_location: "Remove location",
     search_confirm_remove_location_title: "Remove location?",
     search_confirm_remove_location_message: "The record will stay in your collection, but it will appear as “Unlocated”.",
