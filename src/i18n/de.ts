@@ -333,6 +333,7 @@ export const de = {
     album_detail_header: "Albumdetails",
     album_detail_tell_us: "Erzählen Sie uns von diesem Album",
     album_detail_subtitle: "Beantworten Sie die Fragen, die Sie möchten, um Ihre Erfahrung zu personalisieren",
+    album_detail_delete_album_button: "Aus meiner Sammlung entfernen",
     // Account Screen (New)
     account_placeholder_new_email: "neue@email.com",
     account_delete_modal_email_example: "maparvil@gmail.com",

@@ -918,6 +918,7 @@ export const it = {
     album_detail_header: "Dettagli Album",
     album_detail_tell_us: "Parlaci di questo album",
     album_detail_subtitle: "Rispondi alle domande che preferisci per personalizzare la tua esperienza",
+    album_detail_delete_album_button: "Rimuovi dalla mia collezione",
     album_detail_error_no_id: "Nessun ID album fornito o utente non autenticato.",
     album_detail_error_loading: "Errore nel caricamento dell'album",
     album_detail_error_not_found: "Album non trovato nella tua collezione.",

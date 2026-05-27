@@ -191,6 +191,18 @@ export default function AlbumDetailScreen() {
 
   // Audio Mini Player State
   const [isPlayerExpanded, setIsPlayerExpanded] = useState(false);
+  const [activeYoutubeVideoId, setActiveYoutubeVideoId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const youtubeUrls = album?.albums?.album_youtube_urls?.map(ay => ay.url).filter(Boolean) || [];
+    const newVideoId = youtubeUrls.length > 0 ? extractYouTubeId(youtubeUrls[0]) : null;
+
+    if (newVideoId) {
+      setActiveYoutubeVideoId(newVideoId);
+    } else if (!isChangingEdition) {
+      setActiveYoutubeVideoId(null);
+    }
+  }, [album?.albums?.album_youtube_urls, isChangingEdition]);
 
   // Animation for cover
   const coverAnim = useRef(new Animated.Value(0)).current;
@@ -360,20 +372,13 @@ export default function AlbumDetailScreen() {
     }
   };
 
-  // Update header with delete button
+  // Update header title
   useEffect(() => {
     navigation.setOptions({
       title: t("album_detail_header"),
-      headerRight: () => (
-        <TouchableOpacity
-          onPress={() => confirmDeleteAlbum(album)}
-          style={{ marginRight: 16 }}
-        >
-          <Ionicons name="trash-outline" size={24} color="#ef4444" />
-        </TouchableOpacity>
-      )
+      headerRight: () => null
     });
-  }, [navigation, t, album, confirmDeleteAlbum]);
+  }, [navigation, t]);
   // --------------------------
 
   // Preguntas del TypeForm
@@ -1167,16 +1172,15 @@ export default function AlbumDetailScreen() {
       await DiscogsStatsService.fetchAndSaveDiscogsStats(album.albums.id, editionId).catch(() => {});
 
       console.log('📺 Updating YouTube URLs...');
-      // 1. Limpiar URLs de YouTube previas de este álbum
-      await supabase.from('album_youtube_urls').delete().eq('album_id', album.albums.id);
-
-      // 2. Extraer videos del release si existen
+      // 1. Extraer videos del release si existen en Discogs
       const discogsVideos = (releaseDetails.videos || []).filter(
         (v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be'))
       );
 
       if (discogsVideos.length > 0) {
-        // Insertar videos de Discogs
+        // La nueva edición tiene videos específicos, los actualizamos
+        console.log('📺 New release has specific videos. Replacing...');
+        await supabase.from('album_youtube_urls').delete().eq('album_id', album.albums.id);
         const payload = discogsVideos.map((v: any) => ({
           album_id: album.albums.id,
           url: v.uri,
@@ -1187,21 +1191,31 @@ export default function AlbumDetailScreen() {
         }));
         await supabase.from('album_youtube_urls').insert(payload);
       } else {
-        // Fallback: buscar videos por artista y título en la API de YouTube
-        console.log('📺 Falling back to YouTube search API...');
-        const artistForSearch = releaseDetails.artists?.map((a: any) => a.name).join(', ') || album.albums.artist;
-        const titleForSearch = releaseDetails.title || album.albums.title;
-        const foundVideos = await YouTubeSearchService.searchYouTubeVideos(artistForSearch, titleForSearch);
-        
-        if (foundVideos.length > 0) {
-          const payload = foundVideos.map((v) => ({
-            album_id: album.albums.id,
-            url: v.url,
-            title: v.title,
-            is_playlist: false,
-            imported_from_discogs: false,
-          }));
-          await supabase.from('album_youtube_urls').insert(payload);
+        // Si la nueva edición NO tiene videos en Discogs, intentamos conservar el audio asociado actual
+        const { data: existingUrls } = await supabase
+          .from('album_youtube_urls')
+          .select('id')
+          .eq('album_id', album.albums.id);
+
+        if (existingUrls && existingUrls.length > 0) {
+          console.log('📺 New release has no specific videos. Preserving existing YouTube videos.');
+        } else {
+          // Si no existía ninguno previo, entonces sí ejecutamos la búsqueda de fallback
+          console.log('📺 Falling back to YouTube search API...');
+          const artistForSearch = releaseDetails.artists?.map((a: any) => a.name).join(', ') || album.albums.artist;
+          const titleForSearch = releaseDetails.title || album.albums.title;
+          const foundVideos = await YouTubeSearchService.searchYouTubeVideos(artistForSearch, titleForSearch);
+          
+          if (foundVideos.length > 0) {
+            const payload = foundVideos.map((v) => ({
+              album_id: album.albums.id,
+              url: v.url,
+              title: v.title,
+              is_playlist: false,
+              imported_from_discogs: false,
+            }));
+            await supabase.from('album_youtube_urls').insert(payload);
+          }
         }
       }
 
@@ -2123,6 +2137,37 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
+        {/* Botón Eliminar Disco */}
+        {isInCollection && (
+          <TouchableOpacity
+            style={{
+              marginTop: 12,
+              marginBottom: 24,
+              paddingVertical: 16,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: mode === 'dark' ? colors.card : '#fff',
+              borderWidth: 1,
+              borderColor: mode === 'dark' ? '#ef444430' : '#fee2e2',
+              borderRadius: 14,
+              marginHorizontal: 16,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.05,
+              shadowRadius: 4,
+              elevation: 2,
+            }}
+            onPress={() => confirmDeleteAlbum(album)}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="trash-outline" size={18} color="#ef4444" style={{ marginRight: 8 }} />
+              <Text style={{ color: '#ef4444', fontSize: 15, fontWeight: '600' }}>
+                {t('album_detail_delete_album_button' as any) || 'Eliminar disco de mi colección'}
+              </Text>
+            </View>
+          </TouchableOpacity>
+        )}
+
         {/* Sección de Álbumes Similares */}
         {similarAlbums.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -2510,9 +2555,9 @@ export default function AlbumDetailScreen() {
 
       {/* Audio Mini Player (Fixed Bottom) */}
       <AudioMiniPlayer
-        videoId={youtubeVideoId}
+        videoId={activeYoutubeVideoId}
         title={album?.albums?.title || 'Álbum'}
-        isVisible={!!youtubeVideoId}
+        isVisible={!!activeYoutubeVideoId}
         onExpandChange={setIsPlayerExpanded}
       />
     </SafeAreaView>
