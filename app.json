@@ -35,7 +35,8 @@
         "android.permission.RECORD_AUDIO"
       ],
       "edgeToEdgeEnabled": true,
-      "package": "com.manuelparra.bothside"
+      "package": "com.manuelparra.bothside",
+      "versionCode": 2
     },
     "web": {
       "favicon": "./assets/favicon.png"
