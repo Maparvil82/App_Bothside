@@ -44,11 +44,15 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
             if (user) {
                 setHasSeenOnboardingState(true);
+                // Identificar usuario en RevenueCat de forma segura
+                await PurchaseService.logIn(user.id);
                 // Check RC status
                 await checkSubscriptionStatus();
             } else {
                 setHasSeenOnboardingState(false);
                 setSubscriptionStatus('none');
+                // Cerrar sesión en RevenueCat y retornar a anónimo
+                await PurchaseService.logOut();
             }
 
         } catch (e) {
@@ -69,7 +73,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             // Check if purchase was successful and entitlement is active
             // We check for ANY active entitlement for now as we don't know the exact ID
             const activeEntitlements = result?.customerInfo?.entitlements.active || {};
-            const isActive = Object.keys(activeEntitlements).length > 0;
+            const isActive = !!activeEntitlements['pro']?.isActive;
 
             if (isActive) {
                 setSubscriptionStatus('active');
@@ -139,7 +143,7 @@ export const SubscriptionProvider: React.FC<{ children: React.ReactNode }> = ({ 
             }
             
             const activeEntitlements = info?.entitlements?.active || {};
-            const isActive = Object.keys(activeEntitlements).length > 0;
+            const isActive = !!activeEntitlements['pro']?.isActive;
 
             if (isActive) {
                 console.log('✅ SubscriptionContext: User is premium via RevenueCat');

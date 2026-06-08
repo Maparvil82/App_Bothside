@@ -15,6 +15,7 @@ const API_KEY = Platform.select({
 class PurchaseService {
     private static instance: PurchaseService;
     private isInitialized = false;
+    private currentUserId: string | null = null;
 
     private constructor() { }
 
@@ -265,9 +266,12 @@ class PurchaseService {
 
     // Identificar al usuario en RevenueCat (útil si hay login)
     async logIn(userId: string) {
+        if (this.currentUserId === userId) return;
         try {
             await this.EnsureInitialized();
             await Purchases.logIn(userId);
+            this.currentUserId = userId;
+            console.log('✅ RevenueCat: Usuario identificado con ID:', userId);
         } catch (e) {
             console.error('Error logging in to RC:', e);
         }
@@ -277,6 +281,8 @@ class PurchaseService {
         try {
             await this.EnsureInitialized();
             await Purchases.logOut();
+            this.currentUserId = null;
+            console.log('✅ RevenueCat: Cierre de sesión y retorno a anónimo');
         } catch (e) {
             console.error('Error logging out of RC:', e);
         }
