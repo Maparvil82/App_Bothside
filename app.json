@@ -36,7 +36,7 @@
       ],
       "edgeToEdgeEnabled": true,
       "package": "com.manuelparra.bothside",
-      "versionCode": 6
+      "versionCode": 7
     },
     "web": {
       "favicon": "./assets/favicon.png"
