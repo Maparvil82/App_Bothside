@@ -167,19 +167,66 @@ export const PaywallScreen = () => {
                         ]}
                         onPress={!pkg ? async () => {
                             setLoading(true);
+                            let offeringsObj: any = null;
+                            let errorObj: any = null;
                             try {
+                                if (Platform.OS === 'android') {
+                                    try {
+                                        offeringsObj = await Purchases.getOfferings();
+                                    } catch (err) {
+                                        console.error('Error fetching offerings directly:', err);
+                                    }
+                                }
+
                                 const offerings = await PurchaseService.getOfferings();
                                 if (offerings && offerings.availablePackages.length > 0) {
                                     setPkg(offerings.availablePackages[0]);
                                 } else {
                                     if (Platform.OS === 'android') {
-                                        await showAndroidDiagnostic();
+                                        const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
+                                        const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
+                                        const keyLength = apiKey ? apiKey.length : 0;
+                                        
+                                        const currentId = offeringsObj?.current?.identifier || 'null';
+                                        const currentPkgsLen = offeringsObj?.current?.availablePackages?.length || 0;
+                                        const allKeys = offeringsObj?.all ? Object.keys(offeringsObj.all) : [];
+                                        
+                                        Alert.alert(
+                                            "RC DEBUG",
+                                            `Platform.OS: ${Platform.OS}\n` +
+                                            `API key prefix: ${keyPrefix}\n` +
+                                            `API key length: ${keyLength}\n` +
+                                            `offerings.current?.identifier: ${currentId}\n` +
+                                            `offerings.current?.availablePackages?.length: ${currentPkgsLen}\n` +
+                                            `Object.keys(offerings.all): [${allKeys.join(', ')}]\n` +
+                                            `error.code: null\n` +
+                                            `error.message: null`
+                                        );
                                     }
                                     Alert.alert('Error', 'No se encontraron planes disponibles.');
                                 }
                             } catch (e: any) {
+                                errorObj = e;
                                 if (Platform.OS === 'android') {
-                                    await showAndroidDiagnostic(e);
+                                    const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
+                                    const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
+                                    const keyLength = apiKey ? apiKey.length : 0;
+                                    
+                                    const currentId = offeringsObj?.current?.identifier || 'null';
+                                    const currentPkgsLen = offeringsObj?.current?.availablePackages?.length || 0;
+                                    const allKeys = offeringsObj?.all ? Object.keys(offeringsObj.all) : [];
+                                    
+                                    Alert.alert(
+                                        "RC DEBUG",
+                                        `Platform.OS: ${Platform.OS}\n` +
+                                        `API key prefix: ${keyPrefix}\n` +
+                                        `API key length: ${keyLength}\n` +
+                                        `offerings.current?.identifier: ${currentId}\n` +
+                                        `offerings.current?.availablePackages?.length: ${currentPkgsLen}\n` +
+                                        `Object.keys(offerings.all): [${allKeys.join(', ')}]\n` +
+                                        `error.code: ${errorObj?.code || 'unknown'}\n` +
+                                        `error.message: ${errorObj?.message || errorObj}`
+                                    );
                                 }
                                 Alert.alert('Error Detalles', e.message || 'Error desconocido al cargar planes.');
                             } finally {
