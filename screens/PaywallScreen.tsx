@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Linking, Platform } from 'react-native';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
 import { useAuth } from '../contexts/AuthContext';
-import { PurchasesPackage } from 'react-native-purchases';
+import Purchases, { PurchasesPackage } from 'react-native-purchases';
 import PurchaseService from '../services/PurchaseService';
 import { useTheme } from '@react-navigation/native';
 import { translate } from '../src/i18n';
@@ -25,6 +25,52 @@ export const PaywallScreen = () => {
     const { purchasePackage, restorePurchases } = useSubscription();
     const [loading, setLoading] = useState(false);
     const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+
+    const showAndroidDiagnostic = async (errorObj?: any) => {
+        try {
+            const apiKey = ENV.REVENUECAT_API_KEY_ANDROID;
+            const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
+            const keyLength = apiKey ? apiKey.length : 0;
+            
+            let nativeOfferings = null;
+            let fetchErrorMsg = '';
+            try {
+                nativeOfferings = await Purchases.getOfferings();
+            } catch (e: any) {
+                fetchErrorMsg = `FetchError: ${e.code || 'unknown'} - ${e.message || e}`;
+            }
+            
+            const currentId = nativeOfferings?.current?.identifier || 'null';
+            const currentPackagesLength = nativeOfferings?.current?.availablePackages?.length || 0;
+            const allKeys = nativeOfferings ? Object.keys(nativeOfferings.all) : [];
+            
+            let packagesDetails = '';
+            if (nativeOfferings?.current?.availablePackages) {
+                packagesDetails = nativeOfferings.current.availablePackages
+                    .map((pkgItem: any) => `- ${pkgItem.identifier} / ${pkgItem.product?.identifier} / ${pkgItem.product?.priceString}`)
+                    .join('\n');
+            }
+            
+            const errDetails = errorObj 
+                ? `Err: ${errorObj.code || 'unknown'} - ${errorObj.message || errorObj}` 
+                : fetchErrorMsg || 'None';
+                
+            const diagnosticMessage = [
+                `Platform: ${Platform.OS}`,
+                `API Key Prefix: ${keyPrefix}`,
+                `API Key Length: ${keyLength}`,
+                `Current ID: ${currentId}`,
+                `Current Pkgs Count: ${currentPackagesLength}`,
+                `All Offering Keys: [${allKeys.join(', ')}]`,
+                `Packages:\n${packagesDetails || 'None'}`,
+                `Errors: ${errDetails}`
+            ].join('\n\n');
+            
+            Alert.alert('Diagnóstico Temporal Android', diagnosticMessage);
+        } catch (diagErr: any) {
+            Alert.alert('Error en Diagnóstico', diagErr.message);
+        }
+    };
 
     useFocusEffect(
         React.useCallback(() => {
@@ -126,9 +172,15 @@ export const PaywallScreen = () => {
                                 if (offerings && offerings.availablePackages.length > 0) {
                                     setPkg(offerings.availablePackages[0]);
                                 } else {
+                                    if (Platform.OS === 'android') {
+                                        await showAndroidDiagnostic();
+                                    }
                                     Alert.alert('Error', 'No se encontraron planes disponibles.');
                                 }
                             } catch (e: any) {
+                                if (Platform.OS === 'android') {
+                                    await showAndroidDiagnostic(e);
+                                }
                                 Alert.alert('Error Detalles', e.message || 'Error desconocido al cargar planes.');
                             } finally {
                                 setLoading(false);
