@@ -254,6 +254,7 @@ const SearchStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       <Stack.Screen
@@ -279,6 +280,7 @@ const GemsStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       <Stack.Screen
@@ -309,6 +311,7 @@ const MaletasStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       <Stack.Screen
@@ -357,6 +360,7 @@ const DashboardStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       <Stack.Screen
@@ -411,6 +415,7 @@ const AddDiscStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       <Stack.Screen
@@ -452,6 +457,7 @@ const ShelvesStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       <Stack.Screen
@@ -742,6 +748,7 @@ const AppStack = () => {
         headerShown: true,
         headerStyle: { backgroundColor: colors.card },
         headerTitleStyle: { color: colors.text },
+        headerTitleAlign: 'center',
       }}
     >
       {/* ✅ USUARIO AUTENTICADO (libre o Pro) */}
