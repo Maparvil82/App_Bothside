@@ -1096,9 +1096,9 @@ export const AddDiscScreen: React.FC = () => {
             borderLeftWidth: 1,
             borderLeftColor: '#eee',
           }}
-          onPress={() => navigation.navigate('CameraScan')}
+          onPress={() => navigation.navigate('BarcodeScan')}
         >
-          <Ionicons name="camera" size={24} color={colors.text} />
+          <Ionicons name="barcode" size={24} color={colors.text} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -1109,9 +1109,9 @@ export const AddDiscScreen: React.FC = () => {
             borderLeftWidth: 1,
             borderLeftColor: '#eee',
           }}
-          onPress={() => navigation.navigate('BarcodeScan')}
+          onPress={() => navigation.navigate('CameraScan')}
         >
-          <Ionicons name="barcode" size={24} color={colors.text} />
+          <Ionicons name="camera" size={24} color={colors.text} />
         </TouchableOpacity>
 
       </View>
