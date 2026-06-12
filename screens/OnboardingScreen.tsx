@@ -192,7 +192,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     width: '100%',
-    paddingTop: 20,
+    paddingTop: 120,
 
   },
   image: {
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginBottom: 12,
     lineHeight: 34,
-    marginTop: 20
+    marginTop: 80
   },
   subtitle: {
     fontSize: 17,

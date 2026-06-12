@@ -144,7 +144,7 @@ export const LoginScreen: React.FC = () => {
       {/* Header Image */}
       <View style={styles.headerImageContainer}>
         <Image
-          source={require('../assets/wall_1.png')}
+          source={require('../assets/session.png')}
           style={styles.headerImage}
           resizeMode="cover"
         />
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#000', // Matches top area if image doesn't load or verify status bar
   },
   headerImageContainer: {
-    height: height * 0.55,
+    height: height * 0.70,
     width: '100%',
     position: 'absolute',
     top: 0,
