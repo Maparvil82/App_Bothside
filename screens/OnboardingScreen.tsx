@@ -91,7 +91,7 @@ export const OnboardingScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'left', 'right']}>
+    <View style={styles.container}>
       {/* Main content */}
       <ScrollView
         ref={scrollViewRef}
@@ -108,17 +108,10 @@ export const OnboardingScreen: React.FC = () => {
         {onboardingSteps.map((step, index) => (
           <View key={step.id} style={[styles.slide, { width }]}>
             {/* Illustration */}
-            <View style={styles.illustrationContainer}>
+            <View style={[styles.illustrationContainer, { height: height * 0.5 }]}>
               <Image
                 source={step.image}
-                style={[
-                  styles.image,
-                  {
-                    width: width > 600 ? 500 : width * 0.85,
-                    height: height * (height > 1000 ? 0.4 : 0.45),
-                    borderRadius: 20
-                  }
-                ]}
+                style={styles.image}
                 resizeMode="cover"
               />
             </View>
@@ -169,7 +162,7 @@ export const OnboardingScreen: React.FC = () => {
           <Text style={[styles.loginLink, { color: primaryColor }]}>{t('auth_login')}</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -183,26 +176,23 @@ const styles = StyleSheet.create({
   },
   slide: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 24,
   },
   illustrationContainer: {
-    flex: 3,
-    justifyContent: 'center',
-    alignItems: 'center',
     width: '100%',
-    paddingTop: 120,
 
   },
   image: {
-    // Dynamic styles passed in component
+    width: '100%',
+    height: '120%',
+
   },
   textContainer: {
-    flex: 2,
+    flex: 1,
     justifyContent: 'flex-start',
     width: '100%',
-    paddingTop: 20,
+    paddingHorizontal: 24,
+    paddingTop: 24,
   },
   title: {
     fontSize: 24,
@@ -211,7 +201,7 @@ const styles = StyleSheet.create({
     textAlign: 'left',
     marginBottom: 12,
     lineHeight: 34,
-    marginTop: 80
+    marginTop: 100,
   },
   subtitle: {
     fontSize: 17,
