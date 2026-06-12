@@ -143,16 +143,18 @@ export const BarcodeScanScreen = () => {
             } else {
                 console.log('❌ No se encontró ningún release en Discogs');
                 Alert.alert(
-                    'No encontrado',
-                    'No pudimos encontrar ninguna edición para este código de barras en Discogs.',
-                    [{ text: 'Intentar de nuevo', onPress: () => setScanned(false) }]
+                    t('barcode_scanner_not_found_title') || 'No encontrado',
+                    t('barcode_scanner_not_found_message') || 'No pudimos encontrar ninguna edición para este código de barras en Discogs.',
+                    [{ text: t('barcode_scanner_try_again') || 'Intentar de nuevo', onPress: () => setScanned(false) }]
                 );
             }
         } catch (error) {
             console.error('Error procesando escaneo de código de barras:', error);
-            Alert.alert('Error', 'Hubo un problema al buscar el código de barras.', [
-                { text: 'Aceptar', onPress: () => setScanned(false) }
-            ]);
+            Alert.alert(
+                t('common_error') || 'Error',
+                t('barcode_scanner_error_search') || 'Hubo un problema al buscar el código de barras.',
+                [{ text: t('common_accept') || 'Aceptar', onPress: () => setScanned(false) }]
+            );
         } finally {
             setSearching(false);
         }
@@ -194,7 +196,7 @@ export const BarcodeScanScreen = () => {
                     Alert.alert(
                         t('add_disc_alert_duplicate_title') || 'Ya tienes este disco',
                         t('add_disc_alert_duplicate_message') || 'Este disco ya está en tu colección.',
-                        [{ text: 'Escanear otro', onPress: () => { setScannedRelease(null); setScanned(false); } }]
+                        [{ text: t('barcode_scanner_scan_another') || 'Escanear otro', onPress: () => { setScannedRelease(null); setScanned(false); } }]
                     );
                     setSaving(false);
                     return;
@@ -328,7 +330,7 @@ export const BarcodeScanScreen = () => {
                         >
                             <Ionicons name="close" size={30} color="white" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Escáner de Código de Barras</Text>
+                        <Text style={styles.headerTitle}>{t('barcode_scanner_title')}</Text>
                     </View>
 
                     {/* Scanner Frame Overlay */}
@@ -341,7 +343,7 @@ export const BarcodeScanScreen = () => {
                             <View style={styles.scanLine} />
                         </View>
                         <Text style={styles.guideText}>
-                            Coloca el código de barras del vinilo en el marco
+                            {t('barcode_scanner_guide_text')}
                         </Text>
                     </View>
 
@@ -350,7 +352,7 @@ export const BarcodeScanScreen = () => {
                         {searching && (
                             <View style={styles.loadingBox}>
                                 <ActivityIndicator size="large" color="white" />
-                                <Text style={styles.loadingText}>Buscando en Discogs...</Text>
+                                <Text style={styles.loadingText}>{t('barcode_scanner_searching_discogs')}</Text>
                             </View>
                         )}
                     </View>
@@ -373,7 +375,7 @@ export const BarcodeScanScreen = () => {
                                 
                                 <Text style={styles.albumDetails} numberOfLines={1}>
                                     {scannedRelease.year ? `${scannedRelease.year} • ` : ''}
-                                    {Array.isArray(scannedRelease.label) ? scannedRelease.label[0] : (scannedRelease.label || 'Sello Desconocido')}
+                                    {Array.isArray(scannedRelease.label) ? scannedRelease.label[0] : (scannedRelease.label || t('common_unknown_label'))}
                                 </Text>
                                 <Text style={styles.albumDetails} numberOfLines={1}>
                                     {scannedRelease.catno ? `Cat: ${scannedRelease.catno}` : ''}
@@ -392,7 +394,7 @@ export const BarcodeScanScreen = () => {
                                 style={styles.secondaryButton}
                                 disabled={saving}
                             >
-                                <Text style={styles.secondaryButtonText}>Escanear otro</Text>
+                                <Text style={styles.secondaryButtonText}>{t('barcode_scanner_scan_another')}</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -405,7 +407,7 @@ export const BarcodeScanScreen = () => {
                                 ) : (
                                     <>
                                         <Ionicons name="add" size={20} color="white" style={{ marginRight: 6 }} />
-                                        <Text style={styles.primaryButtonText}>Añadir</Text>
+                                        <Text style={styles.primaryButtonText}>{t('common_add')}</Text>
                                     </>
                                 )}
                             </TouchableOpacity>

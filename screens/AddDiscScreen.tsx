@@ -82,43 +82,224 @@ export const AddDiscScreen: React.FC = () => {
     );
   }, [navigation, t, checkRecommendationTrigger]);
 
-  const [activeTab, setActiveTab] = useState<'search' | 'manual'>('search');
   const [query, setQuery] = useState('');
   const [albums, setAlbums] = useState<Album[]>([]);
   const [loading, setLoading] = useState(false);
   const debouncedQuery = useDebounce(query, 400);
 
-  // Estados para la pestaña manual
-  const [artistQuery, setArtistQuery] = useState('');
-  const [albumQuery, setAlbumQuery] = useState('');
+  // Estados para la búsqueda manual y Discogs
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
   const [manualLoading, setManualLoading] = useState(false);
   const [addingDisc, setAddingDisc] = useState(false);
 
+  // Controladores de estado de búsqueda
+  const [hasSearched, setHasSearched] = useState(false);
+  const [showDiscogsResults, setShowDiscogsResults] = useState(false);
+  const [activeSearchMode, setActiveSearchMode] = useState<'bothside' | 'discogs'>('bothside');
+  const [artistQuery, setArtistQuery] = useState('');
+  const [albumQuery, setAlbumQuery] = useState('');
+
+  // Búsqueda en Comunidad/Bothside
   const searchAlbums = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setAlbums([]);
+      setHasSearched(false);
+      setShowDiscogsResults(false);
       return;
     }
 
     setLoading(true);
+    setHasSearched(false);
+    setShowDiscogsResults(false);
+    setManualSearchResults([]);
+    
     try {
+      console.log('🔍 Buscando en Comunidad (Bothside):', searchQuery);
       const results = await AlbumService.searchAlbums(searchQuery);
       setAlbums(results || []);
+      setHasSearched(true);
     } catch (error) {
       console.error('Error searching albums:', error);
       setAlbums([]);
+      setHasSearched(true);
     } finally {
       setLoading(false);
     }
   }, []);
 
+  // Búsqueda en Discogs con un solo término
+  const performDiscogsSearchSingle = async (searchTerm: string) => {
+    if (!searchTerm.trim()) return;
+
+    setManualLoading(true);
+    setShowDiscogsResults(true);
+
+    try {
+      console.log('🧪 Probando conexión con Discogs antes de buscar...');
+      const connectionTest = await DiscogsService.testConnection();
+      if (!connectionTest) {
+        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
+        setManualLoading(false);
+        return;
+      }
+
+      console.log('🔍 Buscando en Discogs (Manual Single):', searchTerm);
+      const response = await DiscogsService.searchReleases(searchTerm);
+
+      // Filtrar solo versiones en vinilo
+      const vinylReleases = response?.results?.filter((release: any) => {
+        let format = '';
+        if (typeof release.format === 'string') {
+          format = release.format.toLowerCase();
+        } else if (Array.isArray(release.format)) {
+          format = release.format.join(' ').toLowerCase();
+        } else if (release.format && typeof release.format === 'object') {
+          format = JSON.stringify(release.format).toLowerCase();
+        }
+        return format.includes('vinyl') || format.includes('lp') || format.includes('12"') || format.includes('7"') || format.includes('10"');
+      }) || [];
+
+      console.log('💿 Versiones en vinilo encontradas en Discogs:', vinylReleases.length);
+      setManualSearchResults(vinylReleases);
+    } catch (error) {
+      console.error('❌ Error searching Discogs:', error);
+      Alert.alert(t('common_error'), t('add_disc_error_search'));
+      setManualSearchResults([]);
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
   const handleSearchChange = useCallback((text: string) => {
     setQuery(text);
     if (!text.trim()) {
       setAlbums([]);
+      setManualSearchResults([]);
+      setHasSearched(false);
+      setShowDiscogsResults(false);
     }
   }, []);
+
+  const handleOpenDiscogsForm = () => {
+    setActiveSearchMode('discogs');
+    setManualSearchResults([]);
+
+    const cleanQuery = query.trim();
+    if (cleanQuery) {
+      // Intentar dividir por separadores comunes si existen
+      const separators = [' - ', ' – ', ' / ', ' | ', ' • '];
+      let foundSeparator = false;
+      for (const sep of separators) {
+        if (cleanQuery.includes(sep)) {
+          const parts = cleanQuery.split(sep);
+          if (parts.length >= 2) {
+            setArtistQuery(parts[0].trim());
+            setAlbumQuery(parts[1].trim());
+            foundSeparator = true;
+            break;
+          }
+        }
+      }
+      
+      // Si no se encontró separador, asumimos que es un término simple (solo artista)
+      if (!foundSeparator) {
+        setArtistQuery(cleanQuery);
+        setAlbumQuery('');
+      }
+    } else {
+      setArtistQuery('');
+      setAlbumQuery('');
+    }
+  };
+
+  const performManualSearch = async (artist: string, album: string) => {
+    if (!artist.trim() || !album.trim()) {
+      Alert.alert(t('common_error'), t('add_disc_error_manual_input'));
+      return;
+    }
+
+    setManualLoading(true);
+    // Asegurarse de estar en el modo discogs
+    setActiveSearchMode('discogs');
+
+    try {
+      // Primero probar la conexión con Discogs
+      console.log('🧪 Probando conexión con Discogs antes de buscar...');
+      const connectionTest = await DiscogsService.testConnection();
+      if (!connectionTest) {
+        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
+        setManualLoading(false);
+        return;
+      }
+
+      const searchTerm = `${artist} ${album}`;
+      console.log('🔍 Buscando en Discogs (Manual):', searchTerm);
+
+      const response = await DiscogsService.searchReleases(searchTerm);
+
+      // Filtrar solo versiones en vinilo y con artista y álbum exactos
+      const vinylReleases = response?.results?.filter((release: any) => {
+        // Extraer artista y álbum del título (formato: "Artista - Álbum")
+        const titleParts = release.title?.split(' - ');
+        const releaseArtist = titleParts?.[0]?.toLowerCase().trim();
+        const releaseAlbum = titleParts?.[1]?.toLowerCase().trim();
+
+        const searchArtist = artist.toLowerCase().trim();
+        const searchAlbum = album.toLowerCase().trim();
+
+        // Verificar coincidencia del artista (más flexible)
+        // Manejo especial para "Various" / "Varios"
+        const isVarious = searchArtist.includes('various') || searchArtist.includes('varios') || searchArtist === 'v.a.';
+
+        let artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
+
+        if (isVarious) {
+          const releaseIsVarious = releaseArtist && (
+            releaseArtist.includes('various') ||
+            releaseArtist.includes('varios') ||
+            releaseArtist.includes('v.a.')
+          );
+
+          if (releaseIsVarious) {
+            artistMatches = true;
+          } else {
+            if (releaseAlbum === searchAlbum) {
+              artistMatches = true;
+            }
+          }
+        }
+
+        // Verificar coincidencia del álbum (más flexible)
+        const albumMatches = releaseAlbum && releaseAlbum.includes(searchAlbum);
+
+        // Manejar format
+        let format = '';
+        if (typeof release.format === 'string') {
+          format = release.format.toLowerCase();
+        } else if (Array.isArray(release.format)) {
+          format = release.format.join(' ').toLowerCase();
+        } else if (release.format && typeof release.format === 'object') {
+          format = JSON.stringify(release.format).toLowerCase();
+        }
+
+        const isVinyl = format.includes('vinyl') || format.includes('lp') || format.includes('12"') || format.includes('7"') || format.includes('10"');
+        return artistMatches && albumMatches && isVinyl;
+      }) || [];
+
+      console.log('💿 Versiones en vinilo encontradas:', vinylReleases.length);
+      setManualSearchResults(vinylReleases);
+    } catch (error) {
+      console.error('❌ Error searching Discogs:', error);
+      Alert.alert(t('common_error'), t('add_disc_error_search'));
+      setManualSearchResults([]);
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
+  const searchDiscogsManual = () => {
+    performManualSearch(artistQuery, albumQuery);
+  };
 
   // Controlar la visibilidad del tab bar inferior en el flujo de añadir disco
   useEffect(() => {
@@ -165,48 +346,35 @@ export const AddDiscScreen: React.FC = () => {
     }
   }, [user, navigation, addingDisc]);
 
-  // Efecto para buscar cuando cambia el query con debounce
+  // Efecto para buscar cuando cambia el query con debounce (previene bucle infinito)
   useEffect(() => {
     if (debouncedQuery.trim()) {
       searchAlbums(debouncedQuery);
     }
-  }, [debouncedQuery, searchAlbums]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery]);
 
   // Handle params from CameraScan
   useEffect(() => {
-    // Legacy single query support could be kept or removed. Prioritizing the new manual split.
     if (route.params?.initialArtist && route.params?.initialAlbum) {
       console.log('📸 Auto-filling Manual Search:', route.params.initialArtist, route.params.initialAlbum);
-
-      // 1. Switch directly to manual tab
-      setActiveTab('manual');
-
-      // 2. Set state
+      setActiveSearchMode('discogs');
       setArtistQuery(route.params.initialArtist);
       setAlbumQuery(route.params.initialAlbum);
-
-      // 3. Trigger search automatically (needs small delay for state or direct call)
-      // We will duplicate the search logic slightly or extract it to avoid stale state issues, 
-      // or simply pass values to a robust search function.
-      // Let's call a specialized internal function or `searchDiscogsManual` with params if we refactor it.
-      // To keep it simple and robust, we'll invoke the search logic directly with the params here.
-
-      // Need to invoke search AFTER state likely updates or pass explicit vals.
-      // Let's refactor searchDiscogsManual to take optional args to avoid state dependency issues.
       performManualSearch(route.params.initialArtist, route.params.initialAlbum);
 
-      // 4. Clean params
+      // Clean params
       navigation.setParams({
         initialArtist: undefined,
         initialAlbum: undefined,
         autoManualSearch: undefined
       });
     } else if (route.params?.initialSearchQuery) {
-      // Fallback for text search if ever used
       setQuery(route.params.initialSearchQuery);
+      setActiveSearchMode('bothside');
       navigation.setParams({ initialSearchQuery: undefined });
     }
-  }, [route.params?.initialArtist, route.params?.initialAlbum, route.params?.initialSearchQuery]);
+  }, [route.params?.initialArtist, route.params?.initialAlbum, route.params?.initialSearchQuery, navigation]);
 
 
   // Función para extraer artista del título
@@ -254,101 +422,6 @@ export const AddDiscScreen: React.FC = () => {
     return title;
   };
 
-  // Función para buscar en Discogs manualmente (Reusable)
-  const performManualSearch = async (artist: string, album: string) => {
-    if (!artist.trim() || !album.trim()) {
-      Alert.alert(t('common_error'), t('add_disc_error_manual_input'));
-      return;
-    }
-
-    setManualLoading(true);
-    // Ensure we are on the manual tab view
-    if (activeTab !== 'manual') setActiveTab('manual');
-
-    try {
-      // Primero probar la conexión con Discogs
-      console.log('🧪 Probando conexión con Discogs antes de buscar...');
-      const connectionTest = await DiscogsService.testConnection();
-      if (!connectionTest) {
-        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
-        setManualLoading(false);
-        return;
-      }
-
-      const searchTerm = `${artist} ${album}`;
-      console.log('🔍 Buscando en Discogs (Manual):', searchTerm);
-
-      const response = await DiscogsService.searchReleases(searchTerm);
-
-      // Filtrar solo versiones en vinilo y con artista y álbum exactos
-      const vinylReleases = response?.results?.filter((release: any) => {
-        // Extraer artista y álbum del título (formato: "Artista - Álbum")
-        const titleParts = release.title?.split(' - ');
-        const releaseArtist = titleParts?.[0]?.toLowerCase().trim();
-        const releaseAlbum = titleParts?.[1]?.toLowerCase().trim();
-
-        const searchArtist = artist.toLowerCase().trim();
-        const searchAlbum = album.toLowerCase().trim();
-
-        // Verificar coincidencia del artista (más flexible)
-        // Manejo especial para "Various" / "Varios"
-        const isVarious = searchArtist.includes('various') || searchArtist.includes('varios') || searchArtist === 'v.a.';
-
-        let artistMatches = releaseArtist && releaseArtist.includes(searchArtist);
-
-        if (isVarious) {
-          // Si buscamos "Various", permitir coincidencias con "Various", "Various Artists", "Varios", etc.
-          // O si el título coincide muy bien, ser permisivo con el artista.
-          const releaseIsVarious = releaseArtist && (
-            releaseArtist.includes('various') ||
-            releaseArtist.includes('varios') ||
-            releaseArtist.includes('v.a.')
-          );
-
-          if (releaseIsVarious) {
-            artistMatches = true;
-          } else {
-            // Si el artista del release no es explícitamente "Various", pero el usuario buscó "Various",
-            // podría ser un caso borde, pero generalmente queremos que coincida.
-            // Permitimos si el título coincide exactamente.
-            if (releaseAlbum === searchAlbum) {
-              artistMatches = true;
-            }
-          }
-        }
-
-        // Verificar coincidencia del álbum (más flexible)
-        const albumMatches = releaseAlbum && releaseAlbum.includes(searchAlbum);
-
-        // Manejar diferentes tipos de format
-        let format = '';
-        if (typeof release.format === 'string') {
-          format = release.format.toLowerCase();
-        } else if (Array.isArray(release.format)) {
-          format = release.format.join(' ').toLowerCase();
-        } else if (release.format && typeof release.format === 'object') {
-          format = JSON.stringify(release.format).toLowerCase();
-        }
-
-        const isVinyl = format.includes('vinyl') || format.includes('lp') || format.includes('12"') || format.includes('7"') || format.includes('10"');
-        return artistMatches && albumMatches && isVinyl;
-      }) || [];
-
-      console.log('💿 Versiones en vinilo encontradas:', vinylReleases.length);
-      setManualSearchResults(vinylReleases);
-    } catch (error) {
-      console.error('❌ Error searching Discogs:', error);
-      Alert.alert(t('common_error'), t('add_disc_error_search'));
-      setManualSearchResults([]);
-    } finally {
-      setManualLoading(false);
-    }
-  };
-
-  // Wrapper para el botón de búsqueda manual que usa el estado actual
-  const searchDiscogsManual = () => {
-    performManualSearch(artistQuery, albumQuery);
-  };
 
   // Función para añadir un release de Discogs a la colección
   const addDiscogsReleaseToCollection = async (release: any) => {
@@ -376,17 +449,38 @@ export const AddDiscScreen: React.FC = () => {
         // Si existe el álbum, comprobar si el usuario ya lo tiene
         const { data: existingExact } = await supabase
           .from("user_collection")
-          .select("id")
+          .select("id, shelves(name)")
           .eq("user_id", user.id)
           .eq("album_id", existingAlbum.id)
           .maybeSingle();
 
         if (existingExact) {
+          const locationName = (existingExact as any)?.shelves?.name;
+          const message = locationName
+            ? `${t('add_disc_alert_duplicate_message')}\n\n${t('add_disc_alert_duplicate_location', { 0: locationName })}`
+            : t('add_disc_alert_duplicate_message');
+
           Alert.alert(
             t('add_disc_alert_duplicate_title'),
-            t('add_disc_alert_duplicate_message')
+            message,
+            [
+              {
+                text: t('common_cancel'),
+                style: 'cancel',
+                onPress: () => {
+                  setAddingDisc(false);
+                }
+              },
+              {
+                text: t('add_disc_alert_duplicate_action_view'),
+                style: 'default',
+                onPress: () => {
+                  setAddingDisc(false);
+                  navigation.navigate('AlbumDetail', { albumId: existingAlbum.id });
+                }
+              }
+            ]
           );
-          setAddingDisc(false);
           return;
         }
       }
@@ -587,17 +681,38 @@ export const AddDiscScreen: React.FC = () => {
           // ------------------------------------------------------
           const { data: existingExact } = await supabase
             .from("user_collection")
-            .select("id")
+            .select("id, shelves(name)")
             .eq("user_id", user.id)
             .eq("album_id", albumRow.id)
             .maybeSingle();
 
           if (existingExact) {
+            const locationName = (existingExact as any)?.shelves?.name;
+            const message = locationName
+              ? `${t('add_disc_alert_duplicate_message')}\n\n${t('add_disc_alert_duplicate_location', { 0: locationName })}`
+              : t('add_disc_alert_duplicate_message');
+
             Alert.alert(
               t('add_disc_alert_duplicate_title'),
-              t('add_disc_alert_duplicate_message')
+              message,
+              [
+                {
+                  text: t('common_cancel'),
+                  style: 'cancel',
+                  onPress: () => {
+                    setAddingDisc(false);
+                  }
+                },
+                {
+                  text: t('add_disc_alert_duplicate_action_view'),
+                  style: 'default',
+                  onPress: () => {
+                    setAddingDisc(false);
+                    navigation.navigate('AlbumDetail', { albumId: albumRow.id });
+                  }
+                }
+              ]
             );
-            setAddingDisc(false);
             return;
           }
 
@@ -733,17 +848,38 @@ export const AddDiscScreen: React.FC = () => {
             // ------------------------------------------------------
             const { data: existingExact } = await supabase
               .from("user_collection")
-              .select("id")
+              .select("id, shelves(name)")
               .eq("user_id", user.id)
               .eq("album_id", newAlbum.id)
               .maybeSingle();
 
             if (existingExact) {
+              const locationName = (existingExact as any)?.shelves?.name;
+              const message = locationName
+                ? `${t('add_disc_alert_duplicate_message')}\n\n${t('add_disc_alert_duplicate_location', { 0: locationName })}`
+                : t('add_disc_alert_duplicate_message');
+
               Alert.alert(
                 t('add_disc_alert_duplicate_title'),
-                t('add_disc_alert_duplicate_message')
+                message,
+                [
+                  {
+                    text: t('common_cancel'),
+                    style: 'cancel',
+                    onPress: () => {
+                      setAddingDisc(false);
+                    }
+                  },
+                  {
+                    text: t('add_disc_alert_duplicate_action_view'),
+                    style: 'default',
+                    onPress: () => {
+                      setAddingDisc(false);
+                      navigation.navigate('AlbumDetail', { albumId: newAlbum.id });
+                    }
+                  }
+                ]
               );
-              setAddingDisc(false);
               return;
             }
 
@@ -804,76 +940,6 @@ export const AddDiscScreen: React.FC = () => {
     }
   };
 
-
-  const renderSearchTab = () => (
-    <View style={styles.tabContent}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <View style={styles.inputContainer}>
-          <Ionicons
-            name="search-outline"
-            size={20}
-            color="#999"
-            style={styles.searchIcon}
-          />
-          <TextInput
-            style={styles.searchInput}
-            placeholder={t('add_disc_placeholder_search')}
-            value={query}
-            onChangeText={handleSearchChange}
-            returnKeyType="search"
-            placeholderTextColor="#999"
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          {query.length > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={() => handleSearchChange('')}
-            >
-              <Ionicons
-                name="close-circle"
-                size={20}
-                color="#999"
-              />
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-
-
-      {/* Results */}
-      {loading && query.trim() ? (
-        <View style={styles.loadingContainer}>
-          <BothsideLoader size="small" fullscreen={false} />
-          <Text style={styles.loadingText}>{t('common_searching')}</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={albums}
-          renderItem={renderAlbum}
-          keyExtractor={(item) => item.id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={albums.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-
-              <Text style={styles.emptyText}>
-                {query ? `${t('add_disc_empty_search_query')} "${query}"` : t('add_disc_empty_search_default')}
-              </Text>
-              {query && (
-                <Text style={styles.emptySubtext}>
-                  {t('add_disc_empty_search_hint')}
-                </Text>
-              )}
-
-            </View>
-          }
-        />
-      )}
-    </View>
-  );
 
   const renderAlbum = ({ item }: { item: Album }) => (
     <View style={styles.albumItem}>
@@ -941,158 +1007,115 @@ export const AddDiscScreen: React.FC = () => {
     </View>
   );
 
-  const renderManualTab = () => (
-    <View style={styles.tabContent}>
-      {/* Overlay de carga cuando se está añadiendo un disco */}
-      {/* Overlay de carga cuando se está añadiendo un disco */}
-      {addingDisc && <BothsideLoader />}
-      {/* Formulario de búsqueda manual */}
-      <View style={styles.manualSearchContainer}>
-        <View style={styles.manualInputContainer}>
-          <Ionicons
-            name="person-outline"
-            size={20}
-            color="#999"
-            style={styles.manualInputIcon}
-          />
-          <TextInput
-            style={styles.manualInput}
-            placeholder={t('add_disc_placeholder_artist')}
-            value={artistQuery}
-            onChangeText={setArtistQuery}
-            placeholderTextColor="#999"
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
-          {artistQuery.length > 0 && (
+  interface UnifiedSearchResult {
+    id: string;
+    type: 'community_album' | 'empty_community_cta' | 'cta_more_results';
+    data?: any;
+  }
+
+  const getListData = (): UnifiedSearchResult[] => {
+    const list: UnifiedSearchResult[] = [];
+
+    if (!query.trim()) {
+      return [];
+    }
+
+    // 1. Mostrar resultados locales si existen
+    if (albums.length > 0) {
+      albums.forEach(album => {
+        list.push({
+          id: `local_${album.id}`,
+          type: 'community_album',
+          data: album
+        });
+      });
+      
+      // 2. Si hay resultados locales: agregar CTA secundario
+      list.push({
+        id: 'cta_more_results',
+        type: 'cta_more_results'
+      });
+    }
+    // 3. Si no hay resultados locales y se ha buscado: agregar CTA principal (estado vacío)
+    else if (hasSearched) {
+      list.push({
+        id: 'empty_community_cta',
+        type: 'empty_community_cta'
+      });
+    }
+
+    return list;
+  };
+
+  const renderUnifiedItem = ({ item }: { item: UnifiedSearchResult }) => {
+    switch (item.type) {
+      case 'community_album':
+        return renderAlbum({ item: item.data });
+      case 'empty_community_cta':
+        return (
+          <View style={styles.emptyCommunityContainer}>
+            <Ionicons name="search-outline" size={48} color="#ccc" style={{ marginBottom: 16 }} />
+            <Text style={styles.emptyCommunityTitle}>
+              No hemos encontrado este disco en la comunidad de Bothside
+            </Text>
+            <Text style={styles.emptyCommunityDescription}>
+              Sé el primero en añadirlo a la colección compartida.
+            </Text>
             <TouchableOpacity
-              style={styles.clearInputButton}
-              onPress={() => setArtistQuery('')}
+              style={[styles.searchDiscogsCTA, { backgroundColor: primaryColor }]}
+              onPress={handleOpenDiscogsForm}
             >
-              <Ionicons name="close-circle" size={20} color="#999" />
+              <Text style={styles.searchDiscogsCTAText}>Buscar en Discogs</Text>
             </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.manualInputContainer}>
-          <Ionicons
-            name="disc-outline"
-            size={20}
-            color="#999"
-            style={styles.manualInputIcon}
-          />
-          <TextInput
-            style={styles.manualInput}
-            placeholder={t('add_disc_placeholder_album')}
-            value={albumQuery}
-            onChangeText={setAlbumQuery}
-            placeholderTextColor="#999"
-            autoCapitalize="words"
-            autoCorrect={false}
-          />
-          {albumQuery.length > 0 && (
+          </View>
+        );
+      case 'cta_more_results':
+        return (
+          <View style={styles.moreResultsContainer}>
+            <Text style={styles.moreResultsText}>
+              ¿No encuentras el disco o la edición que buscas?
+            </Text>
             <TouchableOpacity
-              style={styles.clearInputButton}
-              onPress={() => setAlbumQuery('')}
+              style={[styles.moreResultsButton, { borderColor: primaryColor }]}
+              onPress={handleOpenDiscogsForm}
             >
-              <Ionicons name="close-circle" size={20} color="#999" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View style={styles.manualButtonContainer}>
-          <TouchableOpacity
-            style={[
-              styles.manualSearchButton,
-              { backgroundColor: primaryColor },
-              (!artistQuery.trim() || !albumQuery.trim()) && styles.manualSearchButtonDisabled
-            ]}
-            onPress={searchDiscogsManual}
-            disabled={manualLoading || !artistQuery.trim() || !albumQuery.trim()}
-          >
-            {manualLoading ? (
-              <BothsideLoader size="small" fullscreen={false} />
-            ) : (
-              <Text style={styles.manualSearchButtonText}>{t('add_disc_button_search_manual')}</Text>
-            )}
-          </TouchableOpacity>
-
-          {(artistQuery.length > 0 || albumQuery.length > 0) && (
-            <TouchableOpacity
-              style={styles.clearAllButton}
-              onPress={() => {
-                setArtistQuery('');
-                setAlbumQuery('');
-                setManualSearchResults([]);
-              }}
-            >
-              <Text style={styles.clearAllButtonText}>{t('common_clear')}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
-
-      {/* Resultados de búsqueda */}
-      {manualLoading ? (
-        <View style={styles.loadingContainer}>
-          <BothsideLoader size="small" fullscreen={false} />
-          <Text style={styles.loadingText}>{t('add_disc_searching_vinyl')}</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={manualSearchResults}
-          renderItem={renderDiscogsRelease}
-          keyExtractor={(item) => item.id.toString()}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={manualSearchResults.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-
-              <Text style={styles.emptyText}>
-                {artistQuery && albumQuery
-                  ? t('add_disc_empty_manual_query')
-                  : t('add_disc_empty_manual_default')
-                }
+              <Text style={[styles.moreResultsButtonText, { color: primaryColor }]}>
+                Buscar en Discogs
               </Text>
-              {artistQuery && albumQuery && (
-                <Text style={styles.emptySubtext}>
-                  {t('add_disc_empty_manual_hint')}
-                </Text>
-              )}
-            </View>
-          }
-        />
-      )}
-    </View>
-  );
+            </TouchableOpacity>
+          </View>
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
-      {/* Tabs */}
-      <View style={[styles.tabContainer, { backgroundColor: 'white', borderBottomColor: '#eee' }]}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'search' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
-          onPress={() => setActiveTab('search')}
-        >
-          <Text style={[styles.tabText, { color: activeTab === 'search' ? primaryColor : colors.text }]}>
-            {t('add_disc_tab_search')}
+      {/* Header Estático con Título y Escáneres */}
+      <View style={[styles.tabContainer, { backgroundColor: 'white', borderBottomColor: '#eee', alignItems: 'center', justifyContent: 'space-between', paddingRight: 8, paddingBottom: 12 }]}>
+        {activeSearchMode === 'discogs' && (
+          <TouchableOpacity
+            style={{ paddingLeft: 16, paddingRight: 8 }}
+            onPress={() => {
+              setActiveSearchMode('bothside');
+            }}
+          >
+            <Ionicons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
+        )}
+        <View style={{ flex: 1, paddingLeft: activeSearchMode === 'discogs' ? 8 : 16 }}>
+          <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text }}>
+            {activeSearchMode === 'discogs' ? t('add_disc_title_advanced_discogs') : t('add_disc_title')}
           </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'manual' && [styles.activeTab, { borderBottomColor: primaryColor }]]}
-          onPress={() => setActiveTab('manual')}
-        >
-          <Text style={[styles.tabText, { color: activeTab === 'manual' ? primaryColor : colors.text }]}>
-            {t('add_disc_tab_manual')}
-          </Text>
-        </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={{
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             borderLeftWidth: 1,
             borderLeftColor: '#eee',
           }}
@@ -1105,7 +1128,8 @@ export const AddDiscScreen: React.FC = () => {
           style={{
             justifyContent: 'center',
             alignItems: 'center',
-            paddingHorizontal: 12,
+            paddingHorizontal: 16,
+            paddingVertical: 12,
             borderLeftWidth: 1,
             borderLeftColor: '#eee',
           }}
@@ -1113,12 +1137,198 @@ export const AddDiscScreen: React.FC = () => {
         >
           <Ionicons name="camera" size={24} color={colors.text} />
         </TouchableOpacity>
-
       </View>
 
-      {/* Tab Content */}
-      {activeTab === 'search' && renderSearchTab()}
-      {activeTab === 'manual' && renderManualTab()}
+      {/* Search Bar (Only for bothside mode) */}
+      {activeSearchMode === 'bothside' && (
+        <View style={styles.searchContainer}>
+          <View style={styles.inputContainer}>
+            <Ionicons
+              name="search-outline"
+              size={20}
+              color="#999"
+              style={styles.searchIcon}
+            />
+            <TextInput
+              style={styles.searchInput}
+              placeholder={t('add_disc_placeholder_search_input')}
+              value={query}
+              onChangeText={handleSearchChange}
+              returnKeyType="search"
+              placeholderTextColor="#999"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            {query.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => handleSearchChange('')}
+              >
+                <Ionicons
+                  name="close-circle"
+                  size={20}
+                  color="#999"
+                />
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      )}
+
+      {/* Content based on activeSearchMode */}
+      {activeSearchMode === 'bothside' ? (
+        loading && query.trim() ? (
+          <View style={styles.loadingContainer}>
+            <BothsideLoader size="small" fullscreen={false} />
+            <Text style={styles.loadingText}>{t('common_searching')}</Text>
+          </View>
+        ) : (
+          <FlatList
+            data={getListData()}
+            renderItem={renderUnifiedItem}
+            keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={getListData().length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>
+                  {query ? `Buscando "${query}"...` : t('add_disc_empty_search_default')}
+                </Text>
+              </View>
+            }
+          />
+        )
+      ) : (
+        // Discogs Advanced Search Form and Results
+        <View style={{ flex: 1 }}>
+          {/* Overlay de carga cuando se está añadiendo un disco */}
+          {addingDisc && (
+            <View style={styles.addingOverlay}>
+              <View style={styles.addingOverlayContent}>
+                <BothsideLoader size="large" fullscreen={false} />
+                <Text style={styles.addingOverlayText}>{t('common_saving')}</Text>
+              </View>
+            </View>
+          )}
+
+          {/* Formulario de búsqueda manual */}
+          <View style={styles.manualSearchContainer}>
+            <View style={styles.manualInputContainer}>
+              <Ionicons
+                name="person-outline"
+                size={20}
+                color="#999"
+                style={styles.manualInputIcon}
+              />
+              <TextInput
+                style={styles.manualInput}
+                placeholder={t('add_disc_placeholder_artist')}
+                value={artistQuery}
+                onChangeText={setArtistQuery}
+                placeholderTextColor="#999"
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+              {artistQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearInputButton}
+                  onPress={() => setArtistQuery('')}
+                >
+                  <Ionicons name="close-circle" size={20} color="#999" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.manualInputContainer}>
+              <Ionicons
+                name="disc-outline"
+                size={20}
+                color="#999"
+                style={styles.manualInputIcon}
+              />
+              <TextInput
+                style={styles.manualInput}
+                placeholder={t('add_disc_placeholder_album')}
+                value={albumQuery}
+                onChangeText={setAlbumQuery}
+                placeholderTextColor="#999"
+                autoCapitalize="words"
+                autoCorrect={false}
+              />
+              {albumQuery.length > 0 && (
+                <TouchableOpacity
+                  style={styles.clearInputButton}
+                  onPress={() => setAlbumQuery('')}
+                >
+                  <Ionicons name="close-circle" size={20} color="#999" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View style={styles.manualButtonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.manualSearchButton,
+                  { backgroundColor: primaryColor },
+                  (!artistQuery.trim() || !albumQuery.trim()) && styles.manualSearchButtonDisabled
+                ]}
+                onPress={searchDiscogsManual}
+                disabled={manualLoading || !artistQuery.trim() || !albumQuery.trim()}
+              >
+                {manualLoading ? (
+                  <BothsideLoader size="small" fullscreen={false} />
+                ) : (
+                  <Text style={styles.manualSearchButtonText}>{t('add_disc_button_search_manual')}</Text>
+                )}
+              </TouchableOpacity>
+
+              {(artistQuery.length > 0 || albumQuery.length > 0) && (
+                <TouchableOpacity
+                  style={styles.clearAllButton}
+                  onPress={() => {
+                    setArtistQuery('');
+                    setAlbumQuery('');
+                    setManualSearchResults([]);
+                  }}
+                >
+                  <Text style={styles.clearAllButtonText}>{t('common_clear')}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+
+          {/* Resultados de búsqueda de Discogs */}
+          {manualLoading ? (
+            <View style={styles.loadingContainer}>
+              <BothsideLoader size="small" fullscreen={false} />
+              <Text style={styles.loadingText}>{t('add_disc_searching_vinyl')}</Text>
+            </View>
+          ) : (
+            <FlatList
+              data={manualSearchResults}
+              renderItem={renderDiscogsRelease}
+              keyExtractor={(item) => item.id.toString()}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={manualSearchResults.length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>
+                    {artistQuery && albumQuery
+                      ? t('add_disc_empty_manual_query')
+                      : t('add_disc_empty_manual_default')
+                    }
+                  </Text>
+                  {artistQuery && albumQuery && (
+                    <Text style={styles.emptySubtext}>
+                      {t('add_disc_empty_manual_hint')}
+                    </Text>
+                  )}
+                </View>
+              }
+            />
+          )}
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -1511,5 +1721,66 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
     elevation: 5,
+  },
+  emptyCommunityContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 60,
+    paddingHorizontal: 32,
+  },
+  emptyCommunityTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  emptyCommunityDescription: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  searchDiscogsCTA: {
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: 180,
+  },
+  searchDiscogsCTAText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  moreResultsContainer: {
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+    marginTop: 12,
+  },
+  moreResultsText: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  moreResultsButton: {
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+  },
+  moreResultsButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 }); 
