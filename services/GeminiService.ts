@@ -15,7 +15,7 @@ export class GeminiService {
             }
             console.log('🔑 GeminiService: Initializing with Key prefix:', ENV.GEMINI_API_KEY.substring(0, 8) + '...');
             this.genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
-            this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' });
+            this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
         }
     }
 
