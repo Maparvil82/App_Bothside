@@ -12,6 +12,8 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
+import { ImportDiscogsCard } from '../components/ImportDiscogsCard';
+import { ImportDiscogsBottomSheet } from '../components/ImportDiscogsBottomSheet';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useNavigation, useTheme, useRoute } from '@react-navigation/native';
@@ -98,6 +100,7 @@ export const AddDiscScreen: React.FC = () => {
   const [activeSearchMode, setActiveSearchMode] = useState<'bothside' | 'discogs'>('bothside');
   const [artistQuery, setArtistQuery] = useState('');
   const [albumQuery, setAlbumQuery] = useState('');
+  const [importBottomSheetVisible, setImportBottomSheetVisible] = useState(false);
 
   // Búsqueda en Comunidad/Bothside
   const searchAlbums = useCallback(async (searchQuery: string) => {
@@ -1190,10 +1193,15 @@ export const AddDiscScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={getListData().length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
             ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>
-                  {query ? `Buscando "${query}"...` : t('add_disc_empty_search_default')}
-                </Text>
+              <View style={[styles.emptyContainer, !query ? { justifyContent: 'space-between', paddingVertical: 20 } : null]}>
+                <View style={!query ? { flex: 1, justifyContent: 'center', alignItems: 'center' } : null}>
+                  <Text style={styles.emptyText}>
+                    {query ? `Buscando "${query}"...` : t('add_disc_empty_search_default')}
+                  </Text>
+                </View>
+                {!query && (
+                  <ImportDiscogsCard onPressInfo={() => setImportBottomSheetVisible(true)} />
+                )}
               </View>
             }
           />
@@ -1329,6 +1337,10 @@ export const AddDiscScreen: React.FC = () => {
           )}
         </View>
       )}
+      <ImportDiscogsBottomSheet
+        visible={importBottomSheetVisible}
+        onClose={() => setImportBottomSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 };
