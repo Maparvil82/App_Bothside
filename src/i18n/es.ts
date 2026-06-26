@@ -482,7 +482,7 @@ export const es = {
     add_disc_empty_search_default: "Encuentra discos en la comunidad de Bothside, en Discogs o escanéalo directamente con la cámara",
     import_discogs_card_tag: "Web",
     import_discogs_card_title: "Importa tu colección de Discogs",
-    import_discogs_card_description: "Importa cientos o miles de discos de forma rápida y sencilla desde la versión web de Bothside.",
+    import_discogs_card_description: "Importa cientos de discos de forma rápida desde la versión web de Bothside.",
     import_discogs_card_cta: "Abrir versión web",
     import_discogs_bs_title: "Importa tu colección completa",
     import_discogs_bs_subtitle: "Importa tu colección de Discogs de forma sencilla desde Bothside Web.",
