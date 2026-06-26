@@ -14,11 +14,20 @@ export const ImportDiscogsCard: React.FC<ImportDiscogsCardProps> = ({
   onDismiss,
 }) => {
   const { t } = useTranslation();
-  const { colors } = useTheme();
+  const { colors, dark } = useTheme();
+
+  const themeStyles = {
+    cardBackground: dark ? '#1e1b4b' : '#F5F3FF',
+    badgeBackground: dark ? '#312e81' : '#EBE9FE',
+    badgeText: dark ? '#c7d2fe' : '#5F39F8',
+    descriptionText: dark ? '#a5b4fc' : '#686876',
+    chevronColor: dark ? '#a5b4fc' : '#5F39F8',
+    closeButtonColor: dark ? '#a5b4fc' : '#B8B8C2',
+  };
 
   return (
     <TouchableOpacity
-      style={styles.cardContainer}
+      style={[styles.cardContainer, { backgroundColor: themeStyles.cardBackground }]}
       onPress={onPressInfo}
       activeOpacity={0.8}
     >
@@ -31,13 +40,13 @@ export const ImportDiscogsCard: React.FC<ImportDiscogsCardProps> = ({
           onDismiss();
         }}
       >
-        <Ionicons name="close" size={18} color="#B8B8C2" />
+        <Ionicons name="close" size={18} color={themeStyles.closeButtonColor} />
       </TouchableOpacity>
 
       <View style={styles.textColumn}>
         <View style={styles.headerRow}>
-          <View style={styles.tagBadge}>
-            <Text style={styles.tagText}>
+          <View style={[styles.tagBadge, { backgroundColor: themeStyles.badgeBackground }]}>
+            <Text style={[styles.tagText, { color: themeStyles.badgeText }]}>
               {t('import_discogs_card_tag')}
             </Text>
           </View>
@@ -54,7 +63,7 @@ export const ImportDiscogsCard: React.FC<ImportDiscogsCardProps> = ({
           </Text>
         </View>
 
-        <Text style={styles.description}>
+        <Text style={[styles.description, { color: themeStyles.descriptionText }]}>
           {t('import_discogs_card_description')}
         </Text>
       </View>
@@ -63,7 +72,7 @@ export const ImportDiscogsCard: React.FC<ImportDiscogsCardProps> = ({
         <Ionicons
           name="chevron-forward"
           size={22}
-          color="#5F39F8"
+          color={themeStyles.chevronColor}
         />
       </View>
     </TouchableOpacity>

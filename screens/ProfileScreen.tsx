@@ -23,6 +23,8 @@ import { AppColors } from '../src/theme/colors';
 import { useMyInvitations } from '../hooks/useCollaboration';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { getAiEnabled, setAiEnabled, setAiConsent } from '../src/privacy/aiConsent';
+import { ImportDiscogsCard } from '../components/ImportDiscogsCard';
+import { ImportDiscogsBottomSheet } from '../components/ImportDiscogsBottomSheet';
 
 
 export const ProfileScreen: React.FC = () => {
@@ -39,6 +41,8 @@ export const ProfileScreen: React.FC = () => {
   const [isAiEnabled, setIsAiEnabled] = useState<boolean>(false);
   const { invitations } = useMyInvitations();
   const pendingInvitationsCount = invitations.filter(inv => inv.status === 'pending').length;
+  const [importBottomSheetVisible, setImportBottomSheetVisible] = useState(false);
+  const [showImportCard, setShowImportCard] = useState(false);
 
   useEffect(() => {
     setIsDarkMode(mode === 'dark');
@@ -61,6 +65,10 @@ export const ProfileScreen: React.FC = () => {
 
         const aiPref = await getAiEnabled();
         setIsAiEnabled(aiPref);
+
+        // Forzar a true para que se muestre de nuevo al cambiar de ubicación
+        await AsyncStorage.setItem('@show_import_discogs_card', 'true');
+        setShowImportCard(true);
       } catch { }
     })();
   }, [user?.id]);
@@ -168,6 +176,15 @@ export const ProfileScreen: React.FC = () => {
     }
   };
 
+  const handleDismissImportCard = async () => {
+    try {
+      await AsyncStorage.setItem('@show_import_discogs_card', 'false');
+      setShowImportCard(false);
+    } catch (e) {
+      setShowImportCard(false);
+    }
+  };
+
 
 
   return (
@@ -198,6 +215,13 @@ export const ProfileScreen: React.FC = () => {
             <Text style={[styles.displayName, { color: colors.text }]}>{getDisplayName()}</Text>
           )}
         </View>
+
+        {showImportCard && (
+          <ImportDiscogsCard
+            onPressInfo={() => setImportBottomSheetVisible(true)}
+            onDismiss={handleDismissImportCard}
+          />
+        )}
 
         {/* Configuración */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -299,6 +323,10 @@ export const ProfileScreen: React.FC = () => {
         </View>
       </ScrollView>
 
+      <ImportDiscogsBottomSheet
+        visible={importBottomSheetVisible}
+        onClose={() => setImportBottomSheetVisible(false)}
+      />
     </SafeAreaView>
   );
 };

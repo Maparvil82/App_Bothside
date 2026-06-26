@@ -12,8 +12,6 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
-import { ImportDiscogsCard } from '../components/ImportDiscogsCard';
-import { ImportDiscogsBottomSheet } from '../components/ImportDiscogsBottomSheet';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useNavigation, useTheme, useRoute } from '@react-navigation/native';
@@ -100,29 +98,6 @@ export const AddDiscScreen: React.FC = () => {
   const [activeSearchMode, setActiveSearchMode] = useState<'bothside' | 'discogs'>('bothside');
   const [artistQuery, setArtistQuery] = useState('');
   const [albumQuery, setAlbumQuery] = useState('');
-  const [importBottomSheetVisible, setImportBottomSheetVisible] = useState(false);
-  const [showImportCard, setShowImportCard] = useState(false);
-
-  useEffect(() => {
-    const checkImportCardStatus = async () => {
-      try {
-        await AsyncStorage.setItem('@show_import_discogs_card', 'true');
-        setShowImportCard(true);
-      } catch (e) {
-        setShowImportCard(true);
-      }
-    };
-    checkImportCardStatus();
-  }, []);
-
-  const handleDismissImportCard = async () => {
-    try {
-      await AsyncStorage.setItem('@show_import_discogs_card', 'false');
-      setShowImportCard(false);
-    } catch (e) {
-      setShowImportCard(false);
-    }
-  };
 
   // Búsqueda en Comunidad/Bothside
   const searchAlbums = useCallback(async (searchQuery: string) => {
@@ -1229,7 +1204,7 @@ export const AddDiscScreen: React.FC = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={getListData().length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
             ListEmptyComponent={
-              <View style={[styles.emptyContainer, !query ? { justifyContent: 'space-between', paddingVertical: 20 } : null]}>
+              <View style={styles.emptyContainer}>
                 {!query ? (
                   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                     <Image
@@ -1249,12 +1224,6 @@ export const AddDiscScreen: React.FC = () => {
                       {`${t('add_disc_empty_search_query')} "${query}"`}
                     </Text>
                   </View>
-                )}
-                {!query && showImportCard && (
-                  <ImportDiscogsCard
-                    onPressInfo={() => setImportBottomSheetVisible(true)}
-                    onDismiss={handleDismissImportCard}
-                  />
                 )}
               </View>
             }
@@ -1391,10 +1360,6 @@ export const AddDiscScreen: React.FC = () => {
           )}
         </View>
       )}
-      <ImportDiscogsBottomSheet
-        visible={importBottomSheetVisible}
-        onClose={() => setImportBottomSheetVisible(false)}
-      />
     </SafeAreaView>
   );
 };
