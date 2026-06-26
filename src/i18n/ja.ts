@@ -813,6 +813,9 @@ export const ja = {
     add_disc_tab_search: "コミュニティ",
     add_disc_tab_manual: "Discogs",
     add_disc_tab_camera: "カメラ",
+    add_disc_tab_manual_new: "マニュアル",
+    add_disc_tab_barcode_new: "バーコード",
+    add_disc_tab_cover_new: "カバー",
     add_disc_error_ocr_search: "Discogsで結果を検索できませんでした",
 
     // Planner / Calendar

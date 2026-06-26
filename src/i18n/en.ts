@@ -521,6 +521,9 @@ export const en = {
     add_disc_tab_search: "Community",
     add_disc_tab_manual: "Discogs",
     add_disc_tab_camera: "Camera",
+    add_disc_tab_manual_new: "Manual",
+    add_disc_tab_barcode_new: "Barcode",
+    add_disc_tab_cover_new: "Cover",
     add_disc_error_ocr_search: "Could not search results on Discogs",
     // Pricing Screen
     pricing_feature_scan: "Smart AI cover scanning",

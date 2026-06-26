@@ -519,6 +519,9 @@ export const es = {
     add_disc_tab_search: "Comunidad",
     add_disc_tab_manual: "Discogs",
     add_disc_tab_camera: "Cámara",
+    add_disc_tab_manual_new: "Manual",
+    add_disc_tab_barcode_new: "código de barra",
+    add_disc_tab_cover_new: "Portada",
     add_disc_error_ocr_search: "No se pudieron buscar resultados en Discogs",
     // Pricing Screen
     pricing_feature_scan: "Escaneo inteligente de portadas con IA",

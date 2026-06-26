@@ -101,6 +101,28 @@ export const AddDiscScreen: React.FC = () => {
   const [artistQuery, setArtistQuery] = useState('');
   const [albumQuery, setAlbumQuery] = useState('');
   const [importBottomSheetVisible, setImportBottomSheetVisible] = useState(false);
+  const [showImportCard, setShowImportCard] = useState(false);
+
+  useEffect(() => {
+    const checkImportCardStatus = async () => {
+      try {
+        const value = await AsyncStorage.getItem('@show_import_discogs_card');
+        setShowImportCard(value !== 'false');
+      } catch (e) {
+        setShowImportCard(true);
+      }
+    };
+    checkImportCardStatus();
+  }, []);
+
+  const handleDismissImportCard = async () => {
+    try {
+      await AsyncStorage.setItem('@show_import_discogs_card', 'false');
+      setShowImportCard(false);
+    } catch (e) {
+      setShowImportCard(false);
+    }
+  };
 
   // Búsqueda en Comunidad/Bothside
   const searchAlbums = useCallback(async (searchQuery: string) => {
@@ -1094,12 +1116,12 @@ export const AddDiscScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: 'white' }]}>
-      {/* Header Estático con Título y Escáneres */}
-      <View style={[styles.tabContainer, { backgroundColor: 'white', borderBottomColor: '#eee', alignItems: 'center', justifyContent: 'space-between', paddingRight: 8, paddingBottom: 12 }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? '#121212' : 'white' }]}>
+      {/* Header Estático con Selector de 3 Opciones */}
+      <View style={[styles.headerSelectorContainer, { backgroundColor: mode === 'dark' ? '#121212' : 'white', borderBottomColor: mode === 'dark' ? '#2c2c2c' : '#eee' }]}>
         {activeSearchMode === 'discogs' && (
           <TouchableOpacity
-            style={{ paddingLeft: 16, paddingRight: 8 }}
+            style={styles.absoluteBackButton}
             onPress={() => {
               setActiveSearchMode('bothside');
             }}
@@ -1107,39 +1129,53 @@ export const AddDiscScreen: React.FC = () => {
             <Ionicons name="arrow-back" size={24} color={colors.text} />
           </TouchableOpacity>
         )}
-        <View style={{ flex: 1, paddingLeft: activeSearchMode === 'discogs' ? 8 : 16 }}>
-          <Text style={{ fontSize: 18, fontWeight: 'bold', color: colors.text }}>
-            {activeSearchMode === 'discogs' ? t('add_disc_title_advanced_discogs') : t('add_disc_title')}
-          </Text>
+        <View style={styles.selectorRow}>
+          <TouchableOpacity
+            style={[styles.selectorButton, styles.selectorButtonActive]}
+            onPress={() => {
+              if (activeSearchMode === 'discogs') {
+                setActiveSearchMode('bothside');
+              }
+            }}
+          >
+            <Ionicons
+              name={activeSearchMode !== 'discogs' ? "search" : "search-outline"}
+              size={22}
+              color={primaryColor}
+            />
+            <Text style={[styles.selectorText, { color: primaryColor, fontWeight: '600' }]}>
+              {t('add_disc_tab_manual_new')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => navigation.navigate('BarcodeScan')}
+          >
+            <Ionicons
+              name="barcode-outline"
+              size={22}
+              color={mode === 'dark' ? '#a0a0a0' : '#8e8e93'}
+            />
+            <Text style={[styles.selectorText, { color: mode === 'dark' ? '#a0a0a0' : '#8e8e93' }]}>
+              {t('add_disc_tab_barcode_new')}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => navigation.navigate('CameraScan')}
+          >
+            <Ionicons
+              name="camera-outline"
+              size={22}
+              color={mode === 'dark' ? '#a0a0a0' : '#8e8e93'}
+            />
+            <Text style={[styles.selectorText, { color: mode === 'dark' ? '#a0a0a0' : '#8e8e93' }]}>
+              {t('add_disc_tab_cover_new')}
+            </Text>
+          </TouchableOpacity>
         </View>
-
-        <TouchableOpacity
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderLeftWidth: 1,
-            borderLeftColor: '#eee',
-          }}
-          onPress={() => navigation.navigate('BarcodeScan')}
-        >
-          <Ionicons name="barcode" size={24} color={colors.text} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={{
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingHorizontal: 16,
-            paddingVertical: 12,
-            borderLeftWidth: 1,
-            borderLeftColor: '#eee',
-          }}
-          onPress={() => navigation.navigate('CameraScan')}
-        >
-          <Ionicons name="camera" size={24} color={colors.text} />
-        </TouchableOpacity>
       </View>
 
       {/* Search Bar (Only for bothside mode) */}
@@ -1199,8 +1235,11 @@ export const AddDiscScreen: React.FC = () => {
                     {query ? `Buscando "${query}"...` : t('add_disc_empty_search_default')}
                   </Text>
                 </View>
-                {!query && (
-                  <ImportDiscogsCard onPressInfo={() => setImportBottomSheetVisible(true)} />
+                {!query && showImportCard && (
+                  <ImportDiscogsCard 
+                    onPressInfo={() => setImportBottomSheetVisible(true)} 
+                    onDismiss={handleDismissImportCard}
+                  />
                 )}
               </View>
             }
@@ -1351,37 +1390,42 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'white',
   },
-  tabContainer: {
+  headerSelectorContainer: {
     flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
-    paddingTop: 24,
+    paddingTop: 12,
+    paddingBottom: 8,
   },
-  tab: {
+  absoluteBackButton: {
+    position: 'absolute',
+    left: 16,
+    zIndex: 10,
+    padding: 4,
+  },
+  selectorRow: {
     flex: 1,
     flexDirection: 'row',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  selectorButton: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: AppColors.primary,
+  selectorButtonActive: {
+    // Relying on active theme coloring of text and icon
   },
-  tabText: {
-    marginLeft: 0,
-    fontSize: 14,
-    color: '#666',
+  selectorText: {
+    fontSize: 12,
+    color: '#8e8e93',
+    marginTop: 4,
     fontWeight: '500',
-  },
-  activeTabText: {
-    color: AppColors.primary,
-    fontWeight: '600',
-  },
-  tabContent: {
-    flex: 1,
+    textAlign: 'center',
   },
   searchContainer: {
     flexDirection: 'row',

@@ -516,6 +516,9 @@ export const pt = {
     add_disc_tab_search: "Comunidade",
     add_disc_tab_manual: "Discogs",
     add_disc_tab_camera: "Câmera",
+    add_disc_tab_manual_new: "Manual",
+    add_disc_tab_barcode_new: "código de barra",
+    add_disc_tab_cover_new: "Capa",
     add_disc_error_ocr_search: "Não foi possível buscar resultados no Discogs",
 
     // Pricing Screen

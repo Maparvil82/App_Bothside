@@ -842,6 +842,9 @@ export const de = {
     add_disc_tab_search: "Community",
     add_disc_tab_manual: "Discogs",
     add_disc_tab_camera: "Kamera",
+    add_disc_tab_manual_new: "Manuell",
+    add_disc_tab_barcode_new: "Barcode",
+    add_disc_tab_cover_new: "Cover",
     add_disc_error_ocr_search: "Ergebnisse konnten nicht auf Discogs gesucht werden",
     // Shelf Edit Screen
     shelf_edit_title_edit: "Regal bearbeiten",

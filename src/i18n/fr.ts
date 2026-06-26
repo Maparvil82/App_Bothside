@@ -813,6 +813,9 @@ export const fr = {
     add_disc_tab_search: "Communauté",
     add_disc_tab_manual: "Discogs",
     add_disc_tab_camera: "Caméra",
+    add_disc_tab_manual_new: "Manuel",
+    add_disc_tab_barcode_new: "Code barre",
+    add_disc_tab_cover_new: "Pochette",
     add_disc_error_ocr_search: "Impossible de chercher des résultats sur Discogs",
 
     // Planner / Calendar
