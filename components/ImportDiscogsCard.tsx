@@ -17,7 +17,7 @@ export const ImportDiscogsCard: React.FC<ImportDiscogsCardProps> = ({
   const { colors, dark } = useTheme();
 
   const themeStyles = {
-    cardBackground: dark ? '#1e1b4b' : '#F5F3FF',
+    cardBackground: dark ? '#1e1b4b' : 'white',
     badgeBackground: dark ? '#312e81' : '#EBE9FE',
     badgeText: dark ? '#c7d2fe' : '#5F39F8',
     descriptionText: dark ? '#a5b4fc' : '#686876',
