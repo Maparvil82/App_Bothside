@@ -106,8 +106,8 @@ export const AddDiscScreen: React.FC = () => {
   useEffect(() => {
     const checkImportCardStatus = async () => {
       try {
-        const value = await AsyncStorage.getItem('@show_import_discogs_card');
-        setShowImportCard(value !== 'false');
+        await AsyncStorage.setItem('@show_import_discogs_card', 'true');
+        setShowImportCard(true);
       } catch (e) {
         setShowImportCard(true);
       }
