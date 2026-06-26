@@ -790,6 +790,8 @@ export const ja = {
     add_disc_placeholder_search: "コミュニティ全体を検索...",
     add_disc_empty_search_query: "見つかりませんでした: ",
     add_disc_empty_search_default: "BothsideコミュニティやDiscogsでレコードを検索するか、カメラで直接スキャンしてください",
+    add_disc_empty_state_title: "次のレコードを探す",
+    add_disc_empty_state_subtitle: "アーティスト、アルバム、レーベルで検索、またはバーコードやジャケットをスキャン",
     add_disc_empty_search_hint: "別のキーワードを試すか、スペルを確認してください",
     add_disc_results_found: "件の結果",
     add_disc_no_results: "結果が見つかりません",

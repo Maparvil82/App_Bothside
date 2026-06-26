@@ -819,6 +819,8 @@ export const de = {
     add_disc_placeholder_search: "In der gesamten Community suchen...",
     add_disc_empty_search_query: "Keine Ergebnisse gefunden für",
     add_disc_empty_search_default: "Finde Schallplatten in der Bothside-Community, auf Discogs oder scanne sie direkt mit der Kamera",
+    add_disc_empty_state_title: "Suche deine nächste Schallplatte",
+    add_disc_empty_state_subtitle: "Finde nach Künstler, Album oder Label, scanne den Barcode oder das Cover",
     add_disc_empty_search_hint: "Versuchen Sie andere Begriffe oder überprüfen Sie die Rechtschreibung",
     add_disc_results_found: "Ergebnisse gefunden",
     add_disc_no_results: "Keine Ergebnisse gefunden",

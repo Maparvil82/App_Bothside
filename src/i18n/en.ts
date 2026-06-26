@@ -480,6 +480,8 @@ export const en = {
     add_disc_placeholder_search: "Search the entire community...",
     add_disc_empty_search_query: "No results found for",
     add_disc_empty_search_default: "Find records in the Bothside community, on Discogs or scan it directly with the camera",
+    add_disc_empty_state_title: "Find your next record",
+    add_disc_empty_state_subtitle: "Search by artist, album or label, scan the barcode or the cover",
     import_discogs_card_tag: "Web",
     import_discogs_card_title: "Import your Discogs collection",
     import_discogs_card_description: "Import hundreds or thousands of records quickly and easily from the web version of Bothside.",

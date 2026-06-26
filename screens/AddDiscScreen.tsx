@@ -137,7 +137,7 @@ export const AddDiscScreen: React.FC = () => {
     setHasSearched(false);
     setShowDiscogsResults(false);
     setManualSearchResults([]);
-    
+
     try {
       console.log('🔍 Buscando en Comunidad (Bothside):', searchQuery);
       const results = await AlbumService.searchAlbums(searchQuery);
@@ -225,7 +225,7 @@ export const AddDiscScreen: React.FC = () => {
           }
         }
       }
-      
+
       // Si no se encontró separador, asumimos que es un término simple (solo artista)
       if (!foundSeparator) {
         setArtistQuery(cleanQuery);
@@ -1054,7 +1054,7 @@ export const AddDiscScreen: React.FC = () => {
           data: album
         });
       });
-      
+
       // 2. Si hay resultados locales: agregar CTA secundario
       list.push({
         id: 'cta_more_results',
@@ -1230,14 +1230,29 @@ export const AddDiscScreen: React.FC = () => {
             contentContainerStyle={getListData().length === 0 ? { flexGrow: 1, justifyContent: 'center' } : undefined}
             ListEmptyComponent={
               <View style={[styles.emptyContainer, !query ? { justifyContent: 'space-between', paddingVertical: 20 } : null]}>
-                <View style={!query ? { flex: 1, justifyContent: 'center', alignItems: 'center' } : null}>
-                  <Text style={styles.emptyText}>
-                    {query ? `Buscando "${query}"...` : t('add_disc_empty_search_default')}
-                  </Text>
-                </View>
+                {!query ? (
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                    <Image
+                      source={require('../assets/empty_collection.png')}
+                      style={styles.emptyStateImage}
+                    />
+                    <Text style={styles.emptyStateTitle}>
+                      {t('add_disc_empty_state_title')}
+                    </Text>
+                    <Text style={styles.emptyStateSubtitle}>
+                      {t('add_disc_empty_state_subtitle')}
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={styles.emptyText}>
+                      {`${t('add_disc_empty_search_query')} "${query}"`}
+                    </Text>
+                  </View>
+                )}
                 {!query && showImportCard && (
-                  <ImportDiscogsCard 
-                    onPressInfo={() => setImportBottomSheetVisible(true)} 
+                  <ImportDiscogsCard
+                    onPressInfo={() => setImportBottomSheetVisible(true)}
                     onDismiss={handleDismissImportCard}
                   />
                 )}
@@ -1557,6 +1572,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 60,
+  },
+  emptyStateImage: {
+    width: 220,
+    height: 220,
+    resizeMode: 'contain',
+    marginBottom: 16,
+    opacity: 0.8,
+    alignSelf: 'center',
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#666',
+    marginBottom: 8,
+    opacity: 0.8,
+    textAlign: 'center',
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 40,
+    lineHeight: 20,
   },
   emptyText: {
     fontSize: 16,

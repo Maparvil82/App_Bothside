@@ -480,6 +480,8 @@ export const es = {
     add_disc_placeholder_search: "Buscar en toda la comunidad...",
     add_disc_empty_search_query: "No se encontraron resultados para",
     add_disc_empty_search_default: "Encuentra discos en la comunidad de Bothside, en Discogs o escanéalo directamente con la cámara",
+    add_disc_empty_state_title: "Busca tu próximo disco",
+    add_disc_empty_state_subtitle: "Encuentra por artista, álbum o sello, escanea el código de barras o la portada",
     import_discogs_card_tag: "Web",
     import_discogs_card_title: "Importa tu colección de Discogs",
     import_discogs_card_description: "Importa cientos de discos de forma rápida desde la versión web de Bothside.",

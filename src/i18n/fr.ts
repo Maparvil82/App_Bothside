@@ -790,6 +790,8 @@ export const fr = {
     add_disc_placeholder_search: "Rechercher dans toute la communauté...",
     add_disc_empty_search_query: "Aucun résultat trouvé pour",
     add_disc_empty_search_default: "Trouvez des disques dans la communauté de Bothside, sur Discogs ou scannez-les directement avec l'appareil photo",
+    add_disc_empty_state_title: "Recherchez votre prochain disque",
+    add_disc_empty_state_subtitle: "Trouvez par artiste, album ou label, scannez le code-barres ou la pochette",
     add_disc_empty_search_hint: "Essayez d'autres termes ou vérifiez l'orthographe",
     add_disc_results_found: "résultats trouvés",
     add_disc_no_results: "Aucun résultat trouvé",
