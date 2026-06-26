@@ -491,11 +491,9 @@ export const es = {
     import_discogs_bs_why_point2: "Importación en segundo plano: puedes cerrar la página mientras la importación continúa.",
     import_discogs_bs_why_point3: "Proceso seguro: tus discos se añaden directamente a tu colección de Bothside.",
     import_discogs_bs_how_title: "Cómo funciona",
-    import_discogs_bs_how_step1: "1. Accede a Bothside Web.",
-    import_discogs_bs_how_step2: "2. Inicia sesión con tu misma cuenta.",
-    import_discogs_bs_how_step3: "3. Introduce tu usuario de Discogs.",
-    import_discogs_bs_how_step4: "4. Pulsa Importar colección.",
-    import_discogs_bs_how_step5: "5. Tus discos aparecerán automáticamente en la app.",
+    import_discogs_bs_how_step1: "Entra en Discogs desde tu Desktop y descarga el archivo .csv de tu colección en el menú exportar.",
+    import_discogs_bs_how_step2: "Entra en Bothside desde tu ordenador e importa el archivo .csv que acabas de descargar en Discogs",
+    import_discogs_bs_how_step3: "Cuando el proceso termine tus discos aparecerán automáticamente en la app. ",
     import_discogs_bs_cta_primary: "Ir a Bothside Web",
     import_discogs_bs_cta_secondary: "Cancelar",
     add_disc_empty_search_hint: "Prueba con otros términos o verifica la ortografía",
@@ -1054,5 +1052,12 @@ export const es = {
     recommend_modal_btn_secondary: "Quizá más tarde",
     recommend_modal_btn_tertiary: "No volver a mostrar",
     recommend_share_text: "Estoy usando Bothside para organizar mi colección de vinilos. Si coleccionas discos, te va a gustar.\n\nDescárgala aquí:\n{appStoreUrl}",
+
+    // Mensaje Importar Discogs Bottom Sheet
+    import_discogs_bs_benefit_comfort_title: 'Más cómodo',
+    import_discogs_bs_benefit_background_title: 'En segundo plano',
+    import_discogs_bs_benefit_safe_title: 'Proceso seguro',
+    import_discogs_bs_note: 'Cuando termine, tus discos aparecerán automáticamente en la app.',
+
 };
 

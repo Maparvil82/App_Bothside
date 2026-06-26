@@ -18,7 +18,7 @@ import { useTheme } from '@react-navigation/native';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 
-export const BOTHSIDE_WEB_IMPORT_URL = "https://bothside.app/import";
+export const BOTHSIDE_WEB_IMPORT_URL = 'https://bothside.app/import';
 
 interface ImportDiscogsBottomSheetProps {
   visible: boolean;
@@ -32,29 +32,33 @@ export const ImportDiscogsBottomSheet: React.FC<ImportDiscogsBottomSheetProps> =
   const { t } = useTranslation();
   const { colors } = useTheme();
   const { mode } = useThemeMode();
+
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
-
   const panY = useRef(new Animated.Value(0)).current;
-
-  const resetPositionAnim = Animated.timing(panY, {
-    toValue: 0,
-    duration: 300,
-    useNativeDriver: true,
-  });
 
   const closeAnim = Animated.timing(panY, {
     toValue: Dimensions.get('window').height,
-    duration: 200,
+    duration: 220,
     useNativeDriver: true,
   });
 
+  const resetPositionAnim = Animated.timing(panY, {
+    toValue: 0,
+    duration: 260,
+    useNativeDriver: true,
+  });
+
+  const handleClose = () => {
+    closeAnim.start(() => {
+      onClose();
+      panY.setValue(0);
+    });
+  };
+
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: (_, gestureState) => {
-        // Trigger if user is dragging down
-        return gestureState.dy > 5;
-      },
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: (_, gestureState) => gestureState.dy > 8,
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
           panY.setValue(gestureState.dy);
@@ -62,10 +66,7 @@ export const ImportDiscogsBottomSheet: React.FC<ImportDiscogsBottomSheetProps> =
       },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dy > 120 || gestureState.vy > 0.5) {
-          closeAnim.start(() => {
-            onClose();
-            panY.setValue(0);
-          });
+          handleClose();
         } else {
           resetPositionAnim.start();
         }
@@ -81,116 +82,107 @@ export const ImportDiscogsBottomSheet: React.FC<ImportDiscogsBottomSheetProps> =
     }
   };
 
-  const handleClose = () => {
-    closeAnim.start(() => {
-      onClose();
-      panY.setValue(0);
-    });
-  };
+  const benefits = [
+    {
+      icon: 'laptop-outline',
+      title: t('import_discogs_bs_benefit_comfort_title'),
+      text: t('import_discogs_bs_why_point1'),
+    },
+    {
+      icon: 'cloud-upload-outline',
+      title: t('import_discogs_bs_benefit_background_title'),
+      text: t('import_discogs_bs_why_point2'),
+    },
+    {
+      icon: 'shield-checkmark-outline',
+      title: t('import_discogs_bs_benefit_safe_title'),
+      text: t('import_discogs_bs_why_point3'),
+    },
+  ];
+
+  const steps = [
+    t('import_discogs_bs_how_step1'),
+    t('import_discogs_bs_how_step2'),
+    t('import_discogs_bs_how_step3'),
+
+  ];
 
   return (
     <Modal
       transparent
       visible={visible}
-      animationType="slide"
+      animationType="fade"
       statusBarTranslucent
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
     >
-      <TouchableOpacity
-        style={styles.backdrop}
-        activeOpacity={1}
-        onPress={onClose}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          style={styles.sheetWrapper}
-        >
+      <TouchableOpacity style={styles.backdrop} activeOpacity={1} onPress={handleClose}>
+        <TouchableOpacity activeOpacity={1} style={styles.sheetWrapper}>
           <Animated.View
             style={[
               styles.sheetContainer,
-              { transform: [{ translateY: panY }] }
+              {
+                backgroundColor: colors.background,
+                transform: [{ translateY: panY }],
+              },
             ]}
           >
-            {/* Drag Handle Area */}
             <View {...panResponder.panHandlers} style={styles.dragHandleContainer}>
               <View style={styles.dragHandle} />
             </View>
 
-            <ScrollView 
+            <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
             >
-              {/* Header */}
+
+
               <Text style={[styles.title, { color: colors.text }]}>
                 {t('import_discogs_bs_title')}
               </Text>
-              <Text style={styles.subtitle}>
-                {t('import_discogs_bs_subtitle')}
-              </Text>
 
-              {/* Section: Why from the web? */}
-              <View style={styles.section}>
-                <Text style={[styles.sectionTitle, { color: colors.text }]}>
-                  {t('import_discogs_bs_why_title')}
-                </Text>
-                
-                <View style={styles.bulletItem}>
-                  <Ionicons name="laptop" size={20} color={primaryColor} style={styles.bulletIcon} />
-                  <Text style={styles.bulletText}>
-                    {t('import_discogs_bs_why_point1')}
-                  </Text>
-                </View>
-                
-                <View style={styles.bulletItem}>
-                  <Ionicons name="cloud-upload" size={20} color={primaryColor} style={styles.bulletIcon} />
-                  <Text style={styles.bulletText}>
-                    {t('import_discogs_bs_why_point2')}
-                  </Text>
-                </View>
-                
-                <View style={styles.bulletItem}>
-                  <Ionicons name="shield-checkmark" size={20} color={primaryColor} style={styles.bulletIcon} />
-                  <Text style={styles.bulletText}>
-                    {t('import_discogs_bs_why_point3')}
-                  </Text>
-                </View>
+
+
+              <View style={styles.benefitsGrid}>
+                {benefits.map((item, index) => (
+                  <View key={index} style={styles.benefitCard}>
+                    <View style={[styles.benefitIcon, { backgroundColor: `${primaryColor}12` }]}>
+                      <Ionicons name={item.icon as any} size={20} color={primaryColor} />
+                    </View>
+
+                    <View style={styles.benefitTextContainer}>
+                      <Text style={[styles.benefitTitle, { color: colors.text }]}>
+                        {item.title}
+                      </Text>
+                      <Text style={styles.benefitText}>
+                        {item.text}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
               </View>
 
-              {/* Section: How it works */}
-              <View style={styles.section}>
+              <View style={styles.stepsSection}>
                 <Text style={[styles.sectionTitle, { color: colors.text }]}>
                   {t('import_discogs_bs_how_title')}
                 </Text>
-                
-                <Text style={styles.stepText}>
-                  {t('import_discogs_bs_how_step1')}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t('import_discogs_bs_how_step2')}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t('import_discogs_bs_how_step3')}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t('import_discogs_bs_how_step4')}
-                </Text>
-                <Text style={styles.stepText}>
-                  {t('import_discogs_bs_how_step5')}
-                </Text>
+
+                <View style={styles.stepsList}>
+                  {steps.map((step, index) => (
+                    <View key={index} style={styles.stepItem}>
+                      <View style={[styles.stepNumber, { backgroundColor: primaryColor }]}>
+                        <Text style={styles.stepNumberText}>{index + 1}</Text>
+                      </View>
+                      <Text style={styles.stepText}>{step}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
+
+
             </ScrollView>
 
-            {/* Action Buttons */}
             <SafeAreaView style={styles.buttonContainer}>
-              <TouchableOpacity
-                style={[styles.buttonPrimary, { backgroundColor: primaryColor }]}
-                onPress={handleOpenWeb}
-                activeOpacity={0.9}
-              >
-                <Text style={styles.buttonTextPrimary}>
-                  {t('import_discogs_bs_cta_primary')}
-                </Text>
-              </TouchableOpacity>
+
 
               <TouchableOpacity
                 style={styles.buttonSecondary}
@@ -212,112 +204,174 @@ export const ImportDiscogsBottomSheet: React.FC<ImportDiscogsBottomSheetProps> =
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
     justifyContent: 'flex-end',
   },
   sheetWrapper: {
     width: '100%',
   },
   sheetContainer: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    maxHeight: Dimensions.get('window').height * 0.85,
+    borderTopLeftRadius: 30,
+    borderTopRightRadius: 30,
+    maxHeight: Dimensions.get('window').height * 0.88,
     width: '100%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 16,
+    elevation: 8,
+    paddingTop: 24,
   },
   dragHandleContainer: {
     width: '100%',
-    height: 24,
+    height: 28,
     justifyContent: 'center',
     alignItems: 'center',
   },
   dragHandle: {
-    width: 38,
+    width: 42,
     height: 5,
-    borderRadius: 3,
-    backgroundColor: '#DDDDDD',
+    borderRadius: 999,
+    backgroundColor: '#D8D8DE',
   },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
+    paddingBottom: 20,
+  },
+  heroIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'center',
+    marginTop: 4,
+    marginBottom: 18,
   },
   title: {
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 8,
-    letterSpacing: -0.5,
-    textAlign: 'left',
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: -0.6,
+    textAlign: 'center',
+    marginBottom: 20
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-    marginBottom: 20,
-    textAlign: 'left',
+    fontSize: 15,
+    color: '#747480',
+    lineHeight: 21,
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 8,
   },
-  section: {
+  benefitsGrid: {
+    gap: 10,
+    marginBottom: 26,
+  },
+  benefitCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F7F7FA',
+    borderRadius: 18,
+    padding: 14,
+  },
+  benefitIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  benefitTextContainer: {
+    flex: 1,
+  },
+  benefitTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    marginBottom: 3,
+  },
+  benefitText: {
+    fontSize: 13,
+    color: '#6F6F7A',
+    lineHeight: 18,
+  },
+  stepsSection: {
     marginBottom: 20,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'left',
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 14,
   },
-  bulletItem: {
+  stepsList: {
+    gap: 12,
+  },
+  stepItem: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 10,
   },
-  bulletIcon: {
-    marginRight: 10,
-    marginTop: 2,
+  stepNumber: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 1,
   },
-  bulletText: {
-    flex: 1,
-    fontSize: 14,
-    color: '#444',
-    lineHeight: 20,
-    textAlign: 'left',
+  stepNumberText: {
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
   },
   stepText: {
+    flex: 1,
     fontSize: 14,
-    color: '#444',
-    lineHeight: 22,
-    marginBottom: 6,
-    textAlign: 'left',
+    color: '#555560',
+    lineHeight: 21,
+  },
+  noteBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F7F7FA',
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+  },
+  noteText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#777782',
+    lineHeight: 18,
   },
   buttonContainer: {
     paddingHorizontal: 24,
-    paddingBottom: 24,
-    gap: 10,
+    paddingTop: 12,
+    paddingBottom: 22,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: '#ECECF0',
   },
   buttonPrimary: {
-    paddingVertical: 14,
-    borderRadius: 12,
+    minHeight: 52,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
   },
   buttonTextPrimary: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   buttonSecondary: {
     paddingVertical: 14,
-    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#F5F5F5',
   },
   buttonTextSecondary: {
-    color: '#666',
+    color: '#777782',
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });
