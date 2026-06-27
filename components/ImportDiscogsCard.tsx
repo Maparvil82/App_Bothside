@@ -31,17 +31,7 @@ export const ImportDiscogsCard: React.FC<ImportDiscogsCardProps> = ({
       onPress={onPressInfo}
       activeOpacity={0.8}
     >
-      {/* Botón cerrar */}
-      <TouchableOpacity
-        style={styles.closeButton}
-        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        onPress={(e) => {
-          e.stopPropagation();
-          onDismiss();
-        }}
-      >
-        <Ionicons name="close" size={18} color={themeStyles.closeButtonColor} />
-      </TouchableOpacity>
+
 
       <View style={styles.textColumn}>
         <View style={styles.headerRow}>
