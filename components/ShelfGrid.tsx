@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, Text } from 'react-native';
+import { View, StyleSheet, Dimensions, Text, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
@@ -13,6 +13,7 @@ interface ShelfGridProps {
   highlightRow?: number;
   highlightColumn?: number;
   shelfId?: string;
+  coverUrl?: string;
 }
 
 const ShelfGrid: React.FC<ShelfGridProps> = ({ 
@@ -20,7 +21,8 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({
   columns, 
   highlightRow, 
   highlightColumn,
-  shelfId 
+  shelfId,
+  coverUrl
 }) => {
   const { mode } = useThemeMode();
   const { colors } = useTheme();
@@ -103,6 +105,8 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({
               : t('search_modal_record_plural', { '0': count }))
           : t('shelf_slot_empty');
 
+        const showCover = isHighlighted && coverUrl;
+
         // Clases de estilos dinámicos
         const cellStyle = [
           styles.cell,
@@ -111,7 +115,8 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({
             ? [styles.highlightedCell, { backgroundColor: primaryColor, borderColor: primaryColor }]
             : hasRecords 
               ? (mode === 'dark' ? styles.cellOccupiedDark : styles.cellOccupiedLight)
-              : (mode === 'dark' ? styles.cellEmptyDark : styles.cellEmptyLight)
+              : (mode === 'dark' ? styles.cellEmptyDark : styles.cellEmptyLight),
+          showCover ? { overflow: 'hidden' as const } : null
         ];
 
         const labelStyle = [
@@ -129,6 +134,17 @@ const ShelfGrid: React.FC<ShelfGridProps> = ({
             key={key} 
             style={cellStyle}
           >
+            {showCover && (
+              <>
+                <Image
+                  source={{ uri: coverUrl }}
+                  style={StyleSheet.absoluteFill}
+                  resizeMode="cover"
+                />
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0, 0, 0, 0.45)' }]} />
+              </>
+            )}
+
             <Text style={labelStyle}>{positionLabel}</Text>
             
             {isHighlighted ? (

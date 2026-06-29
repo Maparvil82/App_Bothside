@@ -1958,6 +1958,7 @@ export default function AlbumDetailScreen() {
                   shelfId={album.shelf_id || undefined}
                   highlightRow={album.location_row}
                   highlightColumn={album.location_column}
+                  coverUrl={album.albums.cover_url}
                 />
                 <TouchableOpacity
                   style={styles.removeLocationButton}
