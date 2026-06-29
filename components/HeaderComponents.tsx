@@ -65,6 +65,13 @@ export const HeaderAvatar = () => {
             </TouchableOpacity> */}
 
             <TouchableOpacity
+                onPress={() => navigation.navigate('Leaderboard' as never)}
+                style={{ marginRight: 12, padding: 4 }}
+            >
+                <Ionicons name="trophy-outline" size={24} color={colors.text} />
+            </TouchableOpacity>
+
+            <TouchableOpacity
                 style={styles.avatarContainer}
                 onPress={() => navigation.navigate('Profile' as never)}
                 disabled={loading}
