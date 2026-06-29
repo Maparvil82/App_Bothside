@@ -1125,7 +1125,7 @@ export default function AlbumDetailScreen() {
   // Realizar el cambio de edición/release de Discogs
   const performChangeEdition = async (editionId: number) => {
     if (!album?.albums?.id) return;
-    
+
     setIsChangingEdition(true);
     try {
       console.log(`🌐 Fetching release details for ${editionId} from Discogs...`);
@@ -1137,9 +1137,9 @@ export default function AlbumDetailScreen() {
       // Extraer y formatear datos de la edición
       const formatText = releaseDetails.formats
         ? releaseDetails.formats.map((f: any) => {
-            const desc = f.descriptions ? ` (${f.descriptions.join(', ')})` : '';
-            return `${f.qty}x ${f.name}${desc}`;
-          }).join(', ')
+          const desc = f.descriptions ? ` (${f.descriptions.join(', ')})` : '';
+          return `${f.qty}x ${f.name}${desc}`;
+        }).join(', ')
         : (Array.isArray(releaseDetails.format) ? releaseDetails.format.join(', ') : releaseDetails.format || '');
 
       const labelText = releaseDetails.labels?.[0]?.name || '';
@@ -1179,7 +1179,7 @@ export default function AlbumDetailScreen() {
       }
 
       console.log('📊 Fetching and updating Discogs stats...');
-      await DiscogsStatsService.fetchAndSaveDiscogsStats(album.albums.id, editionId).catch(() => {});
+      await DiscogsStatsService.fetchAndSaveDiscogsStats(album.albums.id, editionId).catch(() => { });
 
       console.log('📺 Updating YouTube URLs...');
       // 1. Extraer videos del release si existen en Discogs
@@ -1215,7 +1215,7 @@ export default function AlbumDetailScreen() {
           const artistForSearch = releaseDetails.artists?.map((a: any) => a.name).join(', ') || album.albums.artist;
           const titleForSearch = releaseDetails.title || album.albums.title;
           const foundVideos = await YouTubeSearchService.searchYouTubeVideos(artistForSearch, titleForSearch);
-          
+
           if (foundVideos.length > 0) {
             const payload = foundVideos.map((v) => ({
               album_id: album.albums.id,
@@ -1235,7 +1235,7 @@ export default function AlbumDetailScreen() {
 
       // Recargar todos los detalles de la pantalla en segundo plano sin bloquear la UI
       await loadAlbumDetail(true);
-      
+
       Alert.alert(
         t('album_detail_change_edition_title' as any) || 'Cambiar Edición',
         t('album_detail_change_edition_success' as any) || 'Edición cambiada con éxito.'
@@ -1792,7 +1792,7 @@ export default function AlbumDetailScreen() {
                   <View style={styles.trackInfo}>
                     <Text style={[styles.trackPosition, { color: colors.text }]}>{track.position}</Text>
                     <Text style={[
-                      styles.trackTitle, 
+                      styles.trackTitle,
                       { color: colors.text },
                       (isFavorite || isDancefloor) && { fontWeight: '700', color: primaryColor }
                     ]}>
@@ -2468,13 +2468,13 @@ export default function AlbumDetailScreen() {
               </Text>
               <View style={styles.headerRight} />
             </View>
- 
+
             {/* Contenido de la pregunta */}
             <ScrollView style={styles.typeFormContent} showsVerticalScrollIndicator={false}>
               <Text style={styles.typeFormQuestion}>
                 {typeFormQuestions[currentQuestion]}
               </Text>
- 
+
               {(currentQuestion === 0 || currentQuestion === 1) && album?.albums?.tracks && album.albums.tracks.length > 0 ? (
                 // Primera y Segunda pregunta: Selección de canción
                 <View style={styles.tracklistContainer}>
