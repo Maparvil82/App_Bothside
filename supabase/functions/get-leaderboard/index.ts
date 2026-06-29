@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-serve(async (req) => {
+serve(async (req: Request) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -37,94 +37,79 @@ serve(async (req) => {
 
     console.log(`👥 Found ${profiles.length} profiles`)
 
-    // Get collection data for each user
-    const collectorsWithStats = await Promise.all(
-      profiles.map(async (profile) => {
-        try {
-          console.log(`🔍 Processing user: ${profile.username} (ID: ${profile.id})`)
-          
-          const { data: collection, error: collectionError } = await supabase
-            .from('user_collection')
-            .select(`
-              album_id,
-              albums (
-                title,
-                artist,
-                album_stats (
-                  avg_price
-                )
-              )
-            `)
-            .eq('user_id', profile.id)
+    // Get all collection items with album stats (N+1 query optimization)
+    const { data: collections, error: collectionError } = await supabase
+      .from('user_collection')
+      .select(`
+        user_id,
+        albums (
+          album_stats (
+            avg_price
+          )
+        )
+      `)
 
-          if (collectionError) {
-            console.error(`❌ Error fetching collection for ${profile.username}:`, collectionError)
-            return {
-              id: profile.id,
-              username: profile.username || 'Usuario',
-              full_name: profile.full_name || profile.username || 'Usuario',
-              total_albums: 0,
-              collection_value: 0,
-              rank_title: 'Principiante',
-              position: 0,
-            }
-          }
+    if (collectionError) {
+      console.error('❌ Error fetching collections:', collectionError)
+      return new Response(
+        JSON.stringify({ error: 'Failed to fetch collections' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-          const totalAlbums = collection?.length || 0
-          const collectionValue = collection?.reduce((sum, item) => {
-            const albumStats = item.albums?.album_stats
-            const avgPrice = albumStats?.avg_price || 0
-            return sum + avgPrice
-          }, 0) || 0
+    console.log(`📊 Found ${collections.length} collection items`)
 
-          console.log(`📊 ${profile.username}: ${totalAlbums} albums, €${collectionValue.toFixed(2)}`)
+    // Group collection items by user_id
+    const userStats = new Map<string, { totalAlbums: number; collectionValue: number }>()
+    for (const item of (collections || []) as any[]) {
+      const userId = item.user_id
+      const avgPrice = item.albums?.album_stats?.avg_price || 0
+      
+      const stats = userStats.get(userId) || { totalAlbums: 0, collectionValue: 0 }
+      stats.totalAlbums++
+      stats.collectionValue += avgPrice
+      userStats.set(userId, stats)
+    }
 
-          // Determine rank based on collection value
-          let rankTitle = 'Principiante'
-          if (collectionValue >= 10000) rankTitle = 'Coleccionista Experto'
-          else if (collectionValue >= 5000) rankTitle = 'Coleccionista Avanzado'
-          else if (collectionValue >= 1000) rankTitle = 'Coleccionista Intermedio'
-          else if (collectionValue >= 100) rankTitle = 'Coleccionista Novato'
+    // Map profiles to their calculated stats
+    const collectorsWithStats = (profiles as any[])
+      .map((profile: any) => {
+        const stats = userStats.get(profile.id) || { totalAlbums: 0, collectionValue: 0 }
+        
+        // Determine rank based on collection value
+        let rankTitle = 'Principiante'
+        if (stats.collectionValue >= 10000) rankTitle = 'Coleccionista Experto'
+        else if (stats.collectionValue >= 5000) rankTitle = 'Coleccionista Avanzado'
+        else if (stats.collectionValue >= 1000) rankTitle = 'Coleccionista Intermedio'
+        else if (stats.collectionValue >= 100) rankTitle = 'Coleccionista Novato'
 
-          return {
-            id: profile.id,
-            username: profile.username || 'Usuario',
-            full_name: profile.full_name || profile.username || 'Usuario',
-            total_albums: totalAlbums,
-            collection_value: collectionValue,
-            rank_title: rankTitle,
-            position: 0, // Will be set after sorting
-          }
-        } catch (error) {
-          console.error(`❌ Error processing user ${profile.username}:`, error)
-          return {
-            id: profile.id,
-            username: profile.username || 'Usuario',
-            full_name: profile.full_name || profile.username || 'Usuario',
-            total_albums: 0,
-            collection_value: 0,
-            rank_title: 'Principiante',
-            position: 0,
-          }
+        return {
+          id: profile.id,
+          username: profile.username || 'Usuario',
+          full_name: profile.full_name || profile.username || 'Usuario',
+          total_albums: stats.totalAlbums,
+          collection_value: stats.collectionValue,
+          rank_title: rankTitle,
+          position: 0,
         }
       })
-    )
+      .filter((collector: any) => collector.total_albums > 0)
 
     // Sort by collection value, then by total albums
     const sortedCollectors = collectorsWithStats
-      .sort((a, b) => {
+      .sort((a: any, b: any) => {
         if (b.collection_value !== a.collection_value) {
           return b.collection_value - a.collection_value
         }
         return b.total_albums - a.total_albums
       })
-      .map((collector, index) => ({
+      .map((collector: any, index: number) => ({
         ...collector,
         position: index + 1,
       }))
 
     console.log('🏆 Leaderboard final:')
-    sortedCollectors.forEach((collector, index) => {
+    sortedCollectors.forEach((collector: any, index: number) => {
       console.log(`${index + 1}. ${collector.username}: ${collector.total_albums} albums, €${collector.collection_value.toFixed(2)}`)
     })
 
