@@ -1816,6 +1816,64 @@ export default function AlbumDetailScreen() {
 
 
 
+        {/* Destacados del álbum (Preguntas de canciones) */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_highlights' as any) || 'Destacados del álbum'}</Text>
+            <View style={styles.typeFormQuestionsContainer}>
+              {[0, 1].map((index) => {
+                const getQuestionKey = (i: number) => {
+                  if (i === 0) return 'question_1';
+                  if (i === 1) return 'question_6';
+                  return `question_${i}`;
+                };
+                const dbKey = getQuestionKey(index);
+                const questionText = typeFormQuestions[index];
+                const hasAnswer = existingTypeFormResponse?.[dbKey];
+                const iconName = index === 0 ? "heart" : "flame";
+                const iconColor = index === 0 ? "#ef4444" : "#f97316";
+
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.typeFormQuestionItem,
+                      hasAnswer && styles.typeFormQuestionItemAnswered,
+                      { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
+                    ]}
+                    onPress={() => {
+                      const currentAnswers = [...typeFormAnswers];
+                      currentAnswers[index] = existingTypeFormResponse?.[dbKey] || '';
+                      setTypeFormAnswers(currentAnswers);
+                      setCurrentQuestion(index);
+                      setShowTypeForm(true);
+                    }}
+                  >
+                    <View style={styles.typeFormQuestionHeader}>
+                      <Ionicons name={iconName} size={20} color={iconColor} style={{ marginRight: 8 }} />
+                      <Text style={[styles.typeFormQuestionText, { color: colors.text, flex: 1 }]}>
+                        {questionText}
+                      </Text>
+                      {hasAnswer ? (
+                        <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+                      ) : (
+                        <Ionicons name="add-circle-outline" size={20} color={colors.text} />
+                      )}
+                    </View>
+                    {hasAnswer && (
+                      <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
+                        {existingTypeFormResponse[dbKey]}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+
+
         {/* Sección de Ediciones */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -2121,6 +2179,7 @@ export default function AlbumDetailScreen() {
             {/* Mostrar todas las preguntas directamente */}
             <View style={styles.typeFormQuestionsContainer}>
               {typeFormQuestions.map((question, index) => {
+                if (index === 0 || index === 1) return null;
                 const getQuestionKey = (i: number) => {
                   if (i === 0) return 'question_1';
                   if (i === 1) return 'question_6';
@@ -2147,7 +2206,7 @@ export default function AlbumDetailScreen() {
                   >
                     <View style={styles.typeFormQuestionHeader}>
                       <Text style={[styles.typeFormQuestionNumber, { color: primaryColor }]}>
-                        {index + 1}
+                        {index - 1}
                       </Text>
                       <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
                         {question}
@@ -2155,7 +2214,7 @@ export default function AlbumDetailScreen() {
                       {hasAnswer ? (
                         <Ionicons name="checkmark-circle" size={20} color="#28a745" />
                       ) : (
-                        <Ionicons name="add-circle-outline" size={20} color="#000" />
+                        <Ionicons name="add-circle-outline" size={20} color={colors.text} />
                       )}
                     </View>
                     {hasAnswer && (
