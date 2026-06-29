@@ -818,6 +818,7 @@ export const en = {
     rank_novice: "Novice Collector",
     rank_beginner: "Beginner",
     leaderboard_you_suffix: "(You)",
+    leaderboard_classification: "General Leaderboard",
     // Legal Screen
     legal_version_text: "Bothside v1.0.0 (Beta)",
     legal_section_docs: "Legal Documents",

@@ -816,6 +816,7 @@ export const es = {
     rank_novice: "Coleccionista Novato",
     rank_beginner: "Principiante",
     leaderboard_you_suffix: "(Tú)",
+    leaderboard_classification: "Clasificación General",
     // Legal Screen
     legal_version_text: "Bothside v1.0.0 (Beta)",
     legal_section_docs: "Documentos Legales",

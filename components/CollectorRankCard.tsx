@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { useTheme } from '@react-navigation/native';
 
 interface CollectorRankCardProps {
   totalAlbums: number;
@@ -24,6 +25,7 @@ const TIER_EMOJI: Record<CollectorRank['tier'], string> = {
 };
 
 export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbums, collectionValue, onPress, userPosition }) => {
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { mode } = useThemeMode();
@@ -91,32 +93,42 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
   const CardComponent = onPress ? TouchableOpacity : View;
 
   return (
-    <CardComponent style={styles.card} onPress={onPress} activeOpacity={onPress ? 0.7 : 1}>
+    <CardComponent
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.card,
+          borderColor: colors.border,
+        }
+      ]}
+      onPress={onPress}
+      activeOpacity={onPress ? 0.7 : 1}
+    >
       <View style={styles.headerRow}>
-        <Text style={styles.title}>{t('collector_rank_title')}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{t('collector_rank_title')}</Text>
         <View style={styles.headerIcons}>
           <View style={styles.rankingContainer}>
             {userPosition && (
               <Text style={[styles.positionNumber, { color: primaryColor }]}>#{userPosition}</Text>
             )}
-            <Text style={styles.rankingText}>{t('collector_rank_ranking')}</Text>
+            <Text style={[styles.rankingText, { color: mode === 'dark' ? '#aaa' : '#666' }]}>{t('collector_rank_ranking')}</Text>
           </View>
           {onPress && (
-            <Ionicons name="chevron-forward" size={16} color="#666" style={{ marginLeft: 8 }} />
+            <Ionicons name="chevron-forward" size={16} color={mode === 'dark' ? '#aaa' : '#666'} style={{ marginLeft: 8 }} />
           )}
         </View>
       </View>
 
       <View style={styles.rankRow}>
         <Text style={styles.rankEmoji}>{emoji}</Text>
-        <Text style={styles.rankText}>{t(`collector_rank_${rank.tier.toLowerCase()}` as any)}</Text>
+        <Text style={[styles.rankText, { color: colors.text }]}>{t(`collector_rank_${rank.tier.toLowerCase()}` as any)}</Text>
       </View>
 
       <View style={styles.progressGroup}>
         <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>{t('collector_rank_albums')}</Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${finalAlbumProgress * 100}%` }]} />
+          <Text style={[styles.progressLabel, { color: mode === 'dark' ? '#aaa' : '#6c757d' }]}>{t('collector_rank_albums')}</Text>
+          <View style={[styles.progressBar, { backgroundColor: mode === 'dark' ? '#333' : '#e9ecef' }]}>
+            <View style={[styles.progressFill, { backgroundColor: primaryColor, width: `${finalAlbumProgress * 100}%` }]} />
           </View>
           <Text style={[styles.progressValue, (rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) && styles.completedText]}>
             {(rank.albumLevelIndex >= 5 || hasReachedCurrentAlbumLevel) ? t('collector_rank_completed') : `-${nextAlbumsMissing}`}
@@ -124,9 +136,9 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
         </View>
 
         <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>{t('collector_rank_value')}</Text>
-          <View style={styles.progressBar}>
-            <View style={[styles.progressFill, { width: `${finalValueProgress * 100}%` }]} />
+          <Text style={[styles.progressLabel, { color: mode === 'dark' ? '#aaa' : '#6c757d' }]}>{t('collector_rank_value')}</Text>
+          <View style={[styles.progressBar, { backgroundColor: mode === 'dark' ? '#333' : '#e9ecef' }]}>
+            <View style={[styles.progressFill, { backgroundColor: primaryColor, width: `${finalValueProgress * 100}%` }]} />
           </View>
           <Text style={[styles.progressValue, (rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) && styles.completedText]}>
             {(rank.valueLevelIndex >= 5 || hasReachedCurrentValueLevel) ? t('collector_rank_completed') : `-${formatCurrency(nextValueMissing)} €`}
@@ -136,33 +148,32 @@ export const CollectorRankCard: React.FC<CollectorRankCardProps> = ({ totalAlbum
 
       {(hasNextAlbums || hasNextValue) && (
         <View style={styles.nextRow}>
-          <Ionicons name="arrow-up-circle" size={16} color="#0d6efd" />
+          <Ionicons name="arrow-up-circle" size={16} color={primaryColor} />
           {hasNextAlbums && hasNextValue ? (
-            <Text style={styles.nextText}>
+            <Text style={[styles.nextText, { color: primaryColor }]}>
               {t('collector_rank_missing_both', { count: nextAlbumsMissing, value: formatCurrency(nextValueMissing) })}
             </Text>
           ) : hasNextAlbums ? (
-            <Text style={styles.nextText}>{t('collector_rank_missing_albums', { count: nextAlbumsMissing })}</Text>
+            <Text style={[styles.nextText, { color: primaryColor }]}>{t('collector_rank_missing_albums', { count: nextAlbumsMissing })}</Text>
           ) : (
-            <Text style={styles.nextText}>{t('collector_rank_missing_value', { value: formatCurrency(nextValueMissing) })}</Text>
+            <Text style={[styles.nextText, { color: primaryColor }]}>{t('collector_rank_missing_value', { value: formatCurrency(nextValueMissing) })}</Text>
           )}
         </View>
       )}
 
       {tierShare !== null && (
         <View style={styles.shareRow}>
-          <Ionicons name="people" size={14} color="#6c757d" />
-          <Text style={styles.shareText}>
+          <Ionicons name="people" size={14} color={mode === 'dark' ? '#aaa' : '#6c757d'} />
+          <Text style={[styles.shareText, { color: mode === 'dark' ? '#aaa' : '#6c757d' }]}>
             {t('collector_rank_global_stats', { percent: new Intl.NumberFormat('es-ES', { style: 'percent', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(tierShare) })}
           </Text>
         </View>
       )}
 
       {rank.nextTier && (
-        <View style={styles.nextTierRow}
-        >
-          <Ionicons name="star-outline" size={14} color="#6c757d" />
-          <Text style={styles.nextTierText}>{t('collector_rank_next_level', { level: t(`collector_rank_${rank.nextTier.toLowerCase()}` as any) })}</Text>
+        <View style={styles.nextTierRow}>
+          <Ionicons name="star-outline" size={14} color={mode === 'dark' ? '#aaa' : '#6c757d'} />
+          <Text style={[styles.nextTierText, { color: mode === 'dark' ? '#aaa' : '#6c757d' }]}>{t('collector_rank_next_level', { level: t(`collector_rank_${rank.nextTier.toLowerCase()}` as any) })}</Text>
         </View>
       )}
     </CardComponent>

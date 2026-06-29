@@ -10,12 +10,14 @@ import {
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useTheme } from '@react-navigation/native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
+import { CollectorRankCard } from '../components/CollectorRankCard';
+import { GamificationService } from '../services/gamification';
 
 interface CollectorData {
   id: string;
@@ -30,6 +32,7 @@ interface CollectorData {
 
 export default function LeaderboardScreen() {
   const navigation = useNavigation();
+  const { colors } = useTheme();
   const { user } = useAuth();
   const { t } = useTranslation();
   const { mode } = useThemeMode();
@@ -37,7 +40,11 @@ export default function LeaderboardScreen() {
   const [collectors, setCollectors] = useState<CollectorData[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [currentUserRank, setCurrentUserRank] = useState<CollectorData | null>(null);
+  const [currentUserStats, setCurrentUserStats] = useState<{
+    totalAlbums: number;
+    collectionValue: number;
+    position?: number;
+  } | null>(null);
 
   const capitalizeFirstLetter = (str: string) => {
     if (!str) return str;
@@ -76,22 +83,42 @@ export default function LeaderboardScreen() {
       if (error) {
         console.error('❌ Error calling leaderboard function:', error);
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
       if (!data || !data.success) {
         console.error('❌ Invalid response from leaderboard function:', data);
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
       console.log('✅ Leaderboard data received:', data.data);
       setCollectors(data.data);
+
+      if (user?.id) {
+        try {
+          const { totalAlbums, collectionValue } = await GamificationService.getUserCollectionSummary(user.id);
+          const matchingCollector = data.data.find((c: any) => c.id === user.id);
+          const position = matchingCollector?.position || undefined;
+          setCurrentUserStats({
+            totalAlbums,
+            collectionValue,
+            position
+          });
+        } catch (err) {
+          console.error('Error fetching current user stats for leaderboard:', err);
+        }
+      }
+
       setLoading(false);
+      setRefreshing(false);
 
     } catch (error) {
       console.error('❌ Error fetching leaderboard:', error);
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -123,11 +150,13 @@ export default function LeaderboardScreen() {
     return (
       <View style={[
         styles.collectorItem,
-        isCurrentUser && [styles.currentUserItem, { borderLeftColor: primaryColor }]
+        { backgroundColor: colors.card, borderBottomColor: colors.border },
+        isCurrentUser && [styles.currentUserItem, { borderLeftColor: primaryColor, backgroundColor: mode === 'dark' ? '#1A1829' : '#f8f9ff' }]
       ]}>
         <View style={styles.rankContainer}>
           <Text style={[
             styles.rankPosition,
+            { color: mode === 'dark' ? '#aaa' : '#666' },
             item.position <= 3 && styles.topThreeRank
           ]}>
             {getRankIcon(item.position)}
@@ -137,6 +166,7 @@ export default function LeaderboardScreen() {
         <View style={styles.collectorInfo}>
           <Text style={[
             styles.collectorName,
+            { color: colors.text },
             isCurrentUser && [styles.currentUserText, { color: primaryColor }]
           ]}>
             {item.full_name}
@@ -152,15 +182,40 @@ export default function LeaderboardScreen() {
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{item.total_albums}</Text>
+            <Text style={[styles.statNumber, { color: colors.text }]}>{item.total_albums}</Text>
             <Text style={styles.statLabel}>{t('common_albums')}</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
+            <Text style={[styles.statNumber, { color: colors.text }]}>
               ${item.collection_value.toLocaleString()}
             </Text>
             <Text style={styles.statLabel}>{t('common_value')}</Text>
           </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderHeader = () => {
+    if (!currentUserStats) return null;
+
+    return (
+      <View style={styles.headerCardContainer}>
+        <CollectorRankCard
+          totalAlbums={currentUserStats.totalAlbums}
+          collectionValue={currentUserStats.collectionValue}
+          userPosition={currentUserStats.position}
+        />
+        <View style={[
+          styles.rankingHeaderSeparator, 
+          { 
+            backgroundColor: mode === 'dark' ? '#1E1E1E' : '#fff', 
+            borderBottomColor: colors.border 
+          }
+        ]}>
+          <Text style={[styles.rankingHeaderTitle, { color: colors.text }]}>
+            {t('leaderboard_classification') || 'Clasificación General'}
+          </Text>
         </View>
       </View>
     );
@@ -171,13 +226,12 @@ export default function LeaderboardScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-
-
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={collectors}
         keyExtractor={(item) => item.id}
         renderItem={renderCollectorItem}
+        ListHeaderComponent={renderHeader}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
@@ -289,5 +343,19 @@ const styles = StyleSheet.create({
   statLabel: {
     fontSize: 12,
     color: '#999',
+  },
+  headerCardContainer: {
+    paddingTop: 16,
+    paddingBottom: 4,
+  },
+  rankingHeaderSeparator: {
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    marginTop: 8,
+  },
+  rankingHeaderTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 
