@@ -657,6 +657,7 @@ export const de = {
     album_detail_error_not_found: "Album nicht in Ihrer Sammlung gefunden.",
     album_detail_error_shelves: "Fehler beim Laden der Regale",
     album_detail_question_favorite_song: "Was ist Ihr Lieblingslied auf diesem Album?",
+    album_detail_question_dancefloor_song: "Welchen Song spielst du normalerweise auf der Tanzfläche?",
     album_detail_question_last_listened: "Wann haben Sie dieses Album zuletzt gehört?",
     album_detail_question_memories: "Welche Erinnerungen weckt dieses Album?",
     album_detail_question_discovery: "Erinnern Sie sich, wo Sie es entdeckt haben?",

@@ -946,6 +946,7 @@ export const ja = {
     album_detail_error_not_found: "アルバムがコレクションに見つかりません。",
     album_detail_error_shelves: "棚の読み込みエラー",
     album_detail_question_favorite_song: "このアルバムでお気に入りの曲は？",
+    album_detail_question_dancefloor_song: "あなたがフロアでよくかける曲は？",
     album_detail_question_last_listened: "最後にこのアルバムを聴いたのはいつですか？",
     album_detail_question_memories: "このアルバムはどんな思い出を呼び起こしますか？",
     album_detail_question_discovery: "どこで発見したか覚えていますか？",

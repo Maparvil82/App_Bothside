@@ -329,6 +329,7 @@ export const pt = {
     album_detail_error_not_found: "Álbum não encontrado na sua coleção.",
     album_detail_error_shelves: "Erro ao carregar as estantes",
     album_detail_question_favorite_song: "Qual é a sua música favorita deste álbum?",
+    album_detail_question_dancefloor_song: "Qual música você costuma tocar na pista?",
     album_detail_question_last_listened: "Quando você ouviu este álbum pela última vez?",
     album_detail_question_memories: "Que memórias este álbum traz?",
     album_detail_question_discovery: "Você se lembra onde o descobriu?",

@@ -176,7 +176,7 @@ export default function AlbumDetailScreen() {
   // Estados para TypeForm
   const [showTypeForm, setShowTypeForm] = useState(false);
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [typeFormAnswers, setTypeFormAnswers] = useState<string[]>(['', '', '', '', '']);
+  const [typeFormAnswers, setTypeFormAnswers] = useState<string[]>(['', '', '', '', '', '']);
   const [existingTypeFormResponse, setExistingTypeFormResponse] = useState<any>(null);
   const [loadingTypeForm, setLoadingTypeForm] = useState(false);
 
@@ -382,9 +382,9 @@ export default function AlbumDetailScreen() {
   // --------------------------
 
   // Preguntas del TypeForm
-  // Preguntas del TypeForm
   const typeFormQuestions = [
     t('album_detail_question_favorite_song'),
+    t('album_detail_question_dancefloor_song'),
     t('album_detail_question_last_listened'),
     t('album_detail_question_memories'),
     t('album_detail_question_discovery'),
@@ -412,12 +412,19 @@ export default function AlbumDetailScreen() {
     }
 
     try {
+      const getQuestionKey = (i: number) => {
+        if (i === 0) return 'question_1';
+        if (i === 1) return 'question_6';
+        return `question_${i}`;
+      };
+      const questionKey = getQuestionKey(currentQuestion);
+
       // Primero intentar actualizar si ya existe una respuesta
       if (existingTypeFormResponse) {
         const { error: updateError } = await supabase
           .from('album_typeform_responses')
           .update({
-            [`question_${currentQuestion + 1}`]: typeFormAnswers[currentQuestion],
+            [questionKey]: typeFormAnswers[currentQuestion],
           })
           .eq('user_id', user?.id)
           .eq('user_collection_id', album?.id);
@@ -434,7 +441,7 @@ export default function AlbumDetailScreen() {
           .insert({
             user_id: user?.id,
             user_collection_id: album?.id,
-            [`question_${currentQuestion + 1}`]: typeFormAnswers[currentQuestion],
+            [questionKey]: typeFormAnswers[currentQuestion],
           });
 
         if (insertError) {
@@ -446,7 +453,7 @@ export default function AlbumDetailScreen() {
 
       setShowTypeForm(false);
       setCurrentQuestion(0);
-      setTypeFormAnswers(['', '', '', '', '']);
+      setTypeFormAnswers(['', '', '', '', '', '']);
       // Recargar las respuestas existentes para actualizar la vista
       await loadExistingTypeFormResponse();
       Alert.alert(t('common_saved'), t('album_detail_success_saved_answer'));
@@ -1779,6 +1786,7 @@ export default function AlbumDetailScreen() {
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_tracks')}</Text>
             {album.albums.tracks.map((track, index) => {
               const isFavorite = existingTypeFormResponse?.question_1 === track.title;
+              const isDancefloor = existingTypeFormResponse?.question_6 === track.title;
               return (
                 <View key={index} style={[styles.trackItem, { borderBottomColor: colors.border }]}>
                   <View style={styles.trackInfo}>
@@ -1786,12 +1794,15 @@ export default function AlbumDetailScreen() {
                     <Text style={[
                       styles.trackTitle, 
                       { color: colors.text },
-                      isFavorite && { fontWeight: '700', color: primaryColor }
+                      (isFavorite || isDancefloor) && { fontWeight: '700', color: primaryColor }
                     ]}>
                       {track.title}
                     </Text>
                     {isFavorite && (
                       <Ionicons name="heart" size={16} color="#ef4444" style={{ marginLeft: 8 }} />
+                    )}
+                    {isDancefloor && (
+                      <Ionicons name="flame" size={16} color="#f97316" style={{ marginLeft: 8 }} />
                     )}
                   </View>
                   {track.duration && (
@@ -2110,7 +2121,13 @@ export default function AlbumDetailScreen() {
             {/* Mostrar todas las preguntas directamente */}
             <View style={styles.typeFormQuestionsContainer}>
               {typeFormQuestions.map((question, index) => {
-                const hasAnswer = existingTypeFormResponse?.[`question_${index + 1}`];
+                const getQuestionKey = (i: number) => {
+                  if (i === 0) return 'question_1';
+                  if (i === 1) return 'question_6';
+                  return `question_${i}`;
+                };
+                const dbKey = getQuestionKey(index);
+                const hasAnswer = existingTypeFormResponse?.[dbKey];
                 return (
                   <TouchableOpacity
                     key={index}
@@ -2122,7 +2139,7 @@ export default function AlbumDetailScreen() {
                     onPress={() => {
                       // Cargar respuesta existente si la hay
                       const currentAnswers = [...typeFormAnswers];
-                      currentAnswers[index] = existingTypeFormResponse?.[`question_${index + 1}`] || '';
+                      currentAnswers[index] = existingTypeFormResponse?.[dbKey] || '';
                       setTypeFormAnswers(currentAnswers);
                       setCurrentQuestion(index);
                       setShowTypeForm(true);
@@ -2143,7 +2160,7 @@ export default function AlbumDetailScreen() {
                     </View>
                     {hasAnswer && (
                       <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
-                        {existingTypeFormResponse[`question_${index + 1}`]}
+                        {existingTypeFormResponse[dbKey]}
                       </Text>
                     )}
                   </TouchableOpacity>
@@ -2392,7 +2409,7 @@ export default function AlbumDetailScreen() {
                 onPress={() => {
                   setShowTypeForm(false);
                   setCurrentQuestion(0);
-                  setTypeFormAnswers(['', '', '', '', '']);
+                  setTypeFormAnswers(['', '', '', '', '', '']);
                 }}
               >
                 <Ionicons name="close" size={24} color="#6b7280" />
@@ -2402,15 +2419,15 @@ export default function AlbumDetailScreen() {
               </Text>
               <View style={styles.headerRight} />
             </View>
-
+ 
             {/* Contenido de la pregunta */}
             <ScrollView style={styles.typeFormContent} showsVerticalScrollIndicator={false}>
               <Text style={styles.typeFormQuestion}>
                 {typeFormQuestions[currentQuestion]}
               </Text>
-
-              {currentQuestion === 0 && album?.albums?.tracks && album.albums.tracks.length > 0 ? (
-                // Primera pregunta: Selección de canción favorita
+ 
+              {(currentQuestion === 0 || currentQuestion === 1) && album?.albums?.tracks && album.albums.tracks.length > 0 ? (
+                // Primera y Segunda pregunta: Selección de canción
                 <View style={styles.tracklistContainer}>
                   {album.albums.tracks.map((track, index) => (
                     <TouchableOpacity
@@ -2418,7 +2435,7 @@ export default function AlbumDetailScreen() {
                       style={[
                         styles.trackItem,
                         { borderBottomColor: colors.border },
-                        typeFormAnswers[0] === track.title && [styles.trackItemSelected, { borderColor: primaryColor }]
+                        typeFormAnswers[currentQuestion] === track.title && [styles.trackItemSelected, { borderColor: primaryColor }]
                       ]}
                       onPress={() => handleTypeFormAnswer(track.title)}
                     >
@@ -2427,13 +2444,13 @@ export default function AlbumDetailScreen() {
                         <Text style={[
                           styles.trackTitle,
                           { color: colors.text },
-                          typeFormAnswers[0] === track.title && [styles.trackTitleSelected, { color: primaryColor }]
+                          typeFormAnswers[currentQuestion] === track.title && [styles.trackTitleSelected, { color: primaryColor }]
                         ]}>
                           {track.title}
                         </Text>
                       </View>
                       <Text style={[styles.trackDuration, { color: colors.text }]}>{track.duration}</Text>
-                      {typeFormAnswers[0] === track.title && (
+                      {typeFormAnswers[currentQuestion] === track.title && (
                         <Ionicons name="checkmark-circle" size={24} color="#000" />
                       )}
                     </TouchableOpacity>

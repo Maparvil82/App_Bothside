@@ -318,6 +318,7 @@ export const es = {
     album_detail_error_not_found: "Álbum no encontrado en tu colección.",
     album_detail_error_shelves: "Error al cargar las estanterías",
     album_detail_question_favorite_song: "¿Cuál es tu canción favorita de este álbum?",
+    album_detail_question_dancefloor_song: "¿Cuál es la canción que sueles poner en la pista?",
     album_detail_question_last_listened: "¿Cuándo escuchaste este álbum por última vez?",
     album_detail_question_memories: "¿Qué recuerdos te trae este álbum?",
     album_detail_question_discovery: "¿Recuerdas donde lo descubriste?",

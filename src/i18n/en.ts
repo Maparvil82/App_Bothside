@@ -318,6 +318,7 @@ export const en = {
     album_detail_error_not_found: "Album not found in your collection.",
     album_detail_error_shelves: "Error loading shelves",
     album_detail_question_favorite_song: "What is your favorite song on this album?",
+    album_detail_question_dancefloor_song: "Which song do you usually play on the dancefloor?",
     album_detail_question_last_listened: "When did you last listen to this album?",
     album_detail_question_memories: "What memories does this album bring back?",
     album_detail_question_discovery: "Do you remember where you discovered it?",
