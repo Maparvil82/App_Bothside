@@ -438,15 +438,18 @@ export default function AlbumDetailScreen() {
           });
 
         if (insertError) {
+          console.error('Error al insertar respuesta:', insertError);
+          Alert.alert(t('common_error'), t('album_detail_error_saving_answer'));
+          return;
         }
-
-        setShowTypeForm(false);
-        setCurrentQuestion(0);
-        setTypeFormAnswers(['', '', '', '', '']);
-        // Recargar las respuestas existentes para actualizar la vista
-        await loadExistingTypeFormResponse();
-        Alert.alert(t('common_saved'), t('album_detail_success_saved_answer'));
       }
+
+      setShowTypeForm(false);
+      setCurrentQuestion(0);
+      setTypeFormAnswers(['', '', '', '', '']);
+      // Recargar las respuestas existentes para actualizar la vista
+      await loadExistingTypeFormResponse();
+      Alert.alert(t('common_saved'), t('album_detail_success_saved_answer'));
     } catch (error) {
       console.error('Error al guardar respuesta:', error);
       Alert.alert(t('common_error'), t('album_detail_error_saving_answer'));
@@ -1774,17 +1777,29 @@ export default function AlbumDetailScreen() {
         {album.albums.tracks && album.albums.tracks.length > 0 && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_tracks')}</Text>
-            {album.albums.tracks.map((track, index) => (
-              <View key={index} style={[styles.trackItem, { borderBottomColor: colors.border }]}>
-                <View style={styles.trackInfo}>
-                  <Text style={[styles.trackPosition, { color: colors.text }]}>{track.position}</Text>
-                  <Text style={[styles.trackTitle, { color: colors.text }]}>{track.title}</Text>
+            {album.albums.tracks.map((track, index) => {
+              const isFavorite = existingTypeFormResponse?.question_1 === track.title;
+              return (
+                <View key={index} style={[styles.trackItem, { borderBottomColor: colors.border }]}>
+                  <View style={styles.trackInfo}>
+                    <Text style={[styles.trackPosition, { color: colors.text }]}>{track.position}</Text>
+                    <Text style={[
+                      styles.trackTitle, 
+                      { color: colors.text },
+                      isFavorite && { fontWeight: '700', color: primaryColor }
+                    ]}>
+                      {track.title}
+                    </Text>
+                    {isFavorite && (
+                      <Ionicons name="heart" size={16} color="#ef4444" style={{ marginLeft: 8 }} />
+                    )}
+                  </View>
+                  {track.duration && (
+                    <Text style={[styles.trackDuration, { color: colors.text }]}>{track.duration}</Text>
+                  )}
                 </View>
-                {track.duration && (
-                  <Text style={[styles.trackDuration, { color: colors.text }]}>{track.duration}</Text>
-                )}
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
 
