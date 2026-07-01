@@ -1150,6 +1150,20 @@ export const AddDiscScreen: React.FC = () => {
               {t('add_disc_tab_cover_new')}
             </Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.selectorButton}
+            onPress={() => navigation.navigate('SpineScan')}
+          >
+            <Ionicons
+              name="library-outline"
+              size={22}
+              color={mode === 'dark' ? '#a0a0a0' : '#8e8e93'}
+            />
+            <Text style={[styles.selectorText, { color: mode === 'dark' ? '#a0a0a0' : '#8e8e93' }]}>
+              {t('add_disc_tab_spines_new' as any) || 'Lomos'}
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 

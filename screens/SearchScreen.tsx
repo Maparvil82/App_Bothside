@@ -15,6 +15,7 @@ import {
   Modal,
   RefreshControl,
   SafeAreaView,
+  DeviceEventEmitter,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useNavigation, useTheme } from '@react-navigation/native';
@@ -236,6 +237,18 @@ export const SearchScreen: React.FC = () => {
     if (user) {
       loadCollection();
     }
+  }, [user]);
+
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('collection_changed', () => {
+      console.log('🔄 SearchScreen: collection_changed event received, reloading collection...');
+      if (user) {
+        loadCollection();
+      }
+    });
+    return () => {
+      subscription.remove();
+    };
   }, [user]);
 
   // Efecto para sincronizar el estado al enfocar la pantalla

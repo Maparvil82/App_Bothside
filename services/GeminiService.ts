@@ -205,4 +205,61 @@ Si no puedes identificar el álbum con certeza, responde con un JSON con campos 
             throw error;
         }
     }
+
+    /**
+     * Identifies multiple albums from an image of a shelf/row of vinyl spines.
+     * Returns an array of albums and the total number of spines detected.
+     */
+    static async identifySpinesFromImage(base64Image: string): Promise<{
+        albums: Array<{ artist: string; title: string }>;
+        estimatedSpinesCount: number;
+    }> {
+        this.initialize();
+
+        const prompt = `
+Analiza esta imagen que contiene una estantería o fila de lomos (spines) de discos de vinilo.
+Identifica todos los álbumes de vinilo que puedas leer con claridad.
+Responde SOLAMENTE con un objeto JSON válido (sin markdown, sin bloques de código, sin texto extra) con el siguiente formato:
+{
+  "albums": [
+    {
+      "artist": "Nombre del Artista",
+      "title": "Título del Álbum"
+    }
+  ],
+  "estimatedSpinesCount": 12
+}
+Donde:
+- "albums" es la lista de álbumes identificados con suficiente claridad.
+- "estimatedSpinesCount" es un número entero aproximado de lomos o discos visibles en la imagen (incluso aquellos no identificados).
+
+Asegúrate de que la primera letra de cada palabra de artist y title esté en MAYÚSCULA (Title Case).
+Si es una compilación de varios artistas o banda sonora (soundtrack), usa "Various" como artista.
+Si no puedes identificar ningún álbum con certeza, devuelve una lista vacía para "albums".
+`;
+
+        const imagePart = {
+            inlineData: {
+                data: base64Image,
+                mimeType: "image/jpeg",
+            },
+        };
+
+        try {
+            const result = await this.model.generateContent([prompt, imagePart]);
+            const response = await result.response;
+            const text = response.text();
+
+            // Clean markdown block wrapper if present
+            const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
+            const data = JSON.parse(jsonStr);
+            return {
+                albums: Array.isArray(data.albums) ? data.albums : [],
+                estimatedSpinesCount: Number(data.estimatedSpinesCount) || 0
+            };
+        } catch (error) {
+            console.error('❌ GeminiService: Error identifying spines:', error);
+            throw error;
+        }
+    }
 }
