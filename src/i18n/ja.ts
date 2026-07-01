@@ -633,6 +633,7 @@ export const ja = {
     maletas_collaborative_switchLabel: "棚をコラボレーションにする",
     maletas_collaborative_switchDescription: "他のBothsideユーザーを招待して、この棚を一緒に構築しましょう。各コラボレーターは自分のコレクションからレコードを追加できます。",
     maletas_collaborative_inviteButton: "コラボレーターを管理",
+    maletas_collaborative_inviteItemAction: "このバッグに招待",
     maletas_collaborative_inviteScreenTitle: "コラボレーターを招待",
     maletas_collaborative_searchPlaceholder: "ユーザーを検索...",
     maletas_collaborative_pendingSectionTitle: "保留中の招待",

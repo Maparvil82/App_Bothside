@@ -633,6 +633,7 @@ export const it = {
     maletas_collaborative_switchLabel: "Rendi scaffale collaborativo",
     maletas_collaborative_switchDescription: "Invita altri utenti di Bothside a costruire questo scaffale insieme. Ogni collaboratore può aggiungere dischi dalla propria collezione.",
     maletas_collaborative_inviteButton: "Gestisci collaboratori",
+    maletas_collaborative_inviteItemAction: "Invita a questa maleta",
     maletas_collaborative_inviteScreenTitle: "Invita collaboratori",
     maletas_collaborative_searchPlaceholder: "Cerca utenti...",
     maletas_collaborative_pendingSectionTitle: "Inviti in sospeso",

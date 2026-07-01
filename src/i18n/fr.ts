@@ -633,6 +633,7 @@ export const fr = {
     maletas_collaborative_switchLabel: "Rendre la valise collaborative",
     maletas_collaborative_switchDescription: "Invitez d'autres utilisateurs de Bothside à construire cette valise ensemble. Chaque collaborateur peut ajouter des disques de sa propre collection.",
     maletas_collaborative_inviteButton: "Gérer les collaborateurs",
+    maletas_collaborative_inviteItemAction: "Inviter dans cette malette",
     maletas_collaborative_inviteScreenTitle: "Inviter des collaborateurs",
     maletas_collaborative_searchPlaceholder: "Rechercher des utilisateurs...",
     maletas_collaborative_pendingSectionTitle: "Invitations en attente",

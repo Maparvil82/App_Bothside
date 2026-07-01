@@ -932,6 +932,7 @@ export const de = {
     maletas_collaborative_switchLabel: "Maleta kollaborativ machen",
     maletas_collaborative_switchDescription: "Laden Sie andere Bothside-Benutzer ein, diese Maleta gemeinsam zu erstellen. Jeder Mitarbeiter kann Platten aus seiner eigenen Sammlung hinzufügen.",
     maletas_collaborative_inviteButton: "Mitarbeiter verwalten",
+    maletas_collaborative_inviteItemAction: "Zu dieser Tasche einladen",
     maletas_collaborative_inviteScreenTitle: "Mitarbeiter einladen",
     maletas_collaborative_searchPlaceholder: "Benutzer suchen...",
     maletas_collaborative_pendingSectionTitle: "Ausstehende Einladungen",

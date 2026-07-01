@@ -48,7 +48,7 @@ export const UserSearchItem: React.FC<UserSearchItemProps> = ({ user, onInvite, 
                     styles.inviteButtonText,
                     isInvited ? { color: colors.text } : { color: 'white' }
                 ]}>
-                    {isInvited ? t('maletas_collaborative_errorAlreadyInvited') : t('maletas_collaborative_inviteButton')}
+                    {isInvited ? t('maletas_collaborative_errorAlreadyInvited') : t('maletas_collaborative_inviteItemAction' as any)}
                 </Text>
             </TouchableOpacity>
         </View>

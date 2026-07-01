@@ -933,6 +933,7 @@ export const en = {
     maletas_collaborative_switchLabel: "Make suitcase collaborative",
     maletas_collaborative_switchDescription: "Invite other Bothside users to build this suitcase together. Each collaborator can add records from their own collection.",
     maletas_collaborative_inviteButton: "Invite collaborators",
+    maletas_collaborative_inviteItemAction: "Invite to this suitcase",
     maletas_collaborative_inviteScreenTitle: "Invite collaborators",
     maletas_collaborative_searchPlaceholder: "Search users...",
     maletas_collaborative_pendingSectionTitle: "Pending invitations",
