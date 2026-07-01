@@ -44,28 +44,28 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
                 return;
             }
 
-            // 2. Check persistent preference "already shown"
-            const alreadyShown = await AsyncStorage.getItem('bothside_recommend_shown');
-            if (alreadyShown === 'true') {
-                console.log('[RecommendBothside] Modal has already been shown in a previous session. Bailing out.');
-                return;
-            }
-
-            // 3. Check session dismissal state
+            // 2. Check session dismissal state
             if (sessionDismissed) {
                 console.log('[RecommendBothside] Modal dismissed for this session. Bailing out.');
                 return;
             }
 
-            // 4. Calculate number of discs in user collection
+            // 3. Calculate number of discs in user collection
             console.log('[RecommendBothside] Checking collection count for user:', user.id);
             const count = await UserCollectionService.getUserCollectionCount(user.id);
             console.log('[RecommendBothside] Current collection count:', count);
 
-            // 5. Trigger modal only if they just reached exactly 4 discs
-            if (count === 4) {
-                console.log('[RecommendBothside] Trigger criteria met (4 discs)! Showing modal...');
+            // 4. Load last shown milestone count to avoid showing multiple times for the same count
+            const lastShownCountStr = await AsyncStorage.getItem('bothside_recommend_last_shown_count');
+            const lastShownCount = lastShownCountStr ? parseInt(lastShownCountStr, 10) : 0;
+
+            // Trigger modal on milestone counts: exactly 4, or any positive multiple of 10
+            const isMilestone = count === 4 || (count > 0 && count % 10 === 0);
+
+            if (isMilestone && count !== lastShownCount) {
+                console.log(`[RecommendBothside] Trigger criteria met (${count} discs)! Showing modal...`);
                 setRecommendModalVisible(true);
+                await AsyncStorage.setItem('bothside_recommend_last_shown_count', count.toString());
             }
         } catch (error) {
             console.error('[RecommendBothside] Error checking trigger:', error);
@@ -77,15 +77,9 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
     const handleRecommend = useCallback(async () => {
         setRecommendModalVisible(false);
         if (isPreviewMode.current) {
-            console.log('[RecommendBothside] Recommend clicked in preview mode. Skipping storage write.');
+            console.log('[RecommendBothside] Recommend clicked in preview mode.');
             isPreviewMode.current = false;
             return;
-        }
-        try {
-            // Persist the shown state so they never see it again
-            await AsyncStorage.setItem('bothside_recommend_shown', 'true');
-        } catch (error) {
-            console.error('[RecommendBothside] Error saving shown state:', error);
         }
     }, []);
 
@@ -126,6 +120,7 @@ export const RecommendBothsideProvider: React.FC<{ children: React.ReactNode }> 
         try {
             await AsyncStorage.removeItem('bothside_recommend_shown');
             await AsyncStorage.removeItem('bothside_recommend_never_show');
+            await AsyncStorage.removeItem('bothside_recommend_last_shown_count');
             setSessionDismissed(false);
             isPreviewMode.current = false;
         } catch (error) {

@@ -10,6 +10,7 @@ import {
   Image,
   StatusBar,
   SafeAreaView,
+  Share,
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +29,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ENABLE_AUDIO_SCAN } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { APP_STORE_URL } from '../config/env';
 
 const { width } = Dimensions.get('window');
 
@@ -531,6 +533,18 @@ export default function DashboardScreen() {
     });
   };
 
+  const handleShareApp = async () => {
+    try {
+      const shareText = t('recommend_share_text', { appStoreUrl: APP_STORE_URL });
+      console.log('[DashboardScreen] Sharing message:', shareText);
+      await Share.share({
+        message: shareText,
+      });
+    } catch (error) {
+      console.error('[DashboardScreen] Error opening native share:', error);
+    }
+  };
+
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchCollectionStats();
@@ -934,6 +948,33 @@ export default function DashboardScreen() {
           </View>
         )}
 
+        {/* Tarjeta de recomendación */}
+        <View style={[styles.recommendCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.recommendCardContent}>
+            <View style={[styles.recommendIconContainer, { backgroundColor: primaryColor + '15' }]}>
+              <Ionicons name="gift" size={24} color={primaryColor} />
+            </View>
+            <View style={styles.recommendTextContainer}>
+              <Text style={[styles.recommendTitle, { color: colors.text }]}>
+                {t('recommend_modal_title') || '¿Conoces a otros coleccionistas?'}
+              </Text>
+              <Text style={[styles.recommendText, { color: colors.text, opacity: 0.7 }]}>
+                {t('recommend_modal_text') || 'Comparte Bothside con tus amigos y ayúdales a organizar sus vinilos.'}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.recommendButton, { backgroundColor: primaryColor }]}
+            onPress={handleShareApp}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="share-social-outline" size={18} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.recommendButtonText}>
+              {t('recommend_modal_btn_primary') || 'Recomendar App'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Mensaje si no hay datos */}
         {stats.totalAlbums === 0 && (
           <View style={styles.emptyContainer}>
@@ -1305,5 +1346,54 @@ const styles = StyleSheet.create({
   audioScanSubtitle: {
     fontSize: 12,
     color: '#6B7280',
+  },
+  recommendCard: {
+    marginHorizontal: 16,
+    marginBottom: 24,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  recommendCardContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  recommendIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  recommendTextContainer: {
+    flex: 1,
+  },
+  recommendTitle: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  recommendText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  recommendButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  recommendButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
   },
 }); 
