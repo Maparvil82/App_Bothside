@@ -22,6 +22,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { useCredits } from '../contexts/CreditsContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AiConsentModal } from '../components/AiConsentModal';
+import { SpineBetaInfoModal } from '../components/SpineBetaInfoModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
 import { AnalyticsService } from '../services/analytics';
 import { supabase } from '../lib/supabase';
@@ -39,10 +41,10 @@ export const SpineScanScreen = () => {
   const { t } = useTranslation();
   const navigation = useNavigation<any>();
   const { colors } = useTheme();
-  
+
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
-  
+
   // Screen States
   const [scanning, setScanning] = useState(false);
   const [showConsentModal, setShowConsentModal] = useState(false);
@@ -51,11 +53,30 @@ export const SpineScanScreen = () => {
   const [estimatedSpines, setEstimatedSpines] = useState<number>(0);
   const [adding, setAdding] = useState(false);
   const [summary, setSummary] = useState<{ addedCount: number } | null>(null);
+  const [showBetaModal, setShowBetaModal] = useState(false);
 
   // Credit Logic
   const { user } = useAuth();
   const { credits, deductCredit } = useCredits();
   const isFocused = useIsFocused();
+
+  useEffect(() => {
+    const checkBetaPreference = async () => {
+      try {
+        const hasSeen = await AsyncStorage.getItem('spines_has_seen_beta_modal');
+        if (hasSeen !== 'true') {
+          setShowBetaModal(true);
+          await AsyncStorage.setItem('spines_has_seen_beta_modal', 'true');
+        }
+      } catch (err) {
+        console.warn('Error checking beta preference:', err);
+      }
+    };
+
+    if (isFocused) {
+      checkBetaPreference();
+    }
+  }, [isFocused]);
 
   useEffect(() => {
     if (isFocused && user) {
@@ -272,7 +293,7 @@ export const SpineScanScreen = () => {
 
             if (discogsRelease?.id) {
               // Fetch and save statistics in background
-              DiscogsStatsService.fetchAndSaveDiscogsStats(albumId, discogsRelease.id).catch(() => {});
+              DiscogsStatsService.fetchAndSaveDiscogsStats(albumId, discogsRelease.id).catch(() => { });
 
               // Fetch full release details to import videos (audio) and tracklist!
               try {
@@ -376,11 +397,11 @@ export const SpineScanScreen = () => {
           <View style={styles.summaryIconContainer}>
             <Ionicons name="checkmark-circle" size={80} color="#2ECC71" />
           </View>
-          
+
           <Text style={[styles.summaryTitle, { color: colors.text }]}>
             ¡Discos Añadidos!
           </Text>
-          
+
           <View style={styles.summaryDetails}>
             <View style={styles.summaryRow}>
               <Text style={styles.summaryLabel}>Discos añadidos:</Text>
@@ -511,16 +532,29 @@ export const SpineScanScreen = () => {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
               <Ionicons name="close" size={30} color="white" />
             </TouchableOpacity>
-            <Text style={styles.title}>Escanear fila de lomos (Beta)</Text>
+
+            <View style={styles.headerTitleContainer}>
+              <Text style={styles.title}>{t('spines_title' as any)}</Text>
+              <View style={styles.betaBadge}>
+                <Text style={styles.betaBadgeText}>BETA</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity onPress={() => setShowBetaModal(true)} style={styles.infoButton}>
+              <Ionicons name="information-circle-outline" size={24} color="white" />
+            </TouchableOpacity>
           </View>
 
           <View style={styles.spineGuideFrame}>
             <Text style={styles.guideText}>
               Alinea los lomos de tus vinilos dentro del recuadro
             </Text>
-            <Text style={styles.experimentalText}>
-              ⚠️ Funcionalidad experimental en fase Beta
-            </Text>
+            <TouchableOpacity style={styles.betaMiniBanner} onPress={() => setShowBetaModal(true)}>
+              <Ionicons name="sparkles" size={12} color="#F1C40F" style={{ marginRight: 4 }} />
+              <Text style={styles.betaMiniBannerText}>
+                Fase Beta: Toca para ver instrucciones
+              </Text>
+            </TouchableOpacity>
             <View style={styles.spineHorizontalBox}>
               <View style={[styles.corner, styles.tl]} />
               <View style={[styles.corner, styles.tr]} />
@@ -563,6 +597,11 @@ export const SpineScanScreen = () => {
           );
         }}
       />
+
+      <SpineBetaInfoModal
+        visible={showBetaModal}
+        onClose={() => setShowBetaModal(false)}
+      />
     </View>
   );
 };
@@ -589,15 +628,41 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 20,
+    justifyContent: 'space-between',
   },
   closeButton: {
     padding: 5,
+  },
+  headerTitleContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginLeft: 16,
+  },
+  betaBadge: {
+    backgroundColor: AppColors.primary,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  betaBadgeText: {
+    color: 'white',
+    fontSize: 9,
+    fontWeight: '900',
+    letterSpacing: 0.5,
+  },
+  infoButton: {
+    padding: 6,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   title: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
-    marginLeft: 20,
   },
   spineGuideFrame: {
     alignSelf: 'center',
@@ -614,15 +679,21 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 3,
   },
-  experimentalText: {
-    color: '#F1C40F',
-    fontSize: 12,
-    fontWeight: '700',
+  betaMiniBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(241, 196, 15, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(241, 196, 15, 0.25)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
     marginBottom: 16,
-    textAlign: 'center',
-    textShadowColor: 'black',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 3,
+  },
+  betaMiniBannerText: {
+    color: '#F1C40F',
+    fontSize: 16,
+    fontWeight: '600',
   },
   spineHorizontalBox: {
     width: '100%',
@@ -692,7 +763,7 @@ const styles = StyleSheet.create({
   },
   permissionSubtitle: {
     color: '#A0A0A0',
-    fontSize: 16,
+    fontSize: 24,
     textAlign: 'center',
     marginBottom: 24,
     lineHeight: 22,

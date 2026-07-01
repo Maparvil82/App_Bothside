@@ -539,6 +539,14 @@ export const pt = {
     add_disc_tab_barcode_new: "código de barra",
     add_disc_tab_cover_new: "Capa",
     add_disc_error_ocr_search: "Não foi possível buscar resultados no Discogs",
+    spines_title: "Escanear lombadas",
+    spines_beta_modal_title: "Scanner de Lombadas (Beta)",
+    spines_beta_modal_intro: "Esta funcionalidade utiliza Inteligência Artificial para identificar vários vinis ao mesmo tempo, analisando a foto de suas lombadas. Por estar em fase Beta e desenvolvimento ativo, pode não ser totalmente precisa e conter falhas.",
+    spines_beta_modal_tips_title: "Dicas para melhores resultados:",
+    spines_beta_modal_tip_light: "💡 Boa luz: Evite reflexos e sombras escuras sobre os textos.",
+    spines_beta_modal_tip_align: "📏 Alinhamento: Mantenha as lombadas verticais e centralizadas no quadro.",
+    spines_beta_modal_tip_focus: "📸 Imagem nítida: Segure o telefone firme e espere a câmera focar bem.",
+    spines_beta_modal_btn: "Entendido, testar",
 
     // Pricing Screen
     pricing_feature_scan: "Escaneamento inteligente de capas com IA",
