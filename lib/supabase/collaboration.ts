@@ -72,6 +72,74 @@ export const inviteCollaborator = async (maletaId: string, userId: string) => {
         .single();
 
     if (error) throw error;
+
+    // Dispatch push notification asynchronously in the background
+    (async () => {
+        try {
+            // 1. Get invited user B's profile (especially push token)
+            const { data: profileB } = await supabase
+                .from('profiles')
+                .select('expo_push_token')
+                .eq('id', userId)
+                .single();
+
+            const token = profileB?.expo_push_token;
+            if (!token) {
+                console.log(`[Notification] Invited user ${userId} has no registered push token`);
+                return;
+            }
+
+            // 2. Get inviter's (User A) username or full name
+            const { data: profileA } = await supabase
+                .from('profiles')
+                .select('username, full_name')
+                .eq('id', user.id)
+                .single();
+
+            const displayName = profileA?.username || profileA?.full_name || 'Un coleccionista';
+
+            // 3. Get the suitcase (maleta) title
+            const { data: maleta } = await supabase
+                .from('user_maletas')
+                .select('title')
+                .eq('id', maletaId)
+                .single();
+
+            const maletaTitle = maleta?.title || 'una maleta';
+
+            // 4. Send push notification using Expo Push API
+            console.log(`[Notification] Dispatching push to user B (${userId}) on token: ${token}`);
+            const response = await fetch('https://exp.host/--/api/v2/push/send', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Accept-encoding': 'gzip, deflate',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    to: token,
+                    sound: 'default',
+                    title: '🎧 Nueva maleta compartida',
+                    body: `${displayName} te ha invitado a colaborar en la maleta "${maletaTitle}".`,
+                    data: {
+                        type: 'shared_crate_invitation',
+                        maletaId: maletaId,
+                    },
+                }),
+            });
+
+            if (!response.ok) {
+                const errText = await response.text();
+                console.error('[Notification] Expo push API returned error status:', response.status, errText);
+            } else {
+                console.log('[Notification] Push notification successfully sent via Expo API');
+            }
+        } catch (pushError) {
+            // Log but don't block
+            console.error('[Notification] Error dispatching push notification:', pushError);
+        }
+    })();
+
     return data;
 };
 

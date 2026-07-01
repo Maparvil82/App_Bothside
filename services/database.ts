@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { DeviceEventEmitter } from 'react-native';
 // TODO: Migrar a la nueva API de filesystem cuando reescribamos las operaciones de archivos
 import * as FileSystem from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -1158,6 +1159,7 @@ export const UserMaletaService = {
     }
 
     console.log('Maleta created successfully:', data);
+    DeviceEventEmitter.emit('maleta_changed');
     return data;
   },
 
@@ -1171,6 +1173,7 @@ export const UserMaletaService = {
       .single();
 
     if (error) throw error;
+    DeviceEventEmitter.emit('maleta_changed');
     return data;
   },
 
@@ -1189,6 +1192,7 @@ export const UserMaletaService = {
     }
 
     console.log('✅ UserMaletaService: Maleta deleted successfully');
+    DeviceEventEmitter.emit('maleta_changed');
   },
 
   // Obtener álbumes de una maleta
@@ -1263,6 +1267,7 @@ export const UserMaletaService = {
       }]);
 
     if (error) throw error;
+    DeviceEventEmitter.emit('maleta_changed');
     return { maleta_id: maletaId, album_id: albumId };
   },
 
@@ -1275,6 +1280,7 @@ export const UserMaletaService = {
       .eq('album_id', albumId);
 
     if (error) throw error;
+    DeviceEventEmitter.emit('maleta_changed');
   },
 
   // Verificar si álbum está en maleta
@@ -1423,6 +1429,7 @@ export const UserMaletaService = {
       }
     }
 
+    DeviceEventEmitter.emit('maleta_changed');
     return { maleta, albumsAdded: selectedAlbumIds.length };
   }
 };
@@ -1435,6 +1442,7 @@ export interface UserProfile {
   created_at?: string | null;
   updated_at?: string | null;
   show_auto_bag_suggestion_on_session_create?: boolean;
+  expo_push_token?: string | null;
 }
 
 // Utilidad: convertir base64 (sin prefijo) a Uint8Array sin usar atob/Buffer

@@ -16,8 +16,27 @@ import { PostHogProvider } from 'posthog-react-native';
 import { RecommendBothsideProvider } from './contexts/RecommendBothsideContext';
 import { RecommendBothsideModal } from './components/RecommendBothsideModal';
 
+import { registerForPushNotificationsAsync } from './services/notifications';
+import { ProfileService } from './services/database';
+
 const AppContent: React.FC = () => {
   const { user, loading } = useAuth();
+
+  React.useEffect(() => {
+    if (user?.id) {
+      (async () => {
+        try {
+          const token = await registerForPushNotificationsAsync();
+          if (token) {
+            console.log('[App] Registering push token for user:', user.id);
+            await ProfileService.updateUserProfile(user.id, { expo_push_token: token });
+          }
+        } catch (error) {
+          console.error('[App] Error saving expo_push_token:', error);
+        }
+      })();
+    }
+  }, [user]);
 
   if (loading) {
     return <BothsideLoader />;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View } from 'react-native';
-import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute, useTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, Theme, getFocusedRouteNameFromRoute, useTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { HeaderBackButton } from '@react-navigation/elements';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -8,6 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { useColorScheme, TouchableOpacity } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+
+export const navigationRef = createNavigationContainerRef();
 import * as Linking from 'expo-linking';
 import { useTranslation } from '../src/i18n/useTranslation';
 
@@ -665,6 +668,7 @@ const ThemedNavigationContainer: React.FC<{ children: React.ReactNode }> = ({ ch
   };
   return (
     <NavigationContainer
+      ref={navigationRef}
       theme={theme}
       linking={linking}
       fallback={<BothsideLoader />}
@@ -884,6 +888,38 @@ const AppStack = () => {
 
 const AppNavigator = () => {
   const { user, loading } = useAuth();
+
+  // Listen for push notifications clicked
+  useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      try {
+        const data = response.notification.request.content.data;
+        console.log('[AppNavigator] Notification tapped with data:', data);
+        if (data && data.type === 'shared_crate_invitation' && data.maletaId) {
+          if (navigationRef.isReady()) {
+            console.log('[AppNavigator] Navigating directly to ViewMaleta:', data.maletaId);
+            (navigationRef as any).navigate('ViewMaleta', { maletaId: data.maletaId });
+          } else {
+            // Keep trying if not fully loaded
+            const interval = setInterval(() => {
+              if (navigationRef.isReady()) {
+                console.log('[AppNavigator] Navigating directly to ViewMaleta (deferred):', data.maletaId);
+                (navigationRef as any).navigate('ViewMaleta', { maletaId: data.maletaId });
+                clearInterval(interval);
+              }
+            }, 300);
+            setTimeout(() => clearInterval(interval), 8000);
+          }
+        }
+      } catch (error) {
+        console.error('[AppNavigator] Error processing notification response:', error);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
 
   // Global modal state
   const [isCreateMaletaVisible, setIsCreateMaletaVisible] = useState(false);

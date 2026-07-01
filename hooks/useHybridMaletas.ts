@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
+import { DeviceEventEmitter } from 'react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { UserMaleta } from '../services/database';
@@ -62,6 +63,17 @@ export const useHybridMaletas = () => {
       myCollabsSub.unsubscribe();
     };
   }, [user, loadListsManually]);
+
+  // Listen for local/global change events to refresh lists immediately
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener('maleta_changed', () => {
+      console.log('🔄 useHybridMaletas: Local maleta_changed event, reloading...');
+      loadListsManually();
+    });
+    return () => {
+      subscription.remove();
+    };
+  }, [loadListsManually]);
 
   // Función para forzar recarga manual
   const refreshLists = useCallback(async () => {
