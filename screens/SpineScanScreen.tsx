@@ -511,12 +511,15 @@ export const SpineScanScreen = () => {
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
               <Ionicons name="close" size={30} color="white" />
             </TouchableOpacity>
-            <Text style={styles.title}>Escanear fila de lomos</Text>
+            <Text style={styles.title}>Escanear fila de lomos (Beta)</Text>
           </View>
 
           <View style={styles.spineGuideFrame}>
             <Text style={styles.guideText}>
               Alinea los lomos de tus vinilos dentro del recuadro
+            </Text>
+            <Text style={styles.experimentalText}>
+              ⚠️ Funcionalidad experimental en fase Beta
             </Text>
             <View style={styles.spineHorizontalBox}>
               <View style={[styles.corner, styles.tl]} />
@@ -605,6 +608,16 @@ const styles = StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+    marginBottom: 16,
+    textAlign: 'center',
+    textShadowColor: 'black',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
+  },
+  experimentalText: {
+    color: '#F1C40F',
+    fontSize: 12,
+    fontWeight: '700',
     marginBottom: 16,
     textAlign: 'center',
     textShadowColor: 'black',
