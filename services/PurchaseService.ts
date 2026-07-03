@@ -185,6 +185,69 @@ class PurchaseService {
             return null;
         } catch (e) {
             console.error('Error fetching credit offerings:', e);
+            if (__DEV__) {
+                console.log('⚠️ Error de RevenueCat en desarrollo para créditos. Usando Mock.');
+                return {
+                    serverDescription: "Mock Credits Offering",
+                    identifier: "credits",
+                    availablePackages: [
+                        {
+                            identifier: "$rc_credits_50",
+                            packageType: "CUSTOM",
+                            product: {
+                                identifier: "bothside_credits_50",
+                                description: "50 AI Credits",
+                                title: "Starter Pack",
+                                price: 1.99,
+                                priceString: "1,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "NON_SUBSCRIPTION",
+                                productType: "CONSUMABLE",
+                                subscriptionPeriod: null,
+                            },
+                            offeringIdentifier: "credits"
+                        },
+                        {
+                            identifier: "$rc_credits_200",
+                            packageType: "CUSTOM",
+                            product: {
+                                identifier: "bothside_credits_200",
+                                description: "200 AI Credits",
+                                title: "Pro Pack",
+                                price: 5.99,
+                                priceString: "5,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "NON_SUBSCRIPTION",
+                                productType: "CONSUMABLE",
+                                subscriptionPeriod: null,
+                            },
+                            offeringIdentifier: "credits"
+                        },
+                        {
+                            identifier: "$rc_credits_500",
+                            packageType: "CUSTOM",
+                            product: {
+                                identifier: "bothside_credits_master",
+                                description: "500 AI Credits",
+                                title: "Master Pack",
+                                price: 12.99,
+                                priceString: "12,99 €",
+                                currencyCode: "EUR",
+                                introPrice: null,
+                                discounts: [],
+                                productCategory: "NON_SUBSCRIPTION",
+                                productType: "CONSUMABLE",
+                                subscriptionPeriod: null,
+                            },
+                            offeringIdentifier: "credits"
+                        }
+                    ] as any
+                } as PurchasesOffering;
+            }
             return null;
         }
     }
@@ -194,8 +257,11 @@ class PurchaseService {
             await this.EnsureInitialized();
 
             // Check for Mock Package
-            if (pkg.product.identifier === 'mock_annual_product') {
-                console.log('🛒 Realizando compra simulada (Mock Purchase)');
+            if (pkg.product.identifier === 'mock_annual_product' ||
+                pkg.product.identifier === 'bothside_credits_50' ||
+                pkg.product.identifier === 'bothside_credits_200' ||
+                pkg.product.identifier === 'bothside_credits_master') {
+                console.log('🛒 Realizando compra simulada (Mock Purchase) de:', pkg.product.identifier);
                 return {
                     customerInfo: {
                         entitlements: {
@@ -209,7 +275,7 @@ class PurchaseService {
                                     originalPurchaseDate: new Date().toISOString(),
                                     expirationDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
                                     store: "APP_STORE",
-                                    productIdentifier: "mock_annual_product",
+                                    productIdentifier: pkg.product.identifier,
                                     isSandbox: true,
                                     unsubscribeDetectedAt: null,
                                     billingIssueDetectedAt: null
@@ -218,8 +284,8 @@ class PurchaseService {
                             all: {}
                         },
                         allPurchaseDates: {},
-                        activeSubscriptions: ["mock_annual_product"],
-                        allPurchasedProductIdentifiers: ["mock_annual_product"],
+                        activeSubscriptions: [pkg.product.identifier],
+                        allPurchasedProductIdentifiers: [pkg.product.identifier],
                         firstSeen: new Date().toISOString(),
                         originalAppUserId: "mock_user",
                         requestDate: new Date().toISOString(),
