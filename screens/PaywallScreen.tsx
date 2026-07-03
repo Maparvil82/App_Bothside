@@ -22,9 +22,15 @@ export const PaywallScreen = () => {
     const { colors } = useTheme();
     const navigation = useNavigation<any>();
     const { user } = useAuth();
-    const { purchasePackage, restorePurchases } = useSubscription();
+    const { subscriptionStatus, purchasePackage, restorePurchases } = useSubscription();
     const [loading, setLoading] = useState(false);
     const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
+
+    useEffect(() => {
+        if (subscriptionStatus === 'active' && user) {
+            navigation.goBack();
+        }
+    }, [subscriptionStatus, user, navigation]);
 
     const showAndroidDiagnostic = async (errorObj?: any) => {
         try {
@@ -98,7 +104,11 @@ export const PaywallScreen = () => {
         try {
             await purchasePackage(pkg);
             // Context updates status to active, which should trigger navigation or we manually navigate
-            navigation.replace('Login', { isSignUp: true });
+            if (user) {
+                navigation.goBack();
+            } else {
+                navigation.replace('Login', { isSignUp: true });
+            }
         } catch (error: any) {
             if (!error.userCancelled) {
                 Alert.alert(i18n.t('pricing_error_title'), error.message || i18n.t('pricing_error_trial'));

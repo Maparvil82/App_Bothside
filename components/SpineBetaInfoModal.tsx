@@ -20,12 +20,7 @@ export const SpineBetaInfoModal: React.FC<SpineBetaInfoModalProps> = ({
             <View style={styles.overlay}>
                 <View style={styles.container}>
                     {/* Header Icon */}
-                    <View style={styles.iconBadge}>
-                        <Ionicons name="library" size={32} color={AppColors.primary} />
-                        <View style={styles.miniBetaBadge}>
-                            <Text style={styles.miniBetaText}>BETA</Text>
-                        </View>
-                    </View>
+
 
                     {/* Title */}
                     <Text style={styles.title}>{t('spines_beta_modal_title' as any)}</Text>
@@ -36,7 +31,7 @@ export const SpineBetaInfoModal: React.FC<SpineBetaInfoModalProps> = ({
                     {/* Tips Section */}
                     <View style={styles.tipsContainer}>
                         <Text style={styles.tipsTitle}>{t('spines_beta_modal_tips_title' as any)}</Text>
-                        
+
                         <View style={styles.tipRow}>
                             <Text style={styles.tipText}>{t('spines_beta_modal_tip_light' as any)}</Text>
                         </View>

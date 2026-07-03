@@ -23,6 +23,7 @@ import { useCredits } from '../contexts/CreditsContext';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { AiConsentModal } from '../components/AiConsentModal';
 import { SpineBetaInfoModal } from '../components/SpineBetaInfoModal';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
 import { AnalyticsService } from '../services/analytics';
@@ -54,11 +55,14 @@ export const SpineScanScreen = () => {
   const [adding, setAdding] = useState(false);
   const [summary, setSummary] = useState<{ addedCount: number } | null>(null);
   const [showBetaModal, setShowBetaModal] = useState(false);
+  const [pendingSave, setPendingSave] = useState(false);
 
   // Credit Logic
   const { user } = useAuth();
   const { credits, deductCredit } = useCredits();
   const isFocused = useIsFocused();
+  const { subscriptionStatus, isLoading: isSubLoading } = useSubscription();
+  const isPro = subscriptionStatus === 'active';
 
   useEffect(() => {
     const checkBetaPreference = async () => {
@@ -103,6 +107,22 @@ export const SpineScanScreen = () => {
       requestPermission();
     }
   }, [permission, isFocused]);
+
+  useEffect(() => {
+    if (isPro && pendingSave) {
+      // Auto resume save once subscription is active
+      setPendingSave(false);
+      handleAddDiscs();
+    }
+  }, [isPro, pendingSave]);
+
+  if (isSubLoading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
 
   if (!permission) {
     return (
@@ -211,6 +231,12 @@ export const SpineScanScreen = () => {
     const selected = albums.filter((a) => a.selected && a.artist.trim() && a.title.trim());
     if (selected.length === 0) {
       Alert.alert('Atención', 'Selecciona al menos un disco válido para añadir.');
+      return;
+    }
+
+    if (!isPro) {
+      setPendingSave(true);
+      navigation.navigate('Paywall');
       return;
     }
 
@@ -511,7 +537,10 @@ export const SpineScanScreen = () => {
             <View style={styles.previewFooter}>
               <TouchableOpacity style={styles.primaryBtn} onPress={handleAddDiscs}>
                 <Text style={styles.primaryBtnText}>
-                  Añadir {albums.filter((a) => a.selected).length} discos
+                  {isPro
+                    ? (t('spines_add_discs' as any) || 'Añadir {0} discos').replace('{0}', String(albums.filter((a) => a.selected).length))
+                    : (t('spines_add_discs_pro' as any) || '🔒 Añadir {0} discos con Bothside Pro').replace('{0}', String(albums.filter((a) => a.selected).length))
+                  }
                 </Text>
               </TouchableOpacity>
             </View>
@@ -536,7 +565,7 @@ export const SpineScanScreen = () => {
             <View style={styles.headerTitleContainer}>
               <Text style={styles.title}>{t('spines_title' as any)}</Text>
               <View style={styles.betaBadge}>
-                <Text style={styles.betaBadgeText}>BETA</Text>
+                <Text style={styles.betaBadgeText}>PRO</Text>
               </View>
             </View>
 
@@ -552,7 +581,7 @@ export const SpineScanScreen = () => {
             <TouchableOpacity style={styles.betaMiniBanner} onPress={() => setShowBetaModal(true)}>
               <Ionicons name="sparkles" size={12} color="#F1C40F" style={{ marginRight: 4 }} />
               <Text style={styles.betaMiniBannerText}>
-                Fase Beta: Toca para ver instrucciones
+                Funcionalidad Pro: Toca para ver instrucciones
               </Text>
             </TouchableOpacity>
             <View style={styles.spineHorizontalBox}>
