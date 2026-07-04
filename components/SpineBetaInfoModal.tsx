@@ -20,9 +20,17 @@ export const SpineBetaInfoModal: React.FC<SpineBetaInfoModalProps> = ({
             <View style={styles.overlay}>
                 <View style={styles.container}>
                     {/* Header Icon */}
-
-
-                    {/* Title */}
+                    <View style={styles.iconBadge}>
+                        <Ionicons
+                            name="reorder-four-outline"
+                            size={32}
+                            color={AppColors.primary}
+                            style={{ transform: [{ rotate: '90deg' }] }}
+                        />
+                        <View style={styles.miniBetaBadge}>
+                            <Text style={styles.miniBetaText}>PRO</Text>
+                        </View>
+                    </View>
                     <Text style={styles.title}>{t('spines_beta_modal_title' as any)}</Text>
 
                     {/* Description */}

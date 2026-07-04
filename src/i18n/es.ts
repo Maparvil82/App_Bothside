@@ -525,7 +525,7 @@ export const es = {
     add_disc_tab_manual_new: "Manual",
     add_disc_tab_barcode_new: "código de barra",
     add_disc_tab_cover_new: "Portada",
-    add_disc_tab_spines_new: "Lomos (Pro)",
+    add_disc_tab_spines_new: "Lomos",
     spines_title: "Escanear lomos",
     spines_beta_modal_title: "Escáner de Lomos",
     spines_beta_modal_intro: "Esta funcionalidad utiliza Inteligencia Artificial para identificar múltiples vinilos a la vez analizando la foto de sus lomos. Al estar en fase Beta y desarrollo activo, puede no ser precisa y contener fallos.",

@@ -1156,9 +1156,10 @@ export const AddDiscScreen: React.FC = () => {
             onPress={() => navigation.navigate('SpineScan')}
           >
             <Ionicons
-              name="library-outline"
+              name="reorder-four-outline"
               size={22}
               color={mode === 'dark' ? '#a0a0a0' : '#8e8e93'}
+              style={{ transform: [{ rotate: '90deg' }] }}
             />
             <Text style={[styles.selectorText, { color: mode === 'dark' ? '#a0a0a0' : '#8e8e93' }]}>
               {t('add_disc_tab_spines_new' as any) || 'Lomos'}
