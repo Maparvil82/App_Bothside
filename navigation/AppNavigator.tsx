@@ -435,21 +435,6 @@ const AddDiscStack = () => {
           headerRight: () => <HeaderAvatar />,
         })}
       />
-      <Stack.Screen
-        name="CameraScan"
-        component={CameraScanScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="BarcodeScan"
-        component={BarcodeScanScreen}
-        options={{ headerShown: false }}
-      />
-      <Stack.Screen
-        name="SpineScan"
-        component={SpineScanScreen}
-        options={{ headerShown: false }}
-      />
       {ProfileScreensGroup()}
     </Stack.Navigator>
   );
@@ -886,6 +871,22 @@ const AppStack = () => {
           presentation: 'modal',
           headerShown: false
         }}
+      />
+
+      <Stack.Screen
+        name="CameraScan"
+        component={CameraScanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BarcodeScan"
+        component={BarcodeScanScreen}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="SpineScan"
+        component={SpineScanScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );
