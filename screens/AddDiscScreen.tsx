@@ -21,6 +21,7 @@ import { AlbumService, UserCollectionService, StyleService } from '../services/d
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
+import { YouTubeSearchService } from '../services/youtube-search';
 import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
@@ -578,6 +579,19 @@ export const AddDiscScreen: React.FC = () => {
                     discogs_video_id: v.id ? String(v.id) : null,
                   }));
                   await supabase.from('album_youtube_urls').insert(payload);
+                } else {
+                  // Fallback: search YouTube search API
+                  const foundVideos = await YouTubeSearchService.searchYouTubeVideos(artistName, albumTitle);
+                  if (foundVideos.length > 0) {
+                    const payload = foundVideos.map((v) => ({
+                      album_id: newAlbum.id,
+                      url: v.url,
+                      title: v.title,
+                      is_playlist: false,
+                      imported_from_discogs: false,
+                    }));
+                    await supabase.from('album_youtube_urls').insert(payload);
+                  }
                 }
                 // Importar tracklist
                 const tracklist = (fullRelease as any)?.tracklist || [];
@@ -808,6 +822,25 @@ export const AddDiscScreen: React.FC = () => {
                   console.error('❌ Error insertando URLs de YouTube:', urlError.message);
                 } else {
                   console.log('✅ URLs de YouTube insertadas:', payload.length);
+                }
+              } else {
+                // Fallback: search YouTube search API
+                console.log('📺 No YouTube videos found in Discogs. Falling back to YouTube search API...');
+                const foundVideos = await YouTubeSearchService.searchYouTubeVideos(album.artist, album.title);
+                if (foundVideos.length > 0) {
+                  const payload = foundVideos.map((v) => ({
+                    album_id: newAlbum.id,
+                    url: v.url,
+                    title: v.title,
+                    is_playlist: false,
+                    imported_from_discogs: false,
+                  }));
+                  const { error: urlError } = await supabase.from('album_youtube_urls').insert(payload);
+                  if (urlError) {
+                    console.error('❌ Error insertando URLs de YouTube (fallback):', urlError.message);
+                  } else {
+                    console.log('✅ URLs de YouTube insertadas (fallback):', payload.length);
+                  }
                 }
               }
 

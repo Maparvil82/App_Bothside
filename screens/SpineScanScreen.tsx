@@ -31,6 +31,7 @@ import { supabase } from '../lib/supabase';
 import { AlbumService, UserCollectionService } from '../services/database';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
+import { YouTubeSearchService } from '../services/youtube-search';
 
 interface SpineAlbum {
   artist: string;
@@ -283,15 +284,43 @@ export const SpineScanScreen = () => {
           // Check if album already exists in catologue
           const { data: existingAlbum } = await supabase
             .from('albums')
-            .select('id')
+            .select('id, discogs_id, cover_url, release_year, label, country')
             .ilike('artist', item.artist.trim())
             .ilike('title', item.title.trim())
             .limit(1)
             .maybeSingle();
 
           let albumId: string;
+          let discogsId: number | null = null;
+
           if (existingAlbum?.id) {
             albumId = existingAlbum.id;
+            if (existingAlbum.discogs_id) {
+              discogsId = Number(existingAlbum.discogs_id);
+            } else {
+              // Search in Discogs to populate missing discogs_id and metadata
+              try {
+                const query = `${item.artist.trim()} ${item.title.trim()}`;
+                const searchResult = await DiscogsService.searchReleases(query, 1);
+                if (searchResult && searchResult.results && searchResult.results.length > 0) {
+                  const discogsRelease = searchResult.results[0] as any;
+                  discogsId = Number(discogsRelease.id);
+                  // Update the album with the found Discogs ID and cover if missing
+                  await supabase
+                    .from('albums')
+                    .update({
+                      discogs_id: discogsId,
+                      cover_url: existingAlbum.cover_url || discogsRelease.cover_image || discogsRelease.thumb || null,
+                      release_year: existingAlbum.release_year || (discogsRelease.year ? String(discogsRelease.year) : null),
+                      label: existingAlbum.label || (discogsRelease.label ? (Array.isArray(discogsRelease.label) ? discogsRelease.label[0] : discogsRelease.label) : null),
+                      country: existingAlbum.country || discogsRelease.country || null,
+                    } as any)
+                    .eq('id', albumId);
+                }
+              } catch (searchErr) {
+                console.warn('Error searching Discogs for existing album:', searchErr);
+              }
+            }
           } else {
             // Search in Discogs to get details (especially cover_url and discogs_id)
             let discogsRelease: any = null;
@@ -316,49 +345,112 @@ export const SpineScanScreen = () => {
               country: discogsRelease?.country || undefined,
             });
             albumId = newAlbum.id;
+            discogsId = discogsRelease ? Number(discogsRelease.id) : null;
+          }
 
-            if (discogsRelease?.id) {
-              // Fetch and save statistics in background
-              DiscogsStatsService.fetchAndSaveDiscogsStats(albumId, discogsRelease.id).catch(() => { });
+          // Fetch tracks, statistics, and youtube URLs if they are missing
+          if (discogsId) {
+            // Fetch stats in background if needed
+            DiscogsStatsService.fetchAndSaveDiscogsStats(albumId, discogsId).catch(() => { });
 
-              // Fetch full release details to import videos (audio) and tracklist!
-              try {
-                const fullRelease = await DiscogsService.getRelease(discogsRelease.id);
+            // Check if tracks or videos are missing in DB for this albumId
+            try {
+              const { data: existingUrls } = await supabase
+                .from('album_youtube_urls')
+                .select('id')
+                .eq('album_id', albumId)
+                .limit(1);
+
+              const { data: existingTracks } = await supabase
+                .from('tracks')
+                .select('id')
+                .eq('album_id', albumId)
+                .limit(1);
+
+              const needsUrls = !existingUrls || existingUrls.length === 0;
+              const needsTracks = !existingTracks || existingTracks.length === 0;
+
+              if (needsUrls || needsTracks) {
+                const fullRelease = await DiscogsService.getRelease(discogsId);
                 if (fullRelease) {
                   // Import YouTube Videos (Audios)
-                  const videos = (fullRelease as any)?.videos || [];
-                  const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
-                  if (youtubeVideos.length > 0) {
-                    const payload = youtubeVideos.map((v: any) => ({
-                      album_id: albumId,
-                      url: v.uri,
-                      title: v.title || '',
-                      is_playlist: false,
-                      imported_from_discogs: true,
-                      discogs_video_id: v.id ? String(v.id) : null,
-                    }));
-                    await supabase.from('album_youtube_urls').insert(payload);
+                  if (needsUrls) {
+                    const videos = (fullRelease as any)?.videos || [];
+                    const youtubeVideos = videos.filter((v: any) => v?.uri && (v.uri.includes('youtube.com') || v.uri.includes('youtu.be')));
+                    
+                    if (youtubeVideos.length > 0) {
+                      const payload = youtubeVideos.map((v: any) => ({
+                        album_id: albumId,
+                        url: v.uri,
+                        title: v.title || '',
+                        is_playlist: false,
+                        imported_from_discogs: true,
+                        discogs_video_id: v.id ? String(v.id) : null,
+                      }));
+                      await supabase.from('album_youtube_urls').insert(payload);
+                    } else {
+                      // Fallback: search YouTube search API
+                      const foundVideos = await YouTubeSearchService.searchYouTubeVideos(item.artist.trim(), item.title.trim());
+                      if (foundVideos.length > 0) {
+                        const payload = foundVideos.map((v) => ({
+                          album_id: albumId,
+                          url: v.url,
+                          title: v.title,
+                          is_playlist: false,
+                          imported_from_discogs: false,
+                        }));
+                        await supabase.from('album_youtube_urls').insert(payload);
+                      }
+                    }
                   }
 
                   // Import Tracklist
-                  const tracklist = (fullRelease as any)?.tracklist || [];
-                  if (Array.isArray(tracklist) && tracklist.length > 0) {
-                    const tracksPayload = tracklist
-                      .filter((t: any) => t?.title)
-                      .map((t: any) => ({
-                        album_id: albumId,
-                        position: t.position?.toString() || null,
-                        title: t.title?.toString() || '',
-                        duration: t.duration?.toString() || null,
-                      }));
-                    if (tracksPayload.length > 0) {
-                      await supabase.from('tracks').insert(tracksPayload);
+                  if (needsTracks) {
+                    const tracklist = (fullRelease as any)?.tracklist || [];
+                    if (Array.isArray(tracklist) && tracklist.length > 0) {
+                      const tracksPayload = tracklist
+                        .filter((t: any) => t?.title)
+                        .map((t: any) => ({
+                          album_id: albumId,
+                          position: t.position?.toString() || null,
+                          title: t.title?.toString() || '',
+                          duration: t.duration?.toString() || null,
+                        }));
+                      if (tracksPayload.length > 0) {
+                        await supabase.from('tracks').insert(tracksPayload);
+                      }
                     }
                   }
                 }
-              } catch (importErr) {
-                console.warn(`Error importing tracklist/videos for release ${discogsRelease.id}:`, importErr);
               }
+            } catch (err) {
+              console.warn('Error fetching and updating release details in background:', err);
+            }
+          } else {
+            // No discogsId found even after searching, but we still want audio fallback!
+            try {
+              const { data: existingUrls } = await supabase
+                .from('album_youtube_urls')
+                .select('id')
+                .eq('album_id', albumId)
+                .limit(1);
+
+              if (!existingUrls || existingUrls.length === 0) {
+                // Search YouTube search API directly as fallback
+                const foundVideos = await YouTubeSearchService.searchYouTubeVideos(item.artist.trim(), item.title.trim());
+                if (foundVideos.length > 0) {
+                  const payload = foundVideos.map((v) => ({
+                    album_id: albumId,
+                    url: v.url,
+                    title: v.title,
+                    is_playlist: false,
+                    imported_from_discogs: false,
+                  }));
+                  await supabase.from('album_youtube_urls').insert(payload);
+                }
+              }
+            } catch (err) {
+              console.warn('Error fetching YouTube fallback without Discogs ID:', err);
             }
           }
 

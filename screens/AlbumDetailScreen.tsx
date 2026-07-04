@@ -1463,11 +1463,15 @@ export default function AlbumDetailScreen() {
   const youtubeVideoId = youtubeUrls.length > 0 ? extractYouTubeId(youtubeUrls[0]) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingBottom: 20 }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingBottom: activeYoutubeVideoId ? 20 : 0 }]}>
 
 
 
-      <ScrollView showsVerticalScrollIndicator={false} removeClippedSubviews={false} style={[styles.detalleScroll]}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={false}
+        style={[styles.detalleScroll, { marginBottom: activeYoutubeVideoId ? 80 : 0 }]}
+      >
         {/* Portada */}
         <Animated.View style={[
           styles.coverSection,
@@ -4675,7 +4679,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detalleScroll: {
-    marginBottom: 55,
+    marginBottom: 40,
 
   },
 });
