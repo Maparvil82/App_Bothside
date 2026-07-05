@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList, ActionSheetIOS, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, FlatList, ActionSheetIOS, Platform, Image } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { CreateShelfModal } from '../components/CreateShelfModal';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -37,7 +37,7 @@ const ShelvesFABIcon: React.FC<{ color: string; size: number }> = ({ color, size
         stroke={color}
         strokeWidth={1.5}
       />
-      
+
       {/* Top-Left Shelf Vinyls (leaning) */}
       <Line
         x1={5.5}
@@ -267,6 +267,10 @@ export default function ShelvesListScreen() {
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
+            <Image
+              source={require('../assets/empty_estanteria.png')}
+              style={styles.emptyImage}
+            />
             <Text style={styles.emptyText}>{t('shelves_list_empty_title')}</Text>
             <Text style={styles.emptySubText}>{t('shelves_list_empty_text')}</Text>
           </View>
@@ -292,7 +296,7 @@ export default function ShelvesListScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#ffffffff',
   },
   centered: {
     flex: 1,
@@ -329,18 +333,32 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+  },
+  emptyImage: {
+    width: '100%',
+    maxWidth: 400,
+    height: 260,
+    resizeMode: 'contain',
+    marginBottom: 4,
+    opacity: 0.8,
+    alignSelf: 'center',
   },
   emptyText: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#3C3C43',
+    fontWeight: '700',
+    color: '#666',
+    marginBottom: 8,
+    opacity: 0.8,
+    textAlign: 'center',
   },
   emptySubText: {
     fontSize: 14,
-    color: '#8E8E93',
-    marginTop: 8,
+    color: '#999',
     textAlign: 'center',
+    marginBottom: 36,
+    width: '75%',
   },
   fab: {
     position: 'absolute',

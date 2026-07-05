@@ -1256,7 +1256,7 @@ export const AddDiscScreen: React.FC = () => {
                 {!query ? (
                   <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', width: '100%' }}>
                     <Image
-                      source={require('../assets/empty_collection.png')}
+                      source={require('../assets/empty_collections.png')}
                       style={styles.emptyStateImage}
                     />
                     <Text style={styles.emptyStateTitle}>
