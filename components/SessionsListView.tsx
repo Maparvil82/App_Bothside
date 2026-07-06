@@ -10,6 +10,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { getColorForTag } from '../src/utils/getColorForTag';
 import { activeLocale as currentLanguage } from '../src/i18n';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { SessionEarningsSection } from './SessionEarningsSection';
 
 interface Session {
   id: string;
@@ -145,6 +146,7 @@ export default function SessionsListView({ sessions, onSessionPress, nameColors 
       renderItem={renderSessionCard}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.listContent}
+      ListHeaderComponent={<SessionEarningsSection style={{ marginHorizontal: 0, marginTop: 0, marginBottom: 8 }} />}
       ListEmptyComponent={emptyListComponent}
       scrollEnabled={true}
       showsVerticalScrollIndicator={true}

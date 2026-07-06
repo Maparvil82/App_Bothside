@@ -38,7 +38,11 @@ interface EarningsData {
   } | null;
 }
 
-export const SessionEarningsSection: React.FC = () => {
+interface SessionEarningsSectionProps {
+  style?: any;
+}
+
+export const SessionEarningsSection: React.FC<SessionEarningsSectionProps> = ({ style }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { colors } = useTheme();
@@ -87,7 +91,7 @@ export const SessionEarningsSection: React.FC = () => {
 
   if (loading) {
     return (
-      <View style={styles.outerContainer}>
+      <View style={[styles.outerContainer, style]}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPressIn={() => {
@@ -127,7 +131,7 @@ export const SessionEarningsSection: React.FC = () => {
 
   if (earningsData.realEarnings === 0 && earningsData.estimatedMonthEarnings === 0) {
     return (
-      <View style={styles.outerContainer}>
+      <View style={[styles.outerContainer, style]}>
         <TouchableOpacity
           activeOpacity={0.9}
           onPressIn={() => {
@@ -174,7 +178,7 @@ export const SessionEarningsSection: React.FC = () => {
   };
 
   return (
-    <View style={styles.outerContainer}>
+    <View style={[styles.outerContainer, style]}>
       <TouchableOpacity
         activeOpacity={0.9}
         onPressIn={() => {
