@@ -57,6 +57,7 @@ interface AlbumDetail {
   added_at: string;
   audio_note?: string;
   is_gem?: boolean;
+  ideal_moment?: string | null;
   albums: {
     id: string;
     title: string;
@@ -170,6 +171,7 @@ export default function AlbumDetailScreen() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentAudioUrl, setCurrentAudioUrl] = useState<string | null>(null);
   const [showListsModal, setShowListsModal] = useState(false);
+  const [showIdealMomentModal, setShowIdealMomentModal] = useState(false);
   const [selectedListId, setSelectedListId] = useState<string | null>(null);
   const lastBackfilledAlbumIdRef = useRef<string | null>(null);
 
@@ -1395,6 +1397,51 @@ export default function AlbumDetailScreen() {
     }
   };
 
+  // ========== IDEAL MOMENT ==========
+
+  const getIdealMomentLabel = (moment: string | null | undefined): string => {
+    switch (moment) {
+      case 'listening':
+        return t('ideal_moment_listening') || '🛋️ Escucha';
+      case 'opening':
+        return t('ideal_moment_opening') || '🌅 Inicio';
+      case 'warmup':
+        return t('ideal_moment_warmup') || '☀️ Calentamiento';
+      case 'peak':
+        return t('ideal_moment_peak') || '🔥 Momento fuerte';
+      case 'closing':
+        return t('ideal_moment_closing') || '🌙 Cierre';
+      default:
+        return t('ideal_moment_listening') || '🛋️ Escucha';
+    }
+  };
+
+  const handleSelectIdealMoment = async (moment: string) => {
+    if (!album?.id) return;
+    try {
+      const { error } = await supabase
+        .from('user_collection')
+        .update({ ideal_moment: moment })
+        .eq('id', album.id);
+
+      if (error) throw error;
+
+      // Update local state immediately for instant feedback
+      setAlbum(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          ideal_moment: moment
+        };
+      });
+
+      setShowIdealMomentModal(false);
+    } catch (e) {
+      console.error('Error updating ideal moment:', e);
+      Alert.alert(t('common_error'), 'No se pudo guardar el momento ideal.');
+    }
+  };
+
   // ========== FIN FUNCIONES GEMS Y LISTAS ==========
 
   // Cargar listas del usuario cuando se monta el componente
@@ -2066,6 +2113,28 @@ export default function AlbumDetailScreen() {
         )}
 
 
+        {/* Momento Ideal */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t('album_detail_ideal_moment_title') || 'Momento Ideal'}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.idealMomentSelectorItem,
+                { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
+              ]}
+              onPress={() => setShowIdealMomentModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.idealMomentValueText, { color: colors.text }]}>
+                {getIdealMomentLabel(album.ideal_moment)}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Nota de Audio */}
         {isInCollection && (
           <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -2635,6 +2704,67 @@ export default function AlbumDetailScreen() {
                 </Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal de selección de Momento Ideal */}
+      <Modal
+        visible={showIdealMomentModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowIdealMomentModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '80%', backgroundColor: colors.card, shadowColor: primaryColor }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {t('album_detail_ideal_moment_title') || 'Momento Ideal'}
+              </Text>
+              <TouchableOpacity onPress={() => setShowIdealMomentModal(false)} style={styles.closeButton}>
+                <Ionicons name="close" size={24} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              {[
+                { value: 'listening', label: t('ideal_moment_listening') || '🛋️ Escucha', desc: t('ideal_moment_listening_desc') || 'Para disfrutar del disco en casa o en una escucha relajada.' },
+                { value: 'opening', label: t('ideal_moment_opening') || '🌅 Inicio', desc: t('ideal_moment_opening_desc') || 'Perfecto para comenzar una sesión y crear el ambiente adecuado.' },
+                { value: 'warmup', label: t('ideal_moment_warmup') || '☀️ Calentamiento', desc: t('ideal_moment_warmup_desc') || 'Ideal cuando la pista empieza a llenarse y la energía comienza a subir.' },
+                { value: 'peak', label: t('ideal_moment_peak') || '🔥 Momento fuerte', desc: t('ideal_moment_peak_desc') || 'El punto de máxima energía para mantener la pista en su mejor momento.' },
+                { value: 'closing', label: t('ideal_moment_closing') || '🌙 Cierre', desc: t('ideal_moment_closing_desc') || 'Para bajar la intensidad y terminar la sesión con elegancia.' },
+              ].map((item) => {
+                const isSelected = album?.ideal_moment === item.value || ((album?.ideal_moment === null || album?.ideal_moment === undefined) && item.value === 'listening');
+                return (
+                  <TouchableOpacity
+                    key={item.value}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      backgroundColor: LIGHT_BG_COLOR,
+                      marginBottom: 12,
+                      padding: 16,
+                      borderRadius: 12,
+                      gap: 12,
+                    }}
+                    onPress={() => handleSelectIdealMoment(item.value)}
+                  >
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <Text style={{ fontSize: 16, fontWeight: '600', color: colors.text }}>
+                        {item.label}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: colors.text, opacity: 0.6 }}>
+                        {item.desc}
+                      </Text>
+                    </View>
+                    {isSelected && (
+                      <Ionicons name="checkmark-circle" size={24} color={primaryColor} style={{ marginLeft: 8 }} />
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </ScrollView>
           </View>
         </View>
       </Modal>
@@ -3898,6 +4028,20 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     borderWidth: 1,
     borderColor: '#f8f9fa',
+  },
+  idealMomentSelectorItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#f8f9fa',
+  },
+  idealMomentValueText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   shelfSelectItemText: {
     fontSize: 14,

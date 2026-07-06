@@ -1079,6 +1079,12 @@ export const pt = {
     autoBag_createSwitchLabel: "Criar maleta para esta sessão",
 
     // Session Linked Albums
+    album_detail_ideal_moment_title: "Momento Ideal",
+    ideal_moment_listening: "🛋️ Ouvir",
+    ideal_moment_opening: "🌅 Opening",
+    ideal_moment_warmup: "🔥 Warm up",
+    ideal_moment_peak: "⚡ Peak time",
+    ideal_moment_closing: "🌌 Closing",
     album_detail_played_in: 'Sessões onde você tocou',
     album_detail_no_sessions: 'Você ainda não atribuiu nenhuma sessão a este disco.',
     album_detail_select_session: 'Selecione uma Sessão',

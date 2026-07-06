@@ -745,6 +745,12 @@ export const fr = {
     autoBag_createSwitchLabel: "Créer une valise pour cette session",
 
     // Session Linked Albums
+    album_detail_ideal_moment_title: "Moment Idéal",
+    ideal_moment_listening: "🛋️ Écoute",
+    ideal_moment_opening: "🌅 Opening",
+    ideal_moment_warmup: "🔥 Warm up",
+    ideal_moment_peak: "⚡ Peak time",
+    ideal_moment_closing: "🌌 Closing",
     album_detail_played_in: 'Sessions où joué',
     album_detail_no_sessions: 'Aucune session assignée à cet album pour le moment.',
     album_detail_select_session: 'Sélectionnez une Session',

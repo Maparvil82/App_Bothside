@@ -745,6 +745,12 @@ export const it = {
     autoBag_createSwitchLabel: "Crea una borsa per questa sessione",
 
     // Session Linked Albums
+    album_detail_ideal_moment_title: "Momento Ideale",
+    ideal_moment_listening: "🛋️ Ascolto",
+    ideal_moment_opening: "🌅 Opening",
+    ideal_moment_warmup: "🔥 Warm up",
+    ideal_moment_peak: "⚡ Peak time",
+    ideal_moment_closing: "🌌 Closing",
     album_detail_played_in: 'Sessioni dove suonato',
     album_detail_no_sessions: 'Nessuna sessione assegnata a questo album per il momento.',
     album_detail_select_session: 'Seleziona una Sessione',

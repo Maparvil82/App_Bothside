@@ -745,6 +745,12 @@ export const ja = {
     autoBag_createSwitchLabel: "このセッション用のバッグを作成",
 
     // Session Linked Albums
+    album_detail_ideal_moment_title: "理想的な瞬間",
+    ideal_moment_listening: "🛋️ リスニング",
+    ideal_moment_opening: "🌅 オープニング",
+    ideal_moment_warmup: "🔥 ウォームアップ",
+    ideal_moment_peak: "⚡ ピークタイム",
+    ideal_moment_closing: "🌌 クロージング",
     album_detail_played_in: '再生されたセッション',
     album_detail_no_sessions: '現在、このアルバムに割り当てられたセッションはありません。',
     album_detail_select_session: 'セッションを選択',
