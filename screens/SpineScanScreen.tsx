@@ -28,7 +28,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
 import { AnalyticsService } from '../services/analytics';
 import { supabase } from '../lib/supabase';
-import { AlbumService, UserCollectionService } from '../services/database';
+import { AlbumService, UserCollectionService, ProfileService } from '../services/database';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { YouTubeSearchService } from '../services/youtube-search';
@@ -59,7 +59,7 @@ export const SpineScanScreen = () => {
   const [pendingSave, setPendingSave] = useState(false);
 
   // Credit Logic
-  const { user } = useAuth();
+  const { user, loadUserSubscriptionAndCredits } = useAuth();
   const { credits, deductCredit } = useCredits();
   const isFocused = useIsFocused();
   const { subscriptionStatus, isLoading: isSubLoading } = useSubscription();
@@ -236,9 +236,25 @@ export const SpineScanScreen = () => {
     }
 
     if (!isPro) {
-      setPendingSave(true);
-      navigation.navigate('Paywall');
-      return;
+      const freeUsed = await ProfileService.checkFreeSpineScanUsed(user.id, user);
+      if (freeUsed) {
+        setPendingSave(true);
+        navigation.navigate('Paywall');
+        return;
+      }
+
+      // Marcar como usado inmediatamente al iniciar el proceso de guardado
+      try {
+        await supabase
+          .from('profiles')
+          .update({ has_used_free_spine_scan: true })
+          .eq('id', user.id);
+        await AsyncStorage.setItem(`has_used_free_spine_scan_${user.id}`, 'true');
+        await loadUserSubscriptionAndCredits(user.id);
+        console.log('✅ SpineScanScreen: has_used_free_spine_scan set to true immediately in handleAddDiscs');
+      } catch (flagErr) {
+        console.error('Failed to update has_used_free_spine_scan flag immediately:', flagErr);
+      }
     }
 
     // Informar inmediatamente al usuario de que se inicia en segundo plano
@@ -488,6 +504,8 @@ export const SpineScanScreen = () => {
       // Emitir eventos globales para que se muestren en la colección y se recargue en tiempo real
       DeviceEventEmitter.emit('collection_changed');
       DeviceEventEmitter.emit('maleta_changed');
+
+
 
       setSummary({ addedCount });
       AnalyticsService.track('spines_add_completed', { count: addedCount });

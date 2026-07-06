@@ -37,7 +37,7 @@ export const PaywallScreen = () => {
             const apiKey = ENV.REVENUECAT_API_KEY_ANDROID;
             const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
             const keyLength = apiKey ? apiKey.length : 0;
-            
+
             let nativeOfferings = null;
             let fetchErrorMsg = '';
             try {
@@ -45,22 +45,22 @@ export const PaywallScreen = () => {
             } catch (e: any) {
                 fetchErrorMsg = `FetchError: ${e.code || 'unknown'} - ${e.message || e}`;
             }
-            
+
             const currentId = nativeOfferings?.current?.identifier || 'null';
             const currentPackagesLength = nativeOfferings?.current?.availablePackages?.length || 0;
             const allKeys = nativeOfferings ? Object.keys(nativeOfferings.all) : [];
-            
+
             let packagesDetails = '';
             if (nativeOfferings?.current?.availablePackages) {
                 packagesDetails = nativeOfferings.current.availablePackages
                     .map((pkgItem: any) => `- ${pkgItem.identifier} / ${pkgItem.product?.identifier} / ${pkgItem.product?.priceString}`)
                     .join('\n');
             }
-            
-            const errDetails = errorObj 
-                ? `Err: ${errorObj.code || 'unknown'} - ${errorObj.message || errorObj}` 
+
+            const errDetails = errorObj
+                ? `Err: ${errorObj.code || 'unknown'} - ${errorObj.message || errorObj}`
                 : fetchErrorMsg || 'None';
-                
+
             const diagnosticMessage = [
                 `Platform: ${Platform.OS}`,
                 `API Key Prefix: ${keyPrefix}`,
@@ -71,7 +71,7 @@ export const PaywallScreen = () => {
                 `Packages:\n${packagesDetails || 'None'}`,
                 `Errors: ${errDetails}`
             ].join('\n\n');
-            
+
             Alert.alert('Diagnóstico Temporal Android', diagnosticMessage);
         } catch (diagErr: any) {
             Alert.alert('Error en Diagnóstico', diagErr.message);
@@ -140,39 +140,82 @@ export const PaywallScreen = () => {
     return (
         <View style={styles.container}>
             {/* Background Image / Gradient */}
-            {/* Background Image / Gradient */}
             <Image
                 source={require('../assets/wall_1.png')}
                 style={styles.backgroundImage}
             />
             <LinearGradient
-                colors={['transparent', '#000000']}
+                colors={['rgba(255, 255, 255, 0.7)', '#FFFFFF']}
                 style={styles.gradient}
             />
 
-            <SafeAreaView style={styles.contentContainer}>
+            <SafeAreaView style={styles.contentContainer} edges={['top', 'bottom']}>
+                {/* Group 1: Close Button & Hero Header (keeps them close at the top) */}
+                <View>
+                    <View style={styles.topHeader}>
+                        {user ? (
+                            <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+                                <Ionicons name="close-outline" size={24} color="#1A2530" />
+                            </TouchableOpacity>
+                        ) : (
+                            <View style={{ width: 40, height: 40 }} />
+                        )}
+                    </View>
 
-                <View style={styles.header}>
-                    <Text style={styles.title}>{i18n.t('paywall_limit_title')}</Text>
-                    <Text style={[styles.preTitle, { marginTop: 8, fontSize: 15, textTransform: 'none', letterSpacing: 0, color: '#DDD', textAlign: 'center' }]}>
-                        {i18n.t('paywall_limit_subtitle')}
-                    </Text>
+                    {/* Hero Header */}
+                    <View style={styles.header}>
+                        <View style={styles.proBadge}>
+                            <Ionicons name="sparkles" size={12} color="#D4AF37" style={{ marginRight: 4 }} />
+                            <Text style={styles.proBadgeText}>PRO</Text>
+                        </View>
+                        <Text style={styles.title}>{i18n.t('paywall_limit_title')}</Text>
+                        <Text style={styles.subtitle}>
+                            {i18n.t('paywall_limit_subtitle')}
+                        </Text>
+                    </View>
                 </View>
 
-                <View style={styles.offerCard}>
+                {/* Pro Features Showcase */}
+                <View style={styles.featuresContainer}>
+                    <FeatureItem
+                        icon="disc-outline"
+                        title="Discos ilimitados"
+                        description="Guarda todos los vinilos de tu colección sin restricciones de espacio."
+                    />
+                    <FeatureItem
+                        icon="reorder-four-outline"
+                        rotateIcon
+                        title="Escáner de lomos por IA"
+                        description="Escanea estanterías completas con tu cámara y añade discos en lote."
+                    />
+                    <FeatureItem
+                        icon="cloud-upload-outline"
+                        title="Importación masiva"
+                        description="Importa colecciones completas desde Discogs o archivos Excel en segundos."
+                    />
+                    <FeatureItem
+                        icon="grid-outline"
+                        title="Estanterías ilimitadas"
+                        description="Organiza tus vinilos en tantas estanterías virtuales como necesites."
+                    />
+                </View>
 
-                    <Text style={styles.planTitle}>{i18n.t('paywall_pro_plan')}</Text>
-                    <View style={styles.priceContainer}>
-                        <Text style={styles.price}>{yearlyPriceText}</Text>
+                {/* Premium Subscription Offer Card */}
+                <View style={styles.offerCard}>
+                    <View style={styles.offerCardBadge}>
+                        <Text style={styles.offerCardBadgeText}>ACCESO COMPLETO</Text>
                     </View>
+                    <Text style={styles.planSubtitle}>{i18n.t('paywall_pro_plan')}</Text>
+                    <Text style={styles.price}>{yearlyPriceText}</Text>
                     <Text style={styles.trialText}>{i18n.t('paywall_pro_trial')}</Text>
                 </View>
 
+                {/* Action & Legal Footer */}
                 <View style={styles.footer}>
                     <TouchableOpacity
                         style={[
                             styles.button,
-                            (loading) && styles.buttonDisabled,
+                            loading && styles.buttonDisabled,
                             (!pkg && !loading) && { backgroundColor: '#FF453A' } // Red for error/retry
                         ]}
                         onPress={!pkg ? async () => {
@@ -196,11 +239,11 @@ export const PaywallScreen = () => {
                                         const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
                                         const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
                                         const keyLength = apiKey ? apiKey.length : 0;
-                                        
+
                                         const currentId = offeringsObj?.current?.identifier || 'null';
                                         const currentPkgsLen = offeringsObj?.current?.availablePackages?.length || 0;
                                         const allKeys = offeringsObj?.all ? Object.keys(offeringsObj.all) : [];
-                                        
+
                                         Alert.alert(
                                             "RC DEBUG",
                                             `Platform.OS: ${Platform.OS}\n` +
@@ -221,11 +264,11 @@ export const PaywallScreen = () => {
                                     const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
                                     const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
                                     const keyLength = apiKey ? apiKey.length : 0;
-                                    
+
                                     const currentId = offeringsObj?.current?.identifier || 'null';
                                     const currentPkgsLen = offeringsObj?.current?.availablePackages?.length || 0;
                                     const allKeys = offeringsObj?.all ? Object.keys(offeringsObj.all) : [];
-                                    
+
                                     Alert.alert(
                                         "RC DEBUG",
                                         `Platform.OS: ${Platform.OS}\n` +
@@ -259,37 +302,31 @@ export const PaywallScreen = () => {
                         {afterTrialText}
                     </Text>
 
-                    <Text style={[styles.legalText, { marginTop: -10, marginBottom: 20 }]}>
+                    <Text style={[styles.legalText, { marginTop: -10, marginBottom: 12 }]}>
                         {i18n.t('paywall_keep_collection')}
                     </Text>
 
                     <View style={styles.linksContainer}>
-                        {user ? (
-                            <TouchableOpacity onPress={() => navigation.goBack()}>
-                                <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF', fontSize: 16, fontWeight: '600' }]}>
-                                    {i18n.t('paywall_not_now')}
-                                </Text>
-                            </TouchableOpacity>
-                        ) : (
+                        {!user && (
                             <TouchableOpacity onPress={() => navigation.navigate('Login', { isSignUp: false })}>
-                                <Text style={[styles.link, { textDecorationLine: 'underline', color: '#FFF' }]}>
+                                <Text style={[styles.link, { textDecorationLine: 'underline', color: '#1A2530', fontSize: 13, fontWeight: '600', marginBottom: 8 }]}>
                                     {i18n.t('pricing_login_link')}
                                 </Text>
                             </TouchableOpacity>
                         )}
                     </View>
 
-                    <View style={[styles.linksContainer, { marginTop: 20 }]}>
+                    <View style={styles.bottomLinksContainer}>
                         <TouchableOpacity onPress={handleRestore}>
-                            <Text style={styles.link}>{i18n.t('pricing_restore_short')}</Text>
+                            <Text style={styles.bottomLink}>{i18n.t('pricing_restore_short')}</Text>
                         </TouchableOpacity>
                         <Text style={styles.divider}>•</Text>
                         <TouchableOpacity onPress={() => openLink(ENV.TERMS_URL)}>
-                            <Text style={styles.link}>{i18n.t('pricing_terms')}</Text>
+                            <Text style={styles.bottomLink}>{i18n.t('pricing_terms')}</Text>
                         </TouchableOpacity>
                         <Text style={styles.divider}>•</Text>
                         <TouchableOpacity onPress={() => openLink(ENV.PRIVACY_URL)}>
-                            <Text style={styles.link}>{i18n.t('pricing_privacy')}</Text>
+                            <Text style={styles.bottomLink}>{i18n.t('pricing_privacy')}</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -298,26 +335,34 @@ export const PaywallScreen = () => {
     );
 };
 
-const FeatureItem = ({ icon, text, highlight = false }: { icon: any, text: string, highlight?: boolean }) => (
+const FeatureItem = ({ icon, title, description, rotateIcon = false }: { icon: any, title: string, description: string, rotateIcon?: boolean }) => (
     <View style={styles.featureItem}>
-        <View style={[styles.iconContainer, highlight && { backgroundColor: '#FFD70030' }]}>
-            <Ionicons name={icon} size={24} color={highlight ? '#FFD700' : '#FFF'} />
+        <View style={styles.featureIconContainer}>
+            <Ionicons
+                name={icon}
+                size={22}
+                color="#000000"
+                style={rotateIcon ? { transform: [{ rotate: '90deg' }] } : undefined}
+            />
         </View>
-        <Text style={[styles.featureText, highlight && { color: '#FFD700', fontWeight: 'bold' }]}>{text}</Text>
+        <View style={styles.featureTextContainer}>
+            <Text style={styles.featureTitle}>{title}</Text>
+            <Text style={styles.featureDescription}>{description}</Text>
+        </View>
     </View>
 );
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#000',
+        backgroundColor: '#FFFFFF',
     },
     backgroundImage: {
         position: 'absolute',
         width: width,
         height: '100%',
         top: 0,
-        opacity: 0.5,
+        opacity: 0.12,
     },
     gradient: {
         position: 'absolute',
@@ -330,137 +375,207 @@ const styles = StyleSheet.create({
     contentContainer: {
         flex: 1,
         zIndex: 2,
-        justifyContent: 'space-around',
-        padding: 24,
+        justifyContent: 'space-between',
+        paddingHorizontal: 24,
+        paddingVertical: 12,
     },
-    header: {
-        marginBottom: 30,
+    topHeader: {
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+        alignItems: 'center',
+        height: 10,
+    },
+    closeButton: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        backgroundColor: '#F3F4F6',
+        justifyContent: 'center',
         alignItems: 'center',
     },
-    preTitle: {
-        color: '#AAA',
-        fontSize: 12,
-        fontWeight: '500',
-        letterSpacing: 2,
-        marginBottom: 8,
-    },
-    title: {
-        color: '#FFF',
-        fontSize: 22,
-        fontWeight: '700',
-        letterSpacing: -1,
+    logo: {
+        width: 50,
+        height: 50,
+        tintColor: '#000000',
         marginBottom: 10,
     },
+    header: {
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    proBadge: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#F3F4F6',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 16,
+        marginBottom: 8,
+    },
+    proBadgeText: {
+        color: '#1A2530',
+        fontSize: 10,
+        fontWeight: '800',
+        letterSpacing: 1,
+    },
+    title: {
+        color: '#1A2530',
+        fontSize: 26,
+        fontWeight: '800',
+        textAlign: 'center',
+        letterSpacing: -0.5,
+        lineHeight: 32,
+    },
+    subtitle: {
+        color: '#4B5563',
+        fontSize: 14.5,
+        textAlign: 'center',
+        marginTop: 6,
+        lineHeight: 20,
+        paddingHorizontal: 10,
+    },
     featuresContainer: {
-        marginBottom: 40,
+        backgroundColor: '#F9FAFB',
+        borderRadius: 16,
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
     },
     featureItem: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 16,
+        marginVertical: 6,
     },
-    iconContainer: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.1)',
+    featureIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#FFFFFF',
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: 12,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 2,
+        elevation: 1,
     },
-    featureText: {
-        color: '#FFF',
-        fontSize: 16,
-        fontWeight: '500',
+    featureTextContainer: {
+        flex: 1,
+    },
+    featureTitle: {
+        color: '#1A2530',
+        fontSize: 15.5,
+        fontWeight: '700',
+    },
+    featureDescription: {
+        color: '#6B7280',
+        fontSize: 12.5,
+        marginTop: 2,
+        lineHeight: 16.5,
     },
     offerCard: {
-        backgroundColor: 'rgba(255,255,255,0.1)',
+        backgroundColor: '#FFFFFF',
         borderRadius: 16,
-        padding: 20,
-        borderWidth: 1,
-        borderColor: '#0A84FF',
-        marginBottom: 24,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderWidth: 2,
+        borderColor: '#000000',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 6,
+        elevation: 2,
         position: 'relative',
-        alignItems: 'center', // Centrado
     },
-    badgeContainer: {
+    offerCardBadge: {
         position: 'absolute',
-        top: -12,
-        backgroundColor: '#0A84FF',
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-        borderRadius: 12,
+        top: -10,
+        backgroundColor: '#000000',
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        borderRadius: 10,
     },
-    badgeText: {
-        color: '#FFF',
-        fontSize: 10,
+    offerCardBadgeText: {
+        color: '#FFFFFF',
+        fontSize: 8,
         fontWeight: '800',
+        letterSpacing: 1,
+    },
+    planSubtitle: {
+        color: '#6B7280',
+        fontSize: 11,
+        fontWeight: '700',
         textTransform: 'uppercase',
-    },
-    planTitle: {
-        color: '#FFF',
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    priceContainer: {
-        flexDirection: 'row',
-        alignItems: 'baseline',
-        marginBottom: 4,
+        marginBottom: 2,
+        marginTop: 2,
     },
     price: {
-        color: '#FFF',
-        fontSize: 32,
+        color: '#1A2530',
+        fontSize: 26,
         fontWeight: '800',
-    },
-    period: {
-        color: '#AAA',
-        fontSize: 16,
-        marginLeft: 4,
+        marginBottom: 2,
     },
     trialText: {
-        color: '#0A84FF',
-        fontSize: 14,
+        color: '#34A853',
+        fontSize: 14.5,
         fontWeight: '700',
     },
     footer: {
         alignItems: 'center',
+        width: '100%',
     },
     button: {
-        backgroundColor: '#0A84FF',
+        backgroundColor: '#000000',
         width: '100%',
-        paddingVertical: 18,
-        borderRadius: 16,
+        paddingVertical: 16,
+        borderRadius: 28,
         alignItems: 'center',
-        marginBottom: 12,
-        shadowColor: '#0A84FF',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 8,
+        marginBottom: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
     },
     buttonDisabled: {
         opacity: 0.7,
     },
     buttonText: {
-        color: '#FFF',
+        color: '#FFFFFF',
         fontSize: 16,
         fontWeight: '700',
     },
     legalText: {
-        color: '#666',
-        fontSize: 12,
-        marginBottom: 20,
+        color: '#9CA3AF',
+        fontSize: 11,
+        textAlign: 'center',
+        lineHeight: 14,
+        marginBottom: 10,
+        paddingHorizontal: 10,
     },
     linksContainer: {
-        flexDirection: 'row',
         alignItems: 'center',
+        width: '100%',
     },
     link: {
         color: '#888',
-        fontSize: 12,
+        fontSize: 11,
+    },
+    bottomLinksContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 6,
+    },
+    bottomLink: {
+        color: '#9CA3AF',
+        fontSize: 11,
     },
     divider: {
-        color: '#444',
+        color: '#E5E7EB',
         marginHorizontal: 8,
     },
 });

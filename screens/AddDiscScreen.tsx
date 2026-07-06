@@ -17,7 +17,8 @@ import { AppColors } from '../src/theme/colors';
 import { useNavigation, useTheme, useRoute } from '@react-navigation/native';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
-import { AlbumService, UserCollectionService, StyleService } from '../services/database';
+import { AlbumService, UserCollectionService, StyleService, ProfileService } from '../services/database';
+import { useSubscription } from '../contexts/SubscriptionContext';
 import { supabase } from '../lib/supabase';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
@@ -49,6 +50,7 @@ const normalize = (str: string) =>
     ?.trim();
 export const AddDiscScreen: React.FC = () => {
   const { user } = useAuth();
+  const { subscriptionStatus } = useSubscription();
   const navigation = useNavigation<any>();
   const route = useRoute<any>(); // Add useRoute
   const { colors } = useTheme();
@@ -1186,7 +1188,27 @@ export const AddDiscScreen: React.FC = () => {
 
           <TouchableOpacity
             style={styles.selectorButton}
-            onPress={() => navigation.navigate('SpineScan')}
+            onPress={async () => {
+              console.log('--- SPIN SCAN BUTTON PRESSED ---');
+              console.log('User logged in:', !!user);
+              if (user) {
+                console.log('User ID:', user.id);
+                const isPro = subscriptionStatus === 'active';
+                console.log('isPro (subscriptionStatus === active):', isPro);
+                console.log('subscriptionStatus:', subscriptionStatus);
+                if (!isPro) {
+                  const freeUsed = await ProfileService.checkFreeSpineScanUsed(user.id, user);
+                  console.log('freeUsed result:', freeUsed);
+                  if (freeUsed) {
+                    console.log('User is not Pro and already used free scan -> showing Paywall');
+                    navigation.navigate('Paywall');
+                    return;
+                  }
+                }
+              }
+              console.log('Navigating to SpineScan');
+              navigation.navigate('SpineScan');
+            }}
           >
             <Ionicons
               name="reorder-four-outline"

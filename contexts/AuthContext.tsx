@@ -16,6 +16,7 @@ export type AppUser = User & {
   username?: string;
   fullName?: string;
   avatarUrl?: string; // Add explicit field
+  hasUsedFreeSpineScan?: boolean;
 };
 
 interface AuthContextType {
@@ -34,106 +35,136 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const loadUserSubscriptionAndCredits = useCallback(async (userId: string) => {
-    // Definimos la ejecución real en una promesa para poder aplicarle un timeout global seguro
-    const fetchPromise = async () => {
-      // (a) Read user_subscriptions
-      const { data: subscription } = await supabase
-        .from("user_subscriptions")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      // (b) Read ia_credits with limit(1) to handle duplicates
-      let creditsData = null;
-
-      const { data: creditsResponse, error: creditsError } = await supabase
-        .from("ia_credits")
-        .select("*")
-        .eq("user_id", userId)
-        .limit(1);
-
-      if (creditsError && creditsError.code !== 'PGRST116') {
-        console.error('❌ Error fetching credits:', creditsError);
-      } else {
-        // Handle array result
-        if (Array.isArray(creditsResponse) && creditsResponse.length > 0) {
-          creditsData = creditsResponse[0];
-          // Trigger cleanup independently of this query result length (because we use limit(1))
-          // We call it in background to ensure data consistency
-          CreditService.cleanupDuplicates(userId).then(cleaned => {
-            if (cleaned) console.log('🧹 Limpieza de duplicados realizada en background');
-          });
-        }
+    const loadUserSubscriptionAndCredits = useCallback(async (userId: string) => {
+      let localFlag = false;
+      try {
+        const localVal = await AsyncStorage.getItem(`has_used_free_spine_scan_${userId}`);
+        localFlag = localVal === 'true';
+      } catch (err) {
+        console.error('Error reading local spine scan flag:', err);
       }
 
-      // If missing, initialize
-      if (!creditsData && (!creditsError || creditsError.code === 'PGRST116')) {
-        console.log('✨ User has no credits row. Initializing 50 credits...');
-        const { data: newCredits, error: insertError } = await supabase
-          .from('ia_credits')
-          .insert({
-            user_id: userId,
-            credits_total: 50,
-            credits_used: 0,
-            period_start: new Date().toISOString(),
-            period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
-          })
-          .select()
+      // Definimos la ejecución real en una promesa para poder aplicarle un timeout global seguro
+      const fetchPromise = async () => {
+        // (a) Read user_subscriptions
+        const { data: subscription } = await supabase
+          .from("user_subscriptions")
+          .select("*")
+          .eq("user_id", userId)
           .single();
 
-        if (newCredits && !insertError) {
-          creditsData = newCredits;
-          console.log('✅ Credits initialized successfully.');
+        // (b) Read ia_credits with limit(1) to handle duplicates
+        let creditsData = null;
+
+        const { data: creditsResponse, error: creditsError } = await supabase
+          .from("ia_credits")
+          .select("*")
+          .eq("user_id", userId)
+          .limit(1);
+
+        if (creditsError && creditsError.code !== 'PGRST116') {
+          console.error('❌ Error fetching credits:', creditsError);
         } else {
-          console.error('❌ Failed to auto-initialize credits:', insertError);
+          // Handle array result
+          if (Array.isArray(creditsResponse) && creditsResponse.length > 0) {
+            creditsData = creditsResponse[0];
+            // Trigger cleanup independently of this query result length (because we use limit(1))
+            // We call it in background to ensure data consistency
+            CreditService.cleanupDuplicates(userId).then(cleaned => {
+              if (cleaned) console.log('🧹 Limpieza de duplicados realizada en background');
+            });
+          }
         }
-      } else if (creditsData) {
-        console.log('💰 Credits Found:', creditsData);
-      }
 
-      // (c) Read Profile Data (avatar, username)
-      const { data: profileData } = await supabase
-        .from('profiles')
-        .select('username, full_name, avatar_url')
-        .eq('id', userId)
-        .single();
+        // If missing, initialize
+        if (!creditsData && (!creditsError || creditsError.code === 'PGRST116')) {
+          console.log('✨ User has no credits row. Initializing 50 credits...');
+          const { data: newCredits, error: insertError } = await supabase
+            .from('ia_credits')
+            .insert({
+              user_id: userId,
+              credits_total: 50,
+              credits_used: 0,
+              period_start: new Date().toISOString(),
+              period_end: new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString()
+            })
+            .select()
+            .single();
 
-      return { subscription, creditsData, profileData };
-    };
+          if (newCredits && !insertError) {
+            creditsData = newCredits;
+            console.log('✅ Credits initialized successfully.');
+          } else {
+            console.error('❌ Failed to auto-initialize credits:', insertError);
+          }
+        } else if (creditsData) {
+          console.log('💰 Credits Found:', creditsData);
+        }
 
-    try {
-      console.log('🔄 Loading subscription and credits for:', userId);
+        // (c) Read Profile Data (avatar, username, has_used_free_spine_scan)
+        let profileData: any = null;
+        let { data, error: profileError } = await supabase
+          .from('profiles')
+          .select('username, full_name, avatar_url, has_used_free_spine_scan')
+          .eq('id', userId)
+          .single();
 
-      // Creamos la promesa con timeout seguro de 8 segundos
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error('Timeout de base de datos excedido (8s)')), 8000)
-      );
+        if (profileError) {
+          console.log('⚠️ profiles query with has_used_free_spine_scan failed, retrying without flag...', profileError.message);
+          const { data: fallbackData } = await supabase
+            .from('profiles')
+            .select('username, full_name, avatar_url')
+            .eq('id', userId)
+            .single();
+          profileData = fallbackData;
+        } else {
+          profileData = data;
+        }
 
-      // Carrera entre la consulta real y el timeout para evitar promesas colgadas
-      const result = await Promise.race([fetchPromise(), timeoutPromise]) as {
-        subscription: any;
-        creditsData: any;
-        profileData: any;
+        if (profileData && 'has_used_free_spine_scan' in profileData) {
+          localFlag = !!profileData.has_used_free_spine_scan;
+          AsyncStorage.setItem(
+            `has_used_free_spine_scan_${userId}`,
+            profileData.has_used_free_spine_scan ? 'true' : 'false'
+          ).catch(err => console.error('Error caching free spine scan flag:', err));
+        }
+
+        return { subscription, creditsData, profileData };
       };
 
-      const { subscription, creditsData, profileData } = result;
+      try {
+        console.log('🔄 Loading subscription and credits for:', userId);
 
-      // (d) Update global state
-      setUser(prev => {
-        if (!prev) return null;
+        // Creamos la promesa con timeout seguro de 8 segundos
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout de base de datos excedido (8s)')), 8000)
+        );
 
-        const newData = {
-          planType: subscription?.plan_type || null,
-          isPremium: subscription?.status === 'active' || subscription?.status === 'trialing',
-          creditsTotal: creditsData?.credits_total || 0,
-          creditsUsed: creditsData?.credits_used || 0,
-          creditsRemaining: creditsData ? (creditsData.credits_total || 0) - (creditsData.credits_used || 0) : 0,
-          renewalDate: subscription?.current_period_end || null,
-          username: profileData?.username || prev.user_metadata?.username,
-          fullName: profileData?.full_name || prev.user_metadata?.full_name,
-          avatarUrl: profileData?.avatar_url || prev.user_metadata?.avatar_url,
+        // Carrera entre la consulta real y el timeout para evitar promesas colgadas
+        const result = await Promise.race([fetchPromise(), timeoutPromise]) as {
+          subscription: any;
+          creditsData: any;
+          profileData: any;
         };
+
+        const { subscription, creditsData, profileData } = result;
+
+        // (d) Update global state
+        setUser(prev => {
+          if (!prev) return null;
+
+          const newData = {
+            planType: subscription?.plan_type || null,
+            isPremium: subscription?.status === 'active' || subscription?.status === 'trialing',
+            creditsTotal: creditsData?.credits_total || 0,
+            creditsUsed: creditsData?.credits_used || 0,
+            creditsRemaining: creditsData ? (creditsData.credits_total || 0) - (creditsData.credits_used || 0) : 0,
+            renewalDate: subscription?.current_period_end || null,
+            username: profileData?.username || prev.user_metadata?.username,
+            fullName: profileData?.full_name || prev.user_metadata?.full_name,
+            avatarUrl: profileData?.avatar_url || prev.user_metadata?.avatar_url,
+            hasUsedFreeSpineScan: localFlag || !!profileData?.has_used_free_spine_scan,
+          };
 
         // Simple comparison to avoid unnecessary updates
         if (
@@ -143,7 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           prev.creditsUsed === newData.creditsUsed &&
           prev.creditsRemaining === newData.creditsRemaining &&
           prev.renewalDate === newData.renewalDate &&
-          prev.avatarUrl === newData.avatarUrl
+          prev.avatarUrl === newData.avatarUrl &&
+          prev.hasUsedFreeSpineScan === newData.hasUsedFreeSpineScan
         ) {
           return prev;
         }

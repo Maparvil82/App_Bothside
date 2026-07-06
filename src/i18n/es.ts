@@ -589,8 +589,8 @@ export const es = {
     pricing_error_title: "Error",
     pricing_error_trial: "No se pudo iniciar la prueba. Inténtalo de nuevo.",
     // New Paywall keys (Freemium)
-    paywall_limit_title: "Dale espacio ilimitado a tu estantería",
-    paywall_limit_subtitle: "Ya has guardado tus primeros 5 vinilos. Pásate a Bothside Pro para seguir catalogando toda tu colección sin restricciones",
+    paywall_limit_title: "Dale espacio ilimitado a tu colección",
+    paywall_limit_subtitle: "Pásate a Bothside Pro para seguir catalogando toda tu colección sin restricciones",
     paywall_pro_plan: "Bothside Pro",
     paywall_price_per_year: "{0} / año",
     paywall_pro_trial: "Probar 7 días gratis",

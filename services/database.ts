@@ -1496,6 +1496,37 @@ export const ProfileService = {
     console.log('✅ ProfileService: Account deletion successful:', data);
     return data;
   },
+  async checkFreeSpineScanUsed(userId: string, currentUserObject?: any): Promise<boolean> {
+    if (currentUserObject?.hasUsedFreeSpineScan) {
+      return true;
+    }
+    try {
+      const localVal = await AsyncStorage.getItem(`has_used_free_spine_scan_${userId}`);
+      if (localVal === 'true') {
+        return true;
+      }
+    } catch (e) {
+      console.warn('Error reading AsyncStorage in checkFreeSpineScanUsed:', e);
+    }
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('has_used_free_spine_scan')
+        .eq('id', userId)
+        .single();
+      if (data?.has_used_free_spine_scan) {
+        try {
+          await AsyncStorage.setItem(`has_used_free_spine_scan_${userId}`, 'true');
+        } catch (e) {
+          console.warn('Error writing AsyncStorage in checkFreeSpineScanUsed:', e);
+        }
+        return true;
+      }
+    } catch (e) {
+      console.error('Error checking free spine scan flag from DB:', e);
+    }
+    return false;
+  },
   async getUserProfile(userId: string): Promise<UserProfile | null> {
     try {
       const { data, error } = await supabase
