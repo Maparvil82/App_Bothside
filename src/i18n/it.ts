@@ -733,13 +733,13 @@ export const it = {
 
     // Auto Bag Creation
     autoBag_modalTitle: "Creare una borsa per questa sessione?",
-    autoBag_modalDescription: "Possiamo creare una borsa col nome di questa sessione e aggiungere automaticamente 3 dischi basati sugli stili o generi che scegli.",
+    autoBag_modalDescription: "Possiamo creare una borsa col nome di questa sessione e aggiungere automaticamente 10 dischi basati sugli stili o generi che scegli.",
     autoBag_sessionLabel: "Sessione",
     autoBag_selectStylesLabel: "Seleziona stili o generi",
     autoBag_noMoreLabel: "Non mostrare più questo suggerimento",
     autoBag_ctaCreate: "Crea borsa",
     autoBag_ctaCancel: "Non ora",
-    autoBag_toastSuccess: "Borsa creata con 3 dischi per questa sessione.",
+    autoBag_toastSuccess: "Borsa creata con 10 dischi per questa sessione.",
     autoBag_toastError: "Si è verificato un errore durante la creazione della borsa. Riprova.",
     autoBag_errorNoStyles: "Seleziona almeno uno stile o genere.",
     autoBag_createSwitchLabel: "Crea una borsa per questa sessione",

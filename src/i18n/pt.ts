@@ -1067,13 +1067,13 @@ export const pt = {
 
     // Auto Bag Creation
     autoBag_modalTitle: "Criar uma maleta para esta sessão?",
-    autoBag_modalDescription: "Podemos criar uma maleta com o nome desta sessão e adicionar automaticamente 3 discos com base nos estilos ou gêneros que você escolher.",
+    autoBag_modalDescription: "Podemos criar uma maleta com o nome desta sessão e adicionar automaticamente 10 discos com base nos estilos ou gêneros que você escolher.",
     autoBag_sessionLabel: "Sessão",
     autoBag_selectStylesLabel: "Selecione estilos ou gêneros",
     autoBag_noMoreLabel: "Não mostrar mais esta sugestão",
     autoBag_ctaCreate: "Criar maleta",
     autoBag_ctaCancel: "Agora não",
-    autoBag_toastSuccess: "Maleta criada com 3 discos para esta sessão.",
+    autoBag_toastSuccess: "Maleta criada com 10 discos para esta sessão.",
     autoBag_toastError: "Ocorreu um erro ao criar a maleta. Tente novamente.",
     autoBag_errorNoStyles: "Selecione pelo menos um estilo ou gênero.",
     autoBag_createSwitchLabel: "Criar maleta para esta sessão",

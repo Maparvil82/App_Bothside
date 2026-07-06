@@ -1669,7 +1669,7 @@ export default function CalendarScreen() {
 
             Alert.alert(
               t('common_success'),
-              t('autoBag_toastSuccess').replace('3', result.albumsAdded.toString())
+              t('autoBag_toastSuccess').replace('10', result.albumsAdded.toString())
             );
           } catch (error) {
             console.error('Error creating auto bag:', error);

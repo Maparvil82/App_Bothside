@@ -1393,7 +1393,7 @@ export const UserMaletaService = {
     // Paso B: Filtrar los que están en la colección del usuario
     const { data: userAlbums, error: userAlbumsError } = await supabase
       .from('user_collection')
-      .select('album_id')
+      .select('album_id, is_gem')
       .eq('user_id', userId)
       .in('album_id', candidateAlbumIds);
 
@@ -1402,13 +1402,19 @@ export const UserMaletaService = {
       return { maleta, albumsAdded: 0 };
     }
 
-    let finalAlbumIds = userAlbums?.map(ua => ua.album_id) || [];
+    // Separar en joyas (gems) y álbumes normales
+    const gemsAlbumIds = userAlbums?.filter(ua => ua.is_gem === true).map(ua => ua.album_id) || [];
+    const normalAlbumIds = userAlbums?.filter(ua => ua.is_gem !== true).map(ua => ua.album_id) || [];
 
-    // Paso C: Seleccionar 3 aleatorios
-    // Shuffle array
-    finalAlbumIds = finalAlbumIds.sort(() => 0.5 - Math.random());
-    // Take first 3
-    const selectedAlbumIds = finalAlbumIds.slice(0, 3);
+    // Paso C: Mezclar ambos arrays por separado
+    const shuffledGems = gemsAlbumIds.sort(() => 0.5 - Math.random());
+    const shuffledNormal = normalAlbumIds.sort(() => 0.5 - Math.random());
+
+    // Combinar dando prioridad a las joyas (gems)
+    const finalAlbumIds = [...shuffledGems, ...shuffledNormal];
+
+    // Seleccionar hasta 10 discos
+    const selectedAlbumIds = finalAlbumIds.slice(0, 10);
 
     // 3. Insertar en maleta_albums
     if (selectedAlbumIds.length > 0) {

@@ -733,13 +733,13 @@ export const ja = {
 
     // Auto Bag Creation
     autoBag_modalTitle: "このセッション用のバッグを作成しますか？",
-    autoBag_modalDescription: "セッション名のバッグを作成し、選択したスタイルやジャンルに基づいて自動的に3枚のレコードを追加できます。",
+    autoBag_modalDescription: "セッション名のバッグを作成し、選択したスタイルやジャンルに基づいて自動的に10枚のレコードを追加できます。",
     autoBag_sessionLabel: "セッション",
     autoBag_selectStylesLabel: "スタイルまたはジャンルを選択",
     autoBag_noMoreLabel: "今後表示しない",
     autoBag_ctaCreate: "バッグを作成",
     autoBag_ctaCancel: "今はしない",
-    autoBag_toastSuccess: "このセッション用に3枚のレコードが入ったバッグを作成しました。",
+    autoBag_toastSuccess: "このセッション用に10枚のレコードが入ったバッグを作成しました。",
     autoBag_toastError: "バッグの作成中にエラーが発生しました。再試行してください。",
     autoBag_errorNoStyles: "少なくとも1つのスタイルまたはジャンルを選択してください。",
     autoBag_createSwitchLabel: "このセッション用のバッグを作成",

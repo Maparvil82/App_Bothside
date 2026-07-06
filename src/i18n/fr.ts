@@ -733,13 +733,13 @@ export const fr = {
 
     // Auto Bag Creation
     autoBag_modalTitle: "Créer une valise pour cette session ?",
-    autoBag_modalDescription: "Nous pouvons créer une valise avec le nom de cette session et ajouter automatiquement 3 disques basés sur les styles ou genres que vous choisissez.",
+    autoBag_modalDescription: "Nous pouvons créer une valise avec le nom de cette session et ajouter automatiquement 10 disques basés sur les styles ou genres que vous choisissez.",
     autoBag_sessionLabel: "Session",
     autoBag_selectStylesLabel: "Sélectionnez des styles ou genres",
     autoBag_noMoreLabel: "Ne plus afficher cette suggestion",
     autoBag_ctaCreate: "Créer une valise",
     autoBag_ctaCancel: "Pas maintenant",
-    autoBag_toastSuccess: "Valise créée avec 3 disques pour cette session.",
+    autoBag_toastSuccess: "Valise créée avec 10 disques pour cette session.",
     autoBag_toastError: "Une erreur est survenue lors de la création de la valise. Veuillez réessayer.",
     autoBag_errorNoStyles: "Sélectionnez au moins un style ou genre.",
     autoBag_createSwitchLabel: "Créer une valise pour cette session",
