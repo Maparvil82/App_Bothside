@@ -22,8 +22,10 @@ interface Session {
   id: string;
   date: string;
   name: string;
-  payment_amount: number;
-  payment_type: string;
+  payment_amount?: number;
+  payment_type?: string;
+  start_time?: string;
+  end_time?: string;
 }
 
 interface EarningsData {
@@ -40,9 +42,15 @@ interface EarningsData {
 
 interface SessionEarningsSectionProps {
   style?: any;
+  sessions?: Session[];
+  currentDate?: Date;
 }
 
-export const SessionEarningsSection: React.FC<SessionEarningsSectionProps> = ({ style }) => {
+export const SessionEarningsSection: React.FC<SessionEarningsSectionProps> = ({
+  style,
+  sessions,
+  currentDate,
+}) => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { colors } = useTheme();
@@ -57,7 +65,57 @@ export const SessionEarningsSection: React.FC<SessionEarningsSectionProps> = ({ 
   });
 
   useEffect(() => {
-    if (summary) {
+    if (sessions) {
+      const now = new Date();
+      let realEarnings = 0;
+      let estimatedMonthEarnings = 0;
+
+      sessions.forEach((s) => {
+        if (!s.payment_amount || s.payment_type === 'gratis') return;
+
+        // estimatedMonthEarnings includes all sessions with payment
+        estimatedMonthEarnings += s.payment_amount;
+
+        // Construct endDateTime to compare with now for realEarnings
+        const sessionDate = new Date(s.date);
+        if (s.start_time && s.end_time) {
+          const [sh, sm] = s.start_time.split(':').map(Number);
+          const [eh, em] = s.end_time.split(':').map(Number);
+
+          const startDt = new Date(sessionDate);
+          startDt.setHours(sh, sm, 0, 0);
+
+          let endDt = new Date(sessionDate);
+          endDt.setHours(eh, em, 0, 0);
+
+          if (endDt <= startDt) {
+            endDt.setDate(endDt.getDate() + 1); // Overnight session
+          }
+
+          if (endDt <= now) {
+            realEarnings += s.payment_amount;
+          }
+        } else {
+          // Fallback: compare dates only
+          const sDate = new Date(s.date);
+          sDate.setHours(0, 0, 0, 0);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          if (sDate < today) {
+            realEarnings += s.payment_amount;
+          }
+        }
+      });
+
+      setEarningsData({
+        realEarnings,
+        estimatedMonthEarnings,
+        sessionsCount: sessions.length,
+        averagePerSession: sessions.length > 0 ? (realEarnings / sessions.length) : 0,
+        lastPaidSession: null,
+      });
+    } else if (summary) {
       setEarningsData({
         realEarnings: summary.monthEarnings,
         estimatedMonthEarnings: summary.monthEstimated,
@@ -70,14 +128,16 @@ export const SessionEarningsSection: React.FC<SessionEarningsSectionProps> = ({ 
         } : null
       });
     }
-  }, [summary]);
+  }, [summary, sessions]);
+
   const isFocused = useIsFocused();
   const scale = useRef(new Animated.Value(1)).current;
   const monthLabel = React.useMemo(() => {
     const formatter = new Intl.DateTimeFormat('es-ES', { month: 'long' });
-    const name = formatter.format(new Date());
+    const targetDate = currentDate || new Date();
+    const name = formatter.format(targetDate);
     return name.charAt(0).toUpperCase() + name.slice(1);
-  }, []);
+  }, [currentDate]);
   const cardTitleText = t('session_earnings_title').replace('{0}', monthLabel);
 
   const handlePress = () => {
@@ -85,11 +145,9 @@ export const SessionEarningsSection: React.FC<SessionEarningsSectionProps> = ({ 
     navigation.navigate('DjStatsDashboard');
   };
 
+  const isComponentLoading = sessions ? false : loading;
 
-
-
-
-  if (loading) {
+  if (isComponentLoading) {
     return (
       <View style={[styles.outerContainer, style]}>
         <TouchableOpacity

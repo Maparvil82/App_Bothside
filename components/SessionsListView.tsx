@@ -30,9 +30,10 @@ interface SessionsListViewProps {
   sessions: Session[];
   onSessionPress: (session: Session) => void;
   nameColors?: Record<string, string>;
+  currentDate?: Date;
 }
 
-export default function SessionsListView({ sessions, onSessionPress, nameColors = {} }: SessionsListViewProps) {
+export default function SessionsListView({ sessions, onSessionPress, nameColors = {}, currentDate }: SessionsListViewProps) {
   const { t } = useTranslation();
   // Formatear fecha a "Jueves, 29 nov"
   const formatDate = (dateString: string): string => {
@@ -146,7 +147,13 @@ export default function SessionsListView({ sessions, onSessionPress, nameColors 
       renderItem={renderSessionCard}
       keyExtractor={(item) => item.id}
       contentContainerStyle={styles.listContent}
-      ListHeaderComponent={<SessionEarningsSection style={{ marginHorizontal: 0, marginTop: 0, marginBottom: 8 }} />}
+      ListHeaderComponent={
+        <SessionEarningsSection
+          sessions={sessions}
+          currentDate={currentDate}
+          style={{ marginHorizontal: 0, marginTop: 0, marginBottom: 8 }}
+        />
+      }
       ListEmptyComponent={emptyListComponent}
       scrollEnabled={true}
       showsVerticalScrollIndicator={true}

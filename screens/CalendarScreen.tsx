@@ -1331,6 +1331,7 @@ export default function CalendarScreen() {
             setIsModalVisible(true);
           }}
           nameColors={nameColors}
+          currentDate={currentDate}
         />
       )}
 
