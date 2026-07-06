@@ -1510,7 +1510,7 @@ export default function AlbumDetailScreen() {
   const youtubeVideoId = youtubeUrls.length > 0 ? extractYouTubeId(youtubeUrls[0]) : null;
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: colors.background, paddingBottom: activeYoutubeVideoId ? 20 : 0 }]}>
+    <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
 
 
 
@@ -1914,6 +1914,244 @@ export default function AlbumDetailScreen() {
         )}
 
 
+        {/* Nueva Sección de Ubicación RECONSTRUIDA */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_location')}</Text>
+
+            {album.shelf_id && album.location_row && album.location_column ? (
+              <>
+                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
+                  {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
+                </Text>
+                <ShelfGrid
+                  rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
+                  columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
+                  shelfId={album.shelf_id || undefined}
+                  highlightRow={album.location_row}
+                  highlightColumn={album.location_column}
+                  coverUrl={album.albums.cover_url}
+                />
+                <TouchableOpacity
+                  style={styles.removeLocationButton}
+                  onPress={confirmRemoveLocation}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  <Text style={styles.removeLocationButtonText}>
+                    {t('search_action_remove_location')}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_change_location')}</Text>
+              </>
+            ) : (
+              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_assign_shelf')}</Text>
+            )}
+
+            {shelves.map((shelf) => {
+              const isCurrentShelf = album.shelf_id === shelf.id;
+              return (
+                <TouchableOpacity
+                  key={shelf.id}
+                  style={[
+                    styles.shelfSelectItem,
+                    { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
+                  ]}
+                  onPress={() => (navigation as any).navigate('SelectCell', {
+                    user_collection_id: album.id,
+                    shelf: shelf,
+                    current_row: isCurrentShelf ? album.location_row : undefined,
+                    current_column: isCurrentShelf ? album.location_column : undefined,
+                  })}
+                >
+                  <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                </TouchableOpacity>
+              );
+            })}
+            {shelves.length === 0 && (
+              <Text style={[styles.noShelvesText, { color: colors.text }]}>{t('album_detail_no_shelves')}</Text>
+            )}
+          </View>
+        )}
+
+
+        {/* Sección de Sesiones (Played In) */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>{t('album_detail_played_in') || 'Sesiones'}</Text>
+              <TouchableOpacity
+                onPress={() => setShowSessionModal(true)}
+                style={{ flexDirection: 'row', alignItems: 'center' }}
+              >
+                <Ionicons name="add-circle" size={24} color={primaryColor} />
+                <Text style={{ color: primaryColor, marginLeft: 4, fontWeight: '600' }}>
+                  {t('common_add') || 'Añadir'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {loadingSessions ? (
+              <ActivityIndicator size="small" color={primaryColor} />
+            ) : linkedSessions.length > 0 ? (
+              linkedSessions.map((session, index) => (
+                <View key={session.id || index} style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: LIGHT_BG_COLOR,
+                  padding: 12,
+                  borderRadius: 12,
+                  marginBottom: 8
+                }}>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>{session.name}</Text>
+                    <Text style={{ color: colors.text, opacity: 0.7, fontSize: 13 }}>
+                      {new Date(session.date).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleRemoveSession(session.id)} style={{ padding: 8 }}>
+                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
+                  </TouchableOpacity>
+                </View>
+              ))
+            ) : (
+              <Text style={{ color: colors.text, opacity: 0.6, fontStyle: 'italic', marginLeft: 4 }}>
+                {t('album_detail_no_sessions') || 'No has asignado ninguna sesión.'}
+              </Text>
+            )}
+          </View>
+        )}
+
+
+
+
+        {/* Momento Ideal */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>
+              {t('album_detail_ideal_moment_title') || 'Momento Ideal'}
+            </Text>
+            <TouchableOpacity
+              style={[
+                styles.idealMomentSelectorItem,
+                { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
+              ]}
+              onPress={() => setShowIdealMomentModal(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.idealMomentValueText, { color: colors.text }]}>
+                {getIdealMomentLabel(album.ideal_moment)}
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Nota de Audio */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_audio_note')}</Text>
+            {album.audio_note ? (
+              // Si existe nota de audio
+              <>
+                <View style={styles.audioSection}>
+                  <View style={styles.audioInfo}>
+                    <Ionicons name="mic" size={20} color={colors.primary} />
+                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_has_audio_note')}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.playAudioButton, { shadowColor: primaryColor }]}
+                  onPress={() => handlePlayAudio(album.audio_note!)}
+                >
+                  <Ionicons name="play-circle" size={24} color={primaryColor} />
+                  <Text style={[styles.playAudioButtonText]}>{t('album_detail_play_audio_note')}</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              // Si no existe nota de audio
+              <>
+                <View style={styles.audioSection}>
+                  <View style={styles.audioInfo}>
+                    <Ionicons name="mic-outline" size={20} color={colors.text} />
+                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_no_audio_note')}</Text>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.recordAudioButton, { shadowColor: primaryColor }]}
+                  onPress={() => handleRecordAudio()}
+                >
+                  <Ionicons name="mic" size={24} color={primaryColor} />
+                  <Text style={[styles.recordAudioButtonText]}>{t('album_detail_record_audio_note')}</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        )}
+
+
+
+        {/* Sección TypeForm */}
+        {isInCollection && (
+          <View style={[styles.typeFormSection, { backgroundColor: colors.card }]}>
+            <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>{t('album_detail_tell_us')}</Text>
+            <Text style={[styles.typeFormSectionSubtitle, { color: colors.text }]}>
+              {t('album_detail_subtitle')}
+            </Text>
+
+            {/* Mostrar todas las preguntas directamente */}
+            <View style={styles.typeFormQuestionsContainer}>
+              {typeFormQuestions.map((question, index) => {
+                if (index === 0 || index === 1) return null;
+                const getQuestionKey = (i: number) => {
+                  if (i === 0) return 'question_1';
+                  if (i === 1) return 'question_6';
+                  return `question_${i}`;
+                };
+                const dbKey = getQuestionKey(index);
+                const hasAnswer = existingTypeFormResponse?.[dbKey];
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={[
+                      styles.typeFormQuestionItem,
+                      hasAnswer && styles.typeFormQuestionItemAnswered,
+                      { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
+                    ]}
+                    onPress={() => {
+                      // Cargar respuesta existente si la hay
+                      const currentAnswers = [...typeFormAnswers];
+                      currentAnswers[index] = existingTypeFormResponse?.[dbKey] || '';
+                      setTypeFormAnswers(currentAnswers);
+                      setCurrentQuestion(index);
+                      setShowTypeForm(true);
+                    }}
+                  >
+                    <View style={styles.typeFormQuestionHeader}>
+                      <Text style={[styles.typeFormQuestionNumber, { color: primaryColor }]}>
+                        {index - 1}
+                      </Text>
+                      <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
+                        {question}
+                      </Text>
+                      {hasAnswer ? (
+                        <Ionicons name="checkmark-circle" size={20} color="#28a745" />
+                      ) : (
+                        <Ionicons name="add-circle-outline" size={20} color={colors.text} />
+                      )}
+                    </View>
+                    {hasAnswer && (
+                      <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
+                        {existingTypeFormResponse[dbKey]}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
 
         {/* Sección de Ediciones */}
         <View style={[styles.section, { backgroundColor: colors.card }]}>
@@ -2051,246 +2289,6 @@ export default function AlbumDetailScreen() {
             <Text style={[styles.noEditionsText, { color: colors.text }]}>{t('album_detail_no_editions')}</Text>
           )}
         </View>
-
-        {/* Nueva Sección de Ubicación RECONSTRUIDA */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_location')}</Text>
-
-            {album.shelf_id && album.location_row && album.location_column ? (
-              <>
-                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
-                  {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
-                </Text>
-                <ShelfGrid
-                  rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
-                  columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
-                  shelfId={album.shelf_id || undefined}
-                  highlightRow={album.location_row}
-                  highlightColumn={album.location_column}
-                  coverUrl={album.albums.cover_url}
-                />
-                <TouchableOpacity
-                  style={styles.removeLocationButton}
-                  onPress={confirmRemoveLocation}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                  <Text style={styles.removeLocationButtonText}>
-                    {t('search_action_remove_location')}
-                  </Text>
-                </TouchableOpacity>
-                <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_change_location')}</Text>
-              </>
-            ) : (
-              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_assign_shelf')}</Text>
-            )}
-
-            {shelves.map((shelf) => {
-              const isCurrentShelf = album.shelf_id === shelf.id;
-              return (
-                <TouchableOpacity
-                  key={shelf.id}
-                  style={[
-                    styles.shelfSelectItem,
-                    { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
-                  ]}
-                  onPress={() => (navigation as any).navigate('SelectCell', {
-                    user_collection_id: album.id,
-                    shelf: shelf,
-                    current_row: isCurrentShelf ? album.location_row : undefined,
-                    current_column: isCurrentShelf ? album.location_column : undefined,
-                  })}
-                >
-                  <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
-                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
-                </TouchableOpacity>
-              );
-            })}
-            {shelves.length === 0 && (
-              <Text style={[styles.noShelvesText, { color: colors.text }]}>{t('album_detail_no_shelves')}</Text>
-            )}
-          </View>
-        )}
-
-
-        {/* Momento Ideal */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {t('album_detail_ideal_moment_title') || 'Momento Ideal'}
-            </Text>
-            <TouchableOpacity
-              style={[
-                styles.idealMomentSelectorItem,
-                { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
-              ]}
-              onPress={() => setShowIdealMomentModal(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.idealMomentValueText, { color: colors.text }]}>
-                {getIdealMomentLabel(album.ideal_moment)}
-              </Text>
-              <Ionicons name="chevron-forward" size={20} color={colors.text} />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Nota de Audio */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_audio_note')}</Text>
-            {album.audio_note ? (
-              // Si existe nota de audio
-              <>
-                <View style={styles.audioSection}>
-                  <View style={styles.audioInfo}>
-                    <Ionicons name="mic" size={20} color={colors.primary} />
-                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_has_audio_note')}</Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={[styles.playAudioButton, { shadowColor: primaryColor }]}
-                  onPress={() => handlePlayAudio(album.audio_note!)}
-                >
-                  <Ionicons name="play-circle" size={24} color={primaryColor} />
-                  <Text style={[styles.playAudioButtonText]}>{t('album_detail_play_audio_note')}</Text>
-                </TouchableOpacity>
-              </>
-            ) : (
-              // Si no existe nota de audio
-              <>
-                <View style={styles.audioSection}>
-                  <View style={styles.audioInfo}>
-                    <Ionicons name="mic-outline" size={20} color={colors.text} />
-                    <Text style={[styles.audioInfoText, { color: colors.text }]}>{t('album_detail_no_audio_note')}</Text>
-                  </View>
-                </View>
-                <TouchableOpacity
-                  style={[styles.recordAudioButton, { shadowColor: primaryColor }]}
-                  onPress={() => handleRecordAudio()}
-                >
-                  <Ionicons name="mic" size={24} color={primaryColor} />
-                  <Text style={[styles.recordAudioButtonText]}>{t('album_detail_record_audio_note')}</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        )}
-
-
-
-
-
-
-
-        {/* Sección de Sesiones (Played In) */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text style={[styles.sectionTitle, { color: colors.text, marginBottom: 0 }]}>{t('album_detail_played_in') || 'Sesiones'}</Text>
-              <TouchableOpacity
-                onPress={() => setShowSessionModal(true)}
-                style={{ flexDirection: 'row', alignItems: 'center' }}
-              >
-                <Ionicons name="add-circle" size={24} color={primaryColor} />
-                <Text style={{ color: primaryColor, marginLeft: 4, fontWeight: '600' }}>
-                  {t('common_add') || 'Añadir'}
-                </Text>
-              </TouchableOpacity>
-            </View>
-
-            {loadingSessions ? (
-              <ActivityIndicator size="small" color={primaryColor} />
-            ) : linkedSessions.length > 0 ? (
-              linkedSessions.map((session, index) => (
-                <View key={session.id || index} style={{
-                  flexDirection: 'row',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  backgroundColor: LIGHT_BG_COLOR,
-                  padding: 12,
-                  borderRadius: 12,
-                  marginBottom: 8
-                }}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={{ color: colors.text, fontSize: 16, fontWeight: '600', marginBottom: 4 }}>{session.name}</Text>
-                    <Text style={{ color: colors.text, opacity: 0.7, fontSize: 13 }}>
-                      {new Date(session.date).toLocaleDateString()}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleRemoveSession(session.id)} style={{ padding: 8 }}>
-                    <Ionicons name="trash-outline" size={20} color="#ef4444" />
-                  </TouchableOpacity>
-                </View>
-              ))
-            ) : (
-              <Text style={{ color: colors.text, opacity: 0.6, fontStyle: 'italic', marginLeft: 4 }}>
-                {t('album_detail_no_sessions') || 'No has asignado ninguna sesión.'}
-              </Text>
-            )}
-          </View>
-        )}
-
-        {/* Sección TypeForm */}
-        {isInCollection && (
-          <View style={[styles.typeFormSection, { backgroundColor: colors.card }]}>
-            <Text style={[styles.typeFormSectionTitle, { color: colors.text }]}>{t('album_detail_tell_us')}</Text>
-            <Text style={[styles.typeFormSectionSubtitle, { color: colors.text }]}>
-              {t('album_detail_subtitle')}
-            </Text>
-
-            {/* Mostrar todas las preguntas directamente */}
-            <View style={styles.typeFormQuestionsContainer}>
-              {typeFormQuestions.map((question, index) => {
-                if (index === 0 || index === 1) return null;
-                const getQuestionKey = (i: number) => {
-                  if (i === 0) return 'question_1';
-                  if (i === 1) return 'question_6';
-                  return `question_${i}`;
-                };
-                const dbKey = getQuestionKey(index);
-                const hasAnswer = existingTypeFormResponse?.[dbKey];
-                return (
-                  <TouchableOpacity
-                    key={index}
-                    style={[
-                      styles.typeFormQuestionItem,
-                      hasAnswer && styles.typeFormQuestionItemAnswered,
-                      { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
-                    ]}
-                    onPress={() => {
-                      // Cargar respuesta existente si la hay
-                      const currentAnswers = [...typeFormAnswers];
-                      currentAnswers[index] = existingTypeFormResponse?.[dbKey] || '';
-                      setTypeFormAnswers(currentAnswers);
-                      setCurrentQuestion(index);
-                      setShowTypeForm(true);
-                    }}
-                  >
-                    <View style={styles.typeFormQuestionHeader}>
-                      <Text style={[styles.typeFormQuestionNumber, { color: primaryColor }]}>
-                        {index - 1}
-                      </Text>
-                      <Text style={[styles.typeFormQuestionText, { color: colors.text }]}>
-                        {question}
-                      </Text>
-                      {hasAnswer ? (
-                        <Ionicons name="checkmark-circle" size={20} color="#28a745" />
-                      ) : (
-                        <Ionicons name="add-circle-outline" size={20} color={colors.text} />
-                      )}
-                    </View>
-                    {hasAnswer && (
-                      <Text style={[styles.typeFormQuestionPreview, { color: colors.text }]}>
-                        {existingTypeFormResponse[dbKey]}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        )}
 
         {/* Botón Eliminar Disco */}
         {isInCollection && (
@@ -2616,7 +2614,7 @@ export default function AlbumDetailScreen() {
 
       {/* Reproductor de audio flotante (Notas de voz) */}
       {currentAudioUrl && (
-        <View style={styles.floatingAudioPlayer}>
+        <View style={[styles.floatingAudioPlayer, { bottom: activeYoutubeVideoId ? 80 : 16 }]}>
           <AudioPlayer
             audioUrl={currentAudioUrl}
             title={album?.albums?.title || 'Música del álbum'}
@@ -4417,8 +4415,8 @@ const styles = StyleSheet.create({
   },
   // Estilos para la sección de audio
   audioSection: {
-    marginTop: 24,
-    paddingHorizontal: 20,
+    marginTop: 4,
+    paddingHorizontal: 0,
   },
   audioSectionTitle: {
     fontSize: 20,
