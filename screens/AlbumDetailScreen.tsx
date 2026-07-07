@@ -1517,7 +1517,8 @@ export default function AlbumDetailScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         removeClippedSubviews={false}
-        style={[styles.detalleScroll, { marginBottom: activeYoutubeVideoId ? 80 : 0 }]}
+        style={styles.detalleScroll}
+        contentContainerStyle={{ paddingBottom: activeYoutubeVideoId ? 100 : 40 }}
       >
         {/* Portada */}
         <Animated.View style={[
@@ -1865,7 +1866,7 @@ export default function AlbumDetailScreen() {
 
             {/* Preguntas de canciones (favorita y pista de baile) al final de la sección de pistas */}
             {isInCollection && (
-              <View style={[styles.typeFormQuestionsContainer, { marginTop: 16, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 16 }]}>
+              <View style={[styles.typeFormQuestionsContainer, { marginTop: 16, paddingTop: 16 }]}>
                 {[0, 1].map((index) => {
                   const getQuestionKey = (i: number) => {
                     if (i === 0) return 'question_1';
@@ -4821,8 +4822,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   detalleScroll: {
-    marginBottom: 40,
-
+    flex: 1,
   },
 });
 
