@@ -144,7 +144,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
                     {loadingStyles ? (
                         <ActivityIndicator size="small" color={primaryColor} style={{ marginVertical: 20 }} />
                     ) : (
-                        <ScrollView style={styles.stylesList} contentContainerStyle={styles.stylesContent}>
+                        <View style={styles.stylesList}>
                             {availableStyles.length > 0 ? (
                                 availableStyles.map(style => (
                                     <TouchableOpacity
@@ -168,7 +168,7 @@ export const AutoBagCreationModal: React.FC<AutoBagCreationModalProps> = ({
                             ) : (
                                 <Text style={{ color: colors.text, opacity: 0.7 }}>No se encontraron estilos en tu colección.</Text>
                             )}
-                        </ScrollView>
+                        </View>
                     )}
 
                     <View style={styles.footer}>
@@ -244,13 +244,10 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     stylesList: {
-        maxHeight: 150,
-        marginBottom: 20,
-    },
-    stylesContent: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         gap: 8,
+        marginBottom: 20,
     },
     styleChip: {
         paddingHorizontal: 12,

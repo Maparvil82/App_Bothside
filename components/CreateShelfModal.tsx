@@ -139,10 +139,7 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
                   {/* Title */}
                   <Text style={styles.title}>{t('shelf_edit_title_create')}</Text>
 
-                  <ScrollView
-                    keyboardShouldPersistTaps="handled"
-                    showsVerticalScrollIndicator={false}
-                  >
+                  <View>
                     {/* Name */}
                     <Text style={styles.label}>{t('shelf_edit_label_name')}</Text>
                     <TextInput
@@ -199,7 +196,7 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
                         <Text style={styles.buttonText}>{t('common_save')}</Text>
                       )}
                     </TouchableOpacity>
-                  </ScrollView>
+                  </View>
                 </View>
               </View>
             </KeyboardAvoidingView>
