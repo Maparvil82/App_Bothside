@@ -602,13 +602,23 @@ export const UserCollectionService = {
   },
 
   // Agregar álbum a la colección
-  async addToCollection(userId: string, albumId: string, isGem: boolean = false) {
+  async addToCollection(
+    userId: string,
+    albumId: string,
+    isGem: boolean = false,
+    shelfId?: string,
+    row?: number,
+    column?: number
+  ) {
     const { data, error } = await supabase
       .from('user_collection')
       .insert([{
         user_id: userId,
         album_id: albumId,
-        is_gem: isGem
+        is_gem: isGem,
+        shelf_id: shelfId || null,
+        location_row: row || null,
+        location_column: column || null
       }])
       .select()
       .single();
