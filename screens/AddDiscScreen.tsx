@@ -10,11 +10,14 @@ import {
   StyleSheet,
   Alert,
   SafeAreaView,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { Ionicons } from '@expo/vector-icons';
 import { AppColors } from '../src/theme/colors';
-import { useNavigation, useTheme, useRoute } from '@react-navigation/native';
+import { useNavigation, useTheme, useRoute, useIsFocused } from '@react-navigation/native';
+import ShelfGridSelectable from '../components/ShelfGridSelectable';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { AlbumService, UserCollectionService, StyleService, ProfileService } from '../services/database';
@@ -94,6 +97,32 @@ export const AddDiscScreen: React.FC = () => {
   const [manualSearchResults, setManualSearchResults] = useState<any[]>([]);
   const [manualLoading, setManualLoading] = useState(false);
   const [addingDisc, setAddingDisc] = useState(false);
+  const [physicalShelves, setPhysicalShelves] = useState<any[]>([]);
+  const [showShelfModal, setShowShelfModal] = useState(false);
+  const [selectedShelf, setSelectedShelf] = useState<any | null>(null);
+  const [showCellModal, setShowCellModal] = useState(false);
+  const [pendingItem, setPendingItem] = useState<{ type: 'local' | 'discogs', item: any } | null>(null);
+
+  const isFocused = useIsFocused();
+  useEffect(() => {
+    const loadShelves = async () => {
+      if (!user) return;
+      try {
+        const { data, error } = await supabase
+          .from('shelves')
+          .select('id, name, shelf_rows, shelf_columns')
+          .eq('user_id', user.id);
+        if (!error && data) {
+          setPhysicalShelves(data);
+        }
+      } catch (err) {
+        console.warn('Error loading physical shelves in AddDiscScreen:', err);
+      }
+    };
+    if (isFocused && user) {
+      loadShelves();
+    }
+  }, [isFocused, user]);
 
   // Controladores de estado de búsqueda
   const [hasSearched, setHasSearched] = useState(false);
@@ -429,6 +458,21 @@ export const AddDiscScreen: React.FC = () => {
   // Función para añadir un release de Discogs a la colección
   const addDiscogsReleaseToCollection = async (release: any) => {
     if (!user) return;
+    if (physicalShelves.length > 0) {
+      setPendingItem({ type: 'discogs', item: release });
+      setShowShelfModal(true);
+    } else {
+      proceedAddDiscogsReleaseToCollection(release);
+    }
+  };
+
+  const proceedAddDiscogsReleaseToCollection = async (
+    release: any,
+    shelfId?: string,
+    row?: number,
+    column?: number
+  ) => {
+    if (!user) return;
 
     setAddingDisc(true);
 
@@ -544,7 +588,7 @@ export const AddDiscScreen: React.FC = () => {
             .maybeSingle();
           if (findErr) throw findErr;
           if (albumRow?.id) {
-            await UserCollectionService.addToCollection(user.id, albumRow.id);
+            await UserCollectionService.addToCollection(user.id, albumRow.id, false, shelfId, row, column);
             showSuccessAlert();
             return;
           } else {
@@ -611,7 +655,7 @@ export const AddDiscScreen: React.FC = () => {
                   }
                 }
               } catch { }
-              await UserCollectionService.addToCollection(user.id, newAlbum.id);
+              await UserCollectionService.addToCollection(user.id, newAlbum.id, false, shelfId, row, column);
               showSuccessAlert();
               return;
             }
@@ -624,6 +668,23 @@ export const AddDiscScreen: React.FC = () => {
 
       if (data?.success) {
         console.log('✅ Disco guardado exitosamente con ID:', data.albumId);
+
+        // Asignar ubicación física si se seleccionó una estantería
+        if (shelfId && row !== undefined && column !== undefined) {
+          try {
+            await supabase
+              .from('user_collection')
+              .update({
+                shelf_id: shelfId,
+                location_row: row,
+                location_column: column
+              })
+              .eq('user_id', user.id)
+              .eq('album_id', data.albumId);
+          } catch (locErr) {
+            console.error('Error assigning physical location after Edge function:', locErr);
+          }
+        }
 
         // Obtener estadísticas de Discogs en segundo plano (no bloquear la UI)
         if (data.albumId && release.id) {
@@ -651,7 +712,7 @@ export const AddDiscScreen: React.FC = () => {
             .eq('discogs_id', release.id)
             .maybeSingle();
           if (albumRow?.id) {
-            await UserCollectionService.addToCollection(user.id, albumRow.id);
+            await UserCollectionService.addToCollection(user.id, albumRow.id, false, shelfId, row, column);
             showSuccessAlert();
             return;
           }
@@ -669,6 +730,21 @@ export const AddDiscScreen: React.FC = () => {
 
 
   const addToCollection = async (album: Album) => {
+    if (!user) return;
+    if (physicalShelves.length > 0) {
+      setPendingItem({ type: 'local', item: album });
+      setShowShelfModal(true);
+    } else {
+      proceedAddToCollection(album);
+    }
+  };
+
+  const proceedAddToCollection = async (
+    album: Album,
+    shelfId?: string,
+    row?: number,
+    column?: number
+  ) => {
     if (!user) return;
 
     setAddingDisc(true);
@@ -771,7 +847,7 @@ export const AddDiscScreen: React.FC = () => {
           }
           // 🟢 3) Si pasa las verificaciones → continuar
 
-          await UserCollectionService.addToCollection(user.id, albumRow.id);
+          await UserCollectionService.addToCollection(user.id, albumRow.id, false, shelfId, row, column);
           showSuccessAlert();
           return;
         } else {
@@ -957,14 +1033,14 @@ export const AddDiscScreen: React.FC = () => {
             }
             // 🟢 3) Si pasa las verificaciones → continuar
 
-            await UserCollectionService.addToCollection(user.id, newAlbum.id);
+            await UserCollectionService.addToCollection(user.id, newAlbum.id, false, shelfId, row, column);
             showSuccessAlert();
             return;
           }
         }
       } else {
         // Para álbumes sin discogs_id (casos raros)
-        await UserCollectionService.addToCollection(user.id, album.id);
+        await UserCollectionService.addToCollection(user.id, album.id, false, shelfId, row, column);
         showSuccessAlert();
       }
     } catch (error) {
@@ -1430,6 +1506,151 @@ export const AddDiscScreen: React.FC = () => {
           )}
         </View>
       )}
+
+      {/* Modal para seleccionar Estantería física */}
+      <Modal
+        visible={showShelfModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => {
+          setShowShelfModal(false);
+          setSelectedShelf(null);
+          setPendingItem(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                ¿En qué estantería está?
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowShelfModal(false);
+                  setSelectedShelf(null);
+                  setPendingItem(null);
+                }}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={[styles.selectShelfTitle, { color: colors.text, marginBottom: 12 }]}>
+                Selecciona la estantería física donde vas a guardar este disco:
+              </Text>
+
+              {physicalShelves.map((shelf) => (
+                <TouchableOpacity
+                  key={shelf.id}
+                  style={[styles.shelfSelectItem, { backgroundColor: colors.background, borderColor: colors.border }]}
+                  onPress={() => {
+                    setSelectedShelf(shelf);
+                    setShowShelfModal(false);
+                    setShowCellModal(true);
+                  }}
+                >
+                  <View style={styles.shelfSelectInfo}>
+                    <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
+                    <Text style={[styles.shelfDimensions, { color: colors.text, opacity: 0.6 }]}>
+                      {shelf.shelf_rows}x{shelf.shelf_columns}
+                    </Text>
+                  </View>
+                  <Ionicons name="chevron-forward" size={20} color="#C7C7CC" />
+                </TouchableOpacity>
+              ))}
+
+              <TouchableOpacity
+                style={[styles.skipButton, { backgroundColor: AppColors.primary }]}
+                onPress={() => {
+                  setShowShelfModal(false);
+                  if (pendingItem) {
+                    if (pendingItem.type === 'local') {
+                      proceedAddToCollection(pendingItem.item);
+                    } else {
+                      proceedAddDiscogsReleaseToCollection(pendingItem.item);
+                    }
+                    setPendingItem(null);
+                  }
+                }}
+              >
+                <Text style={styles.skipButtonText}>
+                  Solo añadir a la colección (sin ubicación)
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal para seleccionar Casilla física */}
+      <Modal
+        visible={showCellModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => {
+          setShowCellModal(false);
+          setSelectedShelf(null);
+          setPendingItem(null);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { backgroundColor: colors.card, width: '95%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                {selectedShelf ? `Ubicación en ${selectedShelf.name}` : 'Seleccionar Casilla'}
+              </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setShowCellModal(false);
+                  setSelectedShelf(null);
+                  setPendingItem(null);
+                }}
+              >
+                <Ionicons name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <Text style={[styles.selectShelfTitle, { color: colors.text, marginBottom: 8 }]}>
+                Elige la casilla (ej: A1, A2...) para el disco:
+              </Text>
+
+              {selectedShelf && (
+                <ShelfGridSelectable
+                  rows={selectedShelf.shelf_rows}
+                  columns={selectedShelf.shelf_columns}
+                  shelfId={selectedShelf.id}
+                  onSelectCell={(row, column) => {
+                    setShowCellModal(false);
+                    if (pendingItem) {
+                      if (pendingItem.type === 'local') {
+                        proceedAddToCollection(pendingItem.item, selectedShelf.id, row + 1, column + 1);
+                      } else {
+                        proceedAddDiscogsReleaseToCollection(pendingItem.item, selectedShelf.id, row + 1, column + 1);
+                      }
+                      setPendingItem(null);
+                    }
+                    setSelectedShelf(null);
+                  }}
+                />
+              )}
+
+              <TouchableOpacity
+                style={[styles.backToShelvesBtn, { borderColor: colors.border }]}
+                onPress={() => {
+                  setShowCellModal(false);
+                  setShowShelfModal(true);
+                }}
+              >
+                <Text style={[styles.backToShelvesBtnText, { color: colors.text }]}>
+                  Volver a estanterías
+                </Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -1910,6 +2131,86 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   moreResultsButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    width: '90%',
+    maxHeight: '85%',
+    borderRadius: 16,
+    padding: 20,
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    flex: 1,
+    marginRight: 10,
+  },
+  modalBody: {
+    maxHeight: '90%',
+  },
+  selectShelfTitle: {
+    fontSize: 14,
+    opacity: 0.8,
+  },
+  shelfSelectItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  shelfSelectInfo: {
+    flex: 1,
+  },
+  shelfSelectItemText: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  shelfDimensions: {
+    fontSize: 12,
+  },
+  skipButton: {
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderRadius: 10,
+    marginTop: 15,
+    marginBottom: 10,
+  },
+  skipButtonText: {
+    color: 'white',
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+  backToShelvesBtn: {
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderRadius: 10,
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  backToShelvesBtnText: {
     fontSize: 14,
     fontWeight: '600',
   },
