@@ -569,6 +569,7 @@ export const ja = {
     shelf_edit_error_save: "棚を保存できませんでした。",
     shelf_edit_label_name: "棚の名前",
     shelf_edit_placeholder_name: "例: リビングのKallax",
+    shelf_edit_label_color: "棚の色",
 
     // Shelf View Screen
     shelf_view_error_load: "棚を読み込めませんでした。",

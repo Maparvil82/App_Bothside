@@ -901,6 +901,7 @@ export const pt = {
     shelf_edit_error_save: "Não foi possível salvar a estante.",
     shelf_edit_label_name: "Nome da Estante",
     shelf_edit_placeholder_name: "Ex: Kallax Principal",
+    shelf_edit_label_color: "Cor da Estante",
 
     // Shelf View Screen
     shelf_view_error_load: "Não foi possível carregar a estante.",

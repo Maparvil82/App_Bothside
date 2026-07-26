@@ -569,6 +569,7 @@ export const fr = {
     shelf_edit_error_save: "Impossible de sauvegarder l'étagère.",
     shelf_edit_label_name: "Nom de l'Étagère",
     shelf_edit_placeholder_name: "Ex : Kallax Salon",
+    shelf_edit_label_color: "Couleur de l'étagère",
 
     // Shelf View Screen
     shelf_view_error_load: "Impossible de charger l'étagère.",

@@ -50,6 +50,7 @@ interface Shelf {
   name: string;
   shelf_rows: number;
   shelf_columns: number;
+  color?: string;
 }
 
 interface AlbumDetail {
@@ -90,6 +91,7 @@ interface AlbumDetail {
   }>;
   shelf_id?: string;
   shelf_name?: string;
+  shelf_color?: string;
   location_row?: number;
   location_column?: number;
 }
@@ -721,7 +723,7 @@ export default function AlbumDetailScreen() {
                   album_youtube_urls ( url ),
                   album_stats ( avg_price, want, have )
                 ),
-                shelves ( name )
+                shelves ( name, color )
               `)
             .eq('user_id', user.id)
             .or(`id.eq.${albumId},album_id.eq.${albumId}`)
@@ -743,6 +745,7 @@ export default function AlbumDetailScreen() {
                 ...collectionData,
                 albums: normalizedAlbums,
                 shelf_name: (collectionData as any)?.shelves?.name || null,
+                shelf_color: (collectionData as any)?.shelves?.color || null,
               } as AlbumDetail;
               foundInCollection = true;
             }
@@ -825,7 +828,7 @@ export default function AlbumDetailScreen() {
         if (foundInCollection) {
           const { data: shelvesData, error: shelvesError } = await supabase
             .from('shelves')
-            .select('id, name, shelf_rows, shelf_columns');
+            .select('id, name, shelf_rows, shelf_columns, color');
 
           if (shelvesError) console.warn('Error loading shelves:', shelvesError);
           setShelves(shelvesData || []);

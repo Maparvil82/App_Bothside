@@ -875,6 +875,7 @@ export const de = {
     shelf_edit_error_save: "Regal konnte nicht gespeichert werden.",
     shelf_edit_label_name: "Regalname",
     shelf_edit_placeholder_name: "Bsp: Kallax Haupt",
+    shelf_edit_label_color: "Regalfarbe",
     // Shelf View Screen
     shelf_view_error_load: "Regal konnte nicht geladen werden.",
     shelf_view_not_found: "Regal nicht gefunden.",

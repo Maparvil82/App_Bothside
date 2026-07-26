@@ -22,7 +22,7 @@ import { useNavigation, useTheme } from '@react-navigation/native';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 import { Ionicons } from '@expo/vector-icons';
-import { AppColors } from '../src/theme/colors';
+import { AppColors, getShelfColor } from '../src/theme/colors';
 import { useAuth } from '../contexts/AuthContext';
 import { useGems } from '../contexts/GemsContext';
 import { useStats } from '../contexts/StatsContext';
@@ -453,13 +453,13 @@ export const SearchScreen: React.FC = () => {
                 styles (*)
               )
             ),
-            shelves ( name )
+            shelves ( name, color )
           `)
           .eq('user_id', user.id)
           .order('added_at', { ascending: false }),
         supabase
           .from('shelves')
-          .select('id, name, shelf_rows, shelf_columns')
+          .select('id, name, shelf_rows, shelf_columns, color')
           .eq('user_id', user.id)
       ]);
 
@@ -476,11 +476,13 @@ export const SearchScreen: React.FC = () => {
       const collectionWithShelfInfo = (collectionRes.data || []).map((item) => {
         const hasLocation = item.shelves && item.shelves.name;
         const shelfName = hasLocation ? (item.shelves as any).name : null;
+        const shelfColor = hasLocation ? (item.shelves as any).color : null;
 
         return {
           ...item,
           in_shelf: hasLocation,
-          shelf_name: shelfName
+          shelf_name: shelfName,
+          shelf_color: shelfColor
         };
       });
 
@@ -652,7 +654,7 @@ export const SearchScreen: React.FC = () => {
     try {
       const { data: shelvesData, error: shelvesError } = await supabase
         .from('shelves')
-        .select('id, name, shelf_rows, shelf_columns')
+        .select('id, name, shelf_rows, shelf_columns, color')
         .eq('user_id', user.id);
 
       if (shelvesError) throw shelvesError;
@@ -1572,10 +1574,10 @@ export const SearchScreen: React.FC = () => {
               <View style={styles.tagsContainer}>
                 {/* Tag de ubicación física - PRIMERO */}
                 {item.in_shelf && (
-                  <View style={styles.shelfTag}>
-                    <Ionicons name="location" size={12} color="#28a745" />
+                  <View style={[styles.shelfTag, { backgroundColor: getShelfColor(item.shelf_color).bg }]}>
+                    <Ionicons name="location" size={12} color={getShelfColor(item.shelf_color).text} />
                     <Text 
-                      style={styles.shelfTagText}
+                      style={[styles.shelfTagText, { color: getShelfColor(item.shelf_color).text }]}
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >

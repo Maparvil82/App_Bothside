@@ -891,6 +891,7 @@ export const en = {
     shelf_edit_error_save: "Could not save shelf.",
     shelf_edit_label_name: "Shelf Name",
     shelf_edit_placeholder_name: "Ex: Main Kallax",
+    shelf_edit_label_color: "Shelf Color",
     // Shelf View Screen
     shelf_view_error_load: "Could not load shelf.",
     shelf_view_not_found: "Shelf not found.",

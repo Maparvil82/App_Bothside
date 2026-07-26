@@ -129,6 +129,7 @@ interface Shelf {
   name: string;
   shelf_rows: number;
   shelf_columns: number;
+  color?: string;
 }
 
 export default function ShelvesListScreen() {
@@ -147,7 +148,7 @@ export default function ShelvesListScreen() {
       setLoading(true);
       const { data, error } = await supabase
         .from('shelves')
-        .select('id, name, shelf_rows, shelf_columns')
+        .select('id, name, shelf_rows, shelf_columns, color')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 

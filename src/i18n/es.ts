@@ -891,6 +891,7 @@ export const es = {
     shelf_edit_error_save: "No se pudo guardar la estantería.",
     shelf_edit_label_name: "Nombre de la Estantería",
     shelf_edit_placeholder_name: "Ej: Kallax Principal",
+    shelf_edit_label_color: "Color de la Estantería",
     // Shelf View Screen
     shelf_view_error_load: "No se pudo cargar la estantería.",
     shelf_view_not_found: "Estantería no encontrada.",

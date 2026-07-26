@@ -18,7 +18,7 @@ import { BothsideLoader } from './BothsideLoader';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from '../src/i18n/useTranslation';
-import { AppColors } from '../src/theme/colors';
+import { AppColors, ShelfColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 
 // ─── Props ───────────────────────────────────────────────────────────────────
@@ -44,6 +44,7 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
   const [name, setName] = useState('');
   const [rows, setRows] = useState('');
   const [columns, setColumns] = useState('');
+  const [selectedColor, setSelectedColor] = useState('green');
   const [saving, setSaving] = useState(false);
 
   // Reset form each time the modal opens
@@ -52,6 +53,7 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
       setName('');
       setRows('');
       setColumns('');
+      setSelectedColor('green');
       setSaving(false);
     }
   }, [visible]);
@@ -88,6 +90,7 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
           name: name.trim(),
           shelf_rows: numRows,
           shelf_columns: numCols,
+          color: selectedColor,
         })
         .select()
         .single();
@@ -177,6 +180,30 @@ export const CreateShelfModal: React.FC<CreateShelfModalProps> = ({
                           placeholderTextColor="#9EA0A4"
                         />
                       </View>
+                    </View>
+
+                    {/* Color Selector */}
+                    <Text style={[styles.label, { marginTop: 20 }]}>{t('shelf_edit_label_color')}</Text>
+                    <View style={styles.colorSelectorContainer}>
+                      {Object.keys(ShelfColors).map((colorKey) => {
+                        const colorscheme = ShelfColors[colorKey as keyof typeof ShelfColors];
+                        const isSelected = selectedColor === colorKey;
+                        return (
+                          <TouchableOpacity
+                            key={colorKey}
+                            style={[
+                              styles.colorCircle,
+                              { backgroundColor: colorscheme.bg, borderColor: colorscheme.text },
+                              isSelected && styles.colorCircleSelected
+                            ]}
+                            onPress={() => setSelectedColor(colorKey)}
+                          >
+                            {isSelected && (
+                              <View style={[styles.colorCircleInner, { backgroundColor: colorscheme.text }]} />
+                            )}
+                          </TouchableOpacity>
+                        );
+                      })}
                     </View>
 
                     {/* Save button */}
@@ -299,5 +326,34 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     letterSpacing: 0.4,
+  },
+  colorSelectorContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 4,
+    marginTop: 4,
+  },
+  colorCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    borderWidth: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  colorCircleSelected: {
+    transform: [{ scale: 1.15 }],
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  colorCircleInner: {
+    width: 14,
+    height: 14,
+    borderRadius: 7,
   },
 });

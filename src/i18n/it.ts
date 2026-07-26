@@ -569,6 +569,7 @@ export const it = {
     shelf_edit_error_save: "Impossibile salvare lo scaffale.",
     shelf_edit_label_name: "Nome dello Scaffale",
     shelf_edit_placeholder_name: "Es: Kallax Salotto",
+    shelf_edit_label_color: "Colore dello scaffale",
 
     // Shelf View Screen
     shelf_view_error_load: "Impossibile caricare lo scaffale.",
