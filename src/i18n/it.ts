@@ -570,6 +570,18 @@ export const it = {
     shelf_edit_label_name: "Nome dello Scaffale",
     shelf_edit_placeholder_name: "Es: Kallax Salotto",
     shelf_edit_label_color: "Colore dello scaffale",
+    shelf_edit_take_out: "Togli temporaneamente",
+    shelf_edit_out_of_shelf: "Fuori temporaneamente",
+    shelf_edit_habitual_location: "Posizione abituale",
+    shelf_edit_return_to_slot: "Riponi in {0}",
+    shelf_edit_save_other_location: "Salva in altra posizione",
+    shelf_edit_toast_out_title: "Disco fuori temporaneamente",
+    shelf_edit_toast_out_message: "Conserveremo {0} come posizione abituale.",
+    shelf_edit_toast_return_title: "Disco riposto in {0}",
+    shelf_edit_toast_return_message: "Si trova nuovamente in {0}.",
+    shelf_edit_filter_out: "Fuori",
+    shelf_edit_return: "Riponi",
+    shelf_edit_toast_return_title_no_slot: "Disco riposto",
 
     // Shelf View Screen
     shelf_view_error_load: "Impossibile caricare lo scaffale.",

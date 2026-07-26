@@ -570,6 +570,18 @@ export const ja = {
     shelf_edit_label_name: "棚の名前",
     shelf_edit_placeholder_name: "例: リビングのKallax",
     shelf_edit_label_color: "棚の色",
+    shelf_edit_take_out: "一時的に出す",
+    shelf_edit_out_of_shelf: "一時的に棚外",
+    shelf_edit_habitual_location: "いつもの場所",
+    shelf_edit_return_to_slot: "{0}に戻す",
+    shelf_edit_save_other_location: "別の場所に片付ける",
+    shelf_edit_toast_out_title: "ディスクを一時的に出しました",
+    shelf_edit_toast_out_message: "{0}をいつもの場所として保持します。",
+    shelf_edit_toast_return_title: "{0}に戻しました",
+    shelf_edit_toast_return_message: "再び{0}にあります。",
+    shelf_edit_filter_out: "棚外",
+    shelf_edit_return: "戻す",
+    shelf_edit_toast_return_title_no_slot: "ディスクを戻しました",
 
     // Shelf View Screen
     shelf_view_error_load: "棚を読み込めませんでした。",

@@ -570,6 +570,18 @@ export const fr = {
     shelf_edit_label_name: "Nom de l'Étagère",
     shelf_edit_placeholder_name: "Ex : Kallax Salon",
     shelf_edit_label_color: "Couleur de l'étagère",
+    shelf_edit_take_out: "Sortir temporairement",
+    shelf_edit_out_of_shelf: "Hors temporairement",
+    shelf_edit_habitual_location: "Emplacement habituel",
+    shelf_edit_return_to_slot: "Retourner à {0}",
+    shelf_edit_save_other_location: "Ranger dans un autre emplacement",
+    shelf_edit_toast_out_title: "Disque hors temporairement",
+    shelf_edit_toast_out_message: "Nous conserverons {0} comme emplacement habituel.",
+    shelf_edit_toast_return_title: "Disque retourné à {0}",
+    shelf_edit_toast_return_message: "Il est à nouveau situé dans {0}.",
+    shelf_edit_filter_out: "Hors",
+    shelf_edit_return: "Retourner",
+    shelf_edit_toast_return_title_no_slot: "Disque retourné",
 
     // Shelf View Screen
     shelf_view_error_load: "Impossible de charger l'étagère.",

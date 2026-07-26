@@ -40,6 +40,7 @@ export default function SelectCellScreen() {
           shelf_id: shelf.id,
           location_row: row + 1, // Guardar como 1-indexed
           location_column: column + 1, // Guardar como 1-indexed
+          is_out_of_shelf: false,
         })
         .eq('id', user_collection_id);
 

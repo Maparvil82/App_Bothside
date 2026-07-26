@@ -92,6 +92,7 @@ interface AlbumDetail {
   shelf_id?: string;
   shelf_name?: string;
   shelf_color?: string;
+  is_out_of_shelf?: boolean;
   location_row?: number;
   location_column?: number;
 }
@@ -350,7 +351,8 @@ export default function AlbumDetailScreen() {
         .update({
           shelf_id: null,
           location_row: null,
-          location_column: null
+          location_column: null,
+          is_out_of_shelf: false
         })
         .eq('id', album.id);
 
@@ -364,7 +366,8 @@ export default function AlbumDetailScreen() {
           shelf_id: undefined,
           shelf_name: undefined,
           location_row: undefined,
-          location_column: undefined
+          location_column: undefined,
+          is_out_of_shelf: false
         };
       });
 
@@ -1925,9 +1928,34 @@ export default function AlbumDetailScreen() {
 
             {album.shelf_id && album.location_row && album.location_column ? (
               <>
-                <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
-                  {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
-                </Text>
+                {album.is_out_of_shelf ? (
+                  <View style={{ marginBottom: 12 }}>
+                    <View style={{
+                      backgroundColor: '#fef2f2',
+                      borderColor: '#ef4444',
+                      borderWidth: 1,
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      alignSelf: 'flex-start',
+                      marginBottom: 8,
+                    }}>
+                      <Ionicons name="warning-outline" size={14} color="#ef4444" style={{ marginRight: 6 }} />
+                      <Text style={{ color: '#ef4444', fontWeight: '600', fontSize: 13 }}>
+                        {t('shelf_edit_out_of_shelf')}
+                      </Text>
+                    </View>
+                    <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
+                      {t('shelf_edit_habitual_location')}: {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
+                    {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
+                  </Text>
+                )}
                 <ShelfGrid
                   rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
                   columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}

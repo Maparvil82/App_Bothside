@@ -482,7 +482,8 @@ export const SearchScreen: React.FC = () => {
           ...item,
           in_shelf: hasLocation,
           shelf_name: shelfName,
-          shelf_color: shelfColor
+          shelf_color: shelfColor,
+          is_out_of_shelf: item.is_out_of_shelf
         };
       });
 
@@ -739,7 +740,8 @@ export const SearchScreen: React.FC = () => {
         .update({
           shelf_id: null,
           location_row: null,
-          location_column: null
+          location_column: null,
+          is_out_of_shelf: false
         })
         .eq('id', item.id);
 
@@ -753,65 +755,208 @@ export const SearchScreen: React.FC = () => {
     }
   };
 
-  const handleLongPress = (item: any) => {
-    // Determinar el texto de la opción de ubicación
-    const locationOptionText = item.shelf_name
-      ? t('search_action_change_location')
-      : t('search_action_assign_location');
-
-    const options: string[] = [t('common_cancel'), locationOptionText];
-    const hasLocation = !!item.shelf_name;
-    
-    if (hasLocation) {
-      options.push(t('search_action_remove_location'));
+  const getSlotString = (row?: number | null, column?: number | null) => {
+    if (typeof row === 'number' && typeof column === 'number' && row > 0 && column > 0) {
+      return `${String.fromCharCode(65 + (row - 1))}${column}`;
     }
-    options.push(t('common_delete'));
+    return '';
+  };
+
+  const handleTakeOutOfShelf = async (item: any) => {
+    try {
+      const { error } = await supabase
+        .from('user_collection')
+        .update({
+          is_out_of_shelf: true
+        })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      const locationStr = formatLocation(item.shelf_name, item.location_row, item.location_column);
+      Alert.alert(
+        t('shelf_edit_toast_out_title'),
+        t('shelf_edit_toast_out_message').replace('{0}', locationStr),
+        [{ text: t('common_accept') }]
+      );
+
+      await loadCollection();
+    } catch (error: any) {
+      console.error('Error taking record out of shelf:', error);
+      Alert.alert(t('common_error'), t('shelf_edit_error_save') || 'No se pudo guardar.');
+    }
+  };
+
+  const handleReturnToShelf = async (item: any) => {
+    try {
+      const { error } = await supabase
+        .from('user_collection')
+        .update({
+          is_out_of_shelf: false
+        })
+        .eq('id', item.id);
+
+      if (error) throw error;
+
+      const slot = getSlotString(item.location_row, item.location_column);
+      const locationStr = formatLocation(item.shelf_name, item.location_row, item.location_column);
+      const titleStr = slot 
+        ? t('shelf_edit_toast_return_title').replace('{0}', slot)
+        : (t('shelf_edit_toast_return_title_no_slot') || 'Disco devuelto');
+
+      Alert.alert(
+        titleStr,
+        t('shelf_edit_toast_return_message').replace('{0}', locationStr),
+        [{ text: t('common_accept') }]
+      );
+
+      await loadCollection();
+    } catch (error: any) {
+      console.error('Error returning record to shelf:', error);
+      Alert.alert(t('common_error'), t('shelf_edit_error_save') || 'No se pudo guardar.');
+    }
+  };
+
+  const handleLongPress = (item: any) => {
+    const hasLocation = !!item.shelf_name;
+    const isOut = !!item.is_out_of_shelf;
 
     if (Platform.OS === 'ios') {
-      const destructiveIndex = options.length - 1;
+      let options: string[] = [];
+      let callback: (buttonIndex: number) => void;
+
+      if (hasLocation && isOut) {
+        const slot = getSlotString(item.location_row, item.location_column);
+        const devolverText = slot ? t('shelf_edit_return_to_slot').replace('{0}', slot) : (t('shelf_edit_return') || 'Devolver');
+        
+        options = [
+          t('common_cancel'),
+          devolverText,
+          t('shelf_edit_save_other_location'),
+          t('search_action_remove_location'),
+          t('common_delete')
+        ];
+
+        callback = (buttonIndex) => {
+          if (buttonIndex === 1) {
+            handleReturnToShelf(item);
+          } else if (buttonIndex === 2) {
+            setSelectedAlbumForLocation(item);
+            loadPhysicalShelves();
+            setShowLocationModal(true);
+          } else if (buttonIndex === 3) {
+            confirmRemoveLocation(item);
+          } else if (buttonIndex === 4) {
+            confirmDeleteRecord(item);
+          }
+        };
+      } else if (hasLocation && !isOut) {
+        options = [
+          t('common_cancel'),
+          t('search_action_change_location'),
+          t('shelf_edit_take_out'),
+          t('search_action_remove_location'),
+          t('common_delete')
+        ];
+
+        callback = (buttonIndex) => {
+          if (buttonIndex === 1) {
+            setSelectedAlbumForLocation(item);
+            loadPhysicalShelves();
+            setShowLocationModal(true);
+          } else if (buttonIndex === 2) {
+            handleTakeOutOfShelf(item);
+          } else if (buttonIndex === 3) {
+            confirmRemoveLocation(item);
+          } else if (buttonIndex === 4) {
+            confirmDeleteRecord(item);
+          }
+        };
+      } else {
+        options = [
+          t('common_cancel'),
+          t('search_action_assign_location'),
+          t('common_delete')
+        ];
+
+        callback = (buttonIndex) => {
+          if (buttonIndex === 1) {
+            setSelectedAlbumForLocation(item);
+            loadPhysicalShelves();
+            setShowLocationModal(true);
+          } else if (buttonIndex === 2) {
+            confirmDeleteRecord(item);
+          }
+        };
+      }
+
       ActionSheetIOS.showActionSheetWithOptions(
         {
           options: options,
-          destructiveButtonIndex: destructiveIndex,
+          destructiveButtonIndex: options.length - 1,
           cancelButtonIndex: 0,
           title: item.albums?.title || t('common_album'),
           message: t('search_action_sheet_title'),
         },
-        (buttonIndex) => {
-          if (buttonIndex === 1) {
-            // Ubicar
-            setSelectedAlbumForLocation(item);
-            loadPhysicalShelves();
-            setShowLocationModal(true);
-          } else if (hasLocation && buttonIndex === 2) {
-            // Quitar ubicación
-            confirmRemoveLocation(item);
-          } else if (buttonIndex === destructiveIndex) {
-            // Eliminar
-            confirmDeleteRecord(item);
-          }
-        }
+        callback
       );
     } else {
       const alertButtons: any[] = [
-        { text: t('common_cancel'), style: 'cancel' },
-        {
-          text: locationOptionText,
+        { text: t('common_cancel'), style: 'cancel' }
+      ];
+
+      if (hasLocation && isOut) {
+        const slot = getSlotString(item.location_row, item.location_column);
+        const devolverText = slot ? t('shelf_edit_return_to_slot').replace('{0}', slot) : (t('shelf_edit_return') || 'Devolver');
+
+        alertButtons.push(
+          {
+            text: devolverText,
+            onPress: () => handleReturnToShelf(item)
+          },
+          {
+            text: t('shelf_edit_save_other_location'),
+            onPress: () => {
+              setSelectedAlbumForLocation(item);
+              loadPhysicalShelves();
+              setShowLocationModal(true);
+            }
+          },
+          {
+            text: t('search_action_remove_location'),
+            onPress: () => confirmRemoveLocation(item)
+          }
+        );
+      } else if (hasLocation && !isOut) {
+        alertButtons.push(
+          {
+            text: t('search_action_change_location'),
+            onPress: () => {
+              setSelectedAlbumForLocation(item);
+              loadPhysicalShelves();
+              setShowLocationModal(true);
+            }
+          },
+          {
+            text: t('shelf_edit_take_out'),
+            onPress: () => handleTakeOutOfShelf(item)
+          },
+          {
+            text: t('search_action_remove_location'),
+            onPress: () => confirmRemoveLocation(item)
+          }
+        );
+      } else {
+        alertButtons.push({
+          text: t('search_action_assign_location'),
           onPress: () => {
             setSelectedAlbumForLocation(item);
             loadPhysicalShelves();
             setShowLocationModal(true);
           }
-        }
-      ];
-      
-      if (hasLocation) {
-        alertButtons.push({
-          text: t('search_action_remove_location'),
-          onPress: () => confirmRemoveLocation(item)
         });
       }
-      
+
       alertButtons.push({
         text: t('common_delete'),
         style: 'destructive',
@@ -977,9 +1122,12 @@ export const SearchScreen: React.FC = () => {
     if (filterByLocation) {
       filtered = filtered.filter(item => {
         if (filterByLocation === t('search_filter_no_location')) {
-          return !item.shelf_name;
+          return !item.shelf_name && !item.is_out_of_shelf;
         }
-        return item.shelf_name === filterByLocation;
+        if (filterByLocation === (t('shelf_edit_filter_out') || 'Fuera')) {
+          return !!item.shelf_name && !!item.is_out_of_shelf;
+        }
+        return item.shelf_name === filterByLocation && !item.is_out_of_shelf;
       });
     }
 
@@ -1182,12 +1330,19 @@ export const SearchScreen: React.FC = () => {
   const getUniqueLocations = () => {
     const locations = new Set<string>();
     collection.forEach(item => {
-      if (item.shelf_name) {
+      if (item.shelf_name && !item.is_out_of_shelf) {
         locations.add(item.shelf_name);
       }
     });
+    
+    // Añadir "Fuera" si hay álbumes fuera de la estantería
+    const hasOutOfShelfAlbums = collection.some(item => item.is_out_of_shelf);
+    if (hasOutOfShelfAlbums) {
+      locations.add(t('shelf_edit_filter_out') || 'Fuera');
+    }
+
     // Añadir "Sin ubicación" si hay álbumes sin ubicación
-    const hasUnlocatedAlbums = collection.some(item => !item.shelf_name);
+    const hasUnlocatedAlbums = collection.some(item => !item.shelf_name && !item.is_out_of_shelf);
     if (hasUnlocatedAlbums) {
       locations.add(t('search_filter_no_location'));
     }
@@ -1211,7 +1366,7 @@ export const SearchScreen: React.FC = () => {
     }];
 
     // 2. Unlocated
-    const unlocatedCount = collection.filter(item => !item.shelf_name).length;
+    const unlocatedCount = collection.filter(item => !item.shelf_name && !item.is_out_of_shelf).length;
     if (unlocatedCount > 0) {
       chips.push({
         key: 'unlocated',
@@ -1220,10 +1375,20 @@ export const SearchScreen: React.FC = () => {
       });
     }
 
+    // 2.5 Out of shelf
+    const outCount = collection.filter(item => item.is_out_of_shelf).length;
+    if (outCount > 0) {
+      chips.push({
+        key: 'out_of_shelf',
+        label: `${t('shelf_edit_filter_out') || 'Fuera'} ${outCount}`,
+        value: t('shelf_edit_filter_out') || 'Fuera',
+      });
+    }
+
     // 3. Shelves
     const shelfCounts: Record<string, number> = {};
     collection.forEach(item => {
-      if (item.shelf_name) {
+      if (item.shelf_name && !item.is_out_of_shelf) {
         shelfCounts[item.shelf_name] = (shelfCounts[item.shelf_name] || 0) + 1;
       }
     });
@@ -1574,16 +1739,25 @@ export const SearchScreen: React.FC = () => {
               <View style={styles.tagsContainer}>
                 {/* Tag de ubicación física - PRIMERO */}
                 {item.in_shelf && (
-                  <View style={[styles.shelfTag, { backgroundColor: getShelfColor(item.shelf_color).bg }]}>
-                    <Ionicons name="location" size={12} color={getShelfColor(item.shelf_color).text} />
-                    <Text 
-                      style={[styles.shelfTagText, { color: getShelfColor(item.shelf_color).text }]}
-                      numberOfLines={1}
-                      ellipsizeMode="tail"
-                    >
-                      {formatLocation(item.shelf_name, item.location_row, item.location_column)}
-                    </Text>
-                  </View>
+                  item.is_out_of_shelf ? (
+                    <View style={[styles.shelfTag, { backgroundColor: '#fef2f2', borderColor: '#ef4444', borderWidth: 1 }]}>
+                      <Ionicons name="warning" size={12} color="#ef4444" />
+                      <Text style={[styles.shelfTagText, { color: '#ef4444', fontWeight: '500' }]}>
+                        {t('shelf_edit_out_of_shelf')}
+                      </Text>
+                    </View>
+                  ) : (
+                    <View style={[styles.shelfTag, { backgroundColor: getShelfColor(item.shelf_color).bg }]}>
+                      <Ionicons name="location" size={12} color={getShelfColor(item.shelf_color).text} />
+                      <Text 
+                        style={[styles.shelfTagText, { color: getShelfColor(item.shelf_color).text }]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {formatLocation(item.shelf_name, item.location_row, item.location_column)}
+                      </Text>
+                    </View>
+                  )
                 )}
 
                 {/* Tag de audio - SEGUNDO (solo icono) */}
@@ -1600,6 +1774,12 @@ export const SearchScreen: React.FC = () => {
                   </View>
                 )}
               </View>
+
+              {item.in_shelf && item.is_out_of_shelf && (
+                <Text style={{ fontSize: 11, color: mode === 'dark' ? '#A1A1AA' : '#6B7280', marginTop: 4 }}>
+                  {t('shelf_edit_habitual_location')}: {formatLocation(item.shelf_name, item.location_row, item.location_column)}
+                </Text>
+              )}
             </View>
           </View>
 

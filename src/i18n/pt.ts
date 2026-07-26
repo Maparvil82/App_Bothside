@@ -902,6 +902,18 @@ export const pt = {
     shelf_edit_label_name: "Nome da Estante",
     shelf_edit_placeholder_name: "Ex: Kallax Principal",
     shelf_edit_label_color: "Cor da Estante",
+    shelf_edit_take_out: "Retirar temporariamente",
+    shelf_edit_out_of_shelf: "Fora temporariamente",
+    shelf_edit_habitual_location: "Localização habitual",
+    shelf_edit_return_to_slot: "Devolver a {0}",
+    shelf_edit_save_other_location: "Guardar em outra localização",
+    shelf_edit_toast_out_title: "Disco fora temporariamente",
+    shelf_edit_toast_out_message: "Manteremos {0} como sua localização habitual.",
+    shelf_edit_toast_return_title: "Disco devolvido a {0}",
+    shelf_edit_toast_return_message: "Volta a estar localizado em {0}.",
+    shelf_edit_filter_out: "Fora",
+    shelf_edit_return: "Devolver",
+    shelf_edit_toast_return_title_no_slot: "Disco devolvido",
 
     // Shelf View Screen
     shelf_view_error_load: "Não foi possível carregar a estante.",
