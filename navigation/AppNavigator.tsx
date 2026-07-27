@@ -48,7 +48,7 @@ import { AudioScanScreen } from '../screens/AudioScanScreen';
 import { ThemeProvider, useThemeMode } from '../contexts/ThemeContext';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
 import { CreateMaletaModal } from '../components/CreateMaletaModal';
-import { ENABLE_AUDIO_SCAN } from '../config/features';
+import { ENABLE_AUDIO_SCAN, FREE_COLLECTION_LIMIT } from '../config/features';
 import { BothsideLoader } from '../components/BothsideLoader';
 import { UserMaletaService, UserCollectionService } from '../services/database';
 import { CameraScanScreen } from '../screens/CameraScanScreen';
@@ -514,14 +514,14 @@ const TabNavigator = () => {
       AnalyticsService.track('add_album_pressed', {
         is_pro: isPro,
         albums_count: count,
-        free_album_limit: FREE_ALBUM_LIMIT,
+        free_album_limit: FREE_COLLECTION_LIMIT,
       });
 
-      if (count >= FREE_ALBUM_LIMIT) {
+      if (count >= FREE_COLLECTION_LIMIT) {
         // Block and show paywall
         AnalyticsService.track('add_album_blocked_free_limit', {
           albums_count: count,
-          free_album_limit: FREE_ALBUM_LIMIT,
+          free_album_limit: FREE_COLLECTION_LIMIT,
           source: 'add_album_limit',
         });
         // Navigate to Paywall in the parent AppStack
@@ -532,7 +532,7 @@ const TabNavigator = () => {
       // Under limit: allow
       AnalyticsService.track('add_album_allowed_free', {
         albums_count: count,
-        free_album_limit: FREE_ALBUM_LIMIT,
+        free_album_limit: FREE_COLLECTION_LIMIT,
       });
       navigation.navigate('AddDiscTab');
     } catch (error) {
@@ -685,8 +685,7 @@ const MainAppWrapper = () => {
 
 // ... AppStack
 
-// Limit for free users
-const FREE_ALBUM_LIMIT = 5;
+// Limit for free users now imported from features.ts
 
 const AppStack = () => {
   const { colors } = useTheme();

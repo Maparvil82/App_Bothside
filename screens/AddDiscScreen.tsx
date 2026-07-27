@@ -29,6 +29,7 @@ import { YouTubeSearchService } from '../services/youtube-search';
 import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
+import { FREE_COLLECTION_LIMIT } from '../config/features';
 
 interface Album {
   id: string;
@@ -102,6 +103,25 @@ export const AddDiscScreen: React.FC = () => {
   const [selectedShelf, setSelectedShelf] = useState<any | null>(null);
   const [showCellModal, setShowCellModal] = useState(false);
   const [pendingItem, setPendingItem] = useState<{ type: 'local' | 'discogs', item: any } | null>(null);
+  const [pendingLimitSave, setPendingLimitSave] = useState<{
+    type: 'local' | 'discogs';
+    item: any;
+    shelfId?: string;
+    row?: number;
+    column?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    if (subscriptionStatus === 'active' && pendingLimitSave) {
+      const { type, item, shelfId, row, column } = pendingLimitSave;
+      setPendingLimitSave(null);
+      if (type === 'local') {
+        proceedAddToCollection(item, shelfId, row, column);
+      } else {
+        proceedAddDiscogsReleaseToCollection(item, shelfId, row, column);
+      }
+    }
+  }, [subscriptionStatus, pendingLimitSave]);
 
   const isFocused = useIsFocused();
   useEffect(() => {
@@ -476,6 +496,21 @@ export const AddDiscScreen: React.FC = () => {
 
     setAddingDisc(true);
 
+    const isPro = subscriptionStatus === 'active';
+    if (!isPro) {
+      try {
+        const count = await UserCollectionService.getUserCollectionCount(user.id);
+        if (count >= FREE_COLLECTION_LIMIT) {
+          setPendingLimitSave({ type: 'discogs', item: release, shelfId, row, column });
+          setAddingDisc(false);
+          navigation.navigate('Paywall');
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking limit in proceedAddDiscogsReleaseToCollection:', err);
+      }
+    }
+
     try {
       console.log('🎵 Llamando a Edge Function para guardar release:', release.id);
 
@@ -748,6 +783,21 @@ export const AddDiscScreen: React.FC = () => {
     if (!user) return;
 
     setAddingDisc(true);
+
+    const isPro = subscriptionStatus === 'active';
+    if (!isPro) {
+      try {
+        const count = await UserCollectionService.getUserCollectionCount(user.id);
+        if (count >= FREE_COLLECTION_LIMIT) {
+          setPendingLimitSave({ type: 'local', item: album, shelfId, row, column });
+          setAddingDisc(false);
+          navigation.navigate('Paywall');
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking limit in proceedAddToCollection:', err);
+      }
+    }
 
     try {
       // Usar siempre el flujo local robusto para todos los usuarios
@@ -1273,6 +1323,11 @@ export const AddDiscScreen: React.FC = () => {
                 console.log('isPro (subscriptionStatus === active):', isPro);
                 console.log('subscriptionStatus:', subscriptionStatus);
                 if (!isPro) {
+                  const count = await UserCollectionService.getUserCollectionCount(user.id);
+                  if (count >= FREE_COLLECTION_LIMIT) {
+                    navigation.navigate('Paywall');
+                    return;
+                  }
                   const freeUsed = await ProfileService.checkFreeSpineScanUsed(user.id, user);
                   console.log('freeUsed result:', freeUsed);
                   if (freeUsed) {

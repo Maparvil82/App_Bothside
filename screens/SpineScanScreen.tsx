@@ -31,6 +31,7 @@ import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/
 import { AnalyticsService } from '../services/analytics';
 import { supabase } from '../lib/supabase';
 import { AlbumService, UserCollectionService, ProfileService } from '../services/database';
+import { FREE_COLLECTION_LIMIT } from '../config/features';
 import { DiscogsService } from '../services/discogs';
 import { DiscogsStatsService } from '../services/discogs-stats';
 import { YouTubeSearchService } from '../services/youtube-search';
@@ -59,6 +60,11 @@ export const SpineScanScreen = () => {
   const [summary, setSummary] = useState<{ addedCount: number } | null>(null);
   const [showBetaModal, setShowBetaModal] = useState(false);
   const [pendingSave, setPendingSave] = useState(false);
+  const [collectionCount, setCollectionCount] = useState<number>(0);
+  const [isLimitChecked, setIsLimitChecked] = useState(false);
+  const [hasShownLimitPaywall, setHasShownLimitPaywall] = useState(false);
+
+  const remainingFreeSlots = Math.max(0, FREE_COLLECTION_LIMIT - collectionCount);
   const [physicalShelves, setPhysicalShelves] = useState<any[]>([]);
   const [showShelfModal, setShowShelfModal] = useState(false);
   const [selectedShelf, setSelectedShelf] = useState<any | null>(null);
@@ -70,6 +76,36 @@ export const SpineScanScreen = () => {
   const isFocused = useIsFocused();
   const { subscriptionStatus, isLoading: isSubLoading } = useSubscription();
   const isPro = subscriptionStatus === 'active';
+
+  useEffect(() => {
+    const checkLimitAndLoadCount = async () => {
+      if (!user) return;
+      try {
+        const count = await UserCollectionService.getUserCollectionCount(user.id);
+        setCollectionCount(count);
+        setIsLimitChecked(true);
+
+        if (subscriptionStatus !== 'active' && count >= FREE_COLLECTION_LIMIT) {
+          if (!hasShownLimitPaywall) {
+            setHasShownLimitPaywall(true);
+            navigation.navigate('Paywall');
+          } else {
+            // User cancelled/returned from Paywall and is still not Pro
+            navigation.goBack();
+          }
+        }
+      } catch (err) {
+        console.error('Error checking collection limit in SpineScanScreen:', err);
+      }
+    };
+
+    if (isFocused) {
+      checkLimitAndLoadCount();
+    } else {
+      // Reset paywall flag when screen loses focus
+      setHasShownLimitPaywall(false);
+    }
+  }, [isFocused, subscriptionStatus, hasShownLimitPaywall, user]);
 
   useEffect(() => {
     const checkBetaPreference = async () => {
@@ -143,9 +179,17 @@ export const SpineScanScreen = () => {
     }
   }, [isPro, pendingSave]);
 
-  if (isSubLoading) {
+  if (isSubLoading || !isLimitChecked) {
     return (
       <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#fff" />
+      </View>
+    );
+  }
+
+  if (subscriptionStatus !== 'active' && collectionCount >= FREE_COLLECTION_LIMIT) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', backgroundColor: 'black' }]}>
         <ActivityIndicator size="large" color="#fff" />
       </View>
     );
@@ -284,6 +328,12 @@ export const SpineScanScreen = () => {
     }
 
     if (!isPro) {
+      if (selected.length > remainingFreeSlots) {
+        setPendingSave(true);
+        navigation.navigate('Paywall');
+        return;
+      }
+
       const freeUsed = await ProfileService.checkFreeSpineScanUsed(user.id, user);
       if (freeUsed) {
         setPendingSave(true);
@@ -660,6 +710,27 @@ export const SpineScanScreen = () => {
         ) : (
           <>
             <ScrollView contentContainerStyle={styles.previewScroll} showsVerticalScrollIndicator={false}>
+              {!isPro && (
+                <View style={[
+                  styles.limitBanner,
+                  remainingFreeSlots <= 0 && { backgroundColor: '#FEEBEE', borderColor: '#FFCDD2' }
+                ]}>
+                  <Ionicons
+                    name={remainingFreeSlots > 0 ? "information-circle-outline" : "alert-circle-outline"}
+                    size={20}
+                    color={remainingFreeSlots > 0 ? "#E65100" : "#C62828"}
+                  />
+                  <Text style={[
+                    styles.limitBannerText,
+                    remainingFreeSlots <= 0 && { color: '#C62828' }
+                  ]}>
+                    {remainingFreeSlots > 0
+                      ? t(remainingFreeSlots === 1 ? 'paywall_remaining_slots_singular' : 'paywall_remaining_slots_plural', { count: remainingFreeSlots })
+                      : t('paywall_limit_reached')
+                    }
+                  </Text>
+                </View>
+              )}
               <Text style={styles.previewInstructions}>
                 Hemos reconocido {albums.length} discos. Puedes desmarcar los que no quieras añadir o editar sus nombres:
               </Text>
@@ -1475,5 +1546,24 @@ const styles = StyleSheet.create({
   backToShelvesBtnText: {
     fontSize: 14,
     fontWeight: '600',
+  },
+  limitBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF9E6',
+    borderWidth: 1,
+    borderColor: '#FFE0B2',
+    borderRadius: 12,
+    padding: 12,
+    marginTop: 16,
+    marginBottom: 8,
+    marginHorizontal: 16,
+  },
+  limitBannerText: {
+    color: '#E65100',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+    flex: 1,
   },
 });

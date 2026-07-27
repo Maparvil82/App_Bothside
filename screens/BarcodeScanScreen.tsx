@@ -26,6 +26,8 @@ import { supabase } from '../lib/supabase';
 import { useTranslation } from '../src/i18n/useTranslation';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
+import { useSubscription } from '../contexts/SubscriptionContext';
+import { FREE_COLLECTION_LIMIT } from '../config/features';
 
 const { width } = Dimensions.get('window');
 
@@ -42,6 +44,7 @@ const normalize = (str: string) =>
 export const BarcodeScanScreen = () => {
     const { t } = useTranslation();
     const { user } = useAuth();
+    const { subscriptionStatus } = useSubscription();
     const navigation = useNavigation<any>();
     const isFocused = useIsFocused();
     const { mode } = useThemeMode();
@@ -58,6 +61,20 @@ export const BarcodeScanScreen = () => {
     const [showShelfModal, setShowShelfModal] = useState(false);
     const [selectedShelf, setSelectedShelf] = useState<any | null>(null);
     const [showCellModal, setShowCellModal] = useState(false);
+
+    const [pendingLimitSave, setPendingLimitSave] = useState<{
+        shelfId?: string;
+        row?: number;
+        column?: number;
+    } | null>(null);
+
+    useEffect(() => {
+        if (subscriptionStatus === 'active' && pendingLimitSave) {
+            const { shelfId, row, column } = pendingLimitSave;
+            setPendingLimitSave(null);
+            proceedSaveReleaseToCollection(shelfId, row, column);
+        }
+    }, [subscriptionStatus, pendingLimitSave]);
 
     useEffect(() => {
         const loadShelves = async () => {
@@ -215,6 +232,21 @@ export const BarcodeScanScreen = () => {
     ) => {
         if (!user || !scannedRelease) return;
         setSaving(true);
+
+        const isPro = subscriptionStatus === 'active';
+        if (!isPro) {
+            try {
+                const count = await UserCollectionService.getUserCollectionCount(user.id);
+                if (count >= FREE_COLLECTION_LIMIT) {
+                    setPendingLimitSave({ shelfId, row, column });
+                    setSaving(false);
+                    navigation.navigate('Paywall');
+                    return;
+                }
+            } catch (err) {
+                console.error('Error checking limit in proceedSaveReleaseToCollection:', err);
+            }
+        }
 
         try {
             console.log('🎵 Guardando release de código de barras:', scannedRelease.id);

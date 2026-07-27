@@ -46,6 +46,7 @@ import { AnalyticsService } from '../services/analytics';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 import Svg, { Rect, Line } from 'react-native-svg';
 import { CreateShelfModal } from '../components/CreateShelfModal';
+import { FREE_COLLECTION_LIMIT } from '../config/features';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
 const normalize = (str: string) =>
@@ -56,8 +57,6 @@ const normalize = (str: string) =>
     ?.replace(/\(.*?\)/g, "") // quitar info entre paréntesis tipo (Remastered), (2011)
     ?.replace(/[^a-z0-9]/g, "") // quitar símbolos
     ?.trim();
-
-const FREE_ALBUM_LIMIT = 5;
 
 export const SearchScreen: React.FC = () => {
   const { user } = useAuth();
@@ -139,12 +138,12 @@ export const SearchScreen: React.FC = () => {
       AnalyticsService.track('add_album_pressed', {
         is_pro: isPro,
         albums_count: count,
-        free_album_limit: FREE_ALBUM_LIMIT,
+        free_album_limit: FREE_COLLECTION_LIMIT,
       });
-      if (count >= FREE_ALBUM_LIMIT) {
+      if (count >= FREE_COLLECTION_LIMIT) {
         AnalyticsService.track('add_album_blocked_free_limit', {
           albums_count: count,
-          free_album_limit: FREE_ALBUM_LIMIT,
+          free_album_limit: FREE_COLLECTION_LIMIT,
           source: 'add_album_limit',
         });
         navigation.navigate('Paywall');
@@ -152,7 +151,7 @@ export const SearchScreen: React.FC = () => {
       }
       AnalyticsService.track('add_album_allowed_free', {
         albums_count: count,
-        free_album_limit: FREE_ALBUM_LIMIT,
+        free_album_limit: FREE_COLLECTION_LIMIT,
       });
       navigation.navigate('AddDiscTab');
     } catch (error) {
@@ -1155,6 +1154,19 @@ export const SearchScreen: React.FC = () => {
 
   const addToCollection = async (release: DiscogsRelease) => {
     if (!user) return;
+
+    const isPro = subscriptionStatus === 'active';
+    if (!isPro) {
+      try {
+        const count = await UserCollectionService.getUserCollectionCount(user.id);
+        if (count >= FREE_COLLECTION_LIMIT) {
+          navigation.navigate('Paywall');
+          return;
+        }
+      } catch (err) {
+        console.error('Error checking limit in addToCollection:', err);
+      }
+    }
 
     try {
       const albumData = {
