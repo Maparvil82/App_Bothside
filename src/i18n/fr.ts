@@ -164,8 +164,8 @@ export const fr = {
     search_action_play_audio: "Lire l'audio",
     search_action_delete_audio: "Supprimer l'audio",
     search_action_record_audio: "Enregistrer une note audio",
-    search_empty_title: "Votre étagère est vide",
-    search_empty_subtitle: "Commencez à organiser votre collection",
+    search_empty_title: "Votre collection est vide",
+    search_empty_subtitle: "Ajoutez votre premier disque pour commencer à l'organiser.",
     search_empty_button: "Ajouter votre premier disque",
     search_no_results: "Aucun résultat trouvé",
 

@@ -314,8 +314,8 @@ export const ja = {
     search_action_play_audio: "音声を再生",
     search_action_delete_audio: "音声を削除",
     search_action_record_audio: "音声メモを録音",
-    search_empty_title: "棚は空です",
-    search_empty_subtitle: "コレクションの整理を始めましょう",
+    search_empty_title: "コレクションは空です",
+    search_empty_subtitle: "最初のレコードを追加して整理を始めましょう。",
     search_empty_button: "最初のレコードを追加",
     search_no_results: "結果が見つかりません",
 

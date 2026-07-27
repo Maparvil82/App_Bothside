@@ -5,7 +5,7 @@ import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
-import { ProfileService, UserProfile } from '../services/database';
+import { ProfileService, UserProfile, UserCollectionService } from '../services/database';
 import { usePendingInvitationsCount } from '../hooks/useCollaboration';
 
 export const HeaderAvatar = () => {
@@ -16,6 +16,7 @@ export const HeaderAvatar = () => {
     const { user } = useAuth();
     const [profile, setProfile] = useState<UserProfile | null>(null);
     const [loading, setLoading] = useState(true);
+    const [collectionCount, setCollectionCount] = useState<number>(0);
     const { count: pendingInvites, refresh: refreshInvites } = usePendingInvitationsCount();
 
     const loadProfile = async () => {
@@ -24,6 +25,8 @@ export const HeaderAvatar = () => {
             setLoading(true);
             const userProfile = await ProfileService.getUserProfile(user!.id);
             setProfile(userProfile);
+            const count = await UserCollectionService.getUserCollectionCount(user!.id);
+            setCollectionCount(count);
         } catch (error) {
             console.error('Error loading profile:', error);
         } finally {
@@ -64,12 +67,14 @@ export const HeaderAvatar = () => {
                 <Ionicons name="grid-outline" size={24} color={colors.text} />
             </TouchableOpacity> */}
 
-            <TouchableOpacity
-                onPress={() => navigation.navigate('Leaderboard' as never)}
-                style={{ marginRight: 12, padding: 4 }}
-            >
-                <Ionicons name="trophy-outline" size={24} color={colors.text} />
-            </TouchableOpacity>
+            {collectionCount > 0 && (
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('Leaderboard' as never)}
+                    style={{ marginRight: 12, padding: 4 }}
+                >
+                    <Ionicons name="trophy-outline" size={24} color={colors.text} />
+                </TouchableOpacity>
+            )}
 
             <TouchableOpacity
                 style={styles.avatarContainer}

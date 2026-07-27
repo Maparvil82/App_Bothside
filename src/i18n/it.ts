@@ -314,8 +314,8 @@ export const it = {
     search_action_play_audio: "Riproduci audio",
     search_action_delete_audio: "Elimina audio",
     search_action_record_audio: "Registra nota audio",
-    search_empty_title: "Il tuo scaffale è vuoto",
-    search_empty_subtitle: "Inizia a organizzare la tua collezione",
+    search_empty_title: "La tua collezione è vuota",
+    search_empty_subtitle: "Aggiungi il tuo primo disco per iniziare a organizzarla.",
     search_empty_button: "Aggiungi il tuo primo disco",
     search_no_results: "Nessun risultato trovato",
 
