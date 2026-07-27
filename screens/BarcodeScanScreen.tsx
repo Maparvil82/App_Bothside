@@ -240,7 +240,7 @@ export const BarcodeScanScreen = () => {
                 if (count >= FREE_COLLECTION_LIMIT) {
                     setPendingLimitSave({ shelfId, row, column });
                     setSaving(false);
-                    navigation.navigate('Paywall');
+                    navigation.navigate('Paywall', { source: 'collection_limit' });
                     return;
                 }
             } catch (err) {

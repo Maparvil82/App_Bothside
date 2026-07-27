@@ -503,7 +503,7 @@ export const AddDiscScreen: React.FC = () => {
         if (count >= FREE_COLLECTION_LIMIT) {
           setPendingLimitSave({ type: 'discogs', item: release, shelfId, row, column });
           setAddingDisc(false);
-          navigation.navigate('Paywall');
+          navigation.navigate('Paywall', { source: 'collection_limit' });
           return;
         }
       } catch (err) {
@@ -791,7 +791,7 @@ export const AddDiscScreen: React.FC = () => {
         if (count >= FREE_COLLECTION_LIMIT) {
           setPendingLimitSave({ type: 'local', item: album, shelfId, row, column });
           setAddingDisc(false);
-          navigation.navigate('Paywall');
+          navigation.navigate('Paywall', { source: 'collection_limit' });
           return;
         }
       } catch (err) {
@@ -1325,7 +1325,7 @@ export const AddDiscScreen: React.FC = () => {
                 if (!isPro) {
                   const count = await UserCollectionService.getUserCollectionCount(user.id);
                   if (count >= FREE_COLLECTION_LIMIT) {
-                    navigation.navigate('Paywall');
+                    navigation.navigate('Paywall', { source: 'collection_limit' });
                     return;
                   }
                   const freeUsed = await ProfileService.checkFreeSpineScanUsed(user.id, user);

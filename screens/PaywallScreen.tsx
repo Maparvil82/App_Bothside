@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, ScrollView, Alert, Dimensions, Linking, Platform } from 'react-native';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useSubscription } from '../contexts/SubscriptionContext';
@@ -12,6 +12,7 @@ import { translate } from '../src/i18n';
 import { ENV } from '../config/env';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AnalyticsService } from '../services/analytics';
+import { FREE_COLLECTION_LIMIT } from '../config/features';
 
 // Compatibility alias to match the code style I just wrote
 const i18n = { t: translate };
@@ -21,8 +22,10 @@ const { width } = Dimensions.get('window');
 export const PaywallScreen = () => {
     const { colors } = useTheme();
     const navigation = useNavigation<any>();
+    const route = useRoute<any>();
     const { user } = useAuth();
     const { subscriptionStatus, purchasePackage, restorePurchases } = useSubscription();
+    const isCollectionLimit = route.params?.source === 'collection_limit';
     const [loading, setLoading] = useState(false);
     const [pkg, setPkg] = useState<PurchasesPackage | null>(null);
 
@@ -150,91 +153,126 @@ export const PaywallScreen = () => {
             />
 
             <SafeAreaView style={styles.contentContainer} edges={['top', 'bottom']}>
-                {/* Group 1: Close Button & Hero Header (keeps them close at the top) */}
-                <View>
-                    <View style={styles.topHeader}>
-                        {user ? (
-                            <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
-                                <Ionicons name="close-outline" size={24} color="#1A2530" />
-                            </TouchableOpacity>
-                        ) : (
-                            <View style={{ width: 40, height: 40 }} />
-                        )}
-                    </View>
-
-                    {/* Hero Header */}
-                    <View style={styles.header}>
-                        <View style={styles.proBadge}>
-                            <Ionicons name="sparkles" size={12} color="#D4AF37" style={{ marginRight: 4 }} />
-                            <Text style={styles.proBadgeText}>PRO</Text>
+                <ScrollView 
+                    contentContainerStyle={styles.scrollContent} 
+                    showsVerticalScrollIndicator={false}
+                >
+                    {/* Group 1: Close Button & Hero Header (keeps them close at the top) */}
+                    <View>
+                        <View style={styles.topHeader}>
+                            {user ? (
+                                <TouchableOpacity style={styles.closeButton} onPress={() => navigation.goBack()}>
+                                    <Ionicons name="close-outline" size={24} color="#1A2530" />
+                                </TouchableOpacity>
+                            ) : (
+                                <View style={{ width: 40, height: 40 }} />
+                            )}
                         </View>
-                        <Text style={styles.title}>{i18n.t('paywall_limit_title')}</Text>
-                        <Text style={styles.subtitle}>
-                            {i18n.t('paywall_limit_subtitle')}
-                        </Text>
+
+                        {/* Hero Header */}
+                        <View style={styles.header}>
+                            {isCollectionLimit && (
+                                <Text style={styles.limitReachedLabel}>
+                                    {i18n.t('paywall_reached_limit_label').replace('{{freeLimit}}', String(FREE_COLLECTION_LIMIT))}
+                                </Text>
+                            )}
+                            <View style={styles.proBadge}>
+                                <Ionicons name="sparkles" size={12} color="#D4AF37" style={{ marginRight: 4 }} />
+                                <Text style={styles.proBadgeText}>PRO</Text>
+                            </View>
+                            <Text style={styles.title}>
+                                {isCollectionLimit ? i18n.t('paywall_limit_title_continue') : i18n.t('paywall_limit_title')}
+                            </Text>
+                            <Text style={styles.subtitle}>
+                                {i18n.t('paywall_limit_subtitle')}
+                            </Text>
+                        </View>
                     </View>
-                </View>
 
-                {/* Pro Features Showcase */}
-                <View style={styles.featuresContainer}>
-                    <FeatureItem
-                        icon="disc-outline"
-                        title="Discos ilimitados"
-                        description="Guarda todos los vinilos de tu colección sin restricciones de espacio."
-                    />
-                    <FeatureItem
-                        icon="reorder-four-outline"
-                        rotateIcon
-                        title="Escáner de lomos por IA"
-                        description="Escanea estanterías completas con tu cámara y añade discos en lote."
-                    />
-                    <FeatureItem
-                        icon="cloud-upload-outline"
-                        title="Importación masiva"
-                        description="Importa colecciones completas desde Discogs o archivos Excel en segundos."
-                    />
-                    <FeatureItem
-                        icon="grid-outline"
-                        title="Estanterías ilimitadas"
-                        description="Organiza tus vinilos en tantas estanterías virtuales como necesites."
-                    />
-                </View>
-
-                {/* Premium Subscription Offer Card */}
-                <View style={styles.offerCard}>
-                    <View style={styles.offerCardBadge}>
-                        <Text style={styles.offerCardBadgeText}>ACCESO COMPLETO</Text>
+                    {/* Pro Features Showcase */}
+                    <View style={styles.featuresContainer}>
+                        <FeatureItem
+                            icon="disc-outline"
+                            title={i18n.t('paywall_feat_1_title')}
+                            description={i18n.t('paywall_feat_1_desc')}
+                        />
+                        <FeatureItem
+                            icon="grid-outline"
+                            title={i18n.t('paywall_feat_2_title')}
+                            description={i18n.t('paywall_feat_2_desc')}
+                        />
+                        <FeatureItem
+                            icon="briefcase-outline"
+                            title={i18n.t('paywall_feat_3_title')}
+                            description={i18n.t('paywall_feat_3_desc')}
+                        />
+                        <FeatureItem
+                            icon="scan-outline"
+                            title={i18n.t('paywall_feat_4_title')}
+                            description={i18n.t('paywall_feat_4_desc')}
+                        />
                     </View>
-                    <Text style={styles.planSubtitle}>{i18n.t('paywall_pro_plan')}</Text>
-                    <Text style={styles.price}>{yearlyPriceText}</Text>
-                    <Text style={styles.trialText}>{i18n.t('paywall_pro_trial')}</Text>
-                </View>
 
-                {/* Action & Legal Footer */}
-                <View style={styles.footer}>
-                    <TouchableOpacity
-                        style={[
-                            styles.button,
-                            loading && styles.buttonDisabled,
-                            (!pkg && !loading) && { backgroundColor: '#FF453A' } // Red for error/retry
-                        ]}
-                        onPress={!pkg ? async () => {
-                            setLoading(true);
-                            let offeringsObj: any = null;
-                            let errorObj: any = null;
-                            try {
-                                if (Platform.OS === 'android') {
-                                    try {
-                                        offeringsObj = await Purchases.getOfferings();
-                                    } catch (err) {
-                                        console.error('Error fetching offerings directly:', err);
+                    {/* Premium Subscription Offer Card */}
+                    <View style={styles.offerCard}>
+                        <View style={styles.offerCardBadge}>
+                            <Text style={styles.offerCardBadgeText}>ACCESO COMPLETO</Text>
+                        </View>
+                        <Text style={styles.planSubtitle}>{i18n.t('paywall_pro_plan')}</Text>
+                        <Text style={styles.trialText}>{i18n.t('paywall_pro_trial_v2')}</Text>
+                        <Text style={styles.price}>{i18n.t('paywall_pro_price_after_trial').replace('{0}', yearlyPriceText)}</Text>
+                    </View>
+
+                    {/* Action & Legal Footer */}
+                    <View style={styles.footer}>
+                        <TouchableOpacity
+                            style={[
+                                styles.button,
+                                loading && styles.buttonDisabled,
+                                (!pkg && !loading) && { backgroundColor: '#FF453A' } // Red for error/retry
+                            ]}
+                            onPress={!pkg ? async () => {
+                                setLoading(true);
+                                let offeringsObj: any = null;
+                                let errorObj: any = null;
+                                try {
+                                    if (Platform.OS === 'android') {
+                                        try {
+                                            offeringsObj = await Purchases.getOfferings();
+                                        } catch (err) {
+                                            console.error('Error fetching offerings directly:', err);
+                                        }
                                     }
-                                }
 
-                                const offerings = await PurchaseService.getOfferings();
-                                if (offerings && offerings.availablePackages.length > 0) {
-                                    setPkg(offerings.availablePackages[0]);
-                                } else {
+                                    const offerings = await PurchaseService.getOfferings();
+                                    if (offerings && offerings.availablePackages.length > 0) {
+                                        setPkg(offerings.availablePackages[0]);
+                                    } else {
+                                        if (Platform.OS === 'android') {
+                                            const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
+                                            const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
+                                            const keyLength = apiKey ? apiKey.length : 0;
+
+                                            const currentId = offeringsObj?.current?.identifier || 'null';
+                                            const currentPkgsLen = offeringsObj?.current?.availablePackages?.length || 0;
+                                            const allKeys = offeringsObj?.all ? Object.keys(offeringsObj.all) : [];
+
+                                            Alert.alert(
+                                                "RC DEBUG",
+                                                `Platform.OS: ${Platform.OS}\n` +
+                                                `API key prefix: ${keyPrefix}\n` +
+                                                `API key length: ${keyLength}\n` +
+                                                `offerings.current?.identifier: ${currentId}\n` +
+                                                `offerings.current?.availablePackages?.length: ${currentPkgsLen}\n` +
+                                                `Object.keys(offerings.all): [${allKeys.join(', ')}]\n` +
+                                                `error.code: null\n` +
+                                                `error.message: null`
+                                            );
+                                        }
+                                        Alert.alert('Error', 'No se encontraron planes disponibles.');
+                                    }
+                                } catch (e: any) {
+                                    errorObj = e;
                                     if (Platform.OS === 'android') {
                                         const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
                                         const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
@@ -252,84 +290,60 @@ export const PaywallScreen = () => {
                                             `offerings.current?.identifier: ${currentId}\n` +
                                             `offerings.current?.availablePackages?.length: ${currentPkgsLen}\n` +
                                             `Object.keys(offerings.all): [${allKeys.join(', ')}]\n` +
-                                            `error.code: null\n` +
-                                            `error.message: null`
+                                            `error.code: ${errorObj?.code || 'unknown'}\n` +
+                                            `error.message: ${errorObj?.message || errorObj}`
                                         );
                                     }
-                                    Alert.alert('Error', 'No se encontraron planes disponibles.');
+                                    Alert.alert('Error Detalles', e.message || 'Error desconocido al cargar planes.');
+                                } finally {
+                                    setLoading(false);
                                 }
-                            } catch (e: any) {
-                                errorObj = e;
-                                if (Platform.OS === 'android') {
-                                    const apiKey = ENV.REVENUECAT_API_KEY_ANDROID || '';
-                                    const keyPrefix = apiKey ? apiKey.substring(0, 5) : 'empty';
-                                    const keyLength = apiKey ? apiKey.length : 0;
-
-                                    const currentId = offeringsObj?.current?.identifier || 'null';
-                                    const currentPkgsLen = offeringsObj?.current?.availablePackages?.length || 0;
-                                    const allKeys = offeringsObj?.all ? Object.keys(offeringsObj.all) : [];
-
-                                    Alert.alert(
-                                        "RC DEBUG",
-                                        `Platform.OS: ${Platform.OS}\n` +
-                                        `API key prefix: ${keyPrefix}\n` +
-                                        `API key length: ${keyLength}\n` +
-                                        `offerings.current?.identifier: ${currentId}\n` +
-                                        `offerings.current?.availablePackages?.length: ${currentPkgsLen}\n` +
-                                        `Object.keys(offerings.all): [${allKeys.join(', ')}]\n` +
-                                        `error.code: ${errorObj?.code || 'unknown'}\n` +
-                                        `error.message: ${errorObj?.message || errorObj}`
-                                    );
+                            } : handleSubscribe}
+                            disabled={loading}
+                        >
+                            <Text style={styles.buttonText}>
+                                {loading
+                                    ? i18n.t('pricing_button_starting')
+                                    : pkg
+                                        ? i18n.t('paywall_pro_cta_v2')
+                                        : 'Reintentar Cargar Plan'
                                 }
-                                Alert.alert('Error Detalles', e.message || 'Error desconocido al cargar planes.');
-                            } finally {
-                                setLoading(false);
-                            }
-                        } : handleSubscribe}
-                        disabled={loading}
-                    >
-                        <Text style={styles.buttonText}>
-                            {loading
-                                ? i18n.t('pricing_button_starting')
-                                : pkg
-                                    ? i18n.t('paywall_pro_cta')
-                                    : 'Reintentar Cargar Plan'
-                            }
+                            </Text>
+                        </TouchableOpacity>
+
+                        <Text style={styles.legalText}>
+                            {i18n.t('paywall_cancel_anytime').replace('{0}', yearlyPriceText)}
                         </Text>
-                    </TouchableOpacity>
 
-                    <Text style={styles.legalText}>
-                        {afterTrialText}
-                    </Text>
+                        <Text style={[styles.legalText, { marginTop: -6, marginBottom: 12, color: '#4B5563' }]}>
+                            {i18n.t('paywall_keep_collection')}
+                        </Text>
 
-                    <Text style={[styles.legalText, { marginTop: -10, marginBottom: 12 }]}>
-                        {i18n.t('paywall_keep_collection')}
-                    </Text>
+                        <View style={styles.linksContainer}>
+                            {!user && (
+                                <TouchableOpacity onPress={() => navigation.navigate('Login', { isSignUp: false })}>
+                                    <Text style={[styles.link, { textDecorationLine: 'underline', color: '#1A2530', fontSize: 13, fontWeight: '600', marginBottom: 8 }]}>
+                                        {i18n.t('pricing_login_link')}
+                                    </Text>
+                                </TouchableOpacity>
+                            )}
+                        </View>
 
-                    <View style={styles.linksContainer}>
-                        {!user && (
-                            <TouchableOpacity onPress={() => navigation.navigate('Login', { isSignUp: false })}>
-                                <Text style={[styles.link, { textDecorationLine: 'underline', color: '#1A2530', fontSize: 13, fontWeight: '600', marginBottom: 8 }]}>
-                                    {i18n.t('pricing_login_link')}
-                                </Text>
+                        <View style={styles.bottomLinksContainer}>
+                            <TouchableOpacity onPress={handleRestore}>
+                                <Text style={styles.bottomLink}>{i18n.t('pricing_restore_short')}</Text>
                             </TouchableOpacity>
-                        )}
+                            <Text style={styles.divider}>•</Text>
+                            <TouchableOpacity onPress={() => openLink(ENV.TERMS_URL)}>
+                                <Text style={styles.bottomLink}>{i18n.t('pricing_terms')}</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.divider}>•</Text>
+                            <TouchableOpacity onPress={() => openLink(ENV.PRIVACY_URL)}>
+                                <Text style={styles.bottomLink}>{i18n.t('pricing_privacy')}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
-
-                    <View style={styles.bottomLinksContainer}>
-                        <TouchableOpacity onPress={handleRestore}>
-                            <Text style={styles.bottomLink}>{i18n.t('pricing_restore_short')}</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.divider}>•</Text>
-                        <TouchableOpacity onPress={() => openLink(ENV.TERMS_URL)}>
-                            <Text style={styles.bottomLink}>{i18n.t('pricing_terms')}</Text>
-                        </TouchableOpacity>
-                        <Text style={styles.divider}>•</Text>
-                        <TouchableOpacity onPress={() => openLink(ENV.PRIVACY_URL)}>
-                            <Text style={styles.bottomLink}>{i18n.t('pricing_privacy')}</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
+                </ScrollView>
             </SafeAreaView>
         </View>
     );
@@ -378,6 +392,25 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 24,
         paddingVertical: 12,
+    },
+    scrollContent: {
+        flexGrow: 1,
+        justifyContent: 'space-between',
+        paddingBottom: 20,
+    },
+    limitReachedLabel: {
+        color: '#E65100',
+        backgroundColor: '#FFF9E6',
+        borderColor: '#FFE0B2',
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingVertical: 6,
+        paddingHorizontal: 12,
+        fontSize: 13,
+        fontWeight: '600',
+        textAlign: 'center',
+        marginBottom: 12,
+        overflow: 'hidden',
     },
     topHeader: {
         flexDirection: 'row',
@@ -514,14 +547,14 @@ const styles = StyleSheet.create({
     },
     price: {
         color: '#1A2530',
-        fontSize: 26,
-        fontWeight: '800',
-        marginBottom: 2,
+        fontSize: 14.5,
+        fontWeight: '700',
     },
     trialText: {
         color: '#34A853',
-        fontSize: 14.5,
-        fontWeight: '700',
+        fontSize: 26,
+        fontWeight: '800',
+        marginBottom: 2,
     },
     footer: {
         alignItems: 'center',

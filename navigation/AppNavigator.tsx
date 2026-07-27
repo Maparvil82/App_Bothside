@@ -525,7 +525,7 @@ const TabNavigator = () => {
           source: 'add_album_limit',
         });
         // Navigate to Paywall in the parent AppStack
-        navigation.getParent()?.navigate('Paywall');
+        navigation.getParent()?.navigate('Paywall', { source: 'collection_limit' });
         return;
       }
 

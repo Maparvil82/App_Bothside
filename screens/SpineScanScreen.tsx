@@ -88,7 +88,7 @@ export const SpineScanScreen = () => {
         if (subscriptionStatus !== 'active' && count >= FREE_COLLECTION_LIMIT) {
           if (!hasShownLimitPaywall) {
             setHasShownLimitPaywall(true);
-            navigation.navigate('Paywall');
+            navigation.navigate('Paywall', { source: 'collection_limit' });
           } else {
             // User cancelled/returned from Paywall and is still not Pro
             navigation.goBack();
@@ -330,7 +330,7 @@ export const SpineScanScreen = () => {
     if (!isPro) {
       if (selected.length > remainingFreeSlots) {
         setPendingSave(true);
-        navigation.navigate('Paywall');
+        navigation.navigate('Paywall', { source: 'collection_limit' });
         return;
       }
 

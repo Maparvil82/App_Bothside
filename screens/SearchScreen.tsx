@@ -146,7 +146,7 @@ export const SearchScreen: React.FC = () => {
           free_album_limit: FREE_COLLECTION_LIMIT,
           source: 'add_album_limit',
         });
-        navigation.navigate('Paywall');
+        navigation.navigate('Paywall', { source: 'collection_limit' });
         return;
       }
       AnalyticsService.track('add_album_allowed_free', {
@@ -1160,7 +1160,7 @@ export const SearchScreen: React.FC = () => {
       try {
         const count = await UserCollectionService.getUserCollectionCount(user.id);
         if (count >= FREE_COLLECTION_LIMIT) {
-          navigation.navigate('Paywall');
+          navigation.navigate('Paywall', { source: 'collection_limit' });
           return;
         }
       } catch (err) {
