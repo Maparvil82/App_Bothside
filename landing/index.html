@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bothside — Tu colección. Tus sesiones. Tu mundo.</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --orange: #ff9800;
+      --orange-light: #ffb74d;
+      --orange-glow: rgba(255,152,0,0.18);
+      --bg: #0a0a0a;
+      --bg2: #111;
+      --bg3: #181818;
+      --bg4: #222;
+      --text: #f0f0f0;
+      --text-dim: #999;
+      --border: rgba(255,255,255,0.07);
+      --radius: 16px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,10,10,0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px;
+      color: var(--text);
+    }
+    .nav-logo span { color: var(--orange); }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a { color: var(--text-dim); text-decoration: none; font-size: .9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--orange); }
+    .nav-cta {
+      background: var(--orange); color: #000; padding: .55rem 1.3rem;
+      border-radius: 999px; font-weight: 700; font-size: .9rem;
+      text-decoration: none; transition: opacity .2s;
+    }
+    .nav-cta:hover { opacity: .85; }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 1.5rem 4rem;
+      position: relative; overflow: hidden;
+    }
+    .hero-bg-glow {
+      position: absolute; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 600px;
+      background: radial-gradient(ellipse at center, var(--orange-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: var(--bg3); border: 1px solid var(--orange-glow);
+      padding: .4rem 1rem; border-radius: 999px;
+      font-size: .8rem; color: var(--orange); font-weight: 600; letter-spacing: .05em;
+      text-transform: uppercase; margin-bottom: 1.5rem;
+    }
+    .hero h1 {
+      font-size: clamp(2.5rem, 7vw, 5.5rem);
+      font-weight: 900; line-height: 1.05; letter-spacing: -2px;
+      max-width: 900px; margin-bottom: 1.5rem;
+    }
+    .hero h1 .accent { color: var(--orange); }
+    .hero p {
+      font-size: clamp(1rem, 2.5vw, 1.25rem);
+      color: var(--text-dim); max-width: 620px; margin-bottom: 2.5rem;
+    }
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+    .btn-primary {
+      background: var(--orange); color: #000; padding: .85rem 2rem;
+      border-radius: 999px; font-weight: 800; font-size: 1rem;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 0 30px var(--orange-glow);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 40px rgba(255,152,0,.35); }
+    .btn-secondary {
+      background: transparent; color: var(--text); padding: .85rem 2rem;
+      border-radius: 999px; font-weight: 700; font-size: 1rem;
+      text-decoration: none; border: 1.5px solid var(--border);
+      transition: border-color .2s, color .2s;
+    }
+    .btn-secondary:hover { border-color: var(--orange); color: var(--orange); }
+
+    /* fake phone mockup */
+    .hero-mockup {
+      margin-top: 4rem; position: relative;
+      width: min(340px, 88vw);
+    }
+    .phone-frame {
+      background: var(--bg3);
+      border: 2px solid var(--border);
+      border-radius: 44px;
+      padding: 14px;
+      box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 60px var(--orange-glow);
+    }
+    .phone-screen {
+      background: var(--bg);
+      border-radius: 34px;
+      overflow: hidden;
+      aspect-ratio: 9/19;
+      display: flex; flex-direction: column;
+    }
+    .phone-status {
+      background: var(--bg2); padding: .6rem 1.2rem;
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: .65rem; color: var(--text-dim);
+    }
+    .phone-header {
+      background: var(--bg2); padding: .8rem 1.2rem;
+      border-bottom: 1px solid var(--border);
+      font-size: .8rem; font-weight: 700; color: var(--orange);
+      text-align: center;
+    }
+    .phone-body { flex: 1; padding: .8rem; display: flex; flex-direction: column; gap: .5rem; overflow: hidden; }
+    .album-card {
+      background: var(--bg3); border-radius: 12px; padding: .65rem;
+      display: flex; align-items: center; gap: .7rem;
+    }
+    .album-thumb {
+      width: 44px; height: 44px; border-radius: 8px;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--bg4), var(--orange-glow));
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.2rem;
+    }
+    .album-info { flex: 1; overflow: hidden; }
+    .album-title { font-size: .72rem; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .album-artist { font-size: .64rem; color: var(--text-dim); }
+    .album-price { font-size: .7rem; font-weight: 700; color: var(--orange); }
+    .phone-tabs {
+      display: flex; justify-content: space-around; padding: .6rem .5rem;
+      background: var(--bg2); border-top: 1px solid var(--border);
+    }
+    .tab-icon { font-size: 1.2rem; opacity: .5; }
+    .tab-icon.active { opacity: 1; }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      display: flex; flex-wrap: wrap; justify-content: center;
+      padding: 2rem;
+    }
+    .stat-item {
+      text-align: center; padding: 1rem 2.5rem;
+      border-right: 1px solid var(--border);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num { font-size: 2rem; font-weight: 900; color: var(--orange); letter-spacing: -1px; }
+    .stat-label { font-size: .8rem; color: var(--text-dim); margin-top: .2rem; }
+
+    /* ── SECTIONS ── */
+    section { padding: 6rem 1.5rem; }
+    .section-tag {
+      display: inline-block; color: var(--orange); font-size: .75rem;
+      font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+      margin-bottom: .8rem;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 900;
+      letter-spacing: -1px; line-height: 1.1; margin-bottom: 1rem; max-width: 700px;
+    }
+    .section-desc { color: var(--text-dim); font-size: 1.05rem; max-width: 560px; margin-bottom: 3rem; }
+
+    .container { max-width: 1100px; margin: 0 auto; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .two-col.reverse { direction: rtl; }
+    .two-col.reverse > * { direction: ltr; }
+
+    /* ── FEATURE GRID ── */
+    .feature-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem; margin-top: 3rem;
+    }
+    .feature-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.8rem;
+      transition: border-color .25s, transform .25s;
+    }
+    .feature-card:hover { border-color: var(--orange); transform: translateY(-4px); }
+    .feature-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      background: var(--orange-glow); display: flex; align-items: center;
+      justify-content: center; font-size: 1.5rem; margin-bottom: 1.1rem;
+    }
+    .feature-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: .5rem; }
+    .feature-card p { font-size: .88rem; color: var(--text-dim); line-height: 1.6; }
+
+    /* ── DUAL AUDIENCE ── */
+    .audience-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 3rem; }
+    .audience-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2.5rem; position: relative; overflow: hidden;
+    }
+    .audience-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--orange);
+    }
+    .audience-emoji { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .audience-card h3 { font-size: 1.4rem; font-weight: 800; margin-bottom: .75rem; }
+    .audience-card p { color: var(--text-dim); font-size: .92rem; margin-bottom: 1.3rem; }
+    .audience-features { list-style: none; display: flex; flex-direction: column; gap: .5rem; }
+    .audience-features li {
+      font-size: .88rem; color: var(--text-dim);
+      padding-left: 1.4rem; position: relative;
+    }
+    .audience-features li::before {
+      content: '→'; position: absolute; left: 0;
+      color: var(--orange); font-weight: 700;
+    }
+
+    /* ── AI SECTION ── */
+    .ai-section {
+      background: linear-gradient(135deg, var(--bg2) 0%, rgba(255,152,0,.06) 100%);
+      border: 1px solid var(--border); border-radius: 24px;
+      padding: 4rem; display: flex; align-items: center; gap: 3rem;
+      flex-wrap: wrap;
+    }
+    .ai-chat-demo {
+      flex: 1; min-width: 260px; max-width: 380px;
+      background: var(--bg); border-radius: 16px; padding: 1.2rem;
+      display: flex; flex-direction: column; gap: .8rem;
+    }
+    .chat-msg { padding: .7rem 1rem; border-radius: 12px; font-size: .85rem; max-width: 85%; }
+    .chat-msg.user { background: var(--orange); color: #000; align-self: flex-end; font-weight: 600; }
+    .chat-msg.ai { background: var(--bg3); color: var(--text); align-self: flex-start; }
+    .ai-info { flex: 1; min-width: 260px; }
+    .ai-info .section-tag { margin-bottom: .5rem; }
+    .ai-info h2 { margin-bottom: 1rem; }
+    .ai-info p { color: var(--text-dim); font-size: .95rem; margin-bottom: 1.5rem; }
+    .ai-badges { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .ai-badge {
+      background: var(--bg3); border: 1px solid var(--border);
+      padding: .35rem .9rem; border-radius: 999px; font-size: .78rem; color: var(--text-dim);
+    }
+
+    /* ── GAMIFICATION ── */
+    .rank-row { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 2rem; }
+    .rank-pill {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 999px; padding: .5rem 1.2rem;
+      display: flex; align-items: center; gap: .5rem;
+      font-size: .88rem;
+    }
+    .rank-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+    /* ── HOW IT WORKS ── */
+    .steps { display: flex; flex-direction: column; gap: 0; margin-top: 3rem; max-width: 640px; }
+    .step {
+      display: flex; gap: 1.5rem; align-items: flex-start;
+      padding-bottom: 2.5rem; position: relative;
+    }
+    .step:not(:last-child)::after {
+      content: ''; position: absolute; left: 21px; top: 48px; bottom: 0;
+      width: 2px; background: var(--border);
+    }
+    .step-num {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--orange-glow); border: 2px solid var(--orange);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 900; font-size: 1rem; color: var(--orange); flex-shrink: 0;
+    }
+    .step-content h4 { font-size: 1rem; font-weight: 700; margin-bottom: .3rem; }
+    .step-content p { font-size: .9rem; color: var(--text-dim); }
+
+    /* ── TECH STRIP ── */
+    .tech-strip {
+      background: var(--bg2); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem; text-align: center;
+    }
+    .tech-strip p { font-size: .8rem; color: var(--text-dim); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: .1em; }
+    .tech-logos { display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem 2.5rem; }
+    .tech-logo {
+      font-size: .9rem; font-weight: 700; color: var(--text-dim);
+      opacity: .6; transition: opacity .2s;
+    }
+    .tech-logo:hover { opacity: 1; color: var(--orange); }
+
+    /* ── PRICING ── */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; margin-top: 3rem; }
+    .pricing-card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem; text-align: center;
+    }
+    .pricing-card.featured {
+      border-color: var(--orange);
+      background: linear-gradient(135deg, var(--bg2) 0%, rgba(255,152,0,.06) 100%);
+      position: relative;
+    }
+    .featured-badge {
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      background: var(--orange); color: #000; font-size: .75rem; font-weight: 800;
+      padding: .25rem .9rem; border-radius: 999px;
+    }
+    .pricing-plan { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--text-dim); margin-bottom: .5rem; }
+    .pricing-price { font-size: 3rem; font-weight: 900; letter-spacing: -2px; color: var(--text); }
+    .pricing-price sup { font-size: 1.2rem; vertical-align: top; margin-top: .8rem; display: inline-block; }
+    .pricing-price sub { font-size: 1rem; font-weight: 400; color: var(--text-dim); }
+    .pricing-desc { font-size: .88rem; color: var(--text-dim); margin: .75rem 0 1.5rem; }
+    .pricing-features { list-style: none; text-align: left; margin-bottom: 1.8rem; display: flex; flex-direction: column; gap: .55rem; }
+    .pricing-features li { font-size: .88rem; padding-left: 1.3rem; position: relative; }
+    .pricing-features li.yes::before { content: '✓'; position: absolute; left: 0; color: var(--orange); font-weight: 700; }
+    .pricing-features li.no { color: var(--text-dim); }
+    .pricing-features li.no::before { content: '–'; position: absolute; left: 0; color: var(--text-dim); }
+    .btn-plan {
+      display: block; padding: .75rem; border-radius: 999px;
+      font-weight: 700; font-size: .9rem; text-decoration: none; text-align: center;
+      transition: opacity .2s;
+    }
+    .btn-plan:hover { opacity: .8; }
+    .btn-plan.dark { background: var(--bg4); color: var(--text); }
+    .btn-plan.orange { background: var(--orange); color: #000; }
+
+    /* ── CTA ── */
+    .cta-section {
+      text-align: center; padding: 6rem 2rem;
+      position: relative; overflow: hidden;
+    }
+    .cta-glow {
+      position: absolute; bottom: -200px; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 500px;
+      background: radial-gradient(ellipse at center, var(--orange-glow) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cta-section h2 { margin: 0 auto 1rem; }
+    .cta-section p { color: var(--text-dim); max-width: 480px; margin: 0 auto 2.5rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--bg2); border-top: 1px solid var(--border);
+      padding: 2rem; text-align: center;
+      font-size: .8rem; color: var(--text-dim);
+    }
+    footer a { color: var(--orange); text-decoration: none; }
+    footer .footer-logo { font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: .5rem; }
+    footer .footer-logo span { color: var(--orange); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .two-col, .audience-grid { grid-template-columns: 1fr; }
+      .two-col.reverse { direction: ltr; }
+      .stat-item { padding: .8rem 1.2rem; }
+      .ai-section { flex-direction: column; padding: 2rem; }
+      h2 { letter-spacing: -.5px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <div class="nav-logo">both<span>side</span></div>
+    <ul class="nav-links">
+      <li><a href="#features">Funciones</a></li>
+      <li><a href="#collectors">Coleccionistas</a></li>
+      <li><a href="#djs">DJs</a></li>
+      <li><a href="#ai">IA</a></li>
+      <li><a href="#pricing">Planes</a></li>
+    </ul>
+    <a href="#pricing" class="nav-cta">Comenzar gratis</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-bg-glow"></div>
+    <div class="hero-badge">🎵 App para coleccionistas y DJs</div>
+    <h1>Tu colección.<br><span class="accent">Tus sesiones.</span><br>Tu mundo.</h1>
+    <p>Bothside combina la base de datos musical más grande del mundo con potentes analíticas, IA y herramientas profesionales para DJs — todo en una sola app.</p>
+    <div class="hero-btns">
+      <a href="#pricing" class="btn-primary">Descargar gratis →</a>
+      <a href="#features" class="btn-secondary">Ver funciones</a>
+    </div>
+
+    <div class="hero-mockup">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-status">
+            <span>9:41</span>
+            <span>●●●</span>
+          </div>
+          <div class="phone-header">Mi Colección · 247 vinilos</div>
+          <div class="phone-body">
+            <div class="album-card">
+              <div class="album-thumb">🎸</div>
+              <div class="album-info">
+                <div class="album-title">Kind of Blue</div>
+                <div class="album-artist">Miles Davis · 1959</div>
+              </div>
+              <div class="album-price">$45</div>
+            </div>
+            <div class="album-card">
+              <div class="album-thumb">🎹</div>
+              <div class="album-info">
+                <div class="album-title">Blue Train</div>
+                <div class="album-artist">John Coltrane · 1957</div>
+              </div>
+              <div class="album-price">$38</div>
+            </div>
+            <div class="album-card">
+              <div class="album-thumb">🎷</div>
+              <div class="album-info">
+                <div class="album-title">Giant Steps</div>
+                <div class="album-artist">John Coltrane · 1960</div>
+              </div>
+              <div class="album-price">$62</div>
+            </div>
+            <div class="album-card">
+              <div class="album-thumb">🥁</div>
+              <div class="album-info">
+                <div class="album-title">A Love Supreme</div>
+                <div class="album-artist">John Coltrane · 1965</div>
+              </div>
+              <div class="album-price">$55</div>
+            </div>
+          </div>
+          <div class="phone-tabs">
+            <div class="tab-icon active">🔍</div>
+            <div class="tab-icon">💎</div>
+            <div class="tab-icon">🎒</div>
+            <div class="tab-icon">📅</div>
+            <div class="tab-icon">📊</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <div class="stat-num">10M+</div>
+      <div class="stat-label">Discos en la base de datos</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">∞</div>
+      <div class="stat-label">Colecciones sin límite</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">360°</div>
+      <div class="stat-label">Analíticas de valor</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num">IA</div>
+      <div class="stat-label">Recomendaciones Gemini</div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section id="features">
+    <div class="container">
+      <div class="section-tag">Funcionalidades</div>
+      <h2>Todo lo que un amante de la música necesita</h2>
+      <p class="section-desc">Desde catalogar tu primer vinilo hasta gestionar tu carrera como DJ — Bothside lo tiene cubierto.</p>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Búsqueda Discogs integrada</h3>
+          <p>Accede a más de 10 millones de registros. Busca por artista, título, sello, país, año o estilo musical con filtros avanzados.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">💎</div>
+          <h3>Gems — Tus favoritos</h3>
+          <p>Marca tus álbumes especiales como Gems y accede a ellos al instante. Sincronización en tiempo real entre dispositivos.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎒</div>
+          <h3>Maletas (Listas personalizadas)</h3>
+          <p>Organiza tu colección en maletas temáticas. Compártelas públicamente o mantenlas privadas. Colabora con otros coleccionistas.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📅</div>
+          <h3>Agenda de sesiones DJ</h3>
+          <p>Registra cada bolo: fecha, hora de inicio/fin, pago fijo u horario, etiquetas y notas. Nunca pierdas un dato de tu carrera.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📊</div>
+          <h3>Dashboard de estadísticas</h3>
+          <p>Gráficos de top artistas, estilos, sellos, décadas y valor estimado de tu colección, actualizados con precios de mercado reales.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🏆</div>
+          <h3>Leaderboard global</h3>
+          <p>Compite con coleccionistas de todo el mundo. Sube de rango desde Principiante hasta Master según el tamaño y valor de tu colección.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🗄️</div>
+          <h3>Estanterías virtuales</h3>
+          <p>Mapea tu colección física a estantes virtuales con cuadrículas personalizables. Sabe exactamente dónde está cada disco.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">🎙️</div>
+          <h3>Notas de audio</h3>
+          <p>Graba notas de voz para cualquier álbum o sesión. El mini reproductor flotante te acompaña mientras navegas la app.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-icon">📷</div>
+          <h3>Escáner de códigos</h3>
+          <p>Apunta la cámara a un código de barras o QR para añadir discos al instante, sin escribir nada.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COLLECTORS & DJs -->
+  <section id="collectors" style="padding-top: 0;">
+    <div class="container">
+      <div class="section-tag">Para quién es</div>
+      <h2>Hecho para dos mundos</h2>
+      <p class="section-desc">Tanto si eres coleccionista obsesivo como DJ profesional — o las dos cosas — Bothside habla tu idioma.</p>
+
+      <div class="audience-grid" id="djs">
+        <div class="audience-card">
+          <span class="audience-emoji">💿</span>
+          <h3>Coleccionistas</h3>
+          <p>La herramienta definitiva para catalogar, valorar y compartir tu amor por la música en formato físico.</p>
+          <ul class="audience-features">
+            <li>Catálogo ilimitado con metadatos completos de Discogs</li>
+            <li>Estimación de valor de mercado en tiempo real</li>
+            <li>Organización en maletas temáticas públicas o privadas</li>
+            <li>Estanterías virtuales para mapear tu colección física</li>
+            <li>Ranking global entre coleccionistas</li>
+            <li>Colecciones colaborativas con amigos</li>
+            <li>Estadísticas de artistas, estilos y décadas</li>
+          </ul>
+        </div>
+        <div class="audience-card">
+          <span class="audience-emoji">🎧</span>
+          <h3>DJs</h3>
+          <p>Gestiona tu carrera desde el primer bolo. Registra sesiones, calcula ingresos y mantén todo organizado.</p>
+          <ul class="audience-features">
+            <li>Agenda de sesiones con vista de calendario mensual</li>
+            <li>Tipos de pago: tarifa fija, por hora o gratuito</li>
+            <li>Dashboard de ingresos y horas trabajadas</li>
+            <li>Notas rápidas y notas de audio por sesión</li>
+            <li>Notificaciones y recordatorios de próximas sesiones</li>
+            <li>Etiquetas de sesión personalizables por color</li>
+            <li>Analíticas completas de tu carrera DJ</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI -->
+  <section id="ai">
+    <div class="container">
+      <div class="ai-section">
+        <div class="ai-chat-demo">
+          <div class="chat-msg user">¿Cuánto vale mi colección de jazz?</div>
+          <div class="chat-msg ai">Tu colección tiene 47 álbumes de jazz valorados en ~$1.840. Tus 3 piezas más valiosas son un Blue Note original de Coltrane ($320), un Miles Davis firmado ($280) y un Art Blakey de primera prensa ($195). 🎷</div>
+          <div class="chat-msg user">¿Qué me falta para subir de rango?</div>
+          <div class="chat-msg ai">Estás a 12 álbumes del rango "Experto". Con tu ritmo actual de adquisición, lo alcanzarás en ~3 semanas. Te recomiendo explorar el sello Impulse! — tienes 4 de sus 40 clásicos. 📈</div>
+        </div>
+        <div class="ai-info">
+          <div class="section-tag">Inteligencia Artificial</div>
+          <h2>Tu asistente musical personal</h2>
+          <p>Powered by Google Gemini 2.0, Bothside entiende tu colección al detalle. Pregunta lo que quieras sobre tus discos, sesiones, valor de mercado o recomendaciones personalizadas.</p>
+          <div class="ai-badges">
+            <span class="ai-badge">Google Gemini 2.0</span>
+            <span class="ai-badge">Contexto de tu colección</span>
+            <span class="ai-badge">Recomendaciones</span>
+            <span class="ai-badge">Análisis de valor</span>
+            <span class="ai-badge">Sistema de créditos</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAMIFICATION -->
+  <section style="padding-top: 0;">
+    <div class="container">
+      <div class="two-col">
+        <div>
+          <div class="section-tag">Gamificación</div>
+          <h2>Colecciona. Compite. Sube de nivel.</h2>
+          <p class="section-desc">El sistema de rangos de Bothside convierte tu pasión en logros. Cuanto más creces tu colección y su valor, más alto subes en el leaderboard global.</p>
+          <div class="rank-row">
+            <div class="rank-pill"><div class="rank-dot" style="background:#78909c"></div> Principiante</div>
+            <div class="rank-pill"><div class="rank-dot" style="background:#66bb6a"></div> Iniciado</div>
+            <div class="rank-pill"><div class="rank-dot" style="background:#42a5f5"></div> Conocedor</div>
+            <div class="rank-pill"><div class="rank-dot" style="background:#ab47bc"></div> Experto</div>
+            <div class="rank-pill"><div class="rank-dot" style="background:#ff9800"></div> Maestro</div>
+            <div class="rank-pill"><div class="rank-dot" style="background:#f44336"></div> Leyenda</div>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <h4>Añade tus discos</h4>
+              <p>Busca en Discogs o escanea el código de barras. Tus álbumes se añaden con portada, tracklist y precio de mercado.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <h4>Organiza y comparte</h4>
+              <p>Crea maletas temáticas, define estanterías físicas e invita a otros coleccionistas a colaborar contigo.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <h4>Analiza tu colección</h4>
+              <p>Descubre el valor total, tus artistas más frecuentes, los estilos que dominas y tendencias de precio.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <h4>Compite globalmente</h4>
+              <p>Sube en el ranking mundial de coleccionistas. Desbloquea rangos y muestra tus logros a la comunidad.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH -->
+  <div class="tech-strip">
+    <p>Tecnología que lo hace posible</p>
+    <div class="tech-logos">
+      <span class="tech-logo">Discogs API</span>
+      <span class="tech-logo">Google Gemini</span>
+      <span class="tech-logo">Supabase</span>
+      <span class="tech-logo">React Native</span>
+      <span class="tech-logo">Expo</span>
+      <span class="tech-logo">RevenueCat</span>
+      <span class="tech-logo">YouTube API</span>
+      <span class="tech-logo">Cloud Vision</span>
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <section id="pricing">
+    <div class="container" style="text-align: center;">
+      <div class="section-tag">Planes</div>
+      <h2 style="margin: 0 auto 1rem;">Simple y transparente</h2>
+      <p class="section-desc" style="margin: 0 auto 3rem;">Empieza gratis. Amplía cuando tu colección (y ambición) lo pidan.</p>
+
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <div class="pricing-plan">Free</div>
+          <div class="pricing-price">$0</div>
+          <div class="pricing-desc">Para empezar a explorar</div>
+          <ul class="pricing-features">
+            <li class="yes">Búsqueda en Discogs</li>
+            <li class="yes">Colección personal</li>
+            <li class="yes">Gems y maletas básicas</li>
+            <li class="yes">Calendario de sesiones DJ</li>
+            <li class="yes">Dashboard de estadísticas</li>
+            <li class="no">IA limitada (créditos básicos)</li>
+            <li class="no">Sin colecciones colaborativas</li>
+            <li class="no">Sin estanterías virtuales</li>
+          </ul>
+          <a href="#" class="btn-plan dark">Empezar gratis</a>
+        </div>
+        <div class="pricing-card featured">
+          <div class="featured-badge">Más popular</div>
+          <div class="pricing-plan">Premium</div>
+          <div class="pricing-price"><sup>$</sup>4<sub>/mes</sub></div>
+          <div class="pricing-desc">Para el coleccionista y DJ serio</div>
+          <ul class="pricing-features">
+            <li class="yes">Todo lo del plan Free</li>
+            <li class="yes">Créditos IA ampliados (Gemini)</li>
+            <li class="yes">Colecciones colaborativas</li>
+            <li class="yes">Estanterías virtuales ilimitadas</li>
+            <li class="yes">Exportar estadísticas</li>
+            <li class="yes">Notas de audio sin límite</li>
+            <li class="yes">Analíticas avanzadas DJ</li>
+            <li class="yes">Leaderboard con insignias premium</li>
+          </ul>
+          <a href="#" class="btn-plan orange">Comenzar Premium</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section">
+    <div class="cta-glow"></div>
+    <div class="section-tag">¿Listo?</div>
+    <h2 style="margin: 0 auto 1rem;">Tu colección te espera</h2>
+    <p>Únete a la comunidad de coleccionistas y DJs que ya gestionan su mundo musical con Bothside.</p>
+    <div class="hero-btns" style="justify-content: center;">
+      <a href="#" class="btn-primary">Descargar la app →</a>
+      <a href="#features" class="btn-secondary">Ver todas las funciones</a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">both<span>side</span></div>
+    <p>Para coleccionistas y DJs que aman la música de verdad.</p>
+    <p style="margin-top:.5rem;">
+      <a href="#">Privacidad</a> · <a href="#">Términos</a> · <a href="#">Contacto</a>
+    </p>
+  </footer>
+
+</body>
+</html>
