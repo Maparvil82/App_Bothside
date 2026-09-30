@@ -36,7 +36,6 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { HeaderCalendar } from '../components/HeaderComponents';
 import { ENV } from '../config/env';
-import { Audio } from 'expo-av';
 import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
@@ -3736,4 +3735,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-}); 
+});

@@ -1002,6 +1002,7 @@ export const de = {
     camera_saving: "Platte wird gespeichert...",
     camera_error_recognition_title: "Fehler bei der Erkennung",
     camera_error_recognition_message: "Album konnte nicht identifiziert werden. Versuchen Sie ein anderes Foto oder suchen Sie manuell.",
+    camera_error_service_message: "Das Foto kann gerade nicht analysiert werden. Versuchen Sie es später erneut oder suchen Sie das Album manuell.",
     camera_error_user_id: "Benutzer konnte nicht identifiziert werden",
     camera_error_no_vinyl_title: "Keine Vinyl-Versionen gefunden",
     camera_error_no_vinyl_message: "Versuchen Sie ein anderes Foto oder suchen Sie manuell.",
@@ -1102,4 +1103,3 @@ export const de = {
     import_discogs_bs_benefit_safe_title: "Sicherer Prozess",
     import_discogs_bs_note: "Sobald der Vorgang abgeschlossen ist, erscheinen deine Schallplatten automatisch in der App.",
 };
-

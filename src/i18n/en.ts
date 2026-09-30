@@ -1018,6 +1018,7 @@ export const en = {
     camera_saving: "Saving disc...",
     camera_error_recognition_title: "Recognition Error",
     camera_error_recognition_message: "Could not identify the album. Try with another photo or search manually.",
+    camera_error_service_message: "We couldn't analyze the photo right now. Try again later or search for the album manually.",
     camera_error_user_id: "Could not identify user",
     camera_error_no_vinyl_title: "No vinyl versions found",
     camera_error_no_vinyl_message: "Try with another photo or search manually.",
@@ -1124,4 +1125,3 @@ export const en = {
     import_discogs_bs_benefit_safe_title: 'Secure process',
     import_discogs_bs_note: 'When finished, your records will automatically appear in the app.',
 };
-

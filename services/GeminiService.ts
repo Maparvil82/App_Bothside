@@ -13,7 +13,6 @@ export class GeminiService {
                 console.error('❌ GeminiService: Missing API Key');
                 throw new Error('Gemini API Key is missing');
             }
-            console.log('🔑 GeminiService: Initializing with Key prefix:', ENV.GEMINI_API_KEY.substring(0, 8) + '...');
             this.genAI = new GoogleGenerativeAI(ENV.GEMINI_API_KEY);
             this.model = this.genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
         }
@@ -190,16 +189,20 @@ Si no puedes identificar el álbum con certeza, responde con un JSON con campos 
         };
 
         try {
-            // Note: Use gemini-1.5-flash for best vision performance if available, otherwise current model
-            // For now reusing the instance model (gemini-2.0-flash-lite should be multimodal)
-            const result = await this.model.generateContent([prompt, imagePart]);
+            const result = await this.model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: prompt }, imagePart] }],
+                generationConfig: { responseMimeType: 'application/json' },
+            });
             const response = await result.response;
             const text = response.text();
 
             // Clean markdown if present
             const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
             const data = JSON.parse(jsonStr);
-            return data;
+            return {
+                artist: typeof data?.artist === 'string' ? data.artist.trim() : '',
+                title: typeof data?.title === 'string' ? data.title.trim() : '',
+            };
         } catch (error) {
             console.error('❌ GeminiService: Error identifying image:', error);
             throw error;
@@ -246,7 +249,10 @@ Si no puedes identificar ningún álbum con certeza, devuelve una lista vacía p
         };
 
         try {
-            const result = await this.model.generateContent([prompt, imagePart]);
+            const result = await this.model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: prompt }, imagePart] }],
+                generationConfig: { responseMimeType: 'application/json' },
+            });
             const response = await result.response;
             const text = response.text();
 

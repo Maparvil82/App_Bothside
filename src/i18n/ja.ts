@@ -704,6 +704,7 @@ export const ja = {
     camera_saving: "ディスクを保存中...",
     camera_error_recognition_title: "認識エラー",
     camera_error_recognition_message: "アルバムを特定できませんでした。別の写真を試すか、手動で検索してください。",
+    camera_error_service_message: "現在、写真を解析できません。後でもう一度試すか、アルバムを手動で検索してください。",
     camera_error_user_id: "ユーザーを特定できませんでした",
     camera_error_no_vinyl_title: "レコード版が見つかりません",
     camera_error_no_vinyl_message: "別の写真を試すか、手動で検索してください。",
@@ -1149,4 +1150,3 @@ export const ja = {
     import_discogs_bs_benefit_safe_title: "安全なプロセス",
     import_discogs_bs_note: "完了すると、レコードは自動的にアプリに表示されます。",
 };
-

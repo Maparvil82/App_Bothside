@@ -170,8 +170,7 @@ export const CameraScanScreen = () => {
             try {
                 const photo = await cameraRef.current.takePictureAsync({
                     base64: true,
-                    quality: 0.5, // Reduce size for faster upload
-                    skipProcessing: true // Faster
+                    quality: 0.7,
                 });
 
                 if (photo?.base64) {
@@ -203,13 +202,25 @@ export const CameraScanScreen = () => {
                             autoManualSearch: true
                         });
                     } else {
-                        Alert.alert('No identificado', 'No pudimos identificar el álbum. Intenta acercarte más o mejorar la luz.');
-                        setScanning(false);
+                        AnalyticsService.track('camera_scan_failed', { reason: 'no_match' });
+                        Alert.alert(t('camera_error_recognition_title'), t('camera_error_recognition_message'));
                     }
+                } else {
+                    throw new Error('CAMERA_IMAGE_MISSING');
                 }
             } catch (error) {
                 console.error('Error scanning:', error);
-                Alert.alert('Error', 'Hubo un problema al analizar la imagen.');
+                const status = typeof error === 'object' && error !== null && 'status' in error
+                    ? Number(error.status) : undefined;
+                const reason = status === 401 || status === 403 ? 'authorization'
+                    : status === 429 ? 'quota'
+                    : status && status >= 500 ? 'service'
+                    : error instanceof SyntaxError ? 'invalid_response'
+                    : error instanceof Error && error.message === 'CAMERA_IMAGE_MISSING' ? 'camera_image_missing'
+                    : 'other';
+                AnalyticsService.track('camera_scan_failed', { reason, status });
+                Alert.alert(t('camera_error_recognition_title'), t('camera_error_service_message'));
+            } finally {
                 setScanning(false);
             }
         }

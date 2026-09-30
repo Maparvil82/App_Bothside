@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   Alert,
 } from 'react-native';
 import { BothsideLoader } from './BothsideLoader';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer as ExpoAudioPlayer, type AudioStatus } from 'expo-audio';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -25,7 +25,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
 }) => {
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const soundRef = useRef<ExpoAudioPlayer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -35,9 +35,8 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
   useEffect(() => {
     loadAudio();
     return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
+      soundRef.current?.remove();
+      soundRef.current = null;
     };
   }, [audioUrl]);
 
@@ -48,35 +47,26 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
       setIsLoading(true);
       setError(null);
 
-      if (sound) {
-        await sound.unloadAsync();
-      }
+      soundRef.current?.remove();
+      soundRef.current = null;
 
       // Configurar el modo de audio
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: true,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
+      await setAudioModeAsync({
+        allowsRecording: false,
+        shouldPlayInBackground: true,
+        playsInSilentMode: true,
+        interruptionMode: 'duckOthers',
+        shouldRouteThroughEarpiece: false,
       });
 
       console.log('🎵 Intentando cargar audio desde:', audioUrl);
 
       // Crear el sonido con configuración más robusta
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUrl },
-        {
-          shouldPlay: false,
-          progressUpdateIntervalMillis: 100,
-          positionMillis: 0,
-          isLooping: false,
-          volume: 1.0,
-        },
-        onPlaybackStatusUpdate
-      );
-
-      setSound(newSound);
+      const player = createAudioPlayer({ uri: audioUrl }, { updateInterval: 100 });
+      player.loop = false;
+      player.volume = 1;
+      player.addListener('playbackStatusUpdate', onPlaybackStatusUpdate);
+      soundRef.current = player;
       setIsLoading(false);
       console.log('✅ Audio cargado exitosamente');
 
@@ -89,22 +79,23 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({
     }
   };
 
-  const onPlaybackStatusUpdate = (status: any) => {
+  const onPlaybackStatusUpdate = (status: AudioStatus) => {
     if (status.isLoaded) {
-      setIsPlaying(status.isPlaying);
-      setDuration(status.durationMillis || 0);
-      setPosition(status.positionMillis || 0);
+      setIsPlaying(status.playing);
+      setDuration(status.duration * 1000);
+      setPosition(status.currentTime * 1000);
     }
   };
 
   const togglePlayPause = async () => {
+    const sound = soundRef.current;
     if (!sound) return;
 
     try {
       if (isPlaying) {
-        await sound.pauseAsync();
+        sound.pause();
       } else {
-        await sound.playAsync();
+        sound.play();
       }
     } catch (error) {
       console.error('Error toggling play/pause:', error);
@@ -270,4 +261,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-}); 
+});
