@@ -386,7 +386,7 @@ export const BarcodeScanScreen = () => {
                     {
                         text: t('add_disc_action_go_collection') || 'Ir a colección',
                         onPress: () => {
-                            navigation.navigate('SearchTab');
+                            navigation.navigate('Main', { screen: 'SearchTab' });
                         }
                     }
                 ]
