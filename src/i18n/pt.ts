@@ -1,4 +1,11 @@
 export const pt = {
+    collection_view_shelf: "Vista estante",
+    collection_view_list: "Vista lista",
+    collection_shelf_title: "As tuas estantes",
+    collection_shelf_placed: "Discos arrumados: {0}",
+    collection_shelf_out: "Fora: {0}",
+    collection_shelf_hint: "Toca num compartimento para ver os discos.",
+    collection_shelf_empty: "Ainda não há discos arrumados nesta estante.",
     // Auth
     auth_validation_username_required: "Por favor, insira um nome de usuário",
     auth_validation_username_min_length: "O nome de usuário deve ter pelo menos 3 caracteres",
@@ -1169,4 +1176,3 @@ export const pt = {
     import_discogs_bs_benefit_safe_title: "Processo seguro",
     import_discogs_bs_note: "Quando terminar, seus discos aparecerão automaticamente no aplicativo.",
 };
-

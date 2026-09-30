@@ -1,4 +1,11 @@
 export const de = {
+    collection_view_shelf: "Regalansicht",
+    collection_view_list: "Listenansicht",
+    collection_shelf_title: "Deine Regale",
+    collection_shelf_placed: "Einsortierte Schallplatten: {0}",
+    collection_shelf_out: "Entnommen: {0}",
+    collection_shelf_hint: "Tippe auf ein Fach, um seine Schallplatten zu sehen.",
+    collection_shelf_empty: "In diesem Regal stehen noch keine Schallplatten.",
     // Auth
     auth_validation_username_required: "Bitte geben Sie einen Benutzernamen ein",
     auth_validation_username_min_length: "Benutzername muss mindestens 3 Zeichen lang sein",
@@ -1102,4 +1109,3 @@ export const de = {
     import_discogs_bs_benefit_safe_title: "Sicherer Prozess",
     import_discogs_bs_note: "Sobald der Vorgang abgeschlossen ist, erscheinen deine Schallplatten automatisch in der App.",
 };
-

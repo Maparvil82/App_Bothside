@@ -1,4 +1,11 @@
 export const fr = {
+    collection_view_shelf: "Vue étagère",
+    collection_view_list: "Vue liste",
+    collection_shelf_title: "Vos étagères",
+    collection_shelf_placed: "Disques rangés : {0}",
+    collection_shelf_out: "Sortis : {0}",
+    collection_shelf_hint: "Touchez une case pour voir ses disques.",
+    collection_shelf_empty: "Aucun disque n'est encore rangé sur cette étagère.",
     // Auth
     auth_validation_username_required: "Veuillez entrer un nom d'utilisateur",
     auth_validation_username_min_length: "Le nom d'utilisateur doit contenir au moins 3 caractères",
@@ -1150,4 +1157,3 @@ export const fr = {
     import_discogs_bs_benefit_safe_title: "Processus sécurisé",
     import_discogs_bs_note: "Une fois terminé, vos disques apparaîtront automatiquement dans l'application.",
 };
-

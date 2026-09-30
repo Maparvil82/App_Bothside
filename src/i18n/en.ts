@@ -1,4 +1,11 @@
 export const en = {
+    collection_view_shelf: "Shelf view",
+    collection_view_list: "List view",
+    collection_shelf_title: "Your shelves",
+    collection_shelf_placed: "Records in place: {0}",
+    collection_shelf_out: "Out: {0}",
+    collection_shelf_hint: "Tap a compartment to see its records.",
+    collection_shelf_empty: "No records have been placed on this shelf yet.",
     // Auth
     auth_validation_username_required: "Please enter a username",
     auth_validation_username_min_length: "Username must be at least 3 characters long",
@@ -1124,4 +1131,3 @@ export const en = {
     import_discogs_bs_benefit_safe_title: 'Secure process',
     import_discogs_bs_note: 'When finished, your records will automatically appear in the app.',
 };
-
