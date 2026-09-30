@@ -411,8 +411,8 @@ export const BarcodeScanScreen = () => {
                     barcodeTypes: ['ean13', 'ean8', 'upc_a', 'upc_e', 'code128', 'code39', 'code93', 'itf14', 'codabar', 'aztec', 'datamatrix', 'pdf417'],
                 }}
                 onBarcodeScanned={scanned ? undefined : handleBarcodeScanned}
-            >
-                <SafeAreaView style={styles.overlay}>
+            />
+                <SafeAreaView style={[styles.overlay, StyleSheet.absoluteFill]}>
                     {/* Header */}
                     <View style={styles.header}>
                         <TouchableOpacity
@@ -448,7 +448,6 @@ export const BarcodeScanScreen = () => {
                         )}
                     </View>
                 </SafeAreaView>
-            </CameraView>
 
             {/* Confirmation Bottom Card / Sheet */}
             {scannedRelease && (

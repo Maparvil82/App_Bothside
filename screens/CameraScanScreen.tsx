@@ -170,7 +170,8 @@ export const CameraScanScreen = () => {
             try {
                 const photo = await cameraRef.current.takePictureAsync({
                     base64: true,
-                    quality: 0.7,
+                    quality: 0.5, // Reduce size for faster upload
+                    skipProcessing: true // Faster
                 });
 
                 if (photo?.base64) {
@@ -202,25 +203,13 @@ export const CameraScanScreen = () => {
                             autoManualSearch: true
                         });
                     } else {
-                        AnalyticsService.track('camera_scan_failed', { reason: 'no_match' });
-                        Alert.alert(t('camera_error_recognition_title'), t('camera_error_recognition_message'));
+                        Alert.alert('No identificado', 'No pudimos identificar el álbum. Intenta acercarte más o mejorar la luz.');
+                        setScanning(false);
                     }
-                } else {
-                    throw new Error('CAMERA_IMAGE_MISSING');
                 }
             } catch (error) {
                 console.error('Error scanning:', error);
-                const status = typeof error === 'object' && error !== null && 'status' in error
-                    ? Number(error.status) : undefined;
-                const reason = status === 401 || status === 403 ? 'authorization'
-                    : status === 429 ? 'quota'
-                    : status && status >= 500 ? 'service'
-                    : error instanceof SyntaxError ? 'invalid_response'
-                    : error instanceof Error && error.message === 'CAMERA_IMAGE_MISSING' ? 'camera_image_missing'
-                    : 'other';
-                AnalyticsService.track('camera_scan_failed', { reason, status });
-                Alert.alert(t('camera_error_recognition_title'), t('camera_error_service_message'));
-            } finally {
+                Alert.alert('Error', 'Hubo un problema al analizar la imagen.');
                 setScanning(false);
             }
         }
@@ -228,8 +217,8 @@ export const CameraScanScreen = () => {
 
     return (
         <View style={styles.container}>
-            <CameraView style={styles.camera} ref={cameraRef} facing="back">
-                <SafeAreaView style={styles.overlay}>
+            <CameraView style={styles.camera} ref={cameraRef} facing="back" />
+                <SafeAreaView style={[styles.overlay, StyleSheet.absoluteFill]}>
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
                             <Ionicons name="close" size={30} color="white" />
@@ -257,7 +246,6 @@ export const CameraScanScreen = () => {
                         )}
                     </View>
                 </SafeAreaView>
-            </CameraView>
 
             <AiConsentModal
                 visible={showConsentModal}

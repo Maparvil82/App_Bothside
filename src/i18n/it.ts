@@ -704,7 +704,6 @@ export const it = {
     camera_saving: "Salvataggio disco...",
     camera_error_recognition_title: "Errore nel Riconoscimento",
     camera_error_recognition_message: "Impossibile identificare l'album. Prova con un'altra foto o cerca manualmente.",
-    camera_error_service_message: "Non possiamo analizzare la foto al momento. Riprova più tardi o cerca l'album manualmente.",
     camera_error_user_id: "Impossibile identificare l'utente",
     camera_error_no_vinyl_title: "Nessuna versione vinile trovata",
     camera_error_no_vinyl_message: "Prova con un'altra foto o cerca manualmente.",
@@ -1151,5 +1150,6 @@ export const it = {
     import_discogs_bs_benefit_safe_title: "Processo sicuro",
     import_discogs_bs_note: "Al termine, i tuoi dischi appariranno automaticamente nell'applicazione.",
 };
+
 
 

@@ -1018,7 +1018,6 @@ export const es = {
     camera_saving: "Guardando disco...",
     camera_error_recognition_title: "Error en Reconocimiento",
     camera_error_recognition_message: "No se pudo identificar el álbum. Intenta con otra foto o busca manualmente.",
-    camera_error_service_message: "No pudimos analizar la foto ahora. Inténtalo de nuevo más tarde o busca el álbum manualmente.",
     camera_error_user_id: "No se pudo identificar al usuario",
     camera_error_no_vinyl_title: "No se encontraron versiones en vinilo",
     camera_error_no_vinyl_message: "Intenta con otra foto o busca manualmente.",
@@ -1126,3 +1125,4 @@ export const es = {
     import_discogs_bs_note: 'Cuando termine, tus discos aparecerán automáticamente en la app.',
 
 };
+

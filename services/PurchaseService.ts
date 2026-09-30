@@ -321,6 +321,7 @@ class PurchaseService {
     }
 
     async getCustomerInfo(): Promise<CustomerInfo | null> {
+        if (!API_KEY) return null;
         try {
             await this.EnsureInitialized();
             return await Purchases.getCustomerInfo();
@@ -332,6 +333,7 @@ class PurchaseService {
 
     // Identificar al usuario en RevenueCat (útil si hay login)
     async logIn(userId: string) {
+        if (!API_KEY) return;
         if (this.currentUserId === userId) return;
         try {
             await this.EnsureInitialized();
@@ -344,6 +346,7 @@ class PurchaseService {
     }
 
     async logOut() {
+        if (!API_KEY) return;
         try {
             await this.EnsureInitialized();
             await Purchases.logOut();

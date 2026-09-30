@@ -189,20 +189,16 @@ Si no puedes identificar el álbum con certeza, responde con un JSON con campos 
         };
 
         try {
-            const result = await this.model.generateContent({
-                contents: [{ role: 'user', parts: [{ text: prompt }, imagePart] }],
-                generationConfig: { responseMimeType: 'application/json' },
-            });
+            // Note: Use gemini-1.5-flash for best vision performance if available, otherwise current model
+            // For now reusing the instance model (gemini-2.0-flash-lite should be multimodal)
+            const result = await this.model.generateContent([prompt, imagePart]);
             const response = await result.response;
             const text = response.text();
 
             // Clean markdown if present
             const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
             const data = JSON.parse(jsonStr);
-            return {
-                artist: typeof data?.artist === 'string' ? data.artist.trim() : '',
-                title: typeof data?.title === 'string' ? data.title.trim() : '',
-            };
+            return data;
         } catch (error) {
             console.error('❌ GeminiService: Error identifying image:', error);
             throw error;
@@ -249,10 +245,7 @@ Si no puedes identificar ningún álbum con certeza, devuelve una lista vacía p
         };
 
         try {
-            const result = await this.model.generateContent({
-                contents: [{ role: 'user', parts: [{ text: prompt }, imagePart] }],
-                generationConfig: { responseMimeType: 'application/json' },
-            });
+            const result = await this.model.generateContent([prompt, imagePart]);
             const response = await result.response;
             const text = response.text();
 
