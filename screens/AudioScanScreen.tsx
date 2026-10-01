@@ -5,11 +5,13 @@ import { useNavigation, useTheme } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { analyzeAudio, AudioScanResult, AudioScanStatus } from '../modules/audioScan';
 import { useTranslation } from '../src/i18n/useTranslation';
+import { RecordingPresets, useAudioRecorder } from 'expo-audio';
 
 export const AudioScanScreen = () => {
     const navigation = useNavigation();
     const { colors } = useTheme();
     const { t } = useTranslation();
+    const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
     const [status, setStatus] = useState<AudioScanStatus>('idle');
     const [result, setResult] = useState<AudioScanResult | null>(null);
@@ -27,7 +29,7 @@ export const AudioScanScreen = () => {
             setStatus('processing');
 
             // Llamada al servicio mock
-            const scanResult = await analyzeAudio();
+            const scanResult = await analyzeAudio(audioRecorder);
 
             setResult(scanResult);
 

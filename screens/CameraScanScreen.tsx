@@ -159,7 +159,7 @@ export const CameraScanScreen = () => {
             }
 
             // Check credits one last time before action
-            const COST_SCAN = 5;
+            const COST_SCAN = __DEV__ ? 0 : 5;
             if (credits < COST_SCAN) {
                 Alert.alert('Créditos Insuficientes', `Necesitas ${COST_SCAN} créditos para escanear.`);
                 return;
@@ -193,14 +193,20 @@ export const CameraScanScreen = () => {
 
                     if (isValidResult(result.artist) && isValidResult(result.title)) {
                         // SUCCESS: Deduct Credit
-                        await deductCredit(COST_SCAN);
+                        if (COST_SCAN > 0) await deductCredit(COST_SCAN);
                         AnalyticsService.track('camera_scan_success');
 
                         // Navigate back
-                        navigation.navigate('AddDisc', {
-                            initialArtist: toTitleCase(result.artist),
-                            initialAlbum: toTitleCase(result.title),
-                            autoManualSearch: true
+                        navigation.navigate('Main', {
+                            screen: 'AddDiscTab',
+                            params: {
+                                screen: 'AddDisc',
+                                params: {
+                                    initialArtist: toTitleCase(result.artist),
+                                    initialAlbum: toTitleCase(result.title),
+                                    autoManualSearch: true,
+                                },
+                            },
                         });
                     } else {
                         Alert.alert('No identificado', 'No pudimos identificar el álbum. Intenta acercarte más o mejorar la luz.');
@@ -217,8 +223,8 @@ export const CameraScanScreen = () => {
 
     return (
         <View style={styles.container}>
-            <CameraView style={styles.camera} ref={cameraRef} facing="back">
-                <SafeAreaView style={styles.overlay}>
+            <CameraView style={styles.camera} ref={cameraRef} facing="back" />
+                <SafeAreaView style={[styles.overlay, StyleSheet.absoluteFill]}>
                     <View style={styles.header}>
                         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
                             <Ionicons name="close" size={30} color="white" />
@@ -246,7 +252,6 @@ export const CameraScanScreen = () => {
                         )}
                     </View>
                 </SafeAreaView>
-            </CameraView>
 
             <AiConsentModal
                 visible={showConsentModal}

@@ -1,4 +1,11 @@
 export const it = {
+    collection_view_shelf: "Vista scaffale",
+    collection_view_list: "Vista elenco",
+    collection_shelf_title: "I tuoi scaffali",
+    collection_shelf_placed: "Dischi collocati: {0}",
+    collection_shelf_out: "Fuori: {0}",
+    collection_shelf_hint: "Tocca uno scomparto per vedere i dischi.",
+    collection_shelf_empty: "Non ci sono ancora dischi in questo scaffale.",
     // Auth
     auth_validation_username_required: "Inserisci un nome utente",
     auth_validation_username_min_length: "Il nome utente deve essere di almeno 3 caratteri",
@@ -1150,6 +1157,4 @@ export const it = {
     import_discogs_bs_benefit_safe_title: "Processo sicuro",
     import_discogs_bs_note: "Al termine, i tuoi dischi appariranno automaticamente nell'applicazione.",
 };
-
-
 

@@ -1,4 +1,11 @@
 export const es = {
+    collection_view_shelf: "Vista estantería",
+    collection_view_list: "Vista lista",
+    collection_shelf_title: "Tus estanterías",
+    collection_shelf_placed: "Discos colocados: {0}",
+    collection_shelf_out: "Fuera: {0}",
+    collection_shelf_hint: "Toca una casilla para ver sus discos.",
+    collection_shelf_empty: "Todavía no hay discos colocados en esta estantería.",
     // Auth
     auth_validation_username_required: "Por favor ingresa un nombre de usuario",
     auth_validation_username_min_length: "El nombre de usuario debe tener al menos 3 caracteres",
@@ -1125,4 +1132,3 @@ export const es = {
     import_discogs_bs_note: 'Cuando termine, tus discos aparecerán automáticamente en la app.',
 
 };
-

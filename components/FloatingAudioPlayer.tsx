@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer as ExpoAudioPlayer, type AudioStatus } from 'expo-audio';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,7 +31,7 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
 }) => {
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const soundRef = useRef<ExpoAudioPlayer | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [duration, setDuration] = useState(0);
   const [position, setPosition] = useState(0);
@@ -81,19 +81,16 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       }).start();
 
       // Limpiar el sonido cuando se oculta
-      if (sound) {
-        sound.unloadAsync();
-        setSound(null);
-      }
+      soundRef.current?.remove();
+      soundRef.current = null;
       setIsPlaying(false);
     }
   }, [visible, audioUri]);
 
   useEffect(() => {
     return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
+      soundRef.current?.remove();
+      soundRef.current = null;
     };
   }, []);
 
@@ -120,25 +117,22 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
       console.log('🔍 FloatingAudioPlayer: Loading standard audio from URI:', audioUri);
       setIsLoading(true);
 
-      if (sound) {
-        await sound.unloadAsync();
-      }
+      soundRef.current?.remove();
+      soundRef.current = null;
 
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: false,
-        staysActiveInBackground: true,
-        playsInSilentModeIOS: true,
-        shouldDuckAndroid: true,
-        playThroughEarpieceAndroid: false,
+      await setAudioModeAsync({
+        allowsRecording: false,
+        shouldPlayInBackground: true,
+        playsInSilentMode: true,
+        interruptionMode: 'duckOthers',
+        shouldRouteThroughEarpiece: false,
       });
 
-      const { sound: newSound } = await Audio.Sound.createAsync(
-        { uri: audioUri },
-        { shouldPlay: true },
-        onPlaybackStatusUpdate
-      );
+      const player = createAudioPlayer({ uri: audioUri });
+      player.addListener('playbackStatusUpdate', onPlaybackStatusUpdate);
+      soundRef.current = player;
+      player.play();
 
-      setSound(newSound);
       setIsLoading(false);
       setIsPlaying(true);
     } catch (error) {
@@ -148,11 +142,11 @@ export const FloatingAudioPlayer: React.FC<FloatingAudioPlayerProps> = ({
     }
   };
 
-  const onPlaybackStatusUpdate = (status: any) => {
+  const onPlaybackStatusUpdate = (status: AudioStatus) => {
     if (status.isLoaded) {
-      setIsPlaying(status.isPlaying);
-      setDuration(status.durationMillis || 0);
-      setPosition(status.positionMillis || 0);
+      setIsPlaying(status.playing);
+      setDuration(status.duration * 1000);
+      setPosition(status.currentTime * 1000);
       if (status.didJustFinish) {
         setIsPlaying(false);
         setPosition(0);
@@ -388,4 +382,4 @@ const styles = StyleSheet.create({
   retryButton: {
     padding: 4,
   },
-}); 
+});

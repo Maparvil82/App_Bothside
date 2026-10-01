@@ -36,7 +36,6 @@ import { AudioPlayer } from '../components/AudioPlayer';
 import { FloatingAudioPlayer } from '../components/FloatingAudioPlayer';
 import { HeaderCalendar } from '../components/HeaderComponents';
 import { ENV } from '../config/env';
-import { Audio } from 'expo-av';
 import { useTranslation } from '../src/i18n/useTranslation';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { CreateMaletaModalContext } from '../contexts/CreateMaletaModalContext';
@@ -46,6 +45,7 @@ import { AnalyticsService } from '../services/analytics';
 import { useRecommendBothside } from '../contexts/RecommendBothsideContext';
 import Svg, { Rect, Line } from 'react-native-svg';
 import { CreateShelfModal } from '../components/CreateShelfModal';
+import { CollectionShelfView } from '../components/CollectionShelfView';
 import { FREE_COLLECTION_LIMIT } from '../config/features';
 
 // Función para normalizar cadenas (quitar acentos, paréntesis, etc.)
@@ -87,6 +87,8 @@ export const SearchScreen: React.FC = () => {
   const [filterByAudioNotes, setFilterByAudioNotes] = useState<boolean>(false);
   const [showFilters, setShowFilters] = useState<boolean>(false);
   const [showSearch, setShowSearch] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'list' | 'shelf'>('list');
+  const [selectedShelfId, setSelectedShelfId] = useState<string | null>(null);
 
   const [filteredCollection, setFilteredCollection] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState(false);
@@ -103,6 +105,7 @@ export const SearchScreen: React.FC = () => {
   // Estados para el modal de asignar Ubicación física
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [physicalShelves, setPhysicalShelves] = useState<any[]>([]);
+  const isShelfView = viewMode === 'shelf' && physicalShelves.length > 0;
   const [selectedAlbumForLocation, setSelectedAlbumForLocation] = useState<any>(null);
 
   const [showEditionsModal, setShowEditionsModal] = useState(false);
@@ -1885,46 +1888,70 @@ export const SearchScreen: React.FC = () => {
     <SafeAreaView style={[styles.container, { backgroundColor: mode === 'dark' ? colors.background : '#FFF' }]}>
 
       {/* Toolbar con botones de búsqueda, vista y filtros */}
-      {collection.length > 0 && (
+      {(collection.length > 0 || physicalShelves.length > 0) && (
         <View style={[styles.toolbarContainer, { backgroundColor: mode === 'dark' ? colors.card : '#FFF', borderBottomColor: mode === 'dark' ? colors.border : '#EAEAEA' }]}>
           {/* Contador de discos y porcentaje ubicados a la izquierda */}
-          <Text style={[styles.collectionStats, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
-            <Text style={[styles.collectionCount, { color: collection.length === 0 ? '#1A2530' : colors.text }]}>
+          <Text numberOfLines={1} style={[styles.collectionStats, { color: colors.text }]}>
+            <Text style={[styles.collectionCount, { color: colors.text }]}>
               {filteredCollection.length} {t('search_stats_discs')}
             </Text>
-            <Text style={[styles.locatedPercentage, { color: collection.length === 0 ? '#6B7280' : colors.text }]}>
+            <Text style={[styles.locatedPercentage, { color: colors.text }]}>
               {' • '}{getLocatedPercentage()}% {t('search_stats_located')}
             </Text>
           </Text>
 
           {/* Botones de búsqueda, vista y filtros a la derecha */}
           <View style={styles.toolbarButtons}>
+            {physicalShelves.length > 0 && (
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t(isShelfView ? 'collection_view_list' : 'collection_view_shelf')}
+                style={[styles.toolbarButton, { backgroundColor: isShelfView ? colors.border : 'transparent' }]}
+                onPress={() => setViewMode(isShelfView ? 'list' : 'shelf')}
+              >
+                <Ionicons name={isShelfView ? 'list-outline' : 'albums-outline'} size={24} color={colors.text} />
+              </TouchableOpacity>
+            )}
             <TouchableOpacity
               style={[
                 styles.toolbarButton,
-                { backgroundColor: showSearch ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
+                { backgroundColor: !isShelfView && showSearch ? colors.border : 'transparent' }
               ]}
-              onPress={() => setShowSearch(!showSearch)}
+              onPress={() => {
+                if (isShelfView) {
+                  setViewMode('list');
+                  setShowSearch(true);
+                } else {
+                  setShowSearch(!showSearch);
+                }
+              }}
             >
               <Ionicons
                 name="search-outline"
                 size={24}
-                color={collection.length === 0 ? '#1A2530' : colors.text}
+                color={colors.text}
               />
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.toolbarButton,
-                { backgroundColor: showFilters ? (collection.length === 0 ? '#EAEAEA' : colors.border) : 'transparent' }
+                { backgroundColor: !isShelfView && showFilters ? colors.border : 'transparent' }
               ]}
-              onPress={() => setShowFilters(!showFilters)}
+              onPress={() => {
+                if (isShelfView) {
+                  setViewMode('list');
+                  setShowFilters(true);
+                } else {
+                  setShowFilters(!showFilters);
+                }
+              }}
             >
               <View style={{ position: 'relative' }}>
                 <Ionicons
                   name="filter-outline"
                   size={24}
-                  color={hasActiveFilters ? '#34A853' : (collection.length === 0 ? '#1A2530' : colors.text)}
+                  color={hasActiveFilters ? '#34A853' : colors.text}
                 />
                 {hasActiveFilters && (
                   <View
@@ -1946,7 +1973,7 @@ export const SearchScreen: React.FC = () => {
       )}
 
       {/* Campo de búsqueda */}
-      {collection.length > 0 && showSearch && (
+      {!isShelfView && collection.length > 0 && showSearch && (
         <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
           <View style={[styles.searchInputContainer, { backgroundColor: colors.background, borderColor: colors.border }]}>
             <TextInput
@@ -1971,7 +1998,7 @@ export const SearchScreen: React.FC = () => {
       )}
 
       {/* Filtros */}
-      {collection.length > 0 && showFilters && (
+      {!isShelfView && collection.length > 0 && showFilters && (
         <View style={[styles.filterDropdownContent, { backgroundColor: colors.card }]}>
           {/* Filtro por Estilo */}
           <View style={styles.filterSection}>
@@ -2158,10 +2185,20 @@ export const SearchScreen: React.FC = () => {
       )}
 
       {/* Filtros rápidos por ubicación física */}
-      {renderQuickLocationFilters()}
+      {!isShelfView && renderQuickLocationFilters()}
 
       {/* Lista combinada */}
-      {user ? (
+      {user && isShelfView ? (
+        <CollectionShelfView
+          shelves={physicalShelves}
+          records={collection}
+          selectedShelfId={selectedShelfId}
+          onSelectShelf={setSelectedShelfId}
+          onOpenRecord={(albumId) => navigation.navigate('AlbumDetail', { albumId })}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+        />
+      ) : user ? (
         <FlatList
           data={filteredCollection}
           renderItem={renderCollectionItem}
@@ -2861,6 +2898,8 @@ const styles = StyleSheet.create({
   collectionStats: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 1,
+    marginRight: 8,
   },
   locatedPercentage: {
     fontSize: 16,
@@ -3736,4 +3775,4 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-}); 
+});

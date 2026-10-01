@@ -921,8 +921,8 @@ export const SpineScanScreen = () => {
   // ----------------------------------------------------
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} ref={cameraRef} facing="back">
-        <SafeAreaView style={styles.overlay}>
+      <CameraView style={styles.camera} ref={cameraRef} facing="back" />
+        <SafeAreaView style={[styles.overlay, StyleSheet.absoluteFill]}>
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
               <Ionicons name="close" size={30} color="white" />
@@ -971,7 +971,6 @@ export const SpineScanScreen = () => {
             )}
           </View>
         </SafeAreaView>
-      </CameraView>
 
       <AiConsentModal
         visible={showConsentModal}

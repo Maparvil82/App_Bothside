@@ -1,4 +1,11 @@
 export const ja = {
+    collection_view_shelf: "棚表示",
+    collection_view_list: "一覧表示",
+    collection_shelf_title: "あなたの棚",
+    collection_shelf_placed: "収納中のレコード: {0} 枚",
+    collection_shelf_out: "取り出し中: {0} 枚",
+    collection_shelf_hint: "マスをタップするとレコードを表示します。",
+    collection_shelf_empty: "この棚にはまだレコードがありません。",
     // Auth
     auth_validation_username_required: "ユーザー名を入力してください",
     auth_validation_username_min_length: "ユーザー名は3文字以上である必要があります",
@@ -1149,4 +1156,3 @@ export const ja = {
     import_discogs_bs_benefit_safe_title: "安全なプロセス",
     import_discogs_bs_note: "完了すると、レコードは自動的にアプリに表示されます。",
 };
-

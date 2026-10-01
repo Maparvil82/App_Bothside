@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0,0,0,0.2)', // Slight dark overlay for premium feel/contrast
   },
   formContainer: {

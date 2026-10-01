@@ -1552,7 +1552,7 @@ export default function AlbumDetailScreen() {
 
           {isChangingEdition && (
             <Animated.View style={{
-              ...StyleSheet.absoluteFillObject,
+              ...StyleSheet.absoluteFill,
               backgroundColor: mode === 'dark' ? 'rgba(0,0,0,0.5)' : 'rgba(255,255,255,0.7)',
               justifyContent: 'center',
               alignItems: 'center',
@@ -3239,7 +3239,7 @@ const styles = StyleSheet.create({
     display: 'none',
   },
   videoLoadingContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -3251,7 +3251,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   videoErrorContainer: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.7)',
@@ -4856,4 +4856,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Alert,
   Dimensions,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { createAudioPlayer, RecordingPresets, requestRecordingPermissionsAsync, setAudioModeAsync, useAudioRecorder, type AudioPlayer as ExpoAudioPlayer } from 'expo-audio';
 import { AppColors } from '../src/theme/colors';
 import { useThemeMode } from '../contexts/ThemeContext';
 // TODO: Migrar a la nueva API de filesystem cuando se reescriba el flujo de notas de audio
@@ -34,22 +34,18 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const { t } = useTranslation();
   const { mode } = useThemeMode();
   const primaryColor = mode === 'dark' ? AppColors.dark.primary : AppColors.primary;
-  const [recording, setRecording] = useState<Audio.Recording | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.LOW_QUALITY);
   const [recordingUri, setRecordingUri] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const soundRef = useRef<ExpoAudioPlayer | null>(null);
   const [timer, setTimer] = useState<number | null>(null);
 
   useEffect(() => {
     return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-      if (recording) {
-        recording.stopAndUnloadAsync();
-      }
+      soundRef.current?.remove();
+      if (audioRecorder.isRecording) audioRecorder.stop();
     };
   }, []);
 
@@ -82,24 +78,21 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   const startRecording = async () => {
     try {
       // Solicitar permisos
-      const { status } = await Audio.requestPermissionsAsync();
+      const { status } = await requestRecordingPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert(t('common_permissions'), t('audio_recorder_permission_error'));
         return;
       }
 
       // Configurar audio
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
+      await setAudioModeAsync({
+        allowsRecording: true,
+        playsInSilentMode: true,
       });
 
-      // Iniciar grabación
-      const { recording } = await Audio.Recording.createAsync(
-        Audio.RecordingOptionsPresets.LOW_QUALITY
-      );
+      await audioRecorder.prepareToRecordAsync();
+      audioRecorder.record();
 
-      setRecording(recording);
       setIsRecording(true);
       setRecordingTime(0);
       setRecordingUri(null);
@@ -112,19 +105,18 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   };
 
   const stopRecording = async () => {
-    if (!recording) return;
+    if (!audioRecorder.isRecording) return;
 
     try {
       setIsRecording(false);
-      await recording.stopAndUnloadAsync();
-      const uri = recording.getURI();
+      await audioRecorder.stop();
+      const uri = audioRecorder.uri;
 
       if (uri) {
         setRecordingUri(uri);
         console.log('✅ Grabación completada:', uri);
       }
 
-      setRecording(null);
     } catch (error) {
       console.error('❌ Error al detener grabación:', error);
       Alert.alert(t('common_error'), t('audio_recorder_error_stop'));
@@ -136,16 +128,15 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
 
     try {
       setIsPlaying(true);
-      const { sound } = await Audio.Sound.createAsync({ uri: recordingUri });
-      setSound(sound);
-
-      await sound.playAsync();
-
-      sound.setOnPlaybackStatusUpdate((status) => {
-        if (status.isLoaded && status.didJustFinish) {
+      soundRef.current?.remove();
+      const player = createAudioPlayer({ uri: recordingUri });
+      soundRef.current = player;
+      player.addListener('playbackStatusUpdate', (status) => {
+        if (status.didJustFinish) {
           setIsPlaying(false);
         }
       });
+      player.play();
     } catch (error) {
       console.error('❌ Error al reproducir:', error);
       Alert.alert(t('common_error'), t('audio_recorder_error_play'));
@@ -154,10 +145,10 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   };
 
   const stopPlaying = async () => {
-    if (sound) {
-      await sound.stopAsync();
-      await sound.unloadAsync();
-      setSound(null);
+    if (soundRef.current) {
+      soundRef.current.pause();
+      soundRef.current.remove();
+      soundRef.current = null;
       setIsPlaying(false);
     }
   };
@@ -246,12 +237,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
             text: t('common_close'),
             style: 'destructive',
             onPress: () => {
-              if (recording) {
-                recording.stopAndUnloadAsync();
-              }
-              if (sound) {
-                sound.unloadAsync();
-              }
+              if (audioRecorder.isRecording) audioRecorder.stop();
+              soundRef.current?.remove();
+              soundRef.current = null;
               setIsRecording(false);
               setIsPlaying(false);
               setRecordingTime(0);
@@ -262,9 +250,8 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
         ]
       );
     } else {
-      if (sound) {
-        sound.unloadAsync();
-      }
+      soundRef.current?.remove();
+      soundRef.current = null;
       onClose();
     }
   };

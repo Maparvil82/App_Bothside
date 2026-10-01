@@ -1,30 +1,25 @@
-import { Audio } from 'expo-av';
+import { requestRecordingPermissionsAsync, setAudioModeAsync, type AudioRecorder } from 'expo-audio';
 import { AudioFingerprint, AudioScanResult } from './audioFingerprint.types';
 import { generateMockFingerprint, compareFingerprintWithCollection } from './audioFingerprint.mock';
 import { generateFingerprintFromFile } from './chromaprint';
 import { AUDIO_FINGERPRINT_ENDPOINT } from '../../config/api';
 import { supabase } from '../../lib/supabase';
 
-let recording: Audio.Recording | null = null;
-
-export const startRecording = async (): Promise<void> => {
+export const startRecording = async (recorder: AudioRecorder): Promise<void> => {
     console.log('Starting audio recording...');
     try {
-        const permission = await Audio.requestPermissionsAsync();
+        const permission = await requestRecordingPermissionsAsync();
         if (permission.status !== 'granted') {
             throw new Error('Permission to access microphone was denied');
         }
 
-        await Audio.setAudioModeAsync({
-            allowsRecordingIOS: true,
-            playsInSilentModeIOS: true,
+        await setAudioModeAsync({
+            allowsRecording: true,
+            playsInSilentMode: true,
         });
 
-        const { recording: newRecording } = await Audio.Recording.createAsync(
-            Audio.RecordingOptionsPresets.HIGH_QUALITY
-        );
-
-        recording = newRecording;
+        await recorder.prepareToRecordAsync();
+        recorder.record();
         console.log('Recording started');
     } catch (err) {
         console.error('Failed to start recording', err);
@@ -32,18 +27,16 @@ export const startRecording = async (): Promise<void> => {
     }
 };
 
-export const stopRecording = async (): Promise<{ uri: string; durationMs: number }> => {
+export const stopRecording = async (recorder: AudioRecorder): Promise<{ uri: string; durationMs: number }> => {
     console.log('Stopping audio recording...');
-    if (!recording) {
+    if (!recorder.isRecording) {
         throw new Error('No active recording');
     }
 
     try {
-        await recording.stopAndUnloadAsync();
-        const uri = recording.getURI();
-        const status = await recording.getStatusAsync();
-
-        recording = null;
+        const durationMs = recorder.getStatus().durationMillis;
+        await recorder.stop();
+        const uri = recorder.uri;
 
         if (!uri) {
             throw new Error('Recording URI is null');
@@ -52,7 +45,7 @@ export const stopRecording = async (): Promise<{ uri: string; durationMs: number
         console.log('Recording stopped, URI:', uri);
         return {
             uri,
-            durationMs: status.durationMillis
+            durationMs
         };
     } catch (err) {
         console.error('Failed to stop recording', err);
@@ -60,17 +53,17 @@ export const stopRecording = async (): Promise<{ uri: string; durationMs: number
     }
 };
 
-export const analyzeAudio = async (): Promise<AudioScanResult> => {
+export const analyzeAudio = async (recorder: AudioRecorder): Promise<AudioScanResult> => {
     console.log('Starting full audio analysis...');
 
     try {
         // 1. Grabar audio
-        await startRecording();
+        await startRecording(recorder);
 
         // Grabar durante 4-6 segundos
         await new Promise(resolve => setTimeout(resolve, 5000));
 
-        const { uri } = await stopRecording();
+        const { uri } = await stopRecording(recorder);
         console.log('Audio recorded at:', uri);
 
         // 2. Preparar subida
@@ -128,10 +121,9 @@ export const analyzeAudio = async (): Promise<AudioScanResult> => {
     } catch (error) {
         console.error('Error during audio analysis:', error);
         // Asegurarse de limpiar si falla
-        if (recording) {
+        if (recorder.isRecording) {
             try {
-                await recording.stopAndUnloadAsync();
-                recording = null;
+                await recorder.stop();
             } catch (e) {
                 console.error('Error cleaning up recording:', e);
             }
