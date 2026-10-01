@@ -567,7 +567,7 @@ const TabNavigator = () => {
 
           return <Ionicons name={iconName as any} size={route.name === 'AddDiscTab' ? size + 8 : size} color={color} />;
         },
-        tabBarActiveTintColor: '#0f0f0fff',
+        tabBarActiveTintColor: '#0f0f0f',
         tabBarInactiveTintColor: 'gray',
         headerShown: false,
         tabBarShowLabel: false,

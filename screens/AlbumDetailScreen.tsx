@@ -1627,6 +1627,91 @@ export default function AlbumDetailScreen() {
           </View>
         )}
 
+        {/* Nueva Sección de Ubicación RECONSTRUIDA */}
+        {isInCollection && (
+          <View style={[styles.section, { backgroundColor: colors.card }]}>
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_location')}</Text>
+
+            {album.shelf_id && album.location_row && album.location_column ? (
+              <>
+                {album.is_out_of_shelf ? (
+                  <View style={{ marginBottom: 12 }}>
+                    <View style={{
+                      backgroundColor: '#fef2f2',
+                      borderColor: '#ef4444',
+                      borderWidth: 1,
+                      paddingVertical: 6,
+                      paddingHorizontal: 12,
+                      borderRadius: 8,
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      alignSelf: 'flex-start',
+                      marginBottom: 8,
+                    }}>
+                      <Ionicons name="warning-outline" size={14} color="#ef4444" style={{ marginRight: 6 }} />
+                      <Text style={{ color: '#ef4444', fontWeight: '600', fontSize: 13 }}>
+                        {t('shelf_edit_out_of_shelf')}
+                      </Text>
+                    </View>
+                    <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
+                      {t('shelf_edit_habitual_location')}: {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
+                    {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
+                  </Text>
+                )}
+                <ShelfGrid
+                  rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
+                  columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
+                  shelfId={album.shelf_id || undefined}
+                  highlightRow={album.location_row}
+                  highlightColumn={album.location_column}
+                  coverUrl={album.albums.cover_url}
+                />
+                <TouchableOpacity
+                  style={styles.removeLocationButton}
+                  onPress={confirmRemoveLocation}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
+                  <Text style={styles.removeLocationButtonText}>
+                    {t('search_action_remove_location')}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_change_location')}</Text>
+              </>
+            ) : (
+              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_assign_shelf')}</Text>
+            )}
+
+            {shelves.map((shelf) => {
+              const isCurrentShelf = album.shelf_id === shelf.id;
+              return (
+                <TouchableOpacity
+                  key={shelf.id}
+                  style={[
+                    styles.shelfSelectItem,
+                    { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
+                  ]}
+                  onPress={() => (navigation as any).navigate('SelectCell', {
+                    user_collection_id: album.id,
+                    shelf: shelf,
+                    current_row: isCurrentShelf ? album.location_row : undefined,
+                    current_column: isCurrentShelf ? album.location_column : undefined,
+                  })}
+                >
+                  <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
+                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
+                </TouchableOpacity>
+              );
+            })}
+            {shelves.length === 0 && (
+              <Text style={[styles.noShelvesText, { color: colors.text }]}>{t('album_detail_no_shelves')}</Text>
+            )}
+          </View>
+        )}
+
         {/* Información principal del álbum */}
         <View style={[styles.albumInfoSection, { backgroundColor: colors.card }]}>
           <Text style={[styles.albumTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{album.albums.title}</Text>
@@ -1921,90 +2006,7 @@ export default function AlbumDetailScreen() {
         )}
 
 
-        {/* Nueva Sección de Ubicación RECONSTRUIDA */}
-        {isInCollection && (
-          <View style={[styles.section, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>{t('album_detail_location')}</Text>
 
-            {album.shelf_id && album.location_row && album.location_column ? (
-              <>
-                {album.is_out_of_shelf ? (
-                  <View style={{ marginBottom: 12 }}>
-                    <View style={{
-                      backgroundColor: '#fef2f2',
-                      borderColor: '#ef4444',
-                      borderWidth: 1,
-                      paddingVertical: 6,
-                      paddingHorizontal: 12,
-                      borderRadius: 8,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      alignSelf: 'flex-start',
-                      marginBottom: 8,
-                    }}>
-                      <Ionicons name="warning-outline" size={14} color="#ef4444" style={{ marginRight: 6 }} />
-                      <Text style={{ color: '#ef4444', fontWeight: '600', fontSize: 13 }}>
-                        {t('shelf_edit_out_of_shelf')}
-                      </Text>
-                    </View>
-                    <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
-                      {t('shelf_edit_habitual_location')}: {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={[styles.currentShelfTitle, { color: colors.text }]}>
-                    {t('album_detail_currently_in')} {formatLocation(album.shelf_name, album.location_row, album.location_column, t('album_detail_unnamed_shelf'))}
-                  </Text>
-                )}
-                <ShelfGrid
-                  rows={shelves.find(s => s.id === album.shelf_id)?.shelf_rows || 0}
-                  columns={shelves.find(s => s.id === album.shelf_id)?.shelf_columns || 0}
-                  shelfId={album.shelf_id || undefined}
-                  highlightRow={album.location_row}
-                  highlightColumn={album.location_column}
-                  coverUrl={album.albums.cover_url}
-                />
-                <TouchableOpacity
-                  style={styles.removeLocationButton}
-                  onPress={confirmRemoveLocation}
-                >
-                  <Ionicons name="trash-outline" size={16} color="#ef4444" />
-                  <Text style={styles.removeLocationButtonText}>
-                    {t('search_action_remove_location')}
-                  </Text>
-                </TouchableOpacity>
-                <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_change_location')}</Text>
-              </>
-            ) : (
-              <Text style={[styles.selectShelfTitle, { color: colors.text }]}>{t('album_detail_assign_shelf')}</Text>
-            )}
-
-            {shelves.map((shelf) => {
-              const isCurrentShelf = album.shelf_id === shelf.id;
-              return (
-                <TouchableOpacity
-                  key={shelf.id}
-                  style={[
-                    styles.shelfSelectItem,
-                    { backgroundColor: LIGHT_BG_COLOR, borderColor: LIGHT_BG_COLOR }
-                  ]}
-                  onPress={() => (navigation as any).navigate('SelectCell', {
-                    user_collection_id: album.id,
-                    shelf: shelf,
-                    current_row: isCurrentShelf ? album.location_row : undefined,
-                    current_column: isCurrentShelf ? album.location_column : undefined,
-                  })}
-                >
-                  <Text style={[styles.shelfSelectItemText, { color: colors.text }]}>{shelf.name}</Text>
-                  <Ionicons name="chevron-forward" size={20} color={colors.text} />
-                </TouchableOpacity>
-              );
-            })}
-            {shelves.length === 0 && (
-              <Text style={[styles.noShelvesText, { color: colors.text }]}>{t('album_detail_no_shelves')}</Text>
-            )}
-          </View>
-        )}
 
 
         {/* Sección de Sesiones (Played In) */}
@@ -2422,12 +2424,14 @@ export default function AlbumDetailScreen() {
 
 
       {/* Audio Recorder Modal */}
-      <AudioRecorder
-        visible={showAudioRecorder}
-        onClose={() => setShowAudioRecorder(false)}
-        onSave={handleSaveAudioNote}
-        albumTitle={album?.albums.title || 'Álbum'}
-      />
+      {showAudioRecorder && (
+        <AudioRecorder
+          visible={showAudioRecorder}
+          onClose={() => setShowAudioRecorder(false)}
+          onSave={handleSaveAudioNote}
+          albumTitle={album?.albums.title || 'Álbum'}
+        />
+      )}
 
       {/* Modal de Listas */}
       <Modal

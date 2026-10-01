@@ -45,7 +45,9 @@ export const AudioRecorder: React.FC<AudioRecorderProps> = ({
   useEffect(() => {
     return () => {
       soundRef.current?.remove();
-      if (audioRecorder.isRecording) audioRecorder.stop();
+      soundRef.current = null;
+      // useAudioRecorder releases its native object on unmount. Reading
+      // isRecording here can access it after Expo has already released it.
     };
   }, []);
 

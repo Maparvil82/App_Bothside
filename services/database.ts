@@ -224,15 +224,12 @@ export const AlbumService = {
 
   // Actualizar álbum
   async updateAlbum(id: string, updates: Partial<Album>) {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('albums')
       .update(updates)
-      .eq('id', id)
-      .select()
-      .single();
+      .eq('id', id);
 
     if (error) throw error;
-    return data;
   },
 
   // Eliminar álbum
