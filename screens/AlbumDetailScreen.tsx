@@ -379,13 +379,13 @@ export default function AlbumDetailScreen() {
     }
   };
 
-  // Update header title
+  // Keep the back navigation in the header; show the screen title with the album details.
   useEffect(() => {
     navigation.setOptions({
-      title: t("album_detail_header"),
+      title: '',
       headerRight: () => null
     });
-  }, [navigation, t]);
+  }, [navigation]);
   // --------------------------
 
   // Preguntas del TypeForm
@@ -1629,6 +1629,7 @@ export default function AlbumDetailScreen() {
 
         {/* Información principal del álbum */}
         <View style={[styles.albumInfoSection, { backgroundColor: colors.card }]}>
+          <Text style={[styles.albumDetailHeading, { color: colors.text }]}>{t('album_detail_header')}</Text>
           <Text style={[styles.albumTitle, { color: colors.text }]} numberOfLines={1} ellipsizeMode="tail">{album.albums.title}</Text>
           <Text style={[styles.artist, { color: colors.text }]}>{album.albums.artist}</Text>
           <View style={styles.labelYearContainer}>
@@ -2422,12 +2423,14 @@ export default function AlbumDetailScreen() {
 
 
       {/* Audio Recorder Modal */}
-      <AudioRecorder
-        visible={showAudioRecorder}
-        onClose={() => setShowAudioRecorder(false)}
-        onSave={handleSaveAudioNote}
-        albumTitle={album?.albums.title || 'Álbum'}
-      />
+      {showAudioRecorder && (
+        <AudioRecorder
+          visible={showAudioRecorder}
+          onClose={() => setShowAudioRecorder(false)}
+          onSave={handleSaveAudioNote}
+          albumTitle={album?.albums.title || 'Álbum'}
+        />
+      )}
 
       {/* Modal de Listas */}
       <Modal
@@ -3392,6 +3395,11 @@ const styles = StyleSheet.create({
     margin: 10,
     borderRadius: 8,
     padding: 16,
+  },
+  albumDetailHeading: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 12,
   },
   albumTitle: {
     fontSize: 24,

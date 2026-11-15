@@ -758,7 +758,7 @@ const AppStack = () => {
         component={AlbumDetailScreen}
         options={{
           headerShown: true,
-          title: 'Detalle del Álbum'
+          title: ''
         }}
       />
       <Stack.Screen
