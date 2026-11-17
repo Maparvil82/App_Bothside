@@ -118,8 +118,8 @@ class PurchaseService {
 
             console.warn('⚠️ No credits offering found in RevenueCat');
 
-            // Mock for Expo Go or Sandbox if configured
-            if (__DEV__ || !offerings.all['credits']) {
+            // Mock only in development builds; a release build must never show fake packages
+            if (__DEV__) {
                 return {
                     serverDescription: "Mock Credits Offering",
                     identifier: "credits",
@@ -256,11 +256,13 @@ class PurchaseService {
         try {
             await this.EnsureInitialized();
 
-            // Check for Mock Package
-            if (pkg.product.identifier === 'mock_annual_product' ||
+            // Simulated purchase for the mock offerings, only in development builds.
+            // Release builds always go through the store, even for these product IDs.
+            if (__DEV__ && (
+                pkg.product.identifier === 'mock_annual_product' ||
                 pkg.product.identifier === 'bothside_credits_50' ||
                 pkg.product.identifier === 'bothside_credits_200' ||
-                pkg.product.identifier === 'bothside_credits_master') {
+                pkg.product.identifier === 'bothside_credits_master')) {
                 console.log('🛒 Realizando compra simulada (Mock Purchase) de:', pkg.product.identifier);
                 return {
                     customerInfo: {
