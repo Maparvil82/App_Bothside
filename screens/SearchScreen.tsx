@@ -1902,16 +1902,6 @@ export const SearchScreen: React.FC = () => {
 
           {/* Botones de búsqueda, vista y filtros a la derecha */}
           <View style={styles.toolbarButtons}>
-            {physicalShelves.length > 0 && (
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={t(isShelfView ? 'collection_view_list' : 'collection_view_shelf')}
-                style={[styles.toolbarButton, { backgroundColor: isShelfView ? colors.border : 'transparent' }]}
-                onPress={() => setViewMode(isShelfView ? 'list' : 'shelf')}
-              >
-                <Ionicons name={isShelfView ? 'list-outline' : 'albums-outline'} size={24} color={colors.text} />
-              </TouchableOpacity>
-            )}
             <TouchableOpacity
               style={[
                 styles.toolbarButton,
