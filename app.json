@@ -30,7 +30,7 @@
         "android.permission.RECORD_AUDIO"
       ],
       "package": "com.manuelparra.bothside",
-      "versionCode": 16
+      "versionCode": 17
     },
     "web": {
       "favicon": "./assets/favicon.png"
