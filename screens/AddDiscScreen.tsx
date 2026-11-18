@@ -187,16 +187,15 @@ export const AddDiscScreen: React.FC = () => {
     setShowDiscogsResults(true);
 
     try {
-      console.log('🧪 Probando conexión con Discogs antes de buscar...');
-      const connectionTest = await DiscogsService.testConnection();
-      if (!connectionTest) {
-        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
-        setManualLoading(false);
-        return;
-      }
-
+      // Search directly: a null response means Discogs could not be reached
+      // (saves the extra "test" request that used to run before every search).
       console.log('🔍 Buscando en Discogs (Manual Single):', searchTerm);
       const response = await DiscogsService.searchReleases(searchTerm);
+      if (response === null) {
+        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
+        setManualSearchResults([]);
+        return;
+      }
 
       // Filtrar solo versiones en vinilo
       const vinylReleases = response?.results?.filter((release: any) => {
@@ -275,19 +274,17 @@ export const AddDiscScreen: React.FC = () => {
     setActiveSearchMode('discogs');
 
     try {
-      // Primero probar la conexión con Discogs
-      console.log('🧪 Probando conexión con Discogs antes de buscar...');
-      const connectionTest = await DiscogsService.testConnection();
-      if (!connectionTest) {
-        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
-        setManualLoading(false);
-        return;
-      }
-
+      // Search directly: a null response means Discogs could not be reached
+      // (saves the extra "test" request that used to run before every search).
       const searchTerm = `${artist} ${album}`;
       console.log('🔍 Buscando en Discogs (Manual):', searchTerm);
 
       const response = await DiscogsService.searchReleases(searchTerm);
+      if (response === null) {
+        Alert.alert(t('common_error_connection'), t('add_disc_error_discogs_connection'));
+        setManualSearchResults([]);
+        return;
+      }
 
       // Filtrar solo versiones en vinilo y con artista y álbum exactos
       const vinylReleases = response?.results?.filter((release: any) => {

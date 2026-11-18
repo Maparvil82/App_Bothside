@@ -12,6 +12,7 @@ import { useTranslation } from '../src/i18n/useTranslation';
 import { AiConsentModal } from '../components/AiConsentModal';
 import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
 import { AnalyticsService } from '../services/analytics';
+import { prepareScanImage } from '../utils/prepareScanImage';
 
 export const CameraScanScreen = () => {
     const { t } = useTranslation();
@@ -169,14 +170,15 @@ export const CameraScanScreen = () => {
             AnalyticsService.track('camera_scan_started');
             try {
                 const photo = await cameraRef.current.takePictureAsync({
-                    base64: true,
-                    quality: 0.5, // Reduce size for faster upload
+                    quality: 0.5,
                     skipProcessing: true // Faster
                 });
 
-                if (photo?.base64) {
+                if (photo?.uri) {
+                    // Shrink before upload: a cover only needs ~1000px to be recognised
+                    const base64 = await prepareScanImage(photo.uri, 1024);
                     console.log('📸 Imagen capturada, analizando con Gemini...');
-                    const result = await GeminiService.identifyAlbumFromImage(photo.base64);
+                    const result = await GeminiService.identifyAlbumFromImage(base64);
                     console.log('🤖 Gemini Vision Resultado:', result);
 
                     const isValidResult = (str: string) => {

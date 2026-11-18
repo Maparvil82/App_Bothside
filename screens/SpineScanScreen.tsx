@@ -29,6 +29,7 @@ import { useSubscription } from '../contexts/SubscriptionContext';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { checkAiAllowedState, setAiConsent, setAiEnabled } from '../src/privacy/aiConsent';
 import { AnalyticsService } from '../services/analytics';
+import { prepareScanImage } from '../utils/prepareScanImage';
 import { supabase } from '../lib/supabase';
 import { AlbumService, UserCollectionService, ProfileService } from '../services/database';
 import { FREE_COLLECTION_LIMIT } from '../config/features';
@@ -252,14 +253,15 @@ export const SpineScanScreen = () => {
       AnalyticsService.track('spines_scan_started');
       try {
         const photo = await cameraRef.current.takePictureAsync({
-          base64: true,
           quality: 0.5,
           skipProcessing: true
         });
 
-        if (photo?.base64) {
+        if (photo?.uri) {
+          // Shrink before upload; spines have small text, so keep more detail than a cover
+          const base64 = await prepareScanImage(photo.uri, 1600);
           console.log('📸 Lomos capturados, analizando con Gemini...');
-          const result = await GeminiService.identifySpinesFromImage(photo.base64);
+          const result = await GeminiService.identifySpinesFromImage(base64);
           console.log('🤖 Gemini Spines Result:', result);
 
           // Deduct credits
@@ -272,7 +274,7 @@ export const SpineScanScreen = () => {
             selected: true,
           }));
 
-          setPhotoBase64(photo.base64);
+          setPhotoBase64(base64);
           setAlbums(formattedAlbums);
           setEstimatedSpines(result.estimatedSpinesCount);
         }
